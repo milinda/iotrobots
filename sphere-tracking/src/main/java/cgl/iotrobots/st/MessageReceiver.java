@@ -80,6 +80,7 @@ public class MessageReceiver {
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
                             System.out.println(body);
+                            inQueue.offer(body);
                             channel.basicAck(deliveryTag, false);
                         }
                     });

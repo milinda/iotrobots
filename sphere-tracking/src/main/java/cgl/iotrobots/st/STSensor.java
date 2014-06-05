@@ -10,12 +10,11 @@ import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class STSensor extends AbstractSensor {
     private static Logger LOG = LoggerFactory.getLogger(STSensor.class);
@@ -37,66 +36,42 @@ public class STSensor extends AbstractSensor {
 
     private SensorContext context;
 
+    private BlockingQueue receivingQueue;
+
     public static void main(String[] args) {
 
     }
 
     @Override
     public Configurator getConfigurator(Map map) {
-        return null;
+        return new STSensorConfigurator();
     }
 
     @Override
     public void open(SensorContext context) {
         this.context = context;
 
-        Object intervalProp = context.getProperty(SEND_INTERVAL);
-        int interval = 100;
-        if (intervalProp != null && intervalProp instanceof Integer) {
-            interval = (Integer) intervalProp;
-        }
+        receivingQueue = new LinkedBlockingQueue();
 
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
 
-        MessageReceiver receiver = new MessageReceiver(null, "task_queue", null, null, "amqp://149.160.213.3:5672");
+        MessageReceiver receiver = new MessageReceiver(receivingQueue, "task_queue", null, null, "amqp://149.160.213.3:5672");
         receiver.start();
 
-        startSend(sendChannel, new MessageSender() {
-            @Override
-            public boolean loop(BlockingQueue queue) {
-                try {
-                    queue.put(new FileContentMessage(content));
-                } catch (InterruptedException e) {
-                    LOG.error("Error", e);
-                }
-                return true;
-            }
-        }, interval);
+        startSend(sendChannel, receivingQueue);
 
         startListen(receiveChannel, new cgl.iotcloud.core.MessageReceiver() {
             @Override
             public void onMessage(Object message) {
                 if (message instanceof RabbitMQMessage) {
-                    byte []body= ((RabbitMQMessage) message).getBody();
-                    String bodyS = new String(body);
-                    BufferedReader reader = new BufferedReader(new StringReader(bodyS));
-                    String timeStampS = null;
-                    try {
-                        timeStampS = reader.readLine();
-                    } catch (IOException e) {
-                        LOG.error("Error occurred while reading the bytes", e);
-                    }
-                    Long timeStamp = Long.parseLong(timeStampS);
-                    long currentTime = System.currentTimeMillis();
-                    LOG.info("latency: " + averageLatency + " initial time: " + timeStamp + " current: " + currentTime);
+                    LOG.info("Message received " + Arrays.toString(((RabbitMQMessage) message).getBody()));
                 } else {
                     System.out.println("Unexpected message");
                 }
             }
         });
-
-        LOG.info("Received open request {}", this.context.getId());
+        LOG.info("Received request {}", this.context.getId());
     }
 
     @Override
