@@ -7,6 +7,7 @@ import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.IdentityConverter;
 import cgl.iotcloud.core.transport.MessageConverter;
 import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
+import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,27 +20,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class STSensor extends AbstractSensor {
     private static Logger LOG = LoggerFactory.getLogger(STSensor.class);
 
-    public static final String SEND_QUEUE_NAME_PROP = "send_queue";
-    public static final String RECEIVE_QUEUE_PROP = "recv_queue";
+    public static final String SEND_QUEUE = "send_queue";
+    public static final String RECEIVE_QUEUE = "recv_queue";
 
-    public static final String SEND_INTERVAL = "send_interval";
-    public static final String FILE_NAME = "file_name";
+    public static final String SEND_EXCHANGE = "send_exchange";
+    public static final String SEND_ROUTING_KEY = "send_routing_key";
 
-    public static final String SEND_EXCHANGE_NAME_PROP = "send_exchange";
-    public static final String SEND_ROUTING_KEY_PROP = "send_routing_key";
+    public static final String RECV_EXCHANGE = "recv_exchange";
+    public static final String RECV_ROUTING_KEY = "recv_routing_key";
 
-    public static final String RECV_EXCHANGE_NAME_PROP = "recv_exchange";
-    public static final String RECV_ROUTING_KEY_PROP = "recv_routing_key";
-
-    public static final String SERVER = "server";
     public static final String SENSOR_NAME = "name";
+    public static final String BROKER_URL = "broker_url";
 
     private SensorContext context;
 
     private BlockingQueue receivingQueue;
 
     public static void main(String[] args) {
-
+        Map<String, String> properties = getProperties(args);
+        SensorSubmitter.submitSensor(properties, "", STSensor.class.getCanonicalName(), Arrays.asList("local"));
     }
 
     @Override
@@ -50,13 +49,13 @@ public class STSensor extends AbstractSensor {
     @Override
     public void open(SensorContext context) {
         this.context = context;
-
         receivingQueue = new LinkedBlockingQueue();
-
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
 
-        MessageReceiver receiver = new MessageReceiver(receivingQueue, "task_queue", null, null, "amqp://149.160.213.3:5672");
+        String brokerURL = (String) context.getProperty(BROKER_URL);
+
+        MessageReceiver receiver = new MessageReceiver(receivingQueue, "task_queue", null, null, brokerURL);
         receiver.start();
 
         startSend(sendChannel, receivingQueue);
@@ -74,29 +73,21 @@ public class STSensor extends AbstractSensor {
         LOG.info("Received request {}", this.context.getId());
     }
 
-    @Override
-    public void close() {
-
-    }
 
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
             SensorContext context = new SensorContext(new SensorId("rabbitChat", "general"));
-            String exchange = (String) conf.get(SEND_EXCHANGE_NAME_PROP);
-            String sendQueue = (String) conf.get(SEND_QUEUE_NAME_PROP);
+            String exchange = (String) conf.get(SEND_EXCHANGE);
+            String sendQueue = (String) conf.get(SEND_QUEUE);
+            String routingKey = (String) conf.get(SEND_ROUTING_KEY);
 
-            String recvExchange = (String) conf.get(RECV_EXCHANGE_NAME_PROP);
+            String recvExchange = (String) conf.get(RECV_EXCHANGE);
+            String recvQueue = (String) conf.get(RECEIVE_QUEUE);
+            String recvRoutingKey = (String) conf.get(RECV_ROUTING_KEY);
 
-            String recvQueue = (String) conf.get(RECEIVE_QUEUE_PROP);
-            String routingKey = (String) conf.get(SEND_ROUTING_KEY_PROP);
-            String recvRoutingKey = (String) conf.get(RECV_ROUTING_KEY_PROP);
-            String fileName = (String) conf.get(FILE_NAME);
-
-            String sendInterval = (String) conf.get(SEND_INTERVAL);
-            int interval = Integer.parseInt(sendInterval);
-            context.addProperty(SEND_INTERVAL, interval);
-            context.addProperty(FILE_NAME, fileName);
+            String brokerUrl = (String) conf.get(BROKER_URL);
+            context.addProperty(BROKER_URL, brokerUrl);
 
             Map sendProps = new HashMap();
             sendProps.put("exchange", exchange);
@@ -133,12 +124,45 @@ public class STSensor extends AbstractSensor {
         @Override
         public Object convert(Object input, Object context) {
             if (input instanceof FileContentMessage) {
-                long currentTime = System.currentTimeMillis();
-                String send = currentTime + "\r\n" + ((FileContentMessage) input).getContent();
-                RabbitMQMessage message = new RabbitMQMessage(null, send.getBytes());
-                return message;
+                return null;
             }
             return null;
         }
+    }
+
+    private static Map<String, String> getProperties(String []args) {
+        Map<String, String> conf = new HashMap<String, String>();
+        Options options = new Options();
+        options.addOption("url", true, "URL of the AMQP Broker");
+        options.addOption("qr", true, "Receive Queue name");
+        options.addOption("qs", true, "Send Queue name");
+        options.addOption("ex", true, "Exchange");
+
+        CommandLineParser commandLineParser = new BasicParser();
+        try {
+            CommandLine cmd = commandLineParser.parse(options, args);
+
+            String url = cmd.getOptionValue("url");
+            conf.put(BROKER_URL, url);
+
+            String recvQueueName = cmd.getOptionValue("qr");
+            conf.put(RECEIVE_QUEUE, recvQueueName);
+            conf.put(RECV_ROUTING_KEY, recvQueueName);
+
+            String sendQueueName = cmd.getOptionValue("qs");
+            conf.put(SEND_QUEUE, sendQueueName);
+            conf.put(SEND_ROUTING_KEY, sendQueueName);
+
+            String exchange = cmd.getOptionValue("ex");
+            conf.put(SEND_EXCHANGE, exchange);
+            conf.put(RECV_EXCHANGE, exchange);
+
+            conf.put(SENSOR_NAME, "STSensor");
+            return conf;
+        } catch (ParseException e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("sensor", options );
+        }
+        return null;
     }
 }
