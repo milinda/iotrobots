@@ -8,6 +8,8 @@ import com.rabbitmq.client.*;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class MessageReceiver {
     private static Logger LOG = LoggerFactory.getLogger(MessageReceiver.class);
@@ -114,5 +116,10 @@ public class MessageReceiver {
 
     public void setExchangeName(String exchangeName) {
         this.exchangeName = exchangeName;
+    }
+
+    public static void main(String[] args) {
+        MessageReceiver receiver = new MessageReceiver(new LinkedBlockingQueue(), "drone_frame", null, null, "amqp://localhost:5672");
+        receiver.start();
     }
 }
