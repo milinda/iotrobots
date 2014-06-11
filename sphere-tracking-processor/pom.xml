@@ -29,6 +29,9 @@
         <resources>
             <resource>
                 <directory>${basedir}/multilang</directory>
+                <includes>
+                    <include>*</include>
+                </includes>
             </resource>
         </resources>
         <plugins>
