@@ -4,9 +4,11 @@ import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.task.ShellBolt;
+import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.ss.rabbitmq.*;
@@ -16,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 public class SphereTrackingTopology {
-    public static class SplitSentence extends ShellBolt implements IRichBolt {
-        public SplitSentence() {
-            super("python", "image_proc.py");
+    public static class ImageProcessing extends ShellBolt implements IRichBolt {
+        public ImageProcessing() {
+            super("python", "resources/image_proc.py");
         }
 
         @Override
@@ -32,6 +34,18 @@ public class SphereTrackingTopology {
         }
     }
 
+    public static class PrintingBolt extends BaseBasicBolt {
+
+        @Override
+        public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+            System.out.println(tuple.getValue(0));
+        }
+
+        @Override
+        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
         ErrorReporter r = new ErrorReporter() {
@@ -42,7 +56,8 @@ public class SphereTrackingTopology {
         };
 
         builder.setSpout("spout", new RabbitMQSpout(new SpoutConfigurator(), r), 3);
-        builder.setBolt("print", new SplitSentence()).shuffleGrouping("spout");
+        builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("spout");
+        builder.setBolt("print", new PrintingBolt()).shuffleGrouping("image_proc");
 
         Config conf = new Config();
         conf.setDebug(true);
@@ -106,7 +121,7 @@ public class SphereTrackingTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("sender", "sphere_tracking", "sender"));
+            list.add(new RabbitMQDestination("sender", "perfSensor", "sender"));
             return list;
         }
 
