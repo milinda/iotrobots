@@ -69,7 +69,7 @@ public class SphereTrackingTopology {
         } else {
             conf.setMaxTaskParallelism(3);
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("word-count", conf, builder.createTopology());
+            cluster.submitTopology("image_proc", conf, builder.createTopology());
             Thread.sleep(10000);
             cluster.shutdown();
         }
