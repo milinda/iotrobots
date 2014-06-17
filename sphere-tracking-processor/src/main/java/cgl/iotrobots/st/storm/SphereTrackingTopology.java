@@ -57,9 +57,10 @@ public class SphereTrackingTopology {
             }
         };
 
-        builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 3);
+        builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
         builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("recv_spout");
-        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
+        builder.setBolt("send_bolt", new PrintingBolt()).shuffleGrouping("image_proc");
+//        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -126,7 +127,7 @@ public class SphereTrackingTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("sender", "perfSensor", "sender"));
+            list.add(new RabbitMQDestination("sender", "drone", "sender"));
             return list;
         }
 
@@ -182,7 +183,7 @@ public class SphereTrackingTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("control", "perfSensor", "control"));
+            list.add(new RabbitMQDestination("control", "drone", "control"));
             return list;
         }
 
