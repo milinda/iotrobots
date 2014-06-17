@@ -20,7 +20,7 @@ import java.util.Map;
 public class SphereTrackingTopology {
     public static class ImageProcessing extends ShellBolt implements IRichBolt {
         public ImageProcessing() {
-            super("python", "resources/image_proc.py");
+            super("python", "image_proc.py");
         }
 
         @Override
