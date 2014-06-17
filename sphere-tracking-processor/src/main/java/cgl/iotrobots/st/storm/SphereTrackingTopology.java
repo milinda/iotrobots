@@ -12,6 +12,7 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.ss.rabbitmq.*;
+import com.ss.rabbitmq.bolt.RabbitMQBolt;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.ArrayList;
@@ -56,12 +57,12 @@ public class SphereTrackingTopology {
             }
         };
 
-        builder.setSpout("spout", new RabbitMQSpout(new SpoutConfigurator(), r), 3);
-        builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("spout");
-        builder.setBolt("print", new PrintingBolt()).shuffleGrouping("image_proc");
+        builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 3);
+        builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("recv_spout");
+        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
 
         Config conf = new Config();
-        conf.setDebug(true);
+        conf.setDebug(false);
 
 
         if (args != null && args.length > 0) {
@@ -147,6 +148,67 @@ public class SphereTrackingTopology {
         @Override
         public RabbitMQDestinationSelector getDestinationSelector() {
             return null;
+        }
+    }
+
+    private static class BoltConfigurator implements RabbitMQConfigurator {
+        private String url = "amqp://localhost:5672";
+
+        @Override
+        public String getURL() {
+            return url;
+        }
+
+        @Override
+        public boolean isAutoAcking() {
+            return true;
+        }
+
+        @Override
+        public int getPrefetchCount() {
+            return 1024;
+        }
+
+        @Override
+        public boolean isReQueueOnFail() {
+            return false;
+        }
+
+        @Override
+        public String getConsumerTag() {
+            return "control";
+        }
+
+        @Override
+        public List<RabbitMQDestination> getQueueName() {
+            List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
+            list.add(new RabbitMQDestination("control", "perfSensor", "control"));
+            return list;
+        }
+
+        @Override
+        public MessageBuilder getMessageBuilder() {
+            return new TimeStampMessageBuilder();
+        }
+
+        @Override
+        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+            outputFieldsDeclarer.declare(new Fields("control"));
+        }
+
+        @Override
+        public int queueSize() {
+            return 1024;
+        }
+
+        @Override
+        public RabbitMQDestinationSelector getDestinationSelector() {
+            return new RabbitMQDestinationSelector() {
+                @Override
+                public String select(Tuple tuple) {
+                    return "control";
+                }
+            };
         }
     }
 }
