@@ -12,6 +12,7 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.ss.rabbitmq.*;
+import org.apache.commons.codec.binary.Base64;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class SphereTrackingTopology {
             conf.setMaxTaskParallelism(3);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("image_proc", conf, builder.createTopology());
-            Thread.sleep(10000);
+            Thread.sleep(1000000);
             cluster.shutdown();
         }
     }
@@ -80,7 +81,10 @@ public class SphereTrackingTopology {
         public List<Object> deSerialize(RabbitMQMessage message) {
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
-            tuples.add(body);
+
+            byte[] encodedBytes = Base64.encodeBase64(body);
+
+            tuples.add(new String(encodedBytes));
             return tuples;
         }
 
