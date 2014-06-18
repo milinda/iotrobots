@@ -12,7 +12,6 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.ss.rabbitmq.*;
-import com.ss.rabbitmq.bolt.RabbitMQBolt;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public class SphereTrackingTopology {
         }
     }
 
-    private static class TimeStampMessageBuilder implements MessageBuilder {
+    private static class Base64Builder implements MessageBuilder {
         @Override
         public List<Object> deSerialize(RabbitMQMessage message) {
             byte []body = message.getBody();
@@ -127,13 +126,13 @@ public class SphereTrackingTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("sender", "drone", "sender"));
+            list.add(new RabbitMQDestination("drone_frame", "drone", "drone_frame"));
             return list;
         }
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new TimeStampMessageBuilder();
+            return new Base64Builder();
         }
 
         @Override
@@ -189,7 +188,7 @@ public class SphereTrackingTopology {
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new TimeStampMessageBuilder();
+            return new Base64Builder();
         }
 
         @Override
