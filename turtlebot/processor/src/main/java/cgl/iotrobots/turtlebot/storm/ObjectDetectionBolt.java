@@ -17,6 +17,7 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+
     }
 
     @Override

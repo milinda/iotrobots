@@ -50,7 +50,6 @@ public class ObjectAvoidanceTopology {
         Config conf = new Config();
         conf.setDebug(false);
 
-
         if (args != null && args.length > 0) {
             conf.setNumWorkers(3);
             StormSubmitter.submitTopology(args[0], conf, builder.createTopology());
@@ -70,7 +69,6 @@ public class ObjectAvoidanceTopology {
             List<Object> tuples = new ArrayList<Object>();
 
             byte[] encodedBytes = Base64.encodeBase64(body);
-
             tuples.add(new String(encodedBytes));
             return tuples;
         }
@@ -112,7 +110,7 @@ public class ObjectAvoidanceTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("drone_frame", "drone", "drone_frame"));
+            list.add(new RabbitMQDestination("kinect_frame", "turtle", "kinect_frame"));
             return list;
         }
 
@@ -168,7 +166,7 @@ public class ObjectAvoidanceTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("control", "drone", "control"));
+            list.add(new RabbitMQDestination("turtle_control", "turtle", "turtle_control"));
             return list;
         }
 
