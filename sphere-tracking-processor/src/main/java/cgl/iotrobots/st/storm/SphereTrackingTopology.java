@@ -82,8 +82,8 @@ public class SphereTrackingTopology {
         public List<Object> deSerialize(RabbitMQMessage message) {
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
-            System.out.println(body);
-            byte[] encodedBytes = Base64.encodeBase64(body);
+            //System.out.println(body);
+            String encodedBytes = Base64.encodeBase64String(body);
 
             tuples.add(new String(encodedBytes));
             return tuples;
