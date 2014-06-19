@@ -20,6 +20,7 @@ class SplitSentenceBolt(storm.BasicBolt):
         base64Frame = [elem.encode("hex") for elem in tup.values[0]]
 
         #frame =  base64.b64decode(base64Frame)
+
         #circles = self.trackingSensorModule.detectCircles(frame)
         circles = []
         message = {}

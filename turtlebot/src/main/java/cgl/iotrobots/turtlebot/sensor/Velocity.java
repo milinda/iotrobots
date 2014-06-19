@@ -1,19 +1,24 @@
 package cgl.iotrobots.turtlebot.sensor;
 
 public class Velocity {
+    public enum Type {
+        ANGULAR,
+        LINEAR
+    }
+
     private double x;
 
     private double y;
 
     private double z;
 
-    public Velocity() {
-    }
+    private Type type;
 
-    public Velocity(double x, double y, double z) {
+    public Velocity(double x, double y, double z, Type type) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.type = type;
     }
 
     public double getX() {
@@ -38,5 +43,9 @@ public class Velocity {
 
     public void setZ(double z) {
         this.z = z;
+    }
+
+    public Type getType() {
+        return type;
     }
 }
