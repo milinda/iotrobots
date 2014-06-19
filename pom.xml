@@ -8,7 +8,7 @@
     <packaging>pom</packaging>
     <name>iotcloud robots</name>
     <modules>
-        <!--<module>turtlebot</module>-->
+        <module>turtlebot</module>
         <module>sphere-tracking</module>
         <module>sphere-tracking-processor</module>
     </modules>
