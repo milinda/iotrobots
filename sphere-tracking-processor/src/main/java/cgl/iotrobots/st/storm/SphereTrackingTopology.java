@@ -12,6 +12,7 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.ss.rabbitmq.*;
+import com.ss.rabbitmq.bolt.RabbitMQBolt;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class SphereTrackingTopology {
         builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
         builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("recv_spout");
         builder.setBolt("send_bolt", new PrintingBolt()).shuffleGrouping("image_proc");
-//        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
+        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
 
         Config conf = new Config();
         conf.setDebug(false);
