@@ -14,8 +14,9 @@
     <name>iotrobots-turtlebot-parent</name>
     <packaging>pom</packaging>
     <modules>
-        <module>controller</module>
         <module>processor</module>
+        <module>sensor</module>
+        <module>controller</module>
     </modules>
 </project>
 
