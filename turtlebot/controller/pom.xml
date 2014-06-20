@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>iotrobots-turtlebot</artifactId>
+    <artifactId>controller</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>iotrobots-turtlebot</name>
     <properties>
