@@ -59,7 +59,7 @@ public class SphereTrackingTopology {
 
         builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
         builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("recv_spout");
-        builder.setBolt("send_bolt", new PrintingBolt()).shuffleGrouping("image_proc");
+        // builder.setBolt("send_bolt", new PrintingBolt()).shuffleGrouping("image_proc");
         builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
 
         Config conf = new Config();
@@ -92,7 +92,8 @@ public class SphereTrackingTopology {
 
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
-            return null;
+            RabbitMQMessage message = new RabbitMQMessage(null, null, null, null, tuple.getValue(0).toString().getBytes());
+            return message;
         }
     }
 
