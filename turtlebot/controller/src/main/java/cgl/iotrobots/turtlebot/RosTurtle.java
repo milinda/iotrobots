@@ -13,18 +13,19 @@ import java.util.concurrent.BlockingQueue;
 public class RosTurtle extends AbstractNodeMain {
     private boolean stop = false;
 
-    private BlockingQueue<Velocity> velocities;
+    private BlockingQueue<Motion> velocities;
 
-    public RosTurtle(BlockingQueue<Velocity> velocity) {
+    public RosTurtle(BlockingQueue<Motion> velocity) {
         this.velocities = velocity;
     }
 
     public GraphName getDefaultNodeName() {
-        return GraphName.of("/controller");
+        return GraphName.of("/cn");
     }
 
     @Override
     public void onStart(final ConnectedNode connectedNode) {
+        System.out.println("Starting....");
         final Publisher<Twist> publisher =
                 connectedNode.newPublisher("/cmd_vel", Twist._TYPE);
 
@@ -38,25 +39,19 @@ public class RosTurtle extends AbstractNodeMain {
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             @Override
             protected void loop() throws InterruptedException {
-                Velocity v = velocities.take();
-
+                System.out.println("loop..");
+                Motion m = velocities.take();
                 Twist str = publisher.newMessage();
+                System.out.println("Linear...");
+                str.getLinear().setX(m.getLinear().getX());
+                str.getLinear().setY(m.getLinear().getY());
+                str.getLinear().setZ(m.getLinear().getZ());
 
-                if (v.getType() == Velocity.Type.LINEAR) {
-                    str.getLinear().setX(v.getX());
-                    str.getLinear().setY(v.getY());
-                    str.getLinear().setZ(v.getZ());
-                }
+                str.getAngular().setX(m.getAngular().getX());
+                str.getAngular().setY(m.getAngular().getY());
+                str.getAngular().setZ(m.getAngular().getZ());
 
-                if (v.getType() == Velocity.Type.ANGULAR) {
-                    str.getAngular().setX(v.getX());
-                    str.getAngular().setY(v.getY());
-                    str.getAngular().setZ(v.getZ());
-                }
-
-                if (!stop) {
-                    publisher.publish(str);
-                }
+                publisher.publish(str);
             }
         });
     }
