@@ -62,7 +62,7 @@ public class SendFrame {
                         outputStream.close();
                         byte[] output = outputStream.toByteArray();
                         try {
-                            channel.basicPublish(EXCHANGE_NAME, "kinect", null, compr);
+                            channel.basicPublish(EXCHANGE_NAME, "kinect", null, output);
                         } catch (IOException e) {
                             System.exit(0);
                         }
