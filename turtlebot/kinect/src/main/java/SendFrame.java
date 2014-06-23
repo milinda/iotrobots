@@ -24,7 +24,7 @@ public class SendFrame {
             Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
 
-            channel.exchangeDeclare(EXCHANGE_NAME, "fanout", false); //stops here...
+            channel.exchangeDeclare(EXCHANGE_NAME, "fanout"); //stops here...
 
             // DECLARATIONS
             Context ctx = null;
@@ -41,28 +41,45 @@ public class SendFrame {
             // DISPLAY DEPTH VIDEO
             dev.startDepth(new DepthHandler() {
                 int numFrame = 0;
-
                 @Override
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
-                    if (numFrame % 2 == 0) {
+                    if(numFrame%2==0) {
                         byte[] data = new byte[614400];
-                        for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
+                        for(int i=0; i<614399; i++) data[i] = frame.get(i);
 
-                        Deflater deflater = new Deflater();
-                        deflater.setInput(data);
+                        // compress data
+                        int err;
+                        int comprLen = 120000;
+                        int uncomprLen = 614400;
+                        byte[] uncompr=new byte[uncomprLen];
+                        byte[] compr=new byte[comprLen];
 
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-
-                        deflater.finished();
-                        byte[] buffer = new byte[1024];
-                        while (!deflater.finished()) {
-                            int count = deflater.deflate(data); // returns the generated code... index
-                            outputStream.write(buffer, 0, count);
+                        Deflater deflater = null;
+                        try{
+                            deflater = new Deflater(JZlib.Z_BEST_SPEED);
                         }
-                        outputStream.close();
-                        byte[] output = outputStream.toByteArray();
+                        catch(GZIPException e){
+                        }
+
+                        deflater.setInput(data);
+                        deflater.setOutput(compr);
+
+                        err=deflater.deflate(JZlib.Z_NO_FLUSH);
+                        CHECK_ERR(deflater, err, "deflate");
+                        if(deflater.avail_in!=0){
+                            System.out.println("deflate not greedy");
+                            System.exit(1);
+                        }
+
+                        err=deflater.deflate(JZlib.Z_FINISH);
+                        if(err!=JZlib.Z_STREAM_END){
+                            System.out.println("deflate should report Z_STREAM_END");
+                            System.exit(1);
+                        }
+                        err=deflater.end();
+                        CHECK_ERR(deflater, err, "deflateEnd");
                         try {
-                            channel.basicPublish(EXCHANGE_NAME, "kinect", null, output);
+                            channel.basicPublish(EXCHANGE_NAME, "kinect", null, compr);
                         } catch (IOException e) {
                             System.exit(0);
                         }
@@ -88,7 +105,6 @@ public class SendFrame {
             }
             ctx.shutdown();
         } catch (IOException e) {
-            e.printStackTrace();
             System.exit(0);
         }
     }
