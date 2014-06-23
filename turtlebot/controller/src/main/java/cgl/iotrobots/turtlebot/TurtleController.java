@@ -1,5 +1,6 @@
 package cgl.iotrobots.turtlebot;
 
+import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
 import com.google.common.base.Preconditions;

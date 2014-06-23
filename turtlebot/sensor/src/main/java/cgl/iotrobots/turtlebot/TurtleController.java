@@ -1,8 +1,10 @@
-package cgl.iotrobots.turtlebot.commons;
+package cgl.iotrobots.turtlebot;
 
+import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
+import cgl.iotrobots.turtlebot.commons.Motion;
+import cgl.iotrobots.turtlebot.commons.RosTurtle;
+import cgl.iotrobots.turtlebot.commons.Velocity;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.ros.internal.loader.CommandLineLoader;
 import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
@@ -23,12 +25,18 @@ public class TurtleController {
 
     public TurtleController() {
         this.turtle = new RosTurtle(velocities);
+        this.messageReceiver = new KinectMessageReceiver(messages, "kinect_controller", null, null, "amqp://localhost:5672");
+
+        this.messageReceiver.setExchangeName("kinect_frames");
+        this.messageReceiver.setRoutingKey("kinect");
     }
 
     public void start(NodeConfiguration configuration) {
         Preconditions.checkState(turtle != null);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(turtle, configuration);
+
+        messageReceiver.start();
     }
 
     public void test() throws InterruptedException {
@@ -39,22 +47,11 @@ public class TurtleController {
         Thread.sleep(100);
     }
 
-    public void addVelocity(Motion motion) {
+    public void setMotion(Motion motion) {
         try {
             velocities.put(motion);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        // register with ros_java
-        CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(args));
-        NodeConfiguration nodeConfiguration = loader.build();
-
-        TurtleController turtleController = new TurtleController();
-        turtleController.start(nodeConfiguration);
-
-
     }
 }
