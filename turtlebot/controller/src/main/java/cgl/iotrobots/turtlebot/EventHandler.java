@@ -1,5 +1,8 @@
 package cgl.iotrobots.turtlebot;
 
+import cgl.iotrobots.turtlebot.commons.Motion;
+import cgl.iotrobots.turtlebot.commons.Velocity;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
