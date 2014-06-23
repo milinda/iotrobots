@@ -46,38 +46,21 @@ public class SendFrame {
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
                     if (numFrame % 2 == 0) {
                         byte[] data = new byte[614400];
-                        for (int i = 0; i < 614399; i++) data[i] = frame.get(i);
+                        for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
 
-                        // compress data
-                        int err;
-                        int comprLen = 120000;
-                        int uncomprLen = 614400;
-                        byte[] uncompr = new byte[uncomprLen];
-                        byte[] compr = new byte[comprLen];
-
-                        Deflater deflater = null;
-                        try {
-                            deflater = new Deflater(JZlib.Z_BEST_SPEED);
-                        } catch (GZIPException e) {
-                        }
-
+                        Deflater deflater = new Deflater();
                         deflater.setInput(data);
-                        deflater.setOutput(compr);
 
-                        err = deflater.deflate(JZlib.Z_NO_FLUSH);
-                        CHECK_ERR(deflater, err, "deflate");
-                        if (deflater.avail_in != 0) {
-                            System.out.println("deflate not greedy");
-                            System.exit(1);
-                        }
+                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
 
-                        err = deflater.deflate(JZlib.Z_FINISH);
-                        if (err != JZlib.Z_STREAM_END) {
-                            System.out.println("deflate should report Z_STREAM_END");
-                            System.exit(1);
+                        deflater.finished();
+                        byte[] buffer = new byte[1024];
+                        while (!deflater.finished()) {
+                            int count = deflater.deflate(data); // returns the generated code... index
+                            outputStream.write(buffer, 0, count);
                         }
-                        err = deflater.end();
-                        CHECK_ERR(deflater, err, "deflateEnd");
+                        outputStream.close();
+                        byte[] output = outputStream.toByteArray();
                         try {
                             channel.basicPublish(EXCHANGE_NAME, "kinect", null, compr);
                         } catch (IOException e) {
@@ -105,6 +88,7 @@ public class SendFrame {
             }
             ctx.shutdown();
         } catch (IOException e) {
+            e.printStackTrace();
             System.exit(0);
         }
     }
