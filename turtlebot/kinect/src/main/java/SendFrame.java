@@ -46,7 +46,7 @@ public class SendFrame {
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
                     if (numFrame % 2 == 0) {
                         byte[] data = new byte[614400];
-                        for (int i = 0; i < 614399; i++) data[i] = frame.get(i);
+                        for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
 
                         // compress data
                         int err;
