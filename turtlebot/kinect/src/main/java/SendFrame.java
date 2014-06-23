@@ -20,7 +20,7 @@ public class SendFrame {
         try {
 
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
+            factory.setHost("192.168.1.3");
             Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
 
