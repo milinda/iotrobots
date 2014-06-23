@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 
 public class RecvFrame {
 
-    private static final String EXCHANGE_NAME = "frames";
+    private static final String EXCHANGE_NAME = "kinect_frames";
 
     public static void main(String[] args) throws InterruptedException, IOException {
         final ImageUI ui = new ImageUI();

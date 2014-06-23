@@ -19,13 +19,13 @@ public class SendFrame {
     public static void main(String[] args) throws InterruptedException {
         try {
 
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("192.168.1.3");
-            Connection connection = factory.newConnection();
-            final Channel channel = connection.createChannel();
+           ConnectionFactory factory = new ConnectionFactory();
+           factory.setHost("localhost");
+           Connection connection = factory.newConnection();
+           Channel channel = connection.createChannel();
 
-            channel.exchangeDeclare(EXCHANGE_NAME, "fanout", false); //stops here...
-
+            channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+ 
             // DECLARATIONS
             Context ctx = null;
             Device dev = null;
@@ -38,7 +38,7 @@ public class SendFrame {
                 System.err.println("No kinects detected.  Exiting.");
                 System.exit(0);
             }
-            // DISPLAY DEPTH VIDEO
+            // START DEPTH TRANSMISSION
             dev.startDepth(new DepthHandler() {
                 int numFrame = 0;
 
@@ -46,28 +46,46 @@ public class SendFrame {
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
                     if (numFrame % 2 == 0) {
                         byte[] data = new byte[614400];
-                        for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
+                        for (int i = 0; i < 614399; i++) data[i] = frame.get(i);
 
-                        Deflater deflater = new Deflater();
-                        deflater.setInput(data);
+                        // compress data
+			int err;
+			int comprLen = 120000;
+			int uncomprLen = 614400;
+			byte[] uncompr=new byte[uncomprLen];
+			byte[] compr=new byte[comprLen];
+			
+			Deflater deflater = null;
+			try{
+			    deflater = new Deflater(JZlib.Z_BEST_SPEED);
+			}
+			catch(GZIPException e){
+			}
+			
+			deflater.setInput(data);
+			deflater.setOutput(compr);
+			
+			err=deflater.deflate(JZlib.Z_NO_FLUSH);
+			CHECK_ERR(deflater, err, "deflate");
+			if(deflater.avail_in!=0){
+			    System.out.println("deflate not greedy");
+			    System.exit(1);
+			}
+			
+			err=deflater.deflate(JZlib.Z_FINISH);
+			if(err!=JZlib.Z_STREAM_END){
+			    System.out.println("deflate should report Z_STREAM_END");
+			    System.exit(1);
+			}
+			err=deflater.end();
+			CHECK_ERR(deflater, err, "deflateEnd");
+			try {
+			    channel.basicPublish(EXCHANGE_NAME, "", null, compr);
+			} catch (IOException e) {
+			    System.exit(0);
+			}
 
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-
-                        deflater.finished();
-                        byte[] buffer = new byte[1024];
-                        while (!deflater.finished()) {
-                            int count = deflater.deflate(data); // returns the generated code... index
-                            outputStream.write(buffer, 0, count);
-                        }
-                        outputStream.close();
-                        byte[] output = outputStream.toByteArray();
-                        try {
-                            channel.basicPublish(EXCHANGE_NAME, "kinect", null, compr);
-                        } catch (IOException e) {
-                            System.exit(0);
-                        }
-
-                    }
+		    }
                     numFrame++;
                 }
             });
