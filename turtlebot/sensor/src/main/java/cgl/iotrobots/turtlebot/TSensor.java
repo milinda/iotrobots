@@ -7,6 +7,7 @@ import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.IdentityConverter;
 import cgl.iotcloud.core.transport.MessageConverter;
 import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
+import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class TSensor extends AbstractSensor {
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
 
-        MessageReceiver receiver = new MessageReceiver(receivingQueue, "task_queue", null, null, brokerURL);
+        KinectMessageReceiver receiver = new KinectMessageReceiver(receivingQueue, "kinect_controller", null, null, "amqp://localhost:5672");
         receiver.start();
 
         startSend(sendChannel, receivingQueue);
@@ -77,7 +78,6 @@ public class TSensor extends AbstractSensor {
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
-            SensorContext context = new SensorContext(new SensorId("rabbitChat", "general"));
             String exchange = (String) conf.get(SEND_EXCHANGE);
             String sendQueue = (String) conf.get(SEND_QUEUE);
             String routingKey = (String) conf.get(SEND_ROUTING_KEY);
@@ -87,8 +87,10 @@ public class TSensor extends AbstractSensor {
             String recvRoutingKey = (String) conf.get(RECV_ROUTING_KEY);
 
             String brokerUrl = (String) conf.get(BROKER_URL);
-            context.addProperty(BROKER_URL, brokerUrl);
+            String sensorName = (String) conf.get(SENSOR_NAME);
 
+            SensorContext context = new SensorContext(new SensorId(sensorName, "general"));
+            context.addProperty(BROKER_URL, brokerUrl);
             Map sendProps = new HashMap();
             sendProps.put("exchange", exchange);
             sendProps.put("routingKey", routingKey);
@@ -157,7 +159,7 @@ public class TSensor extends AbstractSensor {
             conf.put(SEND_EXCHANGE, exchange);
             conf.put(RECV_EXCHANGE, exchange);
 
-            conf.put(SENSOR_NAME, "STSensor");
+            conf.put(SENSOR_NAME, "TurtleSensor");
             return conf;
         } catch (ParseException e) {
             HelpFormatter formatter = new HelpFormatter();

@@ -40,6 +40,14 @@ public class TurtleController {
         nodeMainExecutor.execute(turtle, configuration);
 
         messageReceiver.start();
+
+
+        EventHandler eventHandler = new EventHandler(this);
+
+        TurtleBotUIImpl ui = new TurtleBotUIImpl(eventHandler);
+        Thread t = new Thread(new UIUpdater(messages, ui));
+        t.start();
+        ui.setVisible(true);
     }
 
     public void test() throws InterruptedException {
@@ -66,20 +74,13 @@ public class TurtleController {
         TurtleController turtleController = new TurtleController();
         turtleController.start(nodeConfiguration);
 
-        EventHandler eventHandler = new EventHandler(turtleController);
 
-        TurtleBotUIImpl ui = new TurtleBotUIImpl(eventHandler);
-        ui.setVisible(true);
     }
 
     public class UIUpdater implements Runnable {
         private BlockingQueue messages;
 
         private TurtleBotUIImpl ui;
-
-        public UIUpdater(BlockingQueue messages) {
-            this.messages = messages;
-        }
 
         public UIUpdater(BlockingQueue messages, TurtleBotUIImpl ui) {
             this.messages = messages;

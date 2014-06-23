@@ -1,7 +1,4 @@
-package cgl.iotrobots.turtlebot;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package cgl.iotrobots.turtlebot.commons;
 
 import com.rabbitmq.client.*;
 
@@ -10,9 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class MessageReceiver {
-    private static Logger LOG = LoggerFactory.getLogger(MessageReceiver.class);
-
+public class KinectMessageReceiver {
     private Channel channel;
 
     private Connection conn;
@@ -23,7 +18,7 @@ public class MessageReceiver {
 
     private boolean autoAck = false;
 
-    private Address []addresses;
+    private Address[]addresses;
 
     private String url;
 
@@ -33,11 +28,11 @@ public class MessageReceiver {
 
     private String routingKey;
 
-    public MessageReceiver(BlockingQueue inQueue,
-                           String queueName,
-                           ExecutorService executorService,
-                           Address []addresses,
-                           String url) {
+    public KinectMessageReceiver(BlockingQueue inQueue,
+                                 String queueName,
+                                 ExecutorService executorService,
+                                 Address []addresses,
+                                 String url) {
         this.inQueue = inQueue;
         this.executorService = executorService;
         this.queueName = queueName;
@@ -66,7 +61,7 @@ public class MessageReceiver {
             channel = conn.createChannel();
 
             if (exchangeName != null && routingKey != null) {
-                channel.exchangeDeclare(exchangeName, "direct", false);
+                channel.exchangeDeclare(exchangeName, "fanout", false);
                 channel.queueDeclare(this.queueName, true, false, false, null);
                 channel.queueBind(queueName, exchangeName, routingKey);
             }
@@ -87,11 +82,9 @@ public class MessageReceiver {
                     });
         } catch (IOException e) {
             String msg = "Error consuming the message";
-            LOG.error(msg, e);
             throw new RuntimeException(msg, e);
         } catch (Exception e) {
             String msg = "Error connecting to broker";
-            LOG.error(msg, e);
             throw new RuntimeException(msg, e);
         }
     }
@@ -105,7 +98,7 @@ public class MessageReceiver {
                 conn.close();
             }
         } catch (IOException e) {
-            LOG.error("Error closing the rabbit MQ connection", e);
+            System.out.println("Error closing the rabbit MQ connection" + e);
         }
     }
 
@@ -118,8 +111,7 @@ public class MessageReceiver {
     }
 
     public static void main(String[] args) {
-        MessageReceiver receiver = new MessageReceiver(new LinkedBlockingQueue(), "drone_frame", null, null, "amqp://localhost:5672");
+        KinectMessageReceiver receiver = new KinectMessageReceiver(new LinkedBlockingQueue(), "drone_frame", null, null, "amqp://localhost:5672");
         receiver.start();
     }
 }
-

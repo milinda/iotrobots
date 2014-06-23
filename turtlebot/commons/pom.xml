@@ -9,9 +9,9 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>iotrobots-turtlebot</artifactId>
+    <artifactId>commons</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>iotrobots-turtlebot</name>
+    <name>iotrobots-turtlebot-commons</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -22,6 +22,13 @@
             <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+
 
         <dependency>
             <groupId>iotcloud2</groupId>
@@ -94,13 +101,20 @@
         </dependency>
 
         <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jzlib</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+
+        <dependency>
             <groupId>iotcloud2</groupId>
             <artifactId>iotcloud-rabbitmq</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>iotrobots</groupId>
-            <artifactId>commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

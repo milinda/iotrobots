@@ -17,6 +17,8 @@
         <module>processor</module>
         <module>sensor</module>
         <module>controller</module>
+        <module>commons</module>
     </modules>
-</project>
 
+
+</project>
