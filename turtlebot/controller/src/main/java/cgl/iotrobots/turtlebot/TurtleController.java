@@ -29,13 +29,18 @@ public class TurtleController {
 
     public void test() throws InterruptedException {
         for (int i = 0 ;i < 2; i++) {
-            velocities.add(new Motion(new Velocity(-.1, 0, 0, Velocity.Type.LINEAR), new Velocity(0, 0, 0, Velocity.Type.ANGULAR)));
+            velocities.add(new Motion(new Velocity(-.1, 0, 0), new Velocity(0, 0, 0)));
             Thread.sleep(100);
         }
-//        velocities.add(new Motion(new Velocity(0, 0, 0, Velocity.Type.LINEAR), new Velocity(0, 0, 0, Velocity.Type.ANGULAR)));
-//        velocities.add(new Motion(new Velocity(0, 0, 0, Velocity.Type.LINEAR), new Velocity(0, 0, 0, Velocity.Type.ANGULAR)));
-//        velocities.add(new Motion(new Velocity(0, 0, 0, Velocity.Type.LINEAR), new Velocity(0, 0, 0, Velocity.Type.ANGULAR)));
         Thread.sleep(100);
+    }
+
+    public void addVelocity(Motion motion) {
+        try {
+            velocities.put(motion);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -46,6 +51,9 @@ public class TurtleController {
         TurtleController turtleController = new TurtleController();
         turtleController.start(nodeConfiguration);
 
-        turtleController.test();
+        EventHandler eventHandler = new EventHandler(turtleController);
+
+        TurtleBotUIImpl ui = new TurtleBotUIImpl(eventHandler);
+        ui.setVisible(true);
     }
 }
