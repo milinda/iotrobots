@@ -19,10 +19,19 @@ public class SendFrame {
     public static void main(String[] args) throws InterruptedException {
         try {
 
+<<<<<<< HEAD
            ConnectionFactory factory = new ConnectionFactory();
            factory.setHost("localhost");
            Connection connection = factory.newConnection();
            Channel channel = connection.createChannel();
+=======
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("156.56.93.102");
+            Connection connection = factory.newConnection();
+            final Channel channel = connection.createChannel();
+
+            channel.exchangeDeclare(EXCHANGE_NAME, "fanout"); //stops here...
+>>>>>>> f60894788c0e68eb207401eccce6d73abefde770
 
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
  
@@ -41,11 +50,11 @@ public class SendFrame {
             // START DEPTH TRANSMISSION
             dev.startDepth(new DepthHandler() {
                 int numFrame = 0;
-
                 @Override
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
-                    if (numFrame % 2 == 0) {
+                    if(numFrame%2==0) {
                         byte[] data = new byte[614400];
+<<<<<<< HEAD
                         for (int i = 0; i < 614399; i++) data[i] = frame.get(i);
 
                         // compress data
@@ -86,6 +95,48 @@ public class SendFrame {
 			}
 
 		    }
+=======
+                        for(int i=0; i<614399; i++) data[i] = frame.get(i);
+
+                        // compress data
+                        int err;
+                        int comprLen = 120000;
+                        int uncomprLen = 614400;
+                        byte[] uncompr=new byte[uncomprLen];
+                        byte[] compr=new byte[comprLen];
+
+                        Deflater deflater = null;
+                        try{
+                            deflater = new Deflater(JZlib.Z_BEST_SPEED);
+                        }
+                        catch(GZIPException e){
+                        }
+
+                        deflater.setInput(data);
+                        deflater.setOutput(compr);
+
+                        err=deflater.deflate(JZlib.Z_NO_FLUSH);
+                        CHECK_ERR(deflater, err, "deflate");
+                        if(deflater.avail_in!=0){
+                            System.out.println("deflate not greedy");
+                            System.exit(1);
+                        }
+
+                        err=deflater.deflate(JZlib.Z_FINISH);
+                        if(err!=JZlib.Z_STREAM_END){
+                            System.out.println("deflate should report Z_STREAM_END");
+                            System.exit(1);
+                        }
+                        err=deflater.end();
+                        CHECK_ERR(deflater, err, "deflateEnd");
+                        try {
+                            channel.basicPublish(EXCHANGE_NAME, "kinect", null, compr);
+                        } catch (IOException e) {
+                            System.exit(0);
+                        }
+
+                    }
+>>>>>>> f60894788c0e68eb207401eccce6d73abefde770
                     numFrame++;
                 }
             });
@@ -106,7 +157,6 @@ public class SendFrame {
             }
             ctx.shutdown();
         } catch (IOException e) {
-            e.printStackTrace();
             System.exit(0);
         }
     }
