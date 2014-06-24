@@ -68,20 +68,20 @@ public class SendFrame {
                         CHECK_ERR(deflater, err, "deflate");
                         if (deflater.avail_in != 0) {
                             System.out.println("deflate not greedy");
-                            System.exit(1);
+                            //System.exit(1);
                         }
 
                         err = deflater.deflate(JZlib.Z_FINISH);
                         if (err != JZlib.Z_STREAM_END) {
                             System.out.println("deflate should report Z_STREAM_END");
-                            System.exit(1);
+                            //System.exit(1);
                         }
                         err = deflater.end();
                         CHECK_ERR(deflater, err, "deflateEnd");
                         try {
                             channel.basicPublish(EXCHANGE_NAME, "", null, compr);
                         } catch (IOException e) {
-                            System.exit(0);
+                            //System.exit(0);
                         }
 
                     }
