@@ -50,9 +50,9 @@ public class SendFrame {
 
                         // compress data
                         int err;
-                        int comprLen = 120000;
+                        int comprLen = 614400;
                         int uncomprLen = 614400;
-                        byte[] uncompr = new byte[uncomprLen];
+                        // byte[] uncompr = new byte[uncomprLen];
                         byte[] compr = new byte[comprLen];
 
                         Deflater deflater = null;
@@ -68,20 +68,24 @@ public class SendFrame {
                         CHECK_ERR(deflater, err, "deflate");
                         if (deflater.avail_in != 0) {
                             System.out.println("deflate not greedy");
-                            //System.exit(1);
+                            System.exit(1);
                         }
 
                         err = deflater.deflate(JZlib.Z_FINISH);
                         if (err != JZlib.Z_STREAM_END) {
                             System.out.println("deflate should report Z_STREAM_END");
-                            //System.exit(1);
+                            System.exit(1);
                         }
                         err = deflater.end();
+                        byte out[] = new byte[(int) deflater.total_out];
+                        for (int i = 0 ; i < out.length; i++) {
+                            out[i] = compr[i];
+                        }
                         CHECK_ERR(deflater, err, "deflateEnd");
                         try {
-                            channel.basicPublish(EXCHANGE_NAME, "", null, compr);
+                            channel.basicPublish(EXCHANGE_NAME, "", null, out);
                         } catch (IOException e) {
-                            //System.exit(0);
+                            System.exit(0);
                         }
 
                     }
