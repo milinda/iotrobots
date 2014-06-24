@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +51,12 @@ public class TSensor extends AbstractSensor {
 
         // register with ros_java
         CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(""));
-        NodeConfiguration nodeConfiguration = loader.build();
+        NodeConfiguration nodeConfiguration = null;
+        try {
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
+        } catch (URISyntaxException e) {
+            LOG.error("Failed to connect", e);
+        }
         controller = new TurtleController();
         controller.start(nodeConfiguration);
 

@@ -22,7 +22,7 @@ public class TurtleController {
     private BlockingQueue messages = new LinkedBlockingQueue();
 
     public TurtleController() {
-        this.turtle = new RosTurtle(velocities);
+        this.turtle = new RosTurtle(velocities, "sensor_controller");
     }
 
     public void start(NodeConfiguration configuration) {

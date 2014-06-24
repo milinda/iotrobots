@@ -15,6 +15,8 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.awt.image.BufferedImage;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,7 +33,7 @@ public class TurtleController {
     private BlockingQueue messages = new LinkedBlockingQueue();
 
     public TurtleController() {
-        this.turtle = new RosTurtle(velocities);
+        this.turtle = new RosTurtle(velocities, "ui_controller");
         this.messageReceiver = new KinectMessageReceiver(messages, "kinect_controller", null, null, "amqp://localhost:5672");
 
         this.messageReceiver.setExchangeName("kinect_frames");
@@ -73,10 +75,16 @@ public class TurtleController {
     public static void main(String[] args) throws InterruptedException {
         // register with ros_java
         CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(args));
-        NodeConfiguration nodeConfiguration = loader.build();
+        NodeConfiguration nodeConfiguration = null;
+        try {
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
+            TurtleController turtleController = new TurtleController();
+            turtleController.start(nodeConfiguration);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
 
-        TurtleController turtleController = new TurtleController();
-        turtleController.start(nodeConfiguration);
+
 
 
     }

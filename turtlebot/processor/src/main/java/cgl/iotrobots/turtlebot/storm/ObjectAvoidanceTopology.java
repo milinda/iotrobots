@@ -74,7 +74,7 @@ public class ObjectAvoidanceTopology {
             Motion motion = (Motion) tuple.getValue(0);
             byte []body = new byte[0];
             try {
-                System.out.println("Sending message" + motion);
+                // System.out.println("Sending message" + motion);
                 body = CommonsUtils.motionToJSON(motion);
                 return new RabbitMQMessage(null, null, null, null, body);
             } catch (IOException e) {

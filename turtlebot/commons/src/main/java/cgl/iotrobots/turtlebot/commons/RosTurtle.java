@@ -15,12 +15,19 @@ public class RosTurtle extends AbstractNodeMain {
 
     private BlockingQueue<Motion> velocities;
 
-    public RosTurtle(BlockingQueue<Motion> velocity) {
+    private String name = "/cn";
+
+    public RosTurtle(BlockingQueue<Motion> velocities) {
+        this.velocities = velocities;
+    }
+
+    public RosTurtle(BlockingQueue<Motion> velocity, String name) {
         this.velocities = velocity;
+        this.name = name;
     }
 
     public GraphName getDefaultNodeName() {
-        return GraphName.of("/cn");
+        return GraphName.of("/" + name);
     }
 
     @Override

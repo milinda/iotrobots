@@ -15,23 +15,26 @@ import java.util.Map;
 public class ObjectDetectionBolt extends BaseRichBolt {
     private OutputCollector outputCollector;
 
-    private int count = 0;
+    private ObjectDetector objectDetector;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
+        this.objectDetector = new ObjectDetector();
     }
 
     @Override
     public void execute(Tuple tuple) {
         System.out.println("Got message and sending Motion command");
-        if (count % 2 == 1) {
-            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 1))));
-        } else {
-            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, -1))));
-        }
-        count++;
 
+        boolean detect = objectDetector.detect((byte[]) tuple.getValue(0));
+
+        if (detect) {
+            System.out.println("detected object");
+            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0))));
+        } else {
+            System.out.println("nnnnnnnnnnnnnnnnnnnnnnoooooooooooooooooooooooooo");
+        }
     }
 
     @Override
