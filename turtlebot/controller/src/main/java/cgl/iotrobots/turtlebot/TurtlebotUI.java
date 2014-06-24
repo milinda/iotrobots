@@ -1,5 +1,8 @@
 package cgl.iotrobots.turtlebot;
 
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
 public class TurtlebotUI extends javax.swing.JFrame {
 
     /**
@@ -35,6 +38,20 @@ public class TurtlebotUI extends javax.swing.JFrame {
                 jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGap(0, 279, Short.MAX_VALUE)
         );
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                formKeyPressed(e);
+            }
+        });
+
+        jPanel1.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                jPanel1KeyPressed(e);
+            }
+        });
 
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
