@@ -3,36 +3,23 @@ package cgl.iotrobots.turtlebot.storm;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.turtlebot.commons.CommonsUtils;
+import cgl.iotrobots.turtlebot.commons.Motion;
 import com.ss.rabbitmq.*;
-import org.apache.commons.codec.binary.Base64;
+import com.ss.rabbitmq.bolt.RabbitMQBolt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ObjectAvoidanceTopology {
-    public static class PrintingBolt extends BaseRichBolt {
-        @Override
-        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        }
-
-        @Override
-        public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-
-        }
-
-        @Override
-        public void execute(Tuple tuple) {
-
-        }
-    }
+    private static Logger LOG = LoggerFactory.getLogger(ObjectAvoidanceTopology.class);
 
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
@@ -45,7 +32,7 @@ public class ObjectAvoidanceTopology {
 
         builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
         builder.setBolt("image_proc", new ObjectDetectionBolt()).shuffleGrouping("recv_spout");
-        builder.setBolt("send_bolt", new PrintingBolt()).shuffleGrouping("image_proc");
+        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -62,19 +49,35 @@ public class ObjectAvoidanceTopology {
         }
     }
 
-    private static class Base64Builder implements MessageBuilder {
+    private static class TurtleMessageBuilder implements MessageBuilder {
+        /**
+         * We get the kinect message here
+         * @param message kinect
+         * @return bytes
+         */
         @Override
         public List<Object> deSerialize(RabbitMQMessage message) {
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
-
-            byte[] encodedBytes = Base64.encodeBase64(body);
-            tuples.add(new String(encodedBytes));
+            tuples.add(body);
             return tuples;
         }
 
+        /**
+         * We get the control message and create a RabbitMQmessage
+         * @param tuple containing control message
+         * @return control message
+         */
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
+            Motion motion = (Motion) tuple.getValue(0);
+            byte []body = new byte[0];
+            try {
+                body = CommonsUtils.motionToJSON(motion);
+                return new RabbitMQMessage(null, null, null, null, body);
+            } catch (IOException e) {
+                LOG.error("Failed to convert Motion to json", e);
+            }
             return null;
         }
     }
@@ -110,13 +113,13 @@ public class ObjectAvoidanceTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("kinect_frame", "turtle", "kinect_frame"));
+            list.add(new RabbitMQDestination("kinect", "turtle_sensor", "kinect"));
             return list;
         }
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new Base64Builder();
+            return new TurtleMessageBuilder();
         }
 
         @Override
@@ -166,13 +169,13 @@ public class ObjectAvoidanceTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("turtle_control", "turtle", "turtle_control"));
+            list.add(new RabbitMQDestination("control", "turtle_sensor", "turtle"));
             return list;
         }
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new Base64Builder();
+            return new TurtleMessageBuilder();
         }
 
         @Override

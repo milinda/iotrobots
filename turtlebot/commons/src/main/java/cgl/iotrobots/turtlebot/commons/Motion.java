@@ -1,6 +1,8 @@
 package cgl.iotrobots.turtlebot.commons;
 
-public class Motion {
+import java.io.Serializable;
+
+public class Motion implements Serializable {
     private Velocity angular;
     private Velocity linear;
 

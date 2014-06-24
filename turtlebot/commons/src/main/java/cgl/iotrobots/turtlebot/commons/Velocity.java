@@ -1,6 +1,8 @@
 package cgl.iotrobots.turtlebot.commons;
 
-public class Velocity {
+import java.io.Serializable;
+
+public class Velocity implements Serializable {
     private double x;
 
     private double y;
@@ -17,24 +19,12 @@ public class Velocity {
         return x;
     }
 
-    public void setX(double x) {
-        this.x = x;
-    }
-
     public double getY() {
         return y;
     }
 
-    public void setY(double y) {
-        this.y = y;
-    }
-
     public double getZ() {
         return z;
-    }
-
-    public void setZ(double z) {
-        this.z = z;
     }
 
     @Override
