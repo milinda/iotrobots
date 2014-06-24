@@ -114,7 +114,7 @@ public class SendFrame {
             if (z.msg != null) System.out.print(z.msg + " ");
             System.out.println(msg + " error: " + err);
 
-            System.exit(1);
+            //System.exit(1);
         }
     }
 }
