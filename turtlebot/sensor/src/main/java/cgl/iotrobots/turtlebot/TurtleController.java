@@ -19,24 +19,16 @@ public class TurtleController {
 
     private NodeMainExecutor nodeMainExecutor;
 
-    private KinectMessageReceiver messageReceiver;
-
     private BlockingQueue messages = new LinkedBlockingQueue();
 
     public TurtleController() {
         this.turtle = new RosTurtle(velocities);
-        this.messageReceiver = new KinectMessageReceiver(messages, "kinect_controller", null, null, "amqp://localhost:5672");
-
-        this.messageReceiver.setExchangeName("kinect_frames");
-        this.messageReceiver.setRoutingKey("kinect");
     }
 
     public void start(NodeConfiguration configuration) {
         Preconditions.checkState(turtle != null);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(turtle, configuration);
-
-        messageReceiver.start();
     }
 
     public void test() throws InterruptedException {
@@ -52,6 +44,12 @@ public class TurtleController {
             velocities.put(motion);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void shutDown() {
+        if (nodeMainExecutor != null) {
+            nodeMainExecutor.shutdown();
         }
     }
 }

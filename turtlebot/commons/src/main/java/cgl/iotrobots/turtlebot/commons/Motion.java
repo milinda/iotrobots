@@ -16,4 +16,12 @@ public class Motion {
     public Velocity getLinear() {
         return linear;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "angular=" + angular +
+                ", linear=" + linear +
+                '}';
+    }
 }
