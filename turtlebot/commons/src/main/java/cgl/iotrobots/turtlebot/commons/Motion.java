@@ -11,6 +11,17 @@ public class Motion implements Serializable {
         this.linear = linear;
     }
 
+    public Motion() {
+    }
+
+    public void setAngular(Velocity angular) {
+        this.angular = angular;
+    }
+
+    public void setLinear(Velocity linear) {
+        this.linear = linear;
+    }
+
     public Velocity getAngular() {
         return angular;
     }

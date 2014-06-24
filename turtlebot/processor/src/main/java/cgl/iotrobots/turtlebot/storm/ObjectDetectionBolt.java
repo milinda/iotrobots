@@ -22,6 +22,7 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        System.out.println("Got message and sending Motion command");
         outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(1,0,0), new Velocity(0,0,0))));
     }
 

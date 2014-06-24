@@ -10,7 +10,10 @@ import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
 import cgl.iotrobots.turtlebot.commons.CommonsUtils;
 import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
+import com.google.common.collect.Lists;
 import org.apache.commons.cli.*;
+import org.ros.internal.loader.CommandLineLoader;
+import org.ros.node.NodeConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +33,7 @@ public class TSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "", TSensor.class.getCanonicalName(), Arrays.asList("local"));
+        SensorSubmitter.submitSensor(properties, "iotrobots-turtlebot-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local-1"));
     }
 
     @Override
@@ -44,7 +47,11 @@ public class TSensor extends AbstractSensor {
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
 
+        // register with ros_java
+        CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(""));
+        NodeConfiguration nodeConfiguration = loader.build();
         controller = new TurtleController();
+        controller.start(nodeConfiguration);
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
         KinectMessageReceiver receiver = new KinectMessageReceiver(receivingQueue, "kinect_controller", null, null, brokerURL);
@@ -59,7 +66,7 @@ public class TSensor extends AbstractSensor {
             public void onMessage(Object message) {
                 if (message instanceof Motion) {
                     controller.setMotion((Motion) message);
-                    LOG.info("Message received " + message.toString());
+                    System.out.println("Message received " + message.toString());
                 } else {
                     System.out.println("Unexpected message");
                 }
@@ -88,8 +95,8 @@ public class TSensor extends AbstractSensor {
             Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024, new IdentityConverter());
 
             Map receiveProps = new HashMap();
-            receiveProps.put("queueName", "turtle_sensor");
-            receiveProps.put("exchange", "control");
+            receiveProps.put("queueName", "control");
+            receiveProps.put("exchange", "turtle_sensor");
             receiveProps.put("routingKey", "control");
             Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024, new ControlConverter());
 

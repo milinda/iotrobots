@@ -57,6 +57,7 @@ public class ObjectAvoidanceTopology {
          */
         @Override
         public List<Object> deSerialize(RabbitMQMessage message) {
+            System.out.println("Got kinect message");
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
             tuples.add(body);
@@ -73,6 +74,7 @@ public class ObjectAvoidanceTopology {
             Motion motion = (Motion) tuple.getValue(0);
             byte []body = new byte[0];
             try {
+                System.out.println("Sending message" + motion);
                 body = CommonsUtils.motionToJSON(motion);
                 return new RabbitMQMessage(null, null, null, null, body);
             } catch (IOException e) {
@@ -113,7 +115,7 @@ public class ObjectAvoidanceTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("kinect", "turtle_sensor", "kinect"));
+            list.add(new RabbitMQDestination("local-1.kinect", "turtle_sensor", "kinect"));
             return list;
         }
 
@@ -169,7 +171,7 @@ public class ObjectAvoidanceTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("control", "turtle_sensor", "turtle"));
+            list.add(new RabbitMQDestination("local-1.control", "turtle_sensor", "turtle"));
             return list;
         }
 
@@ -193,7 +195,7 @@ public class ObjectAvoidanceTopology {
             return new RabbitMQDestinationSelector() {
                 @Override
                 public String select(Tuple tuple) {
-                    return "control";
+                    return "local-1.control";
                 }
             };
         }

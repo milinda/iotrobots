@@ -75,7 +75,7 @@ public class KinectMessageReceiver {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            System.out.println(body);
+                            System.out.println("recv: exchange: " + exchangeName + " queue: " + queueName);
                             inQueue.offer(body);
                             channel.basicAck(deliveryTag, false);
                         }
