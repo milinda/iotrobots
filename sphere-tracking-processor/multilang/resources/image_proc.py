@@ -41,8 +41,9 @@ class SplitSentenceBolt(storm.BasicBolt):
         self.p.stdin.write(frame)
         list = []
         #while not self.q.empty():
-        if not self.q.empty:
+        if not self.q.empty():
             list.append(self.q.get())
+            self.q.queue.clear()
             storm.emit(list)
         '''else:
             message = {}
@@ -57,10 +58,10 @@ class SplitSentenceBolt(storm.BasicBolt):
 
         #print "frame: ", frame_size_bytes
         while True:
-            self.q.put("before")
+            #self.q.put("before")
             buffer_str = out.read(frame_size_bytes)
             #self.q.put("after")
-            message["control"] = {"hover" : "true1"}
+            #message["control"] = {"hover" : "true1"}
             #storm.emit(["{topic1:section4}"])
             im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
             im = im.reshape((frame_size[0], frame_size[1], 3))
