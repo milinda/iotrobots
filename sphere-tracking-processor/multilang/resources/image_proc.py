@@ -41,17 +41,27 @@ class SplitSentenceBolt(storm.BasicBolt):
         self.p.stdin.write(frame)
         list = []
         #while not self.q.empty():
-        if not self.q.empty():
+        if not self.q.empty:
             list.append(self.q.get())
             storm.emit(list)
+        '''else:
+            message = {}
+            message["control"] = {"hover" : "true3"}
+            io = StringIO()
+            json.dump(message, io)
+            #self.q.put(io.getvalue())
+            storm.emit([io.getvalue()])'''
 
     def enqueue_output(self, out, frame_size):
         frame_size_bytes = frame_size[0] * frame_size[1] * 3
 
         #print "frame: ", frame_size_bytes
         while True:
+            self.q.put("before")
             buffer_str = out.read(frame_size_bytes)
-            #storm.emit(["section4"])
+            #self.q.put("after")
+            message["control"] = {"hover" : "true1"}
+            #storm.emit(["{topic1:section4}"])
             im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
             im = im.reshape((frame_size[0], frame_size[1], 3))
             circles = self.trackingSensorModule.detectCircles(im)
@@ -63,9 +73,9 @@ class SplitSentenceBolt(storm.BasicBolt):
                     position = self.trackingSensorModule.calculatePosition(circles)
                     message["control"] = {"position" : [position[0], position[1]]}
                 else:
-                    message["control"] = {"hover" : "true"}
+                    message["control"] = {"hover" : "true1"}
             else:
-                message["control"] = {"hover" : "true"}
+                message["control"] = {"hover" : "true2"}
 
 
             io = StringIO()
