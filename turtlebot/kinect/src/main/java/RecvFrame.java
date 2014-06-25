@@ -11,7 +11,6 @@ import java.io.*;
 import java.lang.*;
 import java.util.*;
 import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
 
 public class RecvFrame {
 
@@ -45,7 +44,6 @@ public class RecvFrame {
 	}
 	
 	BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB);
-	ByteBuffer frame = ByteBuffer.allocate(614400);	
 	QueueingConsumer.Delivery delivery = null;
 	System.out.println("Waiting for delivery");
 
@@ -69,12 +67,11 @@ public class RecvFrame {
 	    err=inflater.end();
 	    CHECK_ERR(inflater, err, "inflateEnd");
 
-	    for(int i=0; i<614400; i++) frame.put(i, restored[i]);  
-
+	    
 	    int r,b,g,x,y;
 	    for(int i=0; i<614400; i+=2) {		    
-		int lo = frame.get(i) & 0xFF;
-		int hi = frame.get(i+1) & 0xFF;
+		int lo = restored[i] & 0xFF;
+		int hi = restored[i+1] & 0xFF;
 		int disp = hi << 8 | lo;
 		double dist = t_gamma[disp];
 		if (dist >= 40 && dist<150) {

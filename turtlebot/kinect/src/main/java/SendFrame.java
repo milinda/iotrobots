@@ -20,7 +20,7 @@ public class SendFrame {
         try {
 
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("156.56.93.102");
+            factory.setHost("156.56.93.102"); 
             Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
 
@@ -51,8 +51,6 @@ public class SendFrame {
                         // compress data
                         int err;
                         int comprLen = 614400;
-                        int uncomprLen = 614400;
-                        // byte[] uncompr = new byte[uncomprLen];
                         byte[] compr = new byte[comprLen];
 
                         Deflater deflater = null;
