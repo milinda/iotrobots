@@ -83,10 +83,6 @@ public class TurtleController {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-
-
-
-
     }
 
     public class UIUpdater implements Runnable {
@@ -105,10 +101,14 @@ public class TurtleController {
                 try {
                     Object o = messages.take();
                     if (o instanceof byte[]) {
-                        BufferedImage image = getImage((byte[]) o);
+                        byte []uncompressed = unCompress((byte [])o);
+                        BufferedImage image = getImage(uncompressed);
                         ui.setImage(image);
+                        Motion motion = calculatePosition(uncompressed);
+                        if (motion != null) {
+                            velocities.add(motion);
+                        }
                     }
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -116,21 +116,10 @@ public class TurtleController {
         }
     }
 
-    public static BufferedImage getImage(byte []data) {
-        double t_gamma[] = new double[1024];
-        for (int p = 0; p < 1024; p++) {
-            t_gamma[p] = 100 * 0.1236 * Math.tan(p / 2842.5 + 1.1863);
-        }
-
-        BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB);
-        ByteBuffer frame = ByteBuffer.allocate(614400);
-        System.out.println("Waiting for delivery");
-
+    public static byte[] unCompress(byte []data) {
         int err;
         byte[] restored = new byte[614400];
-
         Inflater inflater = new Inflater();
-
         inflater.setInput(data);
 
         while (true) {
@@ -142,6 +131,82 @@ public class TurtleController {
 
         err = inflater.end();
         CHECK_ERR(inflater, err, "inflateEnd");
+        return restored;
+    }
+
+    public Motion calculatePosition(byte[] depth_buf_) {
+        double t_gamma[] = new double[1024];
+        for (int p = 0; p < 1024; p++) {
+            t_gamma[p] = 0.1236 * Math.tan(p / 2842.5 + 1.1863);
+        }
+
+        double max_z_ = .8;
+        double min_y_ = .1;
+        double max_y_ = .5;
+        double max_x_ = .2;
+        double min_x_ = .2;
+        double goal_z_ = .6;
+
+        double z_scale_ = 1.0, x_scale_ = 5.0;
+
+        int height_ = 480;
+        int width_ = 640;
+        double minDistance = -10;
+        double scaleFactor = .0021;
+        double x, y, z;
+        double totX = 0, totY = 0, totZ = 0;
+        int k = 0, n = 0;
+
+        for (int v = 0; v < height_; ++v) {
+            for (int u = 0; u < width_; ++u, k += 2) {
+                int lo = depth_buf_[k] & 0xFF;
+                int hi = depth_buf_[k + 1] & 0xFF;
+                int disp = hi << 8 | lo;
+
+                double d = t_gamma[disp];
+                if (d <= 0.0)
+                    continue;
+                // Fill in XYZ
+                z = d;
+                x = (u - width_ / 2) * (z + minDistance) * scaleFactor;
+                y = (v - height_ / 2) * (z + minDistance) * scaleFactor;
+                System.out.format("x %f, y %f, z %f\n", x, y, z);
+
+                if (-y > min_y_ && -y < max_y_ && x < max_x_ && x > min_x_ && z < max_z_) {
+                    //Add the point to the totals
+                    totX += x;
+                    totY += y;
+                    totZ = Math.min(z, totZ);
+                    n++;
+                }
+            }
+        }
+
+        if (n > 4000) {
+            totX /= n;
+            totY /= n;
+            if (totZ > max_z_) {
+                System.out.println("No valid points detected, stopping the robot");
+                return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
+            }
+
+            System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
+            return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, -totX * x_scale_));
+
+        } else {
+            System.out.println("No valid points detected, stopping the robot");
+            return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
+        }
+    }
+
+    public static BufferedImage getImage(byte []restored) {
+        double t_gamma[] = new double[1024];
+        for (int p = 0; p < 1024; p++) {
+            t_gamma[p] = 100 * 0.1236 * Math.tan(p / 2842.5 + 1.1863);
+        }
+
+        BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB);
+        ByteBuffer frame = ByteBuffer.allocate(614400);
 
         for (int i = 0; i < 614400; i++) frame.put(i, restored[i]);
 
