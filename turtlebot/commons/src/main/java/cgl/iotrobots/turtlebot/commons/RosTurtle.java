@@ -46,10 +46,10 @@ public class RosTurtle extends AbstractNodeMain {
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             @Override
             protected void loop() throws InterruptedException {
-                System.out.println("loop..");
+                //System.out.println("loop..");
                 Motion m = velocities.take();
                 Twist str = publisher.newMessage();
-                System.out.println("Linear...");
+                //System.out.println("Linear...");
                 str.getLinear().setX(m.getLinear().getX());
                 str.getLinear().setY(m.getLinear().getY());
                 str.getLinear().setZ(m.getLinear().getZ());
