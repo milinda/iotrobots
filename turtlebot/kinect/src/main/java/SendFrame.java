@@ -20,7 +20,7 @@ public class SendFrame {
         try {
 
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("156.56.93.102"); 
+            factory.setHost("156.56.93.102");
             Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
 
@@ -92,8 +92,7 @@ public class SendFrame {
             });
 
             Thread.sleep(100000);
-            channel.basicPublish(EXCHANGE_NAME, "", null, null);
-
+        
             dev.stopDepth();
 
             channel.close();
