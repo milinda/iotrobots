@@ -24,12 +24,14 @@ public class RecvFrame {
 	    });
 	t.start();
 	
+	// RABBITMQ DECLARATIONS
 	ConnectionFactory factory = new ConnectionFactory();
 	factory.setHost("localhost");
 	final Connection connection = factory.newConnection();
 	final Channel channel = connection.createChannel();
 	String exchange_name = args[0];
 
+	// BIND EXCHANGE TO QUEUE
 	channel.exchangeDeclare(exchange_name, "fanout");
 	String queueName = channel.queueDeclare().getQueue();
 	channel.queueBind(queueName, exchange_name, "");	
@@ -37,6 +39,7 @@ public class RecvFrame {
 	QueueingConsumer consumer = new QueueingConsumer(channel);
 	channel.basicConsume(queueName, true, consumer);
 	
+	// CLEANLY SHUTDOWN
 	Runtime.getRuntime().addShutdownHook(new Thread() {
 		@Override
 		    public void run() {
@@ -49,6 +52,7 @@ public class RecvFrame {
 		}
 	    });
 
+	// CALCULATE DISTANCES FROM RAW KINECT DATA
 	double t_gamma[] = new double[1024];
 	for(int p=0; p<1024; p++) {
 	    t_gamma[p]=100 * 0.1236 * Math.tan(p / 2842.5 + 1.1863);
@@ -59,6 +63,7 @@ public class RecvFrame {
 	System.out.println("Waiting for delivery");
 
         do {
+	    // POP DATA OF QUEUE
 	    delivery = consumer.nextDelivery(); 
 	    int err;
 	    byte[] data = delivery.getBody();
@@ -68,6 +73,7 @@ public class RecvFrame {
 	    
 	    inflater.setInput(data);
 		
+	    // DECOMPRESS
 	    while(true){
 		inflater.setOutput(restored);
 		err=inflater.inflate(JZlib.Z_NO_FLUSH);
@@ -78,7 +84,7 @@ public class RecvFrame {
 	    err=inflater.end();
 	    CHECK_ERR(inflater, err, "inflateEnd");
 
-	    
+	    // COLOR DISTANCE DATA
 	    int r,b,g,x,y;
 	    for(int i=0; i<614400; i+=2) {
             int lo = restored[i] & 0xFF;
