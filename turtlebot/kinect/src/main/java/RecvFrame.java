@@ -28,8 +28,8 @@ public class RecvFrame {
 	
 	ConnectionFactory factory = new ConnectionFactory();
 	factory.setHost("localhost");
-	Connection connection = factory.newConnection();
-	Channel channel = connection.createChannel();
+	final Connection connection = factory.newConnection();
+	final Channel channel = connection.createChannel();
 	
 	channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
 	String queueName = channel.queueDeclare().getQueue();
@@ -38,6 +38,18 @@ public class RecvFrame {
 	QueueingConsumer consumer = new QueueingConsumer(channel);
 	channel.basicConsume(queueName, true, consumer);
 	
+	Runtime.getRuntime().addShutdownHook(new Thread() {
+		@Override
+		    public void run() {
+		    System.out.println("exitting");
+		    try { 
+			channel.close();
+		    } catch (IOException e) {
+			System.exit(0);
+		    }
+		}
+	    });
+
 	double t_gamma[] = new double[1024];
 	for(int p=0; p<1024; p++) {
 	    t_gamma[p]=100 * 0.1236 * Math.tan(p / 2842.5 + 1.1863);
@@ -69,52 +81,47 @@ public class RecvFrame {
 
 	    
 	    int r,b,g,x,y;
-	    for(int i=0; i<614400; i+=2) {		    
-		int lo = restored[i] & 0xFF;
-		int hi = restored[i+1] & 0xFF;
-		int disp = hi << 8 | lo;
-		double dist = t_gamma[disp];
-		if (dist >= 40 && dist<150) {
-		    b = 255;
-		    r = 0;
-		    g = (int)(255-((dist-40)/109*255));
-		} else if (dist >= 150 && dist <= 250) {
-		    dist = ((dist-150)/100*255);
-		    b = (int)(255-dist);
-		    r = (int)(dist);
-		    g = 0;
-		} else if (dist > 250 && dist <= 500){
-		    dist = (dist-251)/249*255;
-		    b = 0;
-		    r = (int)(255-dist);
-		    g = (int)(dist);
-		} else if (disp==1023){
-		    b = 0;
-		    r = 0;
-		    g = 0;
-		} else {
-		    dist = (dist-501)/t_gamma[1022]*255;
-		    b = 20;
-		    r = 0;
-		    g = (int)(255-dist);
-		}
-		
-		y=(int)Math.floor((double)i/2/640);
-		x=i/2-640*y;
-		int pixel = (0xFF) << 24
-		    | (b & 0xFF) << 16
-		    | (g & 0xFF) << 8
-		    | (r & 0xFF) << 0;
-		im.setRGB(x, y, pixel);
-	    } 
-		ui.setImage(im);
-		ui.repaint();
-	} while (delivery!=null);
+	    for(int i=0; i<614400; i+=2) {
+            int lo = restored[i] & 0xFF;
+            int hi = restored[i+1] & 0xFF;
+            int disp = hi << 8 | lo;
+            double dist = t_gamma[disp];
+            if (dist >= 40 && dist<150) {
+                b = 255;
+                r = 0;
+                g = (int)(255-((dist-40)/109*255));
+            } else if (dist >= 150 && dist <= 250) {
+                dist = ((dist-150)/100*255);
+                b = (int)(255-dist);
+                r = (int)(dist);
+                g = 0;
+            } else if (dist > 250 && dist <= 500){
+                dist = (dist-251)/249*255;
+                b = 0;
+                r = (int)(255-dist);
+                g = (int)(dist);
+            } else if (disp==1023){
+                b = 0;
+                r = 0;
+                g = 0;
+            } else {
+                dist = (dist-501)/t_gamma[1022]*255;
+                b = 20;
+                r = 0;
+                g = (int)(255-dist);
+            }
 
-	System.out.println("exitting");
-
-	channel.close();
-	connection.close();
+            y=(int)Math.floor((double)i/2/640);
+            x=i/2-640*y;
+            int pixel = (0xFF) << 24
+                | (b & 0xFF) << 16
+                | (g & 0xFF) << 8
+                | (r & 0xFF) << 0;
+            im.setRGB(x, y, pixel);
+            }
+            ui.setImage(im);
+            ui.repaint();
+	} while (true);
     }
 
     static void CHECK_ERR(ZStream z, int err, String msg) {

@@ -7,6 +7,7 @@ import org.openkinect.freenect.*;
 import com.jcraft.jzlib.*;
 
 import java.io.*;
+import java.io.IOException;
 import java.lang.*;
 import java.util.*;
 import java.awt.image.BufferedImage;
@@ -16,28 +17,47 @@ public class SendFrame {
 
     private static final String EXCHANGE_NAME = "kinect_frames";
 
-    public static void main(String[] args) throws InterruptedException {
-        try {
+    // DECLARATIONS
+    public static Context ctx = null;
+    public static Device dev = null;
 
+    public static void main(String[] args) throws InterruptedException {
+
+        //String ipAddr = null;
+        //System.out.println("Please input an ip address...");
+
+        /*BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        try {
+            ipAddr = br.readLine();
+        } catch (IOException ioe) {
+            System.out.println("IO error trying to read");
+            System.exit(1);
+        }
+*/
+        try {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost"); //156.56.93.102
-            Connection connection = factory.newConnection();
+            System.out.println(args[0]);
+            factory.setHost("localhost");
+            final Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
 
             channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
 
-            // DECLARATIONS
-            Context ctx = null;
-            Device dev = null;
+
 
             // INITIALIZE DEVICE
             ctx = Freenect.createContext();
             if (ctx.numDevices() > 0) {
                 dev = ctx.openDevice(0);
+                System.out.println("hi");
+
             } else {
                 System.err.println("No kinects detected.  Exiting.");
                 System.exit(0);
             }
+
+
             // DISPLAY DEPTH VIDEO
             dev.startDepth(new DepthHandler() {
                 int numFrame = 0;
@@ -46,13 +66,14 @@ public class SendFrame {
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
                     if (numFrame % 2 == 0) {
                         byte[] data = new byte[614400];
-                        for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
+                        for (int i = 0; i < 614400; i++) {
+                            System.out.println(frame.get(i));
+                            data[i] = frame.get(i);
+                        }
 
                         // compress data
                         int err;
                         int comprLen = 614400;
-                        int uncomprLen = 614400;
-                        // byte[] uncompr = new byte[uncomprLen];
                         byte[] compr = new byte[comprLen];
 
                         Deflater deflater = null;
@@ -78,7 +99,7 @@ public class SendFrame {
                         }
                         err = deflater.end();
                         byte out[] = new byte[(int) deflater.total_out];
-                        for (int i = 0 ; i < out.length; i++) {
+                        for (int i = 0; i < out.length; i++) {
                             out[i] = compr[i];
                         }
                         CHECK_ERR(deflater, err, "deflateEnd");
@@ -91,15 +112,16 @@ public class SendFrame {
                     }
                     numFrame++;
                 }
+
             });
 
-            Thread.sleep(100000);
-            channel.basicPublish(EXCHANGE_NAME, "", null, null);
-
             dev.stopDepth();
-
-            channel.close();
-            connection.close();
+            try {
+                channel.close();
+                connection.close();
+            } catch (IOException e) {
+                System.exit(0);
+            }
 
             // SHUT DOWN
             if (ctx != null) {
@@ -111,15 +133,19 @@ public class SendFrame {
         } catch (IOException e) {
             System.exit(0);
         }
+
+
     }
+
 
     static void CHECK_ERR(ZStream z, int err, String msg) {
         if (err != JZlib.Z_OK) {
             if (z.msg != null) System.out.print(z.msg + " ");
             System.out.println(msg + " error: " + err);
-
-            //System.exit(1);
+            System.exit(1);
         }
     }
+
+
 }
 
