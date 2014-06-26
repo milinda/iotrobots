@@ -180,7 +180,7 @@ public class TurtleController {
                 z = d;
                 //System.out.format("x %f, y %f, z %f\n", x, y, z);
 
-                if (y > min_y_ && y < max_y_ && x < max_x_ && x > min_x_ && z < max_z_) {
+                if (-y > min_y_ && -y < max_y_ && x < max_x_ && x > min_x_ && z < max_z_) {
                     //Add the point to the totals
                     totX += x;
                     totY += y;
