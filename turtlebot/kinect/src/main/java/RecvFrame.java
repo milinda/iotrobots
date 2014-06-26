@@ -14,8 +14,6 @@ import java.awt.image.BufferedImage;
 
 public class RecvFrame {
 
-    private static final String EXCHANGE_NAME = "kinect_frames";
-
     public static void main(String[] args) throws InterruptedException, IOException {
 	final ImageUI ui = new ImageUI();
 	Thread t = new Thread(new Runnable() {
@@ -30,10 +28,11 @@ public class RecvFrame {
 	factory.setHost("localhost");
 	final Connection connection = factory.newConnection();
 	final Channel channel = connection.createChannel();
-	
-	channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+	String exchange_name = args[0];
+
+	channel.exchangeDeclare(exchange_name, "fanout");
 	String queueName = channel.queueDeclare().getQueue();
-	channel.queueBind(queueName, EXCHANGE_NAME, "");	
+	channel.queueBind(queueName, exchange_name, "");	
 
 	QueueingConsumer consumer = new QueueingConsumer(channel);
 	channel.basicConsume(queueName, true, consumer);
