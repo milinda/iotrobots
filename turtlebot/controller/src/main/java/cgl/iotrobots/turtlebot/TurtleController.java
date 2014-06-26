@@ -184,7 +184,7 @@ public class TurtleController {
                     //Add the point to the totals
                     totX += x;
                     totY += y;
-                    totZ = Math.min(z, totZ);
+                    totZ += z;
                     n++;
                 }
                 k += 2;
@@ -194,6 +194,7 @@ public class TurtleController {
         if (n > 4000) {
             totX /= n;
             totY /= n;
+            totZ /= n;
             if (totZ > max_z_) {
                 //System.out.println("No valid points detected, stopping the robot");
                 return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
