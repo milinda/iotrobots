@@ -44,6 +44,7 @@ public class SendFrame {
                 System.err.println("No kinects detected.  Exiting.");
                 System.exit(0);
             }
+<<<<<<< HEAD
 	    
 	    // DISPLAY DEPTH VIDEO
 	    dev.startDepth(new DepthHandler() {
@@ -103,6 +104,78 @@ public class SendFrame {
 	} catch (IOException e) {
 	    System.exit(0);
 	}
+=======
+            // DISPLAY DEPTH VIDEO
+            dev.startDepth(new DepthHandler() {
+                int numFrame = 0;
+
+                @Override
+                public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
+//                    if (numFrame % 2 == 0) {
+                        byte[] data = new byte[614400];
+                        for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
+
+                        // compress data
+                        int err;
+                        int comprLen = 614400;
+                        byte[] compr = new byte[comprLen];
+
+                        Deflater deflater = null;
+                        try {
+                            deflater = new Deflater(JZlib.Z_BEST_SPEED);
+                        } catch (GZIPException e) {
+                        }
+
+                        deflater.setInput(data);
+                        deflater.setOutput(compr);
+
+                        err = deflater.deflate(JZlib.Z_NO_FLUSH);
+                        CHECK_ERR(deflater, err, "deflate");
+                        if (deflater.avail_in != 0) {
+                            System.out.println("deflate not greedy");
+                            System.exit(1);
+                        }
+
+                        err = deflater.deflate(JZlib.Z_FINISH);
+                        if (err != JZlib.Z_STREAM_END) {
+                            System.out.println("deflate should report Z_STREAM_END");
+                            System.exit(1);
+                        }
+                        err = deflater.end();
+                        byte out[] = new byte[(int) deflater.total_out];
+                        for (int i = 0 ; i < out.length; i++) {
+                            out[i] = compr[i];
+                        }
+                        CHECK_ERR(deflater, err, "deflateEnd");
+                        try {
+                            channel.basicPublish(EXCHANGE_NAME, "", null, out);
+                        } catch (IOException e) {
+                            System.exit(0);
+                        }
+
+//                    }
+//                    numFrame++;
+                }
+            });
+
+            Thread.sleep(1000000);
+        
+            dev.stopDepth();
+
+            channel.close();
+            connection.close();
+
+            // SHUT DOWN
+            if (ctx != null) {
+                if (dev != null) {
+                    dev.close();
+                }
+            }
+            ctx.shutdown();
+        } catch (IOException e) {
+            System.exit(0);
+        }
+>>>>>>> 580622980cf0a2209cf05ec862dfaf5b700b24ff
     }
     
     static void CHECK_ERR(ZStream z, int err, String msg) {

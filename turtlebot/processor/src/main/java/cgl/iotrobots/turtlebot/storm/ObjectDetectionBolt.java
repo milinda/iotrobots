@@ -17,24 +17,36 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     private ObjectDetector objectDetector;
 
+    private PositionCalculator positionCalculator;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
         this.objectDetector = new ObjectDetector();
+        this.positionCalculator = new PositionCalculator();
     }
 
     @Override
     public void execute(Tuple tuple) {
         System.out.println("Got message and sending Motion command");
 
-        boolean detect = objectDetector.detect((byte[]) tuple.getValue(0));
-
-        if (detect) {
-            System.out.println("detected object");
-            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0))));
+        Motion motion = positionCalculator.calculatePosition((byte[]) tuple.getValue(0));
+        if (motion != null) {
+            outputCollector.emit(Arrays.<Object>asList(motion));
         } else {
-            System.out.println("nnnnnnnnnnnnnnnnnnnnnnoooooooooooooooooooooooooo");
+            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0))));
         }
+
+
+
+        // boolean detect = objectDetector.detect((byte[]) tuple.getValue(0));
+
+//        if (detect) {
+//            System.out.println("detected object");
+//            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0))));
+//        } else {
+//            System.out.println("nnnnnnnnnnnnnnnnnnnnnnoooooooooooooooooooooooooo");
+//        }
     }
 
     @Override

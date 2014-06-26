@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/commons/commons.iml" filepath="$PROJECT_DIR$/turtlebot/commons/commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/controller/controller.iml" filepath="$PROJECT_DIR$/turtlebot/controller/controller.iml" />
+      <module fileurl="file://$PROJECT_DIR$/iotrobots.iml" filepath="$PROJECT_DIR$/iotrobots.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/sensor/iotrobots-turtlebot.iml" filepath="$PROJECT_DIR$/turtlebot/sensor/iotrobots-turtlebot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/iotrobots-turtlebot-parent.iml" filepath="$PROJECT_DIR$/turtlebot/iotrobots-turtlebot-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/processor/processor.iml" filepath="$PROJECT_DIR$/turtlebot/processor/processor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sphere-tracking/sphere-tracking.iml" filepath="$PROJECT_DIR$/sphere-tracking/sphere-tracking.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sphere-tracking-processor/sphere-tracking-processor.iml" filepath="$PROJECT_DIR$/sphere-tracking-processor/sphere-tracking-processor.iml" />
+    </modules>
+  </component>
+</project>
+
