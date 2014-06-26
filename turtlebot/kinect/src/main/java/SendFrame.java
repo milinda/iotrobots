@@ -44,7 +44,7 @@ public class SendFrame {
 
                 @Override
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
-                    if (numFrame % 2 == 0) {
+//                    if (numFrame % 2 == 0) {
                         byte[] data = new byte[614400];
                         for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
 
@@ -86,12 +86,12 @@ public class SendFrame {
                             System.exit(0);
                         }
 
-                    }
-                    numFrame++;
+//                    }
+//                    numFrame++;
                 }
             });
 
-            Thread.sleep(100000);
+            Thread.sleep(1000000);
         
             dev.stopDepth();
 
