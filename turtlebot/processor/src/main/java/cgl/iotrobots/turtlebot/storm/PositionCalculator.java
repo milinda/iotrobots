@@ -2,13 +2,18 @@ package cgl.iotrobots.turtlebot.storm;
 
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
+import com.jcraft.jzlib.Inflater;
+import com.jcraft.jzlib.JZlib;
+import com.jcraft.jzlib.ZStream;
 
 public class PositionCalculator {
-    public Motion calculatePosition(byte[] depth_buf_) {
+    public Motion calculatePosition(byte[] data) {
         double t_gamma[] = new double[2048];
         for (int p = 0; p < 2048; p++) {
             t_gamma[p] = 0.1236 * Math.tan(p / 2842.5 + 1.1863);
         }
+
+        byte[] depth_buf_ = unCompress(data);
 
         double max_z_ = 1.2;
         double min_y_ = .1;
@@ -73,11 +78,42 @@ public class PositionCalculator {
 
             // System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
             System.out.println();
-            return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            if (totX * x_scale_ >= .1) {
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            } else {
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, 0));
+            }
 
         } else {
             // System.out.println("No valid points detected, stopping the robot");
             return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
+        }
+    }
+
+    public static byte[] unCompress(byte []data) {
+        int err;
+        byte[] restored = new byte[614400];
+        Inflater inflater = new Inflater();
+        inflater.setInput(data);
+
+        while (true) {
+            inflater.setOutput(restored);
+            err = inflater.inflate(JZlib.Z_NO_FLUSH);
+            if (err == JZlib.Z_STREAM_END) break;
+            CHECK_ERR(inflater, err, "inflate large");
+        }
+
+        err = inflater.end();
+        CHECK_ERR(inflater, err, "inflateEnd");
+        return restored;
+    }
+
+    static void CHECK_ERR(ZStream z, int err, String msg) {
+        if (err != JZlib.Z_OK) {
+            if (z.msg != null) System.out.print(z.msg + " ");
+            System.out.println(msg + " error: " + err);
+
+            System.exit(1);
         }
     }
 }
