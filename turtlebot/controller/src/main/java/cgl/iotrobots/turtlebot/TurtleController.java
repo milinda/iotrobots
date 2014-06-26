@@ -147,7 +147,7 @@ public class TurtleController {
         double min_x_ = -.2;
         double goal_z_ = .8;
 
-        double z_scale_ = 2, x_scale_ = 20;
+        double z_scale_ = 1, x_scale_ = 20;
 
         int height_ = 480;
         int width_ = 640;
@@ -196,14 +196,14 @@ public class TurtleController {
             totY /= n;
             totZ /= n;
             System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
-            if (totZ >= max_z_) {
+            if (Math.abs(totZ  -max_z_) < 0.01) {
                 //System.out.println("No valid points detected, stopping the robot");
                 return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
             }
 
             // System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
             System.out.println();
-            return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, -totX * x_scale_));
+            return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
 
         } else {
             // System.out.println("No valid points detected, stopping the robot");
