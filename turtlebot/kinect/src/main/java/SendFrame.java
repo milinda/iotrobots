@@ -57,7 +57,7 @@ public class SendFrame {
 		    
 			    // COMPRESS DATA
 			    int err;
-			    int comprLen = 614400;
+			    int comprLen = 125000;
 			    byte[] compr = new byte[comprLen];
 			    
 			    Deflater deflater = null;
