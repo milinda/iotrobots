@@ -22,10 +22,10 @@ read exchange_name
 
 # run SendFrame.java in a new terminal 
 #(x-terminal... command doesn't work on all machines)
-x-terminal-emulator -e java -cp .:../lib/commons-io-1.2.jar:../lib/commons-cli-1.1.jar:../lib/rabbitmq-client.jar:../lib/jna-4.1.0.jar:../lib/freenect-jna.jar:../lib/jzlib.jar SendFrame $ipAddr $exchange_name
+x-terminal-emulator -e java -cp .:../lib/commons-io-1.2.jar:../lib/commons-cli-1.1.jar:../lib/rabbitmq-client.jar:../lib/jna-4.1.0.jar:../lib/freenect-jna.jar:../lib/jzlib.jar SendFrame_new $ipAddr $exchange_name
 
 #if [ "$answer" == "y" ]; then
-	java -cp .:../lib/commons-io-1.2.jar:../lib/commons-cli-1.1.jar:../lib/rabbitmq-client.jar:../lib/jna-4.1.0.jar:../lib/freenect-jna.jar:../lib/jzlib.jar RecvFrame $exchange_name
+	java -cp .:../lib/commons-io-1.2.jar:../lib/commons-cli-1.1.jar:../lib/rabbitmq-client.jar:../lib/jna-4.1.0.jar:../lib/freenect-jna.jar:../lib/jzlib.jar RecvFrame_new $exchange_name
 #fi
 
 
