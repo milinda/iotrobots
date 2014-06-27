@@ -7,14 +7,16 @@ import com.jcraft.jzlib.JZlib;
 import com.jcraft.jzlib.ZStream;
 
 public class PositionCalculator {
-    public Motion calculatePosition(byte[] data) {
-        double t_gamma[] = new double[2048];
+    private double t_gamma[];
+    public PositionCalculator() {
+        t_gamma = new double[2048];
         for (int p = 0; p < 2048; p++) {
             t_gamma[p] = 0.1236 * Math.tan(p / 2842.5 + 1.1863);
         }
+    }
 
+    public Motion calculatePosition(byte[] data) {
         byte[] depth_buf_ = unCompress(data);
-
         double max_z_ = 1.2;
         double min_y_ = .1;
         double max_y_ = .5;
