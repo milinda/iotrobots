@@ -18,23 +18,23 @@ public class SendFrame_new {
     // DECLARATIONS
     private static Context ctx = null;
     private static Device dev = null;
-
+    
     public static void main(String[] args) throws InterruptedException {
-
+	
 	try {
-
+	    
 	    // ESTABLISH RABBITMQ CONNECTION
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost(args[0]);
             final Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
 	    final String exchange_name = args[1];	    
-
+	    
 	    // CREATE EXCHANGE
             channel.exchangeDeclare(exchange_name, "fanout");
 	    
 	    addShutDownHook(channel, connection);
-
+	    
             // INITIALIZE DEVICE
             ctx = Freenect.createContext();
             if (ctx.numDevices() > 0) {
@@ -44,13 +44,15 @@ public class SendFrame_new {
                 System.exit(0);
             }
 	    
+	    final int t_gamma[] = new int[1024];
+	    for(int i=0; i<1024; i++) {
+		t_gamma[i]=(int)(1000 * 0.1236 * Math.tan(i / 2842.5 + 1.1863));
+	    }
+
 	    // DISPLAY DEPTH VIDEO
 	    dev.startDepth(new DepthHandler() {
 		    int numFrame = 0;
-		    int t_gamma[] = new int[1024];
-		    for(int i=0; i<1024; i++) {
-			t_gamma[i]=(int)(1000 * 0.1236 * Math.tan(i / 2842.5 + 1.1863));
-		    }
+		    
 		    @Override
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
 			// EVERY OTHER FRAME IS DISPLAYED
@@ -62,7 +64,7 @@ public class SendFrame_new {
 				int lo = frame.get(i) & 0xFF;
 				int hi = frame.get(i+1) & 0xFF;
 				int disp = hi << 8 | lo;
-				if (disp<1012) {
+				if (disp>60 && disp<1012) {
 				    data[p] = (byte)(90300/t_gamma[disp] - 21.575);
 				} else {
 				    data[p] = 0;
@@ -72,7 +74,7 @@ public class SendFrame_new {
 		    
 			    // COMPRESS DATA
 			    int err;
-			    int comprLen = 12000;
+			    int comprLen = 50000;
 			    byte[] compr = new byte[comprLen];
 			    
 			    Deflater deflater = null;

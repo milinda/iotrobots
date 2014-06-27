@@ -89,20 +89,20 @@ public class RecvFrame_new {
 		    g = 0;
 		} else {
 		    int dist = (int)(90300 / (restored[i] + 21.575));
-		    if (dist >= 400 && dist<1500) {
+		    if (dist >= 326 && dist < 1443) {
 			b = 255;
 			r = 0;
-			g = 255;//(int)(255-((dist-400)/1099*255));
+			g = 255; 
 		    } else if (dist >= 1500 && dist <= 2500) {
 			dist = ((dist-1500)/1000*255);
-			b = 255;//(int)(255-dist);
-			r = 255;//(int)(dist);
-			g = 0;
+			b = 255;
+			r = 0;
+			g = 150;
 		    } else if (dist > 2500 && dist <= 5000){
 			dist = (dist-2501)/2499*255;
-			b = 0;
-			r = 255;//(int)(255-dist);
-			g = 255;//(int)(dist);
+			b = 255;
+			r = 0;
+			g = 50;
 		    }
 		}
 		

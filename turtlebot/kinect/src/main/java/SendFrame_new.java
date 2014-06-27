@@ -57,14 +57,13 @@ public class SendFrame_new {
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
 			// EVERY OTHER FRAME IS DISPLAYED
 			if (numFrame % 2 == 0) {  
-                            long startTime = System.currentTimeMillis();  
 			    byte[] data = new byte[307200];
 			    int p=0;
 			    for (int i = 0; i < 614400; i+=2) {
 				int lo = frame.get(i) & 0xFF;
 				int hi = frame.get(i+1) & 0xFF;
 				int disp = hi << 8 | lo;
-				if (disp<1012) {
+				if (disp>60 && disp<1012) {
 				    data[p] = (byte)(90300/t_gamma[disp] - 21.575);
 				} else {
 				    data[p] = 0;
@@ -74,7 +73,7 @@ public class SendFrame_new {
 		    
 			    // COMPRESS DATA
 			    int err;
-			    int comprLen = 307200;
+			    int comprLen = 50000;
 			    byte[] compr = new byte[comprLen];
 			    
 			    Deflater deflater = null;
@@ -105,8 +104,6 @@ public class SendFrame_new {
 				out[i] = compr[i];
 			    }
 			    CHECK_ERR(deflater, err, "deflateEnd");
-			    long endTime = System.currentTimeMillis();
-			    System.out.println(endTime-startTime);
 			    // PUBLISH COMPRESSED DATA
 			    try {
 				channel.basicPublish(exchange_name, "", null, out);

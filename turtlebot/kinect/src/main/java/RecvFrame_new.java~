@@ -19,7 +19,7 @@ public class RecvFrame_new {
 	Thread t = new Thread(new Runnable() {
 		@Override
 		    public void run() {
-		    ui.show();
+		    //ui.show();
 		}
 	    });
 	t.start();
@@ -69,7 +69,7 @@ public class RecvFrame_new {
 		
 	    // DECOMPRESS
 	    while(true){
-		inflater.setOutput(restored);
+		inflater.setOutput(inverted);
 		err=inflater.inflate(JZlib.Z_NO_FLUSH);
 		if(err==JZlib.Z_STREAM_END) break;
 		CHECK_ERR(inflater, err, "inflate large");
@@ -80,34 +80,35 @@ public class RecvFrame_new {
 
 	    // COLOR DISTANCE DATA
 	    int[] restored = new int[307200];
-	    int r,b,g,x,y;
+	    int r=0,b=0,g=0,x,y;
 	    for(int i=0; i<307200; i++) {
 		restored[i] = 0 | (inverted[i] & 0xFF);
-		if(restored == 0) {
+		if(restored[i] == 0) {
 		    b = 0;
 		    r = 0;
 		    g = 0;
 		} else {
 		    int dist = (int)(90300 / (restored[i] + 21.575));
-		    if (dist >= 400 && dist<1500) {
+		    if (dist >= 326 && dist < 1443) {
 			b = 255;
 			r = 0;
-			g = (int)(255-((dist-400)/1099*255));
+			g = 255; 
+System.out.println(dist-326);//(int)(255-((dist-400)/1099*255));
 		    } else if (dist >= 1500 && dist <= 2500) {
 			dist = ((dist-1500)/1000*255);
-			b = (int)(255-dist);
-			r = (int)(dist);
-			g = 0;
+			b = 255;//(int)(255-dist);
+			r = 0;//(int)(dist);
+			g = 150;
 		    } else if (dist > 2500 && dist <= 5000){
 			dist = (dist-2501)/2499*255;
-			b = 0;
-			r = (int)(255-dist);
-			g = (int)(dist);
+			b = 255;
+			r = 0;//(int)(255-dist);
+			g = 50;//(int)(dist);
 		    }
 		}
 		
-		y=(int)Math.floor((double)i/2/640);
-		x=i/2-640*y;
+		y=(int)Math.floor((double)i/640);
+		x=i-640*y;
 		int pixel = (0xFF) << 24
 		    | (b & 0xFF) << 16
 		    | (g & 0xFF) << 8
