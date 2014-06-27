@@ -4,8 +4,6 @@ import com.jcraft.jzlib.Inflater;
 import com.jcraft.jzlib.JZlib;
 import com.jcraft.jzlib.ZStream;
 
-import java.nio.ByteBuffer;
-
 public class ObjectDetector {
     double t_gamma[] = new double[1024];
 
@@ -21,7 +19,6 @@ public class ObjectDetector {
         Inflater inflater = new Inflater();
 
         inflater.setInput(data);
-        ByteBuffer frame = ByteBuffer.allocate(614400);
         int err;
 
         while (true) {
@@ -34,11 +31,9 @@ public class ObjectDetector {
         err = inflater.end();
         CHECK_ERR(inflater, err, "inflateEnd");
 
-        for (int i = 0; i < 614400; i++) frame.put(i, restored[i]);
-
         for (int i = 0; i < 614400; i += 2) {
-            int lo = frame.get(i) & 0xFF;
-            int hi = frame.get(i + 1) & 0xFF;
+            int lo = restored[i] & 0xFF;
+            int hi = restored[i + 1] & 0xFF;
             int disp = hi << 8 | lo;
             double dist = t_gamma[disp];
             if (dist >= 40 && dist < 75) {
