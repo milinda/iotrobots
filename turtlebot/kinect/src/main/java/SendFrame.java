@@ -64,6 +64,7 @@ public class SendFrame {
 			    try {
 				deflater = new Deflater(JZlib.Z_BEST_SPEED);
 			    } catch (GZIPException e) {
+			    	System.exit(0);
 			    }
 
 			    deflater.setInput(data);
