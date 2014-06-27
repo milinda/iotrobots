@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="commons-io-1.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/turtlebot/kinect/lib/commons-io-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/turtlebot/kinect/lib/freenect-jna.jar!/" />
+      <root url="jar://$PROJECT_DIR$/turtlebot/kinect/lib/jna-4.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/turtlebot/kinect/lib/jna-platform-4.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/turtlebot/kinect/lib/junit.jar!/" />
+      <root url="jar://$PROJECT_DIR$/turtlebot/kinect/lib/jzlib.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
