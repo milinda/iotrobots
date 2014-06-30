@@ -2,7 +2,6 @@ package cgl.iotrobots.turtlebot;
 
 import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
-import cgl.iotrobots.turtlebot.commons.RosTurtle;
 import cgl.iotrobots.turtlebot.commons.Velocity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -75,7 +74,7 @@ public class TurtleController {
     public static void main(String[] args) throws InterruptedException {
         // register with ros_java
         CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(args));
-        NodeConfiguration nodeConfiguration = null;
+        NodeConfiguration nodeConfiguration;
         try {
             nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
             TurtleController turtleController = new TurtleController();
