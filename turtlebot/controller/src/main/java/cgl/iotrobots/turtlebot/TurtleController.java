@@ -191,7 +191,7 @@ public class TurtleController {
             }
         }
 
-        if (n > 1000) {
+        if (n > 4000) {
             totX /= n;
             totY /= n;
             totZ /= n;
@@ -202,8 +202,11 @@ public class TurtleController {
             }
 
             // System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
-            System.out.println();
-            return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            if (totX * x_scale_ >= .1) {
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            } else {
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, 0));
+            }
 
         } else {
             // System.out.println("No valid points detected, stopping the robot");
