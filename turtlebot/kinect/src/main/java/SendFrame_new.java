@@ -45,8 +45,10 @@ public class SendFrame_new {
             }
 	    
 	    final int t_gamma[] = new int[1024];
+	    final byte inverted[] = new byte[1024];
 	    for(int i=0; i<1024; i++) {
 		t_gamma[i]=(int)(1000 * 0.1236 * Math.tan(i / 2842.5 + 1.1863));
+		inverted[i]=(byte)(90300/t_gamma[i] - 21.575);
 	    }
 
 	    // DISPLAY DEPTH VIDEO
@@ -56,7 +58,7 @@ public class SendFrame_new {
 		    @Override
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
 			// EVERY OTHER FRAME IS DISPLAYED
-			if (numFrame % 2 == 0) {  
+			if (numFrame % 1 == 0) {  
 			    byte[] data = new byte[307200];
 			    int p=0;
 			    for (int i = 0; i < 614400; i+=2) {
@@ -64,7 +66,7 @@ public class SendFrame_new {
 				int hi = frame.get(i+1) & 0xFF;
 				int disp = hi << 8 | lo;
 				if (disp>60 && disp<1012) {
-				    data[p] = (byte)(90300/t_gamma[disp] - 21.575);
+				    data[p] = inverted[disp];
 				} else {
 				    data[p] = 0;
 				}
@@ -73,7 +75,7 @@ public class SendFrame_new {
 		    
 			    // COMPRESS DATA
 			    int err;
-			    int comprLen = 50000;
+			    int comprLen = 60000;
 			    byte[] compr = new byte[comprLen];
 			    
 			    Deflater deflater = null;
@@ -99,14 +101,14 @@ public class SendFrame_new {
 			    }
 			    err = deflater.end();
 
-			    byte out[] = new byte[(int) deflater.total_out];
+			    /*byte out[] = new byte[(int) deflater.total_out];
 			    for (int i = 0; i < out.length; i++) {
 				out[i] = compr[i];
-			    }
+				}*/
 			    CHECK_ERR(deflater, err, "deflateEnd");
 			    // PUBLISH COMPRESSED DATA
 			    try {
-				channel.basicPublish(exchange_name, "", null, out);
+				channel.basicPublish(exchange_name, "", null, compr);
 			    } catch (IOException e) {
 				System.exit(0);
 			    }
