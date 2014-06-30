@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjectAvoidanceTopology {
-    private static Logger LOG = LoggerFactory.getLogger(ObjectAvoidanceTopology.class);
+public class FollowerTopology {
+    private static Logger LOG = LoggerFactory.getLogger(FollowerTopology.class);
 
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
@@ -85,7 +85,7 @@ public class ObjectAvoidanceTopology {
     }
 
     private static class SpoutConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://localhost:5672";
+        private String url = "amqp://10.39.1.22:5672";
 
         @Override
         public String getURL() {
@@ -141,7 +141,7 @@ public class ObjectAvoidanceTopology {
     }
 
     private static class BoltConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://localhost:5672";
+        private String url = "amqp://10.39.1.22:5672";
 
         @Override
         public String getURL() {
