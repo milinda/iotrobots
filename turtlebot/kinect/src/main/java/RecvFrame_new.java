@@ -19,7 +19,7 @@ public class RecvFrame_new {
 	Thread t = new Thread(new Runnable() {
 		@Override
 		    public void run() {
-		    ui.show();
+		    //ui.show();
 		}
 	    });
 	t.start();
@@ -57,6 +57,7 @@ public class RecvFrame_new {
 	System.out.println("Waiting for delivery");
 
         do {
+
 	    // POP DATA OF QUEUE
 	    delivery = consumer.nextDelivery(); 
 	    int err;
