@@ -57,6 +57,7 @@ public class RecvFrame_new {
 	System.out.println("Waiting for delivery");
 
         do {
+
 	    // POP DATA OF QUEUE
 	    delivery = consumer.nextDelivery(); 
 	    int err;
@@ -92,14 +93,12 @@ public class RecvFrame_new {
 		    if (dist >= 326 && dist < 1443) {
 			b = 255;
 			r = 0;
-			g = 255; 
-		    } else if (dist >= 1500 && dist <= 2500) {
-			dist = ((dist-1500)/1000*255);
+			g = 255;
+		    } else if (dist >= 1443 && dist <= 2500) {
 			b = 255;
 			r = 0;
 			g = 150;
-		    } else if (dist > 2500 && dist <= 5000){
-			dist = (dist-2501)/2499*255;
+		    } else if (dist > 2500 && dist <= 4185){
 			b = 255;
 			r = 0;
 			g = 50;
