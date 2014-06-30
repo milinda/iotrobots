@@ -57,75 +57,68 @@ public class SendFrame_new {
 		    
 		    @Override
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
-			final long startTime = System.currentTimeMillis();
+			//final long startTime = System.currentTimeMillis();
 
-			    byte[] data = new byte[307200];
-			    int tmp1=0,tmp2=0;
-			    int p=0;
-			    for (int i = 0; i < 614400; i+=2) {
-				int lo = frame.get(i) & 0xFF;
-				int hi = frame.get(i+1) & 0xFF;
-				int disp = hi << 8 | lo;
-				if (disp>60 && disp<1012) {
-				    tmp1 = (int)(inverted[disp]);
-				    data[p] = (byte)(tmp1 - tmp2);
-				    tmp2 = tmp1;
-				} else {
-				    data[p] = 0;
-				}
-				p++;
+			byte[] data = new byte[307200];
+			int p=0;
+			for (int i = 0; i < 614400; i+=2) {
+			    int lo = frame.get(i) & 0xFF;
+			    int hi = frame.get(i+1) & 0xFF;
+			    int disp = hi << 8 | lo;
+			    if (disp>60 && disp<1012) {
+				data[p]=inverted[disp];
+			    } else {
+				data[p] = 0;
 			    }
-		    
-			    // COMPRESS DATA
-			    int err;
-			    int comprLen = 50000;
-			    byte[] compr = new byte[comprLen];
-			    
-			    Deflater deflater = null;
-			    try {
-				deflater = new Deflater(JZlib.Z_BEST_SPEED);
-			    } catch (GZIPException e) {
-			    }
-
-			    deflater.setInput(data);
-			    deflater.setOutput(compr);
-			    
-			    err = deflater.deflate(JZlib.Z_NO_FLUSH);
-			    CHECK_ERR(deflater, err, "deflate");
-			    if (deflater.avail_in != 0) {
-				System.out.println("deflate not greedy");
-				System.exit(1);
-			    }
-			    
-			    err = deflater.deflate(JZlib.Z_FINISH);
-			    if (err != JZlib.Z_STREAM_END) {
-				System.out.println("deflate should report Z_STREAM_END");
-				System.exit(1);
-			    }
-			    err = deflater.end();
-
-			    /*byte out[] = new byte[(int) deflater.total_out];
-			    for (int i = 0; i < out.length; i++) {
-				out[i] = compr[i];
-				}*/
-			    CHECK_ERR(deflater, err, "deflateEnd");
-
-			    final long endTime = System.currentTimeMillis();
-			    //System.out.println(endTime-startTime);
-
-			    // PUBLISH COMPRESSED DATA
-			    try {
-				channel.basicPublish(exchange_name, "", null, compr);
-			    } catch (IOException e) {
-				System.exit(0);
-			    }
+			    p++;
 			}
+			
+			// COMPRESS DATA
+			int err;
+			int comprLen = 60000;
+			byte[] compr = new byte[comprLen];
+			
+			Deflater deflater = null;
+			try {
+			    deflater = new Deflater(JZlib.Z_BEST_SPEED);
+			} catch (GZIPException e) {
+			}
+			
+			deflater.setInput(data);
+			deflater.setOutput(compr);
+			
+			err = deflater.deflate(JZlib.Z_NO_FLUSH);
+			CHECK_ERR(deflater, err, "deflate");
+			if (deflater.avail_in != 0) {
+			    System.out.println("deflate not greedy");
+			    System.exit(1);
+			}
+			
+			err = deflater.deflate(JZlib.Z_FINISH);
+			if (err != JZlib.Z_STREAM_END) {
+			    System.out.println("deflate should report Z_STREAM_END");
+			    System.exit(1);
+			}
+			err = deflater.end();
+			
+			CHECK_ERR(deflater, err, "deflateEnd");
+			
+			//final long endTime = System.currentTimeMillis();
+			//System.out.println(endTime-startTime);
+			
+			// PUBLISH COMPRESSED DATA
+			try {
+			    channel.basicPublish(exchange_name, "", null, compr);
+			} catch (IOException e) {
+			    System.exit(0);
+			}
+		    }
  		});
 	} catch (IOException e) {
 	    System.exit(0);
 	}
     }
-
+    
     
     static void CHECK_ERR(ZStream z, int err, String msg) {
         if (err != JZlib.Z_OK) {

@@ -19,7 +19,7 @@ public class RecvFrame_new {
 	Thread t = new Thread(new Runnable() {
 		@Override
 		    public void run() {
-		    //ui.show();
+		    ui.show();
 		}
 	    });
 	t.start();
