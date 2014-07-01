@@ -7,8 +7,8 @@ Created on Apr 29, 2014
 import time
 import sys
 import threading
-from resources.lib import libardrone
-from resources.modules import TrackingSensorModule, ControlModule
+from lib import libardrone
+from modules import TrackingSensorModule, ControlModule
 
 
 class VideoController(threading.Thread):

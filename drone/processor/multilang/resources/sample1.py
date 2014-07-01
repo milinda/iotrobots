@@ -6,7 +6,7 @@ Created on Apr 7, 2014
 import time
 import numpy as np
 import cv2
-from resources.lib import libardrone
+from lib import libardrone
 
 drone = libardrone.ARDrone2()
 

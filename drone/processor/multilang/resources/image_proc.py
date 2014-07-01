@@ -1,5 +1,5 @@
-from resources import storm
-from resources.modules import TrackingSensorModule
+import storm
+from modules import TrackingSensorModule
 
 import time
 import sys

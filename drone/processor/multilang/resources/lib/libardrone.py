@@ -34,7 +34,7 @@ import multiprocessing
 import time
 import numpy as np
 from mutex import mutex
-from resources.lib import arnetwork
+from lib import arnetwork
 
 __author__ = "Bastian Venthur"
 

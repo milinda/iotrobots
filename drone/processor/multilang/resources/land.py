@@ -3,7 +3,7 @@ import time
 import sys
 import numpy as np
 import threading
-from resources.lib import libardrone
+from lib import libardrone
 
 if __name__ == "__main__":
     drone = libardrone.ARDrone2()
