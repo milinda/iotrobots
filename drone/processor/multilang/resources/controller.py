@@ -8,7 +8,8 @@ import time
 import sys
 import threading
 from lib import libardrone
-from modules import TrackingSensorModule, ControlModule
+from modules.TrackingSensorModule import TrackingSensorModule
+from modules.ControlModule import ControlModule
 
 
 class VideoController(threading.Thread):
