@@ -57,6 +57,8 @@ public class SendFrame_new {
 		    
 		    @Override
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
+			// EVERY OTHER FRAME IS DISPLAYED
+			if (numFrame % 1 == 0) {  
 			if (numFrame % 2 == 0) { 
 			    byte[] data = new byte[307200];
 			    int p=0;
@@ -65,6 +67,7 @@ public class SendFrame_new {
 				int hi = frame.get(i+1) & 0xFF;
 				int disp = hi << 8 | lo;
 				if (disp>60 && disp<1012) {
+				    data[p] = inverted[disp];
 				    data[p]=inverted[disp];
 				} else {
 				    data[p] = 0;
@@ -99,7 +102,11 @@ public class SendFrame_new {
 				System.exit(1);
 			    }
 			    err = deflater.end();
-			    
+
+			    /*byte out[] = new byte[(int) deflater.total_out];
+			    for (int i = 0; i < out.length; i++) {
+				out[i] = compr[i];
+				}*/
 			    CHECK_ERR(deflater, err, "deflateEnd");
 			      
 			    // PUBLISH COMPRESSED DATA
