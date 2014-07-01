@@ -98,7 +98,7 @@ public class SphereTrackingTopology {
     }
 
     private static class SpoutConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://10.39.1.22:5672";
+        private String url = "amqp://10.39.1.16:5672";
 
         @Override
         public String getURL() {
@@ -154,7 +154,7 @@ public class SphereTrackingTopology {
     }
 
     private static class BoltConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://10.39.1.22:5672";
+        private String url = "amqp://10.39.1.16:5672";
 
         @Override
         public String getURL() {
