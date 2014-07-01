@@ -98,7 +98,7 @@ public class SphereTrackingTopology {
     }
 
     private static class SpoutConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://localhost:5672";
+        private String url = "amqp://10.39.1.22:5672";
 
         @Override
         public String getURL() {
@@ -128,7 +128,7 @@ public class SphereTrackingTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("drone_frame", "drone", "drone_frame"));
+            list.add(new RabbitMQDestination("local-1.storm_drone_frame", "storm_drone", "storm_drone_frame"));
             return list;
         }
 
@@ -154,7 +154,7 @@ public class SphereTrackingTopology {
     }
 
     private static class BoltConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://localhost:5672";
+        private String url = "amqp://10.39.1.22:5672";
 
         @Override
         public String getURL() {
@@ -184,7 +184,7 @@ public class SphereTrackingTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("control", "drone", "control"));
+            list.add(new RabbitMQDestination("local-1.storm_control", "storm_drone", "storm_control"));
             return list;
         }
 

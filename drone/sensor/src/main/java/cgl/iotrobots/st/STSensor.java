@@ -90,15 +90,15 @@ public class STSensor extends AbstractSensor {
             SensorContext context = new SensorContext(new SensorId("turtle_sensor", "general"));
             context.addProperty(BROKER_URL, brokerUrl);
             Map sendProps = new HashMap();
-            sendProps.put("exchange", "turtle_sensor");
-            sendProps.put("routingKey", "kinect");
-            sendProps.put("queueName", "kinect");
+            sendProps.put("exchange", "storm_drone");
+            sendProps.put("routingKey", "storm_drone_frame");
+            sendProps.put("queueName", "storm_drone_frame");
             Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024, new IdentityConverter());
 
             Map receiveProps = new HashMap();
-            receiveProps.put("queueName", "control");
-            receiveProps.put("exchange", "turtle_sensor");
-            receiveProps.put("routingKey", "control");
+            receiveProps.put("queueName", "storm_control");
+            receiveProps.put("exchange", "storm_drone");
+            receiveProps.put("routingKey", "storm_control");
             Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024, new IdentityConverter());
 
             context.addChannel("rabbitmq", sendChannel);
