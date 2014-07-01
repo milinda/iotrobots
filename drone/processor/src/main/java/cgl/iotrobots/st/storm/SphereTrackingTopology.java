@@ -208,7 +208,7 @@ public class SphereTrackingTopology {
             return new RabbitMQDestinationSelector() {
                 @Override
                 public String select(Tuple tuple) {
-                    return "local-1.control";
+                    return "local-1.storm_control";
                 }
             };
         }
