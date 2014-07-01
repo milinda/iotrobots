@@ -20,7 +20,7 @@ class SplitSentenceBolt(storm.BasicBolt):
         self.p = Popen(["nice", "-n", "15", "avconv", "-i", "-",
                    "-probesize", "2048", "-flags", "low_delay", "-f",
                    "rawvideo", "-pix_fmt", 'rgb24', "-"],
-                  stdin=PIPE, stdout=PIPE, stderr=open('/home/oliver/error', 'w'),
+                  stdin=PIPE, stdout=PIPE, stderr=open('/dev/null', 'w'),
                   bufsize=0, preexec_fn=set_death_signal_int)
         t = Thread(target=self.enqueue_output, args=(self.p.stdout, (360, 640)))
         t.daemon = True # thread dies with the program
