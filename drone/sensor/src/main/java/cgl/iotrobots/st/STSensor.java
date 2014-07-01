@@ -33,7 +33,7 @@ public class STSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "iotrobots-turtlebot-1.0-SNAPSHOT-jar-with-dependencies.jar", STSensor.class.getCanonicalName(), Arrays.asList("local-1"));
+        SensorSubmitter.submitSensor(properties, "drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", STSensor.class.getCanonicalName(), Arrays.asList("local-1"));
     }
 
     @Override
@@ -48,9 +48,9 @@ public class STSensor extends AbstractSensor {
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
 
-        videoReceiver = new DroneMessageReceiver(receivingQueue, "drone_frames", null, null, brokerURL);
+        videoReceiver = new DroneMessageReceiver(receivingQueue, "drone_frame", null, null, brokerURL);
         videoReceiver.setExchangeName("drone");
-        videoReceiver.setRoutingKey("drone_frames");
+        videoReceiver.setRoutingKey("drone_frame");
         videoReceiver.start();
 
 
