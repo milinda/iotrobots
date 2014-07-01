@@ -1,5 +1,5 @@
 import storm
-from modules import TrackingSensorModule
+from modules.TrackingSensorModule import TrackingSensorModule
 
 import time
 import sys
