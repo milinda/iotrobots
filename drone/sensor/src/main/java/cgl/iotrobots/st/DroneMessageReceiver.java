@@ -10,8 +10,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class MessageReceiver {
-    private static Logger LOG = LoggerFactory.getLogger(MessageReceiver.class);
+public class DroneMessageReceiver {
+    private static Logger LOG = LoggerFactory.getLogger(DroneMessageReceiver.class);
 
     private Channel channel;
 
@@ -33,11 +33,11 @@ public class MessageReceiver {
 
     private String routingKey;
 
-    public MessageReceiver(BlockingQueue inQueue,
-                            String queueName,
-                            ExecutorService executorService,
-                            Address []addresses,
-                            String url) {
+    public DroneMessageReceiver(BlockingQueue inQueue,
+                                String queueName,
+                                ExecutorService executorService,
+                                Address[] addresses,
+                                String url) {
         this.inQueue = inQueue;
         this.executorService = executorService;
         this.queueName = queueName;
@@ -118,7 +118,7 @@ public class MessageReceiver {
     }
 
     public static void main(String[] args) {
-        MessageReceiver receiver = new MessageReceiver(new LinkedBlockingQueue(), "drone_frame", null, null, "amqp://localhost:5672");
+        DroneMessageReceiver receiver = new DroneMessageReceiver(new LinkedBlockingQueue(), "drone_frame", null, null, "amqp://localhost:5672");
         receiver.start();
     }
 }
