@@ -28,8 +28,7 @@ Video decoding for the AR.Drone 2.0.
 This is just H.264 encapsulated in a funny way.
 """
 
-import h264decoder
-import paveparser
+from resources.lib import h264decoder, paveparser
 
 
 class ARVideo2(object):

@@ -30,7 +30,6 @@ import sys
 from subprocess import PIPE, Popen
 from threading  import Thread
 import time
-import libardrone
 import ctypes
 import numpy as np
 

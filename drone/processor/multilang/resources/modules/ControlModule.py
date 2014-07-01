@@ -2,9 +2,8 @@
 @author: oliver lewis May 28, 2014
 '''
 
-from lib import libardrone
 import cv2
-from modules.TrackingSensorModule import TrackingSensorModule
+from resources.lib import libardrone
 
 command = {10:'takeoff', ord('l'):'land', ord(' '):'hover', ord('w'):'move_forward', ord('s'):'move_backward', ord('a'):'move_left', ord('d'):'move_right', 81:'turn_left', 82:'move_up',83:'turn_right',84:'move_down',8:'emergency'}
 class ControlModule():

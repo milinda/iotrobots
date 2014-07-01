@@ -4,12 +4,11 @@ Created on Apr 29, 2014
 @author: shahensha
 @author: oliver lewis May 28, 2014
 '''
-from lib import libardrone
 import time
 import sys
 import threading
-from modules.ControlModule import ControlModule
-from modules.TrackingSensorModule import TrackingSensorModule
+from resources.lib import libardrone
+from resources.modules import TrackingSensorModule, ControlModule
 
 
 class VideoController(threading.Thread):

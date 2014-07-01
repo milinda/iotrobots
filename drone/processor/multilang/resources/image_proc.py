@@ -1,7 +1,6 @@
-import storm
+from resources import storm
+from resources.modules import TrackingSensorModule
 
-from lib import libardrone
-from lib import h264decoder
 import time
 import sys
 import threading
@@ -14,7 +13,6 @@ import ctypes
 from subprocess import PIPE, Popen
 from StringIO import StringIO
 
-from modules.TrackingSensorModule import TrackingSensorModule
 
 class SplitSentenceBolt(storm.BasicBolt):
     def __init__(self):

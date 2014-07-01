@@ -3,10 +3,10 @@ Created on Apr 7, 2014
 
 @author: shahensha
 '''
-import libardrone
 import time
 import numpy as np
 import cv2
+from resources.lib import libardrone
 
 drone = libardrone.ARDrone2()
 

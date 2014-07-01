@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>processor</artifactId>
+    <artifactId>turtle-processor</artifactId>
     <build>
         <plugins>
             <plugin>

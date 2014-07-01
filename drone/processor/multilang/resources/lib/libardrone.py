@@ -31,11 +31,10 @@ import sys
 import threading
 import multiprocessing
 
-import arnetwork
-
 import time
 import numpy as np
 from mutex import mutex
+from resources.lib import arnetwork
 
 __author__ = "Bastian Venthur"
 

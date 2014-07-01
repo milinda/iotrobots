@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 import logging
+from resources.lib import ar2video, libardrone
 
 """
 This module provides access to the data provided by the AR.Drone.
@@ -26,7 +27,7 @@ import threading
 import select
 import socket
 import multiprocessing
-import libardrone
+
 
 class ARDroneNetworkProcess(threading.Thread):
     """ARDrone Network Process.
@@ -41,7 +42,6 @@ class ARDroneNetworkProcess(threading.Thread):
         self.com_pipe = com_pipe
         self.is_ar_drone_2 = is_ar_drone_2
         if is_ar_drone_2:
-            import ar2video
             self.ar2video = ar2video.ARVideo2(self._drone, libardrone.DEBUG)
         else:
             import arvideo
