@@ -8,7 +8,6 @@ import cgl.iotcloud.core.transport.IdentityConverter;
 import cgl.iotcloud.core.transport.MessageConverter;
 import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
 import cgl.iotrobots.st.commons.CommonsUtils;
-import cgl.iotrobots.st.commons.Control;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
