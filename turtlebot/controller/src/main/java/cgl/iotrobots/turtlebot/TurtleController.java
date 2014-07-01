@@ -2,7 +2,6 @@ package cgl.iotrobots.turtlebot;
 
 import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
-import cgl.iotrobots.turtlebot.commons.RosTurtle;
 import cgl.iotrobots.turtlebot.commons.Velocity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -75,7 +74,7 @@ public class TurtleController {
     public static void main(String[] args) throws InterruptedException {
         // register with ros_java
         CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(args));
-        NodeConfiguration nodeConfiguration = null;
+        NodeConfiguration nodeConfiguration;
         try {
             nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
             TurtleController turtleController = new TurtleController();
@@ -191,19 +190,22 @@ public class TurtleController {
             }
         }
 
-        if (n > 1000) {
+        if (n > 4000) {
             totX /= n;
             totY /= n;
             totZ /= n;
-            System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
+            // System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
             if (Math.abs(totZ  -max_z_) < 0.01) {
                 //System.out.println("No valid points detected, stopping the robot");
                 return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
             }
 
             // System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
-            System.out.println();
-            return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            if (totX * x_scale_ >= .1) {
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            } else {
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, 0));
+            }
 
         } else {
             // System.out.println("No valid points detected, stopping the robot");

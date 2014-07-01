@@ -9,8 +9,7 @@
     <name>iotcloud robots</name>
     <modules>
         <module>turtlebot</module>
-        <module>sphere-tracking</module>
-        <module>sphere-tracking-processor</module>
+        <module>drone</module>
     </modules>
 
     <properties>

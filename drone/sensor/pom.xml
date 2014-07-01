@@ -1,15 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <parent>
-        <artifactId>iotrobots-turtlebot-parent</artifactId>
+        <artifactId>iotrobots-drone-parent</artifactId>
         <groupId>iotrobots</groupId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>turtle-processor</artifactId>
+    <name>drone-sensor</name>
+    <artifactId>drone-sensor</artifactId>
     <build>
         <plugins>
             <plugin>
@@ -31,36 +32,23 @@
             </plugin>
         </plugins>
     </build>
-
-
     <dependencies>
         <dependency>
-            <groupId>org.apache.storm</groupId>
-            <artifactId>storm-core</artifactId>
-            <scope>provided</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>storm-bcs</groupId>
-            <artifactId>storm-rabbitmq</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.4</version>
-        </dependency>
-
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>drone-commons</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jzlib</artifactId>
-            <version>1.1.3</version>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>iotcloud2</groupId>
+            <artifactId>iotcloud-rabbitmq</artifactId>
         </dependency>
     </dependencies>
 </project>

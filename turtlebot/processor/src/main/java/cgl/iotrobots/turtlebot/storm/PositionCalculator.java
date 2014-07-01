@@ -68,7 +68,7 @@ public class PositionCalculator {
             }
         }
 
-        if (n > 1000) {
+        if (n > 4000) {
             totX /= n;
             totY /= n;
             totZ /= n;
@@ -81,7 +81,7 @@ public class PositionCalculator {
             // System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
             System.out.println();
             if (totX * x_scale_ >= .1) {
-                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, -1* totX * x_scale_));
             } else {
                 return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, 0));
             }

@@ -59,6 +59,7 @@ public class SendFrame_new {
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
 			// EVERY OTHER FRAME IS DISPLAYED
 			if (numFrame % 1 == 0) {  
+			if (numFrame % 2 == 0) { 
 			    byte[] data = new byte[307200];
 			    int p=0;
 			    for (int i = 0; i < 614400; i+=2) {
@@ -67,12 +68,13 @@ public class SendFrame_new {
 				int disp = hi << 8 | lo;
 				if (disp>60 && disp<1012) {
 				    data[p] = inverted[disp];
+				    data[p]=inverted[disp];
 				} else {
 				    data[p] = 0;
 				}
 				p++;
 			    }
-		    
+			    
 			    // COMPRESS DATA
 			    int err;
 			    int comprLen = 60000;
@@ -83,7 +85,7 @@ public class SendFrame_new {
 				deflater = new Deflater(JZlib.Z_BEST_SPEED);
 			    } catch (GZIPException e) {
 			    }
-
+			
 			    deflater.setInput(data);
 			    deflater.setOutput(compr);
 			    
@@ -106,6 +108,7 @@ public class SendFrame_new {
 				out[i] = compr[i];
 				}*/
 			    CHECK_ERR(deflater, err, "deflateEnd");
+			      
 			    // PUBLISH COMPRESSED DATA
 			    try {
 				channel.basicPublish(exchange_name, "", null, compr);
@@ -113,14 +116,14 @@ public class SendFrame_new {
 				System.exit(0);
 			    }
 			}
-			numFrame++;
+			++numFrame;
 		    }
  		});
 	} catch (IOException e) {
 	    System.exit(0);
 	}
     }
-
+    
     
     static void CHECK_ERR(ZStream z, int err, String msg) {
         if (err != JZlib.Z_OK) {

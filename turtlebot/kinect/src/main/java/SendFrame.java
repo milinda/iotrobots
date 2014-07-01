@@ -44,10 +44,9 @@ public class SendFrame {
                 System.exit(0);
             }
 	    
-	    // DISPLAY DEPTH VIDEO
 	    dev.startDepth(new DepthHandler() {
 		    int numFrame = 0;
-		    
+
 		    @Override
 			public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
 			// EVERY OTHER FRAME IS DISPLAYED
@@ -55,9 +54,10 @@ public class SendFrame {
 			    byte[] data = new byte[614400];
 			    for (int i = 0; i < 614400; i++) data[i] = frame.get(i);
 		    
+
 			    // COMPRESS DATA
 			    int err;
-			    int comprLen = 125000;
+			    int comprLen = 130000;
 			    byte[] compr = new byte[comprLen];
 			    
 			    Deflater deflater = null;
@@ -89,7 +89,7 @@ public class SendFrame {
 				out[i] = compr[i];
 			    }
 			    CHECK_ERR(deflater, err, "deflateEnd");
-			    
+
 			    // PUBLISH COMPRESSED DATA
 			    try {
 				channel.basicPublish(exchange_name, "", null, out);
