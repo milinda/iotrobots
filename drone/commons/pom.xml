@@ -1,7 +1,7 @@
-<?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>iotrobots-drone-parent</artifactId>
         <groupId>iotrobots</groupId>
@@ -9,18 +9,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <name>drone-sensor</name>
-    <artifactId>drone-sensor</artifactId>
+    <name>drone-commons</name>
+    <artifactId>drone-commons</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>iotrobots</groupId>
-            <artifactId>drone-commons</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rabbitmq</groupId>
@@ -29,6 +24,11 @@
         <dependency>
             <groupId>iotcloud2</groupId>
             <artifactId>iotcloud-rabbitmq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.4.1.1</version>
         </dependency>
     </dependencies>
 </project>
