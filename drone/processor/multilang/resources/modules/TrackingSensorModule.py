@@ -34,8 +34,8 @@ class TrackingSensorModule():
             y = circles[0][1]
             target_y = self.getCenter()[1] - y
             target_x = x - self.getCenter()[0]
-            kX = 1.0/320*0.1
-            kY = -1.0/320*0.1
+            kX = -(1.0/320*0.1)
+            kY = -(-1.0/320*0.1)
         return (kX*target_x, kY*target_y)
 
     def getCenter(self):
