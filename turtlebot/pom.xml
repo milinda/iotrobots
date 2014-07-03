@@ -19,6 +19,12 @@
         <module>controller</module>
         <module>commons</module>
     </modules>
-
+    <repositories>
+    <repository>
+        <id>ros</id>
+        <name>ros</name>
+        <url>https://github.com/stonier/rosjava_mvn_repo/raw/master</url>
+    </repository>
+    </repositories>
 
 </project>
