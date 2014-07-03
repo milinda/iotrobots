@@ -360,9 +360,9 @@
         </dependency>
         
         <dependency>
-                 <groupId>org.ros.rosjava_bootstrap</groupId>
-                 <artifactId>message_generation</artifactId>
-                 <version>0.1.20</version>
+            <groupId>org.ros.rosjava_bootstrap</groupId>
+            <artifactId>message_generation</artifactId>
+            <version>0.1.21</version>
         </dependency>
 
         <dependency>
