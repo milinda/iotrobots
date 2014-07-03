@@ -345,7 +345,7 @@
         </dependency>
         
          <dependency>
-            <groupId> org.ros.rosjava_bootsrap</groupId>
+            <groupId> org.ros.rosjava_bootstrap</groupId>
             <artifactId>message_generation</artifactId>
             <version>0.1.16</version>
          </dependency>
