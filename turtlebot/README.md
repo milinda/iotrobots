@@ -4,7 +4,7 @@ Deploy on Storm
 1. Build the processor module 
 2. Run the storm command 
 
-./bin/storm jar ~/projects/iotrobots/turtbot/processor/target/turtle-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.turtlebot.storm.FollowerTopology image_proc
+./bin/storm jar ~/projects/iotrobots/turtlebot/processor/target/turtle-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.turtlebot.storm.FollowerTopology image_proc
 
 Deploy the sensor
 =================
