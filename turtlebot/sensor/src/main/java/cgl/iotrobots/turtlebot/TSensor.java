@@ -50,7 +50,6 @@ public class TSensor extends AbstractSensor {
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
 
         // register with ros_java
-        CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(""));
         NodeConfiguration nodeConfiguration = null;
         try {
             nodeConfiguration = NodeConfiguration.newPublic("156.56.95.203", new URI("http://149.160.205.153:11311"));

@@ -72,7 +72,7 @@ public class FollowerTopology {
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
             Motion motion = (Motion) tuple.getValue(0);
-            byte []body = new byte[0];
+            byte []body;
             try {
                 // System.out.println("Sending message" + motion);
                 body = CommonsUtils.motionToJSON(motion);
