@@ -76,6 +76,14 @@ public class KinectMessageReceiver {
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
                             //System.out.println("recv: exchange: " + exchangeName + " queue: " + queueName);
+                            /*ByteBuffer buffer = ByteBuffer.allocate(8);
+			    buffer.put(body, 0, 8);
+			    buffer.flip();
+			    System.out.print(buffer.getLong());
+			    buffer.putLong(System.timeCurrentTime);
+			    byte[] time = buffer.array();
+                            for(int i = 0; i < time.length; i++) body[i] = time[i];*/
+			    System.out.println(System.currentTimeMillis());
                             inQueue.offer(body);
                             channel.basicAck(deliveryTag, false);
                         }
@@ -115,5 +123,3 @@ public class KinectMessageReceiver {
         receiver.start();
     }
 }
-
-

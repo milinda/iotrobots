@@ -73,7 +73,7 @@ public class TSensor extends AbstractSensor {
             public void onMessage(Object message) {
                 if (message instanceof Motion) {
                     controller.setMotion((Motion) message);
-                    System.out.println("Message received " + message.toString());
+                    System.out.println("Message received " + message.toString() + " at " + System.currentTimeMillis());
                 } else {
                     System.out.println("Unexpected message");
                 }

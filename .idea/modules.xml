@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/drone/commons/drone-commons.iml" filepath="$PROJECT_DIR$/drone/commons/drone-commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/drone/processor/drone-processor.iml" filepath="$PROJECT_DIR$/drone/processor/drone-processor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/drone/sensor/drone-sensor.iml" filepath="$PROJECT_DIR$/drone/sensor/drone-sensor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/iotrobots.iml" filepath="$PROJECT_DIR$/iotrobots.iml" />
+      <module fileurl="file://$PROJECT_DIR$/drone/iotrobots-drone-parent.iml" filepath="$PROJECT_DIR$/drone/iotrobots-drone-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/sensor/iotrobots-sensor.iml" filepath="$PROJECT_DIR$/turtlebot/sensor/iotrobots-sensor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/iotrobots-turtlebot-parent.iml" filepath="$PROJECT_DIR$/turtlebot/iotrobots-turtlebot-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/processor/turtle-processor.iml" filepath="$PROJECT_DIR$/turtlebot/processor/turtle-processor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/commons/turtlebot-commons.iml" filepath="$PROJECT_DIR$/turtlebot/commons/turtlebot-commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/turtlebot/controller/turtlebot-controller.iml" filepath="$PROJECT_DIR$/turtlebot/controller/turtlebot-controller.iml" />
+    </modules>
+  </component>
+</project>
+
