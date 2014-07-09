@@ -4,15 +4,11 @@ import cgl.iotcloud.core.*;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
-import cgl.iotcloud.core.transport.IdentityConverter;
-import cgl.iotcloud.core.transport.MessageConverter;
 import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
-import cgl.iotrobots.st.commons.CommonsUtils;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,6 +78,7 @@ public class STSensor extends AbstractSensor {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
@@ -93,33 +90,18 @@ public class STSensor extends AbstractSensor {
             sendProps.put("exchange", "storm_drone");
             sendProps.put("routingKey", "storm_drone_frame");
             sendProps.put("queueName", "storm_drone_frame");
-            Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024, new IdentityConverter());
+            Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
             receiveProps.put("queueName", "storm_control");
             receiveProps.put("exchange", "storm_drone");
             receiveProps.put("routingKey", "storm_control");
-            Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024, new IdentityConverter());
+            Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
 
             return context;
-        }
-    }
-
-    private class ControlConverter implements MessageConverter {
-        @Override
-        public Object convert(Object input, Object context) {
-            if (input instanceof RabbitMQMessage) {
-                try {
-                    return CommonsUtils.jsonToMotion(((RabbitMQMessage) input).getBody());
-                } catch (IOException e) {
-                    LOG.error("Failed to convert the message to a Motion", e);
-                    return null;
-                }
-            }
-            return null;
         }
     }
 

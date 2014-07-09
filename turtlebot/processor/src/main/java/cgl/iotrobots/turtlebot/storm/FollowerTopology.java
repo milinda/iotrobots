@@ -7,8 +7,10 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.turtlebot.commons.CommonsUtils;
 import cgl.iotrobots.turtlebot.commons.Motion;
+import com.rabbitmq.client.AMQP;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
 import org.slf4j.Logger;
@@ -16,7 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FollowerTopology {
     private static Logger LOG = LoggerFactory.getLogger(FollowerTopology.class);
@@ -30,9 +34,9 @@ public class FollowerTopology {
             }
         };
 
-        builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
-        builder.setBolt("image_proc", new ObjectDetectionBolt()).shuffleGrouping("recv_spout");
-        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
+        builder.setSpout("kinect_frame_recv", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
+        builder.setBolt("object_detection", new ObjectDetectionBolt()).shuffleGrouping("kinect_frame_recv");
+        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("object_detection");
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -58,9 +62,20 @@ public class FollowerTopology {
         @Override
         public List<Object> deSerialize(RabbitMQMessage message) {
             System.out.println("Got kinect message");
+
+            Object sensorId = null;
+            Map<String, Object> props = new HashMap<String, Object>();
+            AMQP.BasicProperties properties = message.getProperties();
+            if (properties != null && properties.getHeaders() != null) {
+                sensorId = properties.getHeaders().get(TransportConstants.SENSOR_ID);
+            }
+
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
             tuples.add(body);
+            if (sensorId != null) {
+                tuples.add(sensorId.toString());
+            }
             return tuples;
         }
 
@@ -71,12 +86,17 @@ public class FollowerTopology {
          */
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
-            Motion motion = (Motion) tuple.getValue(0);
+            Motion motion = (Motion) tuple.getValueByField("control");
+            String sensorId = (String) tuple.getValueByField("sensorID");
+
             byte []body;
             try {
+                Map<String, Object> props = new HashMap<String, Object>();
+                props.put(TransportConstants.SENSOR_ID, sensorId);
+
                 // System.out.println("Sending message" + motion);
                 body = CommonsUtils.motionToJSON(motion);
-                return new RabbitMQMessage(null, null, null, null, body);
+                return new RabbitMQMessage(null, null, null, new AMQP.BasicProperties.Builder().headers(props).build(), body);
             } catch (IOException e) {
                 LOG.error("Failed to convert Motion to json", e);
             }
@@ -126,7 +146,7 @@ public class FollowerTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields("time1"));
+            outputFieldsDeclarer.declare(new Fields("image_frame", "sensorID"));
         }
 
         @Override

@@ -1,18 +1,14 @@
 package cgl.iotrobots.turtlebot;
 
 import cgl.iotcloud.core.*;
+import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
-import cgl.iotcloud.core.transport.IdentityConverter;
-import cgl.iotcloud.core.transport.MessageConverter;
-import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
 import cgl.iotrobots.turtlebot.commons.CommonsUtils;
 import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
-import com.google.common.collect.Lists;
 import org.apache.commons.cli.*;
-import org.ros.internal.loader.CommandLineLoader;
 import org.ros.node.NodeConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +26,14 @@ public class TSensor extends AbstractSensor {
     private static Logger LOG = LoggerFactory.getLogger(TSensor.class);
 
     public static final String BROKER_URL = "broker_url";
+    public static final String LOCAL_IP = "local_ip";
+    public static final String ROS_MASTER = "ros_master";
 
     private TurtleController controller;
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "iotrobots-turtlebot-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local-1"));
+        SensorSubmitter.submitSensor(properties, "iotrobots-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local-1"));
     }
 
     @Override
@@ -51,8 +49,11 @@ public class TSensor extends AbstractSensor {
 
         // register with ros_java
         NodeConfiguration nodeConfiguration = null;
+        String localIp = (String) context.getProperty(LOCAL_IP);
+        String rosMaster = (String) context.getProperty(ROS_MASTER);
+
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.95.203", new URI("http://149.160.205.153:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
         } catch (URISyntaxException e) {
             LOG.error("Failed to connect", e);
         }
@@ -70,11 +71,16 @@ public class TSensor extends AbstractSensor {
         startListen(receiveChannel, new cgl.iotcloud.core.MessageReceiver() {
             @Override
             public void onMessage(Object message) {
-                if (message instanceof Motion) {
-                    controller.setMotion((Motion) message);
-                    System.out.println("Message received " + message.toString());
+                if (message instanceof MessageContext) {
+                    try {
+                        Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
+                        controller.setMotion(motion);
+                        System.out.println("Message received " + message.toString());
+                    } catch (IOException e) {
+                        LOG.error("Un-expected motion control message");
+                    }
                 } else {
-                    System.out.println("Unexpected message");
+                    LOG.error("Unexpected message");
                 }
             }
         });
@@ -87,6 +93,7 @@ public class TSensor extends AbstractSensor {
         controller.shutDown();
     }
 
+    @SuppressWarnings("unchecked")
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
@@ -98,13 +105,13 @@ public class TSensor extends AbstractSensor {
             sendProps.put("exchange", "turtle_sensor");
             sendProps.put("routingKey", "kinect");
             sendProps.put("queueName", "kinect");
-            Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024, new IdentityConverter());
+            Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
             receiveProps.put("queueName", "control");
             receiveProps.put("exchange", "turtle_sensor");
             receiveProps.put("routingKey", "control");
-            Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024, new ControlConverter());
+            Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
@@ -113,32 +120,28 @@ public class TSensor extends AbstractSensor {
         }
     }
 
-    private class ControlConverter implements MessageConverter {
-        @Override
-        public Object convert(Object input, Object context) {
-            if (input instanceof RabbitMQMessage) {
-                try {
-                    return CommonsUtils.jsonToMotion(((RabbitMQMessage) input).getBody());
-                } catch (IOException e) {
-                    LOG.error("Failed to convert the message to a Motion", e);
-                    return null;
-                }
-            }
-            return null;
-        }
-    }
-
     private static Map<String, String> getProperties(String []args) {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
         options.addOption("url", true, "URL of the AMQP Broker");
+        options.addOption("ros_master", true, "Ros master URL");
+        options.addOption("local_ip", true, "Local IP address");
 
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
 
             String url = cmd.getOptionValue("url");
+            String rosMaster = cmd.getOptionValue(ROS_MASTER);
+            String localIp = cmd.getOptionValue(LOCAL_IP);
+
+            System.out.println(url);
+            System.out.println(rosMaster);
+            System.out.println(localIp);
+
             conf.put(BROKER_URL, url);
+            conf.put(ROS_MASTER, rosMaster);
+            conf.put(LOCAL_IP, localIp);
 
             return conf;
         } catch (ParseException e) {
