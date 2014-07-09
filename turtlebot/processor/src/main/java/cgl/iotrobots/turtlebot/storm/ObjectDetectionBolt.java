@@ -32,10 +32,11 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
         Motion motion = positionCalculator.calculatePosition((byte[]) tuple.getValue(0));
         String sensorId = (String) tuple.getValueByField("sensorID");
+        String time = (String) tuple.getValueByField("time");
         if (motion != null) {
-            outputCollector.emit(Arrays.<Object>asList(motion, sensorId));
+            outputCollector.emit(Arrays.<Object>asList(motion, sensorId, time));
         } else {
-            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0)), sensorId));
+            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0)), sensorId, time));
         }
 
 
@@ -52,6 +53,6 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("control", "sensorID"));
+        outputFieldsDeclarer.declare(new Fields("control", "sensorID", "time"));
     }
 }

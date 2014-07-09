@@ -47,7 +47,7 @@ public class FollowerTopology {
         } else {
             conf.setMaxTaskParallelism(3);
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("image_proc", conf, builder.createTopology());
+            cluster.submitTopology("turtle_follower", conf, builder.createTopology());
             Thread.sleep(1000000);
             cluster.shutdown();
         }
@@ -64,10 +64,12 @@ public class FollowerTopology {
             System.out.println("Got kinect message");
 
             Object sensorId = null;
+            Object time = null;
             Map<String, Object> props = new HashMap<String, Object>();
             AMQP.BasicProperties properties = message.getProperties();
             if (properties != null && properties.getHeaders() != null) {
                 sensorId = properties.getHeaders().get(TransportConstants.SENSOR_ID);
+                time = properties.getHeaders().get("time");
             }
 
             byte []body = message.getBody();
@@ -75,6 +77,10 @@ public class FollowerTopology {
             tuples.add(body);
             if (sensorId != null) {
                 tuples.add(sensorId.toString());
+            }
+
+            if (time != null) {
+                tuples.add(time.toString());
             }
             return tuples;
         }
@@ -88,11 +94,13 @@ public class FollowerTopology {
         public RabbitMQMessage serialize(Tuple tuple) {
             Motion motion = (Motion) tuple.getValueByField("control");
             String sensorId = (String) tuple.getValueByField("sensorID");
+            String time = (String) tuple.getValueByField("time");
 
             byte []body;
             try {
                 Map<String, Object> props = new HashMap<String, Object>();
                 props.put(TransportConstants.SENSOR_ID, sensorId);
+                props.put("time", time);
 
                 // System.out.println("Sending message" + motion);
                 body = CommonsUtils.motionToJSON(motion);
@@ -146,7 +154,7 @@ public class FollowerTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields("image_frame", "sensorID"));
+            outputFieldsDeclarer.declare(new Fields("image_frame", "sensorID", "time"));
         }
 
         @Override

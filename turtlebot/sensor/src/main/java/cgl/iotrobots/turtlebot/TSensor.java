@@ -43,7 +43,7 @@ public class TSensor extends AbstractSensor {
 
     @Override
     public void open(SensorContext context) {
-        BlockingQueue receivingQueue = new LinkedBlockingQueue();
+        final BlockingQueue receivingQueue = new LinkedBlockingQueue();
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
 
@@ -66,7 +66,23 @@ public class TSensor extends AbstractSensor {
         receiver.setRoutingKey("kinect_controller");
         receiver.start();
 
-        startSend(sendChannel, receivingQueue);
+        // startSend(sendChannel, receivingQueue);
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        byte[] body = (byte[]) receivingQueue.take();
+                        Map<String, Object> props = new HashMap<String, Object>();
+                        props.put("time", Long.toString(System.currentTimeMillis()));
+                        sendChannel.publish(body, props);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        t.start();
 
         startListen(receiveChannel, new cgl.iotcloud.core.MessageReceiver() {
             @Override
@@ -74,6 +90,8 @@ public class TSensor extends AbstractSensor {
                 if (message instanceof MessageContext) {
                     try {
                         Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
+                        String time = (String) ((MessageContext) message).getProperties().get("time");
+                        System.out.println(System.currentTimeMillis() - Long.parseLong(time));
                         controller.setMotion(motion);
                         System.out.println("Message received " + message.toString());
                     } catch (IOException e) {
