@@ -13,6 +13,10 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.ArrayList;
@@ -57,19 +61,30 @@ public class SphereTrackingTopology {
             }
         };
 
-        builder.setSpout("recv_spout", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
-        builder.setBolt("image_proc", new ImageProcessing()).shuffleGrouping("recv_spout");
-        // builder.setBolt("send_bolt", new PrintingBolt()).shuffleGrouping("image_proc");
-        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("image_proc");
+        Options options = new Options();
+        options.addOption("url", true, "URL of the AMQP Broker");
+        options.addOption("name", true, "Name of the topology");
+        options.addOption("local", false, "Weather we want run locally");
+
+        CommandLineParser commandLineParser = new BasicParser();
+        CommandLine cmd = commandLineParser.parse(options, args);
+        String url = cmd.getOptionValue("url");
+        String name = cmd.getOptionValue("name");
+        boolean local = cmd.hasOption("local");
+
+        builder.setSpout("frame_receive", new RabbitMQSpout(new SpoutConfigurator(url), r), 1);
+        builder.setBolt("decode_process", new ImageProcessing()).shuffleGrouping("frame_receive");
+        builder.setBolt("send_command", new RabbitMQBolt(new BoltConfigurator(url), r)).shuffleGrouping("decode_process");
 
         Config conf = new Config();
         conf.setDebug(false);
 
-
-        if (args != null && args.length > 0) {
+        // we are going to deploy on a real cluster
+        if (!local) {
             conf.setNumWorkers(3);
-            StormSubmitter.submitTopology(args[0], conf, builder.createTopology());
+            StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
+            // deploy on a local cluster
             conf.setMaxTaskParallelism(3);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("image_proc", conf, builder.createTopology());
@@ -85,20 +100,22 @@ public class SphereTrackingTopology {
             List<Object> tuples = new ArrayList<Object>();
             //System.out.println(body);
             String encodedBytes = Base64.encodeBase64String(body);
-
-            tuples.add(new String(encodedBytes));
+            tuples.add(encodedBytes);
             return tuples;
         }
 
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
-            RabbitMQMessage message = new RabbitMQMessage(null, null, null, null, tuple.getValue(0).toString().getBytes());
-            return message;
+            return new RabbitMQMessage(null, null, null, null, tuple.getValue(0).toString().getBytes());
         }
     }
 
     private static class SpoutConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://10.39.1.16:5672";
+
+        private SpoutConfigurator(String url) {
+            this.url = url;
+        }
 
         @Override
         public String getURL() {
@@ -155,6 +172,10 @@ public class SphereTrackingTopology {
 
     private static class BoltConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://10.39.1.16:5672";
+
+        private BoltConfigurator(String url) {
+            this.url = url;
+        }
 
         @Override
         public String getURL() {
