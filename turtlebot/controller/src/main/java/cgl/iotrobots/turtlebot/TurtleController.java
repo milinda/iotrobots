@@ -4,11 +4,11 @@ import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+//import com.google.common.collect.Lists;
 import com.jcraft.jzlib.Inflater;
 import com.jcraft.jzlib.JZlib;
 import com.jcraft.jzlib.ZStream;
-import org.ros.internal.loader.CommandLineLoader;
+//import org.ros.internal.loader.CommandLineLoader;
 import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
@@ -16,7 +16,7 @@ import org.ros.node.NodeMainExecutor;
 import java.awt.image.BufferedImage;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
+//import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -56,7 +56,7 @@ public class TurtleController {
     }
 
     public void test() throws InterruptedException {
-        for (int i = 0 ;i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
             velocities.add(new Motion(new Velocity(-.1, 0, 0), new Velocity(0, 0, 0)));
             Thread.sleep(100);
         }
@@ -73,10 +73,9 @@ public class TurtleController {
 
     public static void main(String[] args) throws InterruptedException {
         // register with ros_java
-        CommandLineLoader loader = new CommandLineLoader(Lists.newArrayList(args));
         NodeConfiguration nodeConfiguration;
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.95.203", new URI("http://149.160.205.153:11311"));
             TurtleController turtleController = new TurtleController();
             turtleController.start(nodeConfiguration);
         } catch (URISyntaxException e) {
@@ -100,10 +99,11 @@ public class TurtleController {
                 try {
                     Object o = messages.take();
                     if (o instanceof byte[]) {
-                        byte []uncompressed = unCompress((byte [])o);
-                        BufferedImage image = getImage(uncompressed);
+                        int[] dist = unCompress((byte[]) o);
+                        BufferedImage image = getImage(dist);
                         ui.setImage(image);
-                        Motion motion = calculatePosition(uncompressed);
+                        //detect(ui, dist);
+                        Motion motion = calculatePosition(dist);
                         if (motion != null) {
                             velocities.add(motion);
                         }
@@ -115,14 +115,24 @@ public class TurtleController {
         }
     }
 
-    public static byte[] unCompress(byte []data) {
+    /*public static void detect(TurtleBotUIImpl ui, int[] dist) {
+        for (int i = 0; i < dist.length; i++) {
+            if (dist[i] < 750) {
+                ui.setObstacle(true);
+                return;
+            }
+        }
+        ui.setObstacle(false);
+    }*/
+
+    public static int[] unCompress(byte []data) {
         int err;
-        byte[] restored = new byte[614400];
+        byte[] inverted = new byte[307200];
         Inflater inflater = new Inflater();
         inflater.setInput(data);
 
         while (true) {
-            inflater.setOutput(restored);
+            inflater.setOutput(inverted);
             err = inflater.inflate(JZlib.Z_NO_FLUSH);
             if (err == JZlib.Z_STREAM_END) break;
             CHECK_ERR(inflater, err, "inflate large");
@@ -130,44 +140,45 @@ public class TurtleController {
 
         err = inflater.end();
         CHECK_ERR(inflater, err, "inflateEnd");
-        return restored;
+
+        int[] dist = new int[307200];
+        for(int i=0; i<307200; i++) {
+            if(inverted[i]==0) {
+                dist[i] = 0;
+                continue;
+            }
+            dist[i] = (inverted[i] & 0xFF);
+            dist[i] = (int)(90300 / (dist[i] + 21.575)); //distance given in mm
+        }
+        return dist;
     }
 
-    public Motion calculatePosition(byte[] depth_buf_) {
-        double t_gamma[] = new double[2048];
-        for (int p = 0; p < 2048; p++) {
-            t_gamma[p] = 0.1236 * Math.tan(p / 2842.5 + 1.1863);
-        }
+    public Motion calculatePosition(int[] dist) {
 
-        double max_z_ = 1.2;
+        double max_z_ = 1.0;
         double min_y_ = .1;
         double max_y_ = .5;
         double max_x_ = .2;
         double min_x_ = -.2;
-        double goal_z_ = .8;
+        double goal_z_ = .7;
 
-        double z_scale_ = 1, x_scale_ = 20;
+        double z_scale_ = 1, x_scale_ = 5.0;
 
-        int height_ = 480;
-        int width_ = 640;
-        double minDistance = -10;
-        double scaleFactor = .0021;
         double x, y, z;
         double totX = 0, totY = 0, totZ = 0;
-        int k = 0, n = 0;
+        int n = 0;
 
         double cx = 320.0; // center of projection
         double cy = 240.0; // center of projection
         double fx = 600.0; // focal length in pixels
         double fy = 600.0; // focal length in pixels
 
-        for (int v = 0; v < height_; ++v) {
-            for (int u = 0; u < width_; ++u) {
-                int lo = depth_buf_[k] & 0xFF;
-                int hi = depth_buf_[k + 1] & 0xFF;
-                int disp = hi << 8 | lo;
-
-                double d = t_gamma[disp];
+        int u = 0,v = 0;
+        for(int i=0; i<307200; i++) {
+                v = (int) Math.floor((double) i / 640);
+                u = i - 640 * v;
+                //double d = (double) (dist[i]) / 1000;
+                double d = ((double) dist[i]) / 1000;
                 if (d <= 0.0)
                     continue;
                 // Fill in XYZ
@@ -186,23 +197,24 @@ public class TurtleController {
                     totZ += z;
                     n++;
                 }
-                k += 2;
-            }
+                //u++;
+                //if(i % 640 == 0) v++;
         }
-
         if (n > 4000) {
             totX /= n;
-            totY /= n;
+            //totY /= n;
             totZ /= n;
-            // System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
+            //System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
             if (Math.abs(totZ  -max_z_) < 0.01) {
                 //System.out.println("No valid points detected, stopping the robot");
                 return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));
             }
 
-            // System.out.format("Centroid at %f %f %f with %d points", totX, totY, totZ, n);
-            if (totX * x_scale_ >= .1) {
-                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, totX * x_scale_));
+            //System.out.format("Centroid at %f %f %f with %d points\n", totX, totY, totZ, n);
+            if (Math.abs(totX * x_scale_) >= .1) {
+                if(Math.abs(totX) > .05) System.out.println("XTurn Detected MoFo!!!!");
+                else System.out.println("Its coo do");
+                return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, (-1)*totX * x_scale_));
             } else {
                 return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, 0));
             }
@@ -213,50 +225,34 @@ public class TurtleController {
         }
     }
 
-    public static BufferedImage getImage(byte []restored) {
-        double t_gamma[] = new double[1024];
-        for (int p = 0; p < 1024; p++) {
-            t_gamma[p] = 100 * 0.1236 * Math.tan(p / 2842.5 + 1.1863);
-        }
+    public static BufferedImage getImage(int []dist) {
 
         BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB);
-        ByteBuffer frame = ByteBuffer.allocate(614400);
 
-        for (int i = 0; i < 614400; i++) frame.put(i, restored[i]);
-
-        int r, b, g, x, y;
-        for (int i = 0; i < 614400; i += 2) {
-            int lo = frame.get(i) & 0xFF;
-            int hi = frame.get(i + 1) & 0xFF;
-            int disp = hi << 8 | lo;
-            double dist = t_gamma[disp];
-            if (dist >= 40 && dist < 150) {
-                b = 255;
-                r = 0;
-                g = (int) (255 - ((dist - 40) / 109 * 255));
-            } else if (dist >= 150 && dist <= 250) {
-                dist = ((dist - 150) / 100 * 255);
-                b = (int) (255 - dist);
-                r = (int) (dist);
-                g = 0;
-            } else if (dist > 250 && dist <= 500) {
-                dist = (dist - 251) / 249 * 255;
-                b = 0;
-                r = (int) (255 - dist);
-                g = (int) (dist);
-            } else if (disp == 1023) {
+        int r=0,b=0,g=0,x,y;
+        for(int i=0; i<307200; i++) {
+            if(dist[i] == 0) {
                 b = 0;
                 r = 0;
                 g = 0;
             } else {
-                dist = (dist - 501) / t_gamma[1022] * 255;
-                b = 20;
-                r = 0;
-                g = (int) (255 - dist);
+                if (dist[i] >= 326 && dist[i] < 1443) {
+                    b = 255;
+                    r = 0;
+                    g = 255;
+                } else if (dist[i] >= 1443 && dist[i] <= 2500) {
+                    b = 255;
+                    r = 0;
+                    g = 150;
+                } else if (dist[i] > 2500 && dist[i] <= 4185){
+                    b = 255;
+                    r = 0;
+                    g = 50;
+                }
             }
 
-            y = (int) Math.floor((double) i / 2 / 640);
-            x = i / 2 - 640 * y;
+            y=(int)Math.floor((double)i/640);
+            x=i-640*y;
             int pixel = (0xFF) << 24
                     | (b & 0xFF) << 16
                     | (g & 0xFF) << 8
