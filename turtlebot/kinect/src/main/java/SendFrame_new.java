@@ -1,7 +1,7 @@
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.MessageProperties;
+import com.rabbitmq.client.MessageProperties;
 
 import org.openkinect.freenect.*;
 import com.jcraft.jzlib.*;
@@ -25,8 +25,7 @@ public class SendFrame_new {
             factory.setHost(args[0]);
             final Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
-            final String exchange_name = args[1];
-
+            final String exchange_name = "kinect_frames"
             // CREATE EXCHANGE
             channel.exchangeDeclare(exchange_name, "fanout");
 
