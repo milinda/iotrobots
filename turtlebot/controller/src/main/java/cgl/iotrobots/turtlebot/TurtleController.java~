@@ -125,7 +125,7 @@ public class TurtleController {
         ui.setObstacle(false);
     }*/
 
-    public static int[] unCompress(byte[] data) {
+    public static int[] unCompress(byte []data) {
         int err;
         byte[] inverted = new byte[307200];
         Inflater inflater = new Inflater();
