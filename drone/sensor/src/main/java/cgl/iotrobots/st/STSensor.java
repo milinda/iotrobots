@@ -1,10 +1,10 @@
 package cgl.iotrobots.st;
 
 import cgl.iotcloud.core.*;
+import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
-import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,9 +58,9 @@ public class STSensor extends AbstractSensor {
         startListen(receiveChannel, new MessageReceiver() {
             @Override
             public void onMessage(Object message) {
-                if (message instanceof RabbitMQMessage) {
+                if (message instanceof MessageContext) {
                     try {
-                        sendingQueue.put(((RabbitMQMessage) message).getBody());
+                        sendingQueue.put(((MessageContext) message).getBody());
                     } catch (InterruptedException e) {
                         LOG.error("Failed to put the message for sending", e);
                     }

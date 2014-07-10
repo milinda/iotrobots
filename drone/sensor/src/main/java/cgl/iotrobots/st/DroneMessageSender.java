@@ -1,6 +1,6 @@
 package cgl.iotrobots.st;
 
-import cgl.iotcloud.core.transport.MessageConverter;
+import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
@@ -104,8 +104,8 @@ public class DroneMessageSender {
                 try {
                     try {
                         Object input = outQueue.take();
-                        if (input instanceof byte []) {
-                            channel.basicPublish(exchangeName, routingKey, null, (byte[]) input);
+                        if (input instanceof MessageContext) {
+                            channel.basicPublish(exchangeName, routingKey, null, ((MessageContext) input).getBody());
                         } else {
                             throw new RuntimeException("Expepected byte array after conversion");
                         }
