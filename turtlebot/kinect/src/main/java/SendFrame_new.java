@@ -48,23 +48,19 @@ public class SendFrame_new {
                 inverted[i] = (byte) (90300 / t_gamma[i] - 21.575);
             }
 
-            // DISPLAY DEPTH VIDEO
+            // START DEPTH VIDEO
             dev.startDepth(new DepthHandler() {
                 int numFrame = 0;
 
                 @Override
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
-                    // EVERY OTHER FRAME IS DISPLAYED
-                    if (numFrame % 1 == 0) {
-                        if (numFrame % 2 == 0) {
-                            byte[] data = new byte[307200];
-                            int p = 0;
+                       	     byte[] data = new byte[307200];
+                       	     int p = 0;
                             for (int i = 0; i < 614400; i += 2) {
                                 int lo = frame.get(i) & 0xFF;
                                 int hi = frame.get(i + 1) & 0xFF;
                                 int disp = hi << 8 | lo;
                                 if (disp > 60 && disp < 1012) {
-                                    data[p] = inverted[disp];
                                     data[p] = inverted[disp];
                                 } else {
                                     data[p] = 0;
@@ -74,13 +70,14 @@ public class SendFrame_new {
 
                             // COMPRESS DATA
                             int err;
-                            int comprLen = 60000;
+                            int comprLen = 65000;
                             byte[] compr = new byte[comprLen];
 
                             Deflater deflater = null;
                             try {
                                 deflater = new Deflater(JZlib.Z_BEST_SPEED);
                             } catch (GZIPException e) {
+                            System.exit(0);
                             }
 
                             deflater.setInput(data);
@@ -111,9 +108,6 @@ public class SendFrame_new {
                             } catch (IOException e) {
                                 System.exit(0);
                             }
-                        }
-                        ++numFrame;
-                    }
                 }
 
                 );
