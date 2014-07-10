@@ -28,7 +28,7 @@ public class RecvFrame_new {
         factory.setHost("localhost");
         final Connection connection = factory.newConnection();
         final Channel channel = connection.createChannel();
-        String exchange_name = args[0];
+        String exchange_name = "kinect_frames";
 
         // BIND EXCHANGE TO QUEUE
         channel.exchangeDeclare(exchange_name, "fanout");
