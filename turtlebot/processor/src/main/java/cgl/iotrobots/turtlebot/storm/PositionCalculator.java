@@ -2,14 +2,13 @@ package cgl.iotrobots.turtlebot.storm;
 
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
-import com.jcraft.jzlib.Inflater;
-import com.jcraft.jzlib.JZlib;
-import com.jcraft.jzlib.ZStream;
+import cgl.iotrobots.turtlebot.commons.Compressor
 
 public class PositionCalculator {
 
     public Motion calculatePosition(byte[] data) {
-        int[] dist = unCompress(data);
+        Compressor compressor = new Compressor();
+        int[] dist = compressor.unCompr(data);
         double max_z_ = 1.0;
         double min_y_ = .1;
         double max_y_ = .5;
@@ -76,40 +75,4 @@ public class PositionCalculator {
         }
     }
 
-    public static int[] unCompress(byte []data) {
-        int err;
-        byte[] inverted = new byte[307200];
-        Inflater inflater = new Inflater();
-        inflater.setInput(data);
-
-        while (true) {
-            inflater.setOutput(inverted);
-            err = inflater.inflate(JZlib.Z_NO_FLUSH);
-            if (err == JZlib.Z_STREAM_END) break;
-            CHECK_ERR(inflater, err, "inflate large");
-        }
-
-        err = inflater.end();
-        CHECK_ERR(inflater, err, "inflateEnd");
-
-        int[] dist = new int[307200];
-        for(int i=0; i<307200; i++) {
-            if(inverted[i]==0) {
-                dist[i] = 0;
-                continue;
-            }
-            dist[i] = (inverted[i] & 0xFF);
-            dist[i] = (int)(90300 / (dist[i] + 21.575)); //distance given in mm
-        }
-        return dist;
-    }
-
-    static void CHECK_ERR(ZStream z, int err, String msg) {
-        if (err != JZlib.Z_OK) {
-            if (z.msg != null) System.out.print(z.msg + " ");
-            System.out.println(msg + " error: " + err);
-
-            System.exit(1);
-        }
-    }
 }
