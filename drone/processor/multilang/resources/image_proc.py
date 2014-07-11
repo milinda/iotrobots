@@ -24,7 +24,7 @@ class SplitSentenceBolt(storm.BasicBolt):
                   bufsize=0, preexec_fn=set_death_signal_int)
         t = Thread(target=self.enqueue_output, args=(self.p.stdout, (360, 640)))
         t.daemon = True # thread dies with the program
-        self.q = Queue.Queue(1)
+        self.q = Queue.Queue()
         self.time_queue = Queue.Queue()
         self.tcount = 0
         self.emitcount = 0
@@ -38,9 +38,11 @@ class SplitSentenceBolt(storm.BasicBolt):
         time = tup.values[1]
         self.time_queue.put(time)
 
+        # storm.log("Before write $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         self.p.stdin.write(frame)
+        # storm.log("After write &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         self.tcount += 1
-        while not self.q.empty():
+        while not self.q.empty() and not self.time_queue.empty():
             if len(self.diff) > 10 and not self.started_decode:
                 equal = 1
                 cd = 0
@@ -56,8 +58,8 @@ class SplitSentenceBolt(storm.BasicBolt):
                     d = self.diff[-2 - x]
 
                 if equal:
-                    storm.log(("size of time queue ****** " + str(self.time_queue.qsize())))
-                    for x in range(0, d):
+                    # storm.log(("size of time queue *************************************************************************** " + str(self.time_queue.qsize())))
+                    for x in range(0, d - 1):
                         self.time_queue.get()
                     self.started_decode = 1
 
@@ -77,7 +79,7 @@ class SplitSentenceBolt(storm.BasicBolt):
             self.q.queue.clear()
             self.emitcount += 1
             storm.log(("emit count " + str(self.emitcount)))
-            storm.log(("tuple count " + str(self.tcount)))
+            storm.log(("tuple count " + str(self.tcount) + "\n\n"))
 
             self.diff.append(self.tcount - self.emitcount)
 
@@ -111,6 +113,7 @@ class SplitSentenceBolt(storm.BasicBolt):
 
             io = StringIO()
             json.dump(message, io)
+            # storm.log("Before put %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             self.q.put(io.getvalue())
             #storm.emit([io.getvalue()])
 
