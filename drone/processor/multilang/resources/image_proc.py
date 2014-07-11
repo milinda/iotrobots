@@ -26,22 +26,45 @@ class SplitSentenceBolt(storm.BasicBolt):
         t.daemon = True # thread dies with the program
         self.q = Queue.Queue()
         self.time_queue = Queue.Queue()
-
+        self.tcount = 0
+        self.emitcount = 0
+        self.started_decode = 0
         t.start()
 
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
-        time = tup.values[1]
-        self.time_queue.put(time)
-        self.p.stdin.write(frame)
 
+        if self.tcount > 8:
+            time = tup.values[1]
+            self.time_queue.put(time)
+
+        self.p.stdin.write(frame)
+        self.tcount += 1
         while not self.q.empty():
-        # if not self.q.empty():
+            # if not self.started_decode:
+            #     storm.log(("size of time queue ****** " + str(self.time_queue.qsize())))
+            #     if self.time_queue.qsize() > 2:
+            #         while self.time_queue.qsize() != 3:
+            #             self.time_queue.get()
+            #     self.started_decode = 1
+
             list = []
             time = self.time_queue.get()
             list.append(self.q.get())
             list.append(time)
-            # self.q.queue.clear()
+
+            storm.log(("size of time queue " + str(self.time_queue.qsize())))
+            storm.log(("size of message queue " + str(self.q.qsize())))
+
+            # if (self.time_queue.qsize() != self.q.qsize()):
+            #     with self.q.mutex:
+            #         self.q.queue.clear()
+            #         while not self.time_queue.empty():
+            #             self.time_queue.get()
+            self.q.queue.clear()
+            self.emitcount += 1
+            storm.log(("emit count " + str(self.emitcount)))
+            storm.log(("tuple count " + str(self.tcount)))
             storm.emit(list)
 
     def enqueue_output(self, out, frame_size):

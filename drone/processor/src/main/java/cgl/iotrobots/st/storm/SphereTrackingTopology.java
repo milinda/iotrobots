@@ -46,18 +46,6 @@ public class SphereTrackingTopology {
         }
     }
 
-    public static class PrintingBolt extends BaseBasicBolt {
-
-        @Override
-        public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
-            System.out.println(tuple.getValue(0));
-        }
-
-        @Override
-        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        }
-    }
-
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
         ErrorReporter r = new ErrorReporter() {
@@ -108,7 +96,6 @@ public class SphereTrackingTopology {
                 time = properties.getHeaders().get("time");
             }
 
-            // System.out.println("Getting message");
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
             //System.out.println(body);
@@ -116,7 +103,7 @@ public class SphereTrackingTopology {
             tuples.add(encodedBytes);
 
             if (time != null) {
-                System.out.println(time);
+//                System.out.println(time);
                 tuples.add(time.toString());
             }
 
