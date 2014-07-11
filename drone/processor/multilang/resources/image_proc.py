@@ -24,29 +24,42 @@ class SplitSentenceBolt(storm.BasicBolt):
                   bufsize=0, preexec_fn=set_death_signal_int)
         t = Thread(target=self.enqueue_output, args=(self.p.stdout, (360, 640)))
         t.daemon = True # thread dies with the program
-        self.q = Queue.Queue()
+        self.q = Queue.Queue(1)
         self.time_queue = Queue.Queue()
         self.tcount = 0
         self.emitcount = 0
         self.started_decode = 0
+        self.diff = []
         t.start()
 
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
 
-        if self.tcount > 8:
-            time = tup.values[1]
-            self.time_queue.put(time)
+        time = tup.values[1]
+        self.time_queue.put(time)
 
         self.p.stdin.write(frame)
         self.tcount += 1
         while not self.q.empty():
-            # if not self.started_decode:
-            #     storm.log(("size of time queue ****** " + str(self.time_queue.qsize())))
-            #     if self.time_queue.qsize() > 2:
-            #         while self.time_queue.qsize() != 3:
-            #             self.time_queue.get()
-            #     self.started_decode = 1
+            if len(self.diff) > 10 and not self.started_decode:
+                equal = 1
+                cd = 0
+                pd = 0
+                d = 0
+                for x in range(0, 10):
+                    cd = self.diff[-1 - x] - self.diff[-2 - x]
+                    if x == 0:
+                        pd = cd
+                    if pd != cd:
+                        equal = 0
+                    pd = cd
+                    d = self.diff[-2 - x]
+
+                if equal:
+                    storm.log(("size of time queue ****** " + str(self.time_queue.qsize())))
+                    for x in range(0, d):
+                        self.time_queue.get()
+                    self.started_decode = 1
 
             list = []
             time = self.time_queue.get()
@@ -65,6 +78,9 @@ class SplitSentenceBolt(storm.BasicBolt):
             self.emitcount += 1
             storm.log(("emit count " + str(self.emitcount)))
             storm.log(("tuple count " + str(self.tcount)))
+
+            self.diff.append(self.tcount - self.emitcount)
+
             storm.emit(list)
 
     def enqueue_output(self, out, frame_size):
