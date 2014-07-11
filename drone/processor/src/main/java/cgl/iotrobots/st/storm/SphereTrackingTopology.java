@@ -11,6 +11,7 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import com.rabbitmq.client.AMQP;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
 import org.apache.commons.cli.BasicParser;
@@ -18,12 +19,17 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SphereTrackingTopology {
+    private static Logger LOG = LoggerFactory.getLogger(SphereTrackingTopology.class);
+
     public static class ImageProcessing extends ShellBolt implements IRichBolt {
         public ImageProcessing() {
             super("python", "image_proc.py");
@@ -31,7 +37,7 @@ public class SphereTrackingTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer declarer) {
-            declarer.declare(new Fields("image"));
+            declarer.declare(new Fields("image", "time"));
         }
 
         @Override
@@ -96,22 +102,42 @@ public class SphereTrackingTopology {
     private static class Base64Builder implements MessageBuilder {
         @Override
         public List<Object> deSerialize(RabbitMQMessage message) {
+            Object time = null;
+            AMQP.BasicProperties properties = message.getProperties();
+            if (properties != null && properties.getHeaders() != null) {
+                time = properties.getHeaders().get("time");
+            }
+
+            // System.out.println("Getting message");
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
             //System.out.println(body);
             String encodedBytes = Base64.encodeBase64String(body);
             tuples.add(encodedBytes);
+
+            if (time != null) {
+                System.out.println(time);
+                tuples.add(time.toString());
+            }
+
             return tuples;
         }
 
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
-            return new RabbitMQMessage(null, null, null, null, tuple.getValue(0).toString().getBytes());
+            String time = (String) tuple.getValueByField("time");
+            Map<String, Object> props = new HashMap<String, Object>();
+            props.put("time", time);
+
+            // System.out.println("Sending message" + motion);
+            return new RabbitMQMessage(null, null, null,
+                    new AMQP.BasicProperties.Builder().headers(props).build(),
+                    tuple.getValue(0).toString().getBytes());
         }
     }
 
     private static class SpoutConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://10.39.1.16:5672";
+        private String url = "amqp://localhost:5672";
 
         private SpoutConfigurator(String url) {
             this.url = url;
@@ -156,7 +182,7 @@ public class SphereTrackingTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields("time1"));
+            outputFieldsDeclarer.declare(new Fields("frame", "time"));
         }
 
         @Override
@@ -171,7 +197,7 @@ public class SphereTrackingTopology {
     }
 
     private static class BoltConfigurator implements RabbitMQConfigurator {
-        private String url = "amqp://10.39.1.16:5672";
+        private String url = "amqp://localhost:5672";
 
         private BoltConfigurator(String url) {
             this.url = url;

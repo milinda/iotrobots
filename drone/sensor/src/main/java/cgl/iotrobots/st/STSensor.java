@@ -53,6 +53,21 @@ public class STSensor extends AbstractSensor {
         controlSender = new DroneMessageSender(sendingQueue, "drone", "control", "control", null, null, brokerURL);
         controlSender.start();
 
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        MessageContext messageContext = (MessageContext) receivingQueue.take();
+                        sendChannel.publish(messageContext);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        t.start();
+
         startSend(sendChannel, receivingQueue);
 
         startListen(receiveChannel, new MessageReceiver() {
@@ -60,7 +75,7 @@ public class STSensor extends AbstractSensor {
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
                     try {
-                        sendingQueue.put(((MessageContext) message).getBody());
+                        sendingQueue.put(message);
                     } catch (InterruptedException e) {
                         LOG.error("Failed to put the message for sending", e);
                     }

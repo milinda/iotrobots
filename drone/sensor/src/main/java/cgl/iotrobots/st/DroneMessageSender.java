@@ -1,15 +1,15 @@
 package cgl.iotrobots.st;
 
 import cgl.iotcloud.core.msg.MessageContext;
+import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotcloud.transport.rabbitmq.RabbitMQMessage;
-import com.rabbitmq.client.Address;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
@@ -103,11 +103,21 @@ public class DroneMessageSender {
             while (run) {
                 try {
                     try {
-                        Object input = outQueue.take();
-                        if (input instanceof MessageContext) {
-                            channel.basicPublish(exchangeName, routingKey, null, ((MessageContext) input).getBody());
+                        Object message = outQueue.take();
+                        if (message instanceof MessageContext) {
+                            MessageContext input = (MessageContext) outQueue.take();
+
+                            Map<String, Object> props = new HashMap<String, Object>();
+                            props.put(TransportConstants.SENSOR_ID, input.getSensorId());
+
+                            for (Map.Entry<String, Object> e : input.getProperties().entrySet()) {
+                                props.put(e.getKey(), e.getValue());
+                            }
+
+                            channel.basicPublish(exchangeName, routingKey,
+                                    new AMQP.BasicProperties.Builder().headers(props).build(), input.getBody());
                         } else {
-                            throw new RuntimeException("Expepected byte array after conversion");
+                            LOG.error("Expepected byte array after conversion");
                         }
                     } catch (InterruptedException e) {
                         LOG.error("Exception occurred in the worker listening for consumer changes", e);
@@ -115,9 +125,9 @@ public class DroneMessageSender {
                 } catch (Throwable t) {
                     errorCount++;
                     if (errorCount <= 3) {
-                        LOG.error("Error occurred " + errorCount + " times.. trying to continue the worker");
+                        LOG.error("Error occurred " + errorCount + " times.. trying to continue the worker", t);
                     } else {
-                        LOG.error("Error occurred " + errorCount + " times.. terminating the worker");
+                        LOG.error("Error occurred " + errorCount + " times.. terminating the worker", t);
                         run = false;
                     }
                 }

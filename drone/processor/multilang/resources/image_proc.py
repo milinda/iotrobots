@@ -25,31 +25,24 @@ class SplitSentenceBolt(storm.BasicBolt):
         t = Thread(target=self.enqueue_output, args=(self.p.stdout, (360, 640)))
         t.daemon = True # thread dies with the program
         self.q = Queue.Queue()
-        #self.f = open('test.out', 'w')
-
+        self.time_queue = Queue.Queue()
 
         t.start()
-#        self.decoder = h264decoder.H264Decoder((360, 640, 3))
 
     def process(self, tup):
-        #base64Frame = [elem.encode("hex") for elem in tup.values[0]]
-
         frame =  base64.b64decode(tup.values[0])
-        frame_bytes = [elem.encode("hex") for elem in frame]
+        time = tup.values[1]
+        self.time_queue.put(time)
         self.p.stdin.write(frame)
-        list = []
-        #while not self.q.empty():
-        if not self.q.empty():
+
+        while not self.q.empty():
+        # if not self.q.empty():
+            list = []
+            time = self.time_queue.get()
             list.append(self.q.get())
-            self.q.queue.clear()
+            list.append(time)
+            # self.q.queue.clear()
             storm.emit(list)
-        '''else:
-            message = {}
-            message["control"] = {"hover" : "true3"}
-            io = StringIO()
-            json.dump(message, io)
-            #self.q.put(io.getvalue())
-            storm.emit([io.getvalue()])'''
 
     def enqueue_output(self, out, frame_size):
         frame_size_bytes = frame_size[0] * frame_size[1] * 3
@@ -82,16 +75,11 @@ class SplitSentenceBolt(storm.BasicBolt):
             self.q.put(io.getvalue())
             #storm.emit([io.getvalue()])
 
-
 # Logic for making ffmpeg terminate on the death of this process
 def set_death_signal(signal):
     libc = ctypes.CDLL('libc.so.6')
     PR_SET_DEATHSIG = 1
     libc.prctl(PR_SET_DEATHSIG, signal)
-
-
-
-
 
 def set_death_signal_int():
     if sys.platform != 'darwin':

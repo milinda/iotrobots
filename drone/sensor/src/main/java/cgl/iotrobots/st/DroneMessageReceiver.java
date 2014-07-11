@@ -1,11 +1,16 @@
 package cgl.iotrobots.st;
 
+import cgl.iotcloud.core.msg.MessageContext;
+import cgl.iotcloud.core.transport.TransportConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.*;
 
+import javax.jms.MessageConsumer;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -80,8 +85,17 @@ public class DroneMessageReceiver {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
+                            Map<String, Object> props = new HashMap<String, Object>();
+                            if (properties != null && properties.getHeaders() != null) {
+                                for (Map.Entry<String, Object> e : properties.getHeaders().entrySet()) {
+                                    props.put(e.getKey(), e.getValue().toString());
+                                }
+                            }
+
+                            MessageContext messageContext = new MessageContext("default", body, props);
+
                             System.out.println(body);
-                            inQueue.offer(body);
+                            inQueue.offer(messageContext);
                             channel.basicAck(deliveryTag, false);
                         }
                     });
