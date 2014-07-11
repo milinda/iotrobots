@@ -76,7 +76,7 @@ class SplitSentenceBolt(storm.BasicBolt):
             #         self.q.queue.clear()
             #         while not self.time_queue.empty():
             #             self.time_queue.get()
-            self.q.queue.clear()
+            #self.q.queue.clear()
             self.emitcount += 1
             storm.log(("emit count " + str(self.emitcount)))
             storm.log(("tuple count " + str(self.tcount) + "\n\n"))

@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ece4fde1-8cb2-42a6-b78d-423b4ae93fee" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/pom.xml" afterPath="$PROJECT_DIR$/drone/pom.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/turtlebot/pom.xml" afterPath="$PROJECT_DIR$/turtlebot/pom.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" afterPath="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="iotrobots.iws" />
@@ -16,7 +15,7 @@
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/iotrobots$frame_sender.coverage" NAME="frame_sender Coverage Results" MODIFIED="1405111432226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/drone/frame" />
+    <SUITE FILE_PATH="coverage/iotrobots$frame_sender.coverage" NAME="frame_sender Coverage Results" MODIFIED="1405112680933" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/drone/frame" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
@@ -149,21 +148,6 @@
     <splitter split-orientation="horizontal" split-proportion="0.5406732">
       <split-first>
         <leaf>
-          <file leaf-file-name="SphereTrackingTopology.java" pinned="false" current="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java">
-              <provider selected="true" editor-type-id="text-editor">
-                <state line="106" column="24" selection-start="4037" selection-end="4037" vertical-scroll-proportion="-28.666666" vertical-offset="816" max-vertical-offset="3705">
-                  <folding>
-                    <element signature="imports" expanded="true" />
-                    <element signature="e#1703#1858#0" expanded="true" />
-                    <element signature="e#1847#1848#0" expanded="true" />
-                    <element signature="e#3779#3787#0" expanded="true" />
-                    <element signature="e#4302#4318#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/drone/processor/pom.xml">
               <provider selected="true" editor-type-id="text-editor">
@@ -200,15 +184,6 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="README.md" pinned="false" current="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/README.md">
-              <provider selected="true" editor-type-id="text-editor">
-                <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="-0.0" vertical-offset="0" max-vertical-offset="150">
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pom.xml">
               <provider selected="true" editor-type-id="text-editor">
@@ -218,11 +193,33 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="pom.xml" pinned="false" current="true" current-in-tab="true">
+          <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/turtlebot/pom.xml">
               <provider selected="true" editor-type-id="text-editor">
-                <state line="41" column="12" selection-start="1419" selection-end="1419" vertical-scroll-proportion="0.60117304" vertical-offset="0" max-vertical-offset="1023">
+                <state line="41" column="12" selection-start="1419" selection-end="1419" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="750">
                   <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="frame_sender.py" pinned="false" current="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/drone/frame/frame_sender.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state line="32" column="27" selection-start="1210" selection-end="1210" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="930">
+                  <folding>
+                    <element signature="e#0#11#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="image_proc.py" pinned="false" current="true" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state line="78" column="13" selection-start="2821" selection-end="2821" vertical-scroll-proportion="0.6627566" vertical-offset="492" max-vertical-offset="2055">
+                  <folding>
+                    <element signature="e#0#12#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -289,10 +286,10 @@
         <option value="$PROJECT_DIR$/drone/processor/pom.xml" />
         <option value="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java" />
         <option value="$PROJECT_DIR$/drone/README.md" />
-        <option value="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/drone/pom.xml" />
         <option value="$PROJECT_DIR$/turtlebot/pom.xml" />
+        <option value="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
       </list>
     </option>
   </component>
@@ -438,6 +435,32 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="processor" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="iotrobots" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="iotrobots" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="drone" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="processor" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="multilang" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -989,7 +1012,7 @@
       <updated>1404832971316</updated>
       <workItem from="1404927746454" duration="6014000" />
       <workItem from="1404934224141" duration="4189000" />
-      <workItem from="1405021486077" duration="32712000" />
+      <workItem from="1405021486077" duration="33448000" />
     </task>
     <task id="LOCAL-00001" summary="reformatting the code">
       <created>1404928951930</created>
@@ -1015,11 +1038,15 @@
       <created>1405112087735</created>
       <updated>1405112087735</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="adding timestamps&#10;">
+      <created>1405112348926</created>
+      <updated>1405112348926</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="42915000" />
+    <option name="totallyTimeSpent" value="43651000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1985" y="24" width="1855" height="1176" extended-state="6" />
@@ -1364,24 +1391,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="44" column="41" selection-start="1465" selection-end="1465" vertical-scroll-proportion="0.0" vertical-offset="135" max-vertical-offset="2055">
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/drone/frame/frame_sender.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="32" column="27" selection-start="1210" selection-end="1210" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="930">
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="106" column="24" selection-start="4037" selection-end="4037" vertical-scroll-proportion="-28.666666" vertical-offset="816" max-vertical-offset="3705">
@@ -1453,8 +1462,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/turtlebot/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="12" selection-start="1419" selection-end="1419" vertical-scroll-proportion="0.60117304" vertical-offset="0" max-vertical-offset="1023">
+        <state line="41" column="12" selection-start="1419" selection-end="1419" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="750">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/drone/frame/frame_sender.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="32" column="27" selection-start="1210" selection-end="1210" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="930">
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="78" column="13" selection-start="2821" selection-end="2821" vertical-scroll-proportion="0.6627566" vertical-offset="492" max-vertical-offset="2055">
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
