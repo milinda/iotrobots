@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ece4fde1-8cb2-42a6-b78d-423b4ae93fee" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java" afterPath="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" afterPath="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/processor/pom.xml" afterPath="$PROJECT_DIR$/drone/processor/pom.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -151,10 +149,10 @@
     <splitter split-orientation="horizontal" split-proportion="0.7741935">
       <split-first>
         <leaf>
-          <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
+          <file leaf-file-name="pom.xml" pinned="false" current="true" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/drone/processor/pom.xml">
               <provider selected="true" editor-type-id="text-editor">
-                <state line="19" column="21" selection-start="788" selection-end="788" vertical-scroll-proportion="0.0" vertical-offset="285" max-vertical-offset="1275">
+                <state line="19" column="21" selection-start="781" selection-end="781" vertical-scroll-proportion="0.27509654" vertical-offset="0" max-vertical-offset="1275">
                   <folding />
                 </state>
               </provider>
@@ -196,10 +194,10 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="image_proc.py" pinned="false" current="true" current-in-tab="true">
+          <file leaf-file-name="image_proc.py" pinned="false" current="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state line="48" column="31" selection-start="1534" selection-end="1534" vertical-scroll-proportion="0.26686218" vertical-offset="447" max-vertical-offset="1755">
+                <state line="48" column="31" selection-start="1534" selection-end="1534" vertical-scroll-proportion="0.0" vertical-offset="447" max-vertical-offset="1755">
                   <folding>
                     <element signature="e#0#12#0" expanded="true" />
                     <marker date="1405192063136" expanded="true" signature="1690:1795" placeholder="..." />
@@ -286,10 +284,10 @@
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/drone/pom.xml" />
         <option value="$PROJECT_DIR$/turtlebot/pom.xml" />
-        <option value="$PROJECT_DIR$/drone/processor/pom.xml" />
         <option value="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java" />
         <option value="$PROJECT_DIR$/drone/frame/frame_sender.py" />
         <option value="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
+        <option value="$PROJECT_DIR$/drone/processor/pom.xml" />
       </list>
     </option>
   </component>
@@ -1055,7 +1053,7 @@
       <workItem from="1405021486077" duration="41025000" />
       <workItem from="1405127574502" duration="1564000" />
       <workItem from="1405129152721" duration="136000" />
-      <workItem from="1405134529809" duration="12161000" />
+      <workItem from="1405134529809" duration="12283000" />
     </task>
     <task id="LOCAL-00001" summary="reformatting the code">
       <created>1404928951930</created>
@@ -1089,11 +1087,15 @@
       <created>1405113086421</created>
       <updated>1405113086421</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="adding timestamps&#10;">
+      <created>1405192146596</created>
+      <updated>1405192146596</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="65089000" />
+    <option name="totallyTimeSpent" value="65211000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1985" y="24" width="1855" height="1176" extended-state="6" />
@@ -1119,7 +1121,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27137342" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21345836" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21345836" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4064516" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1397,13 +1399,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/drone/processor/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="21" selection-start="788" selection-end="788" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1275">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/drone/README.md">
       <provider selected="true" editor-type-id="text-editor">
         <state line="21" column="143" selection-start="819" selection-end="819" vertical-scroll-proportion="-12.6" vertical-offset="0" max-vertical-offset="450">
@@ -1441,11 +1436,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="48" column="31" selection-start="1534" selection-end="1534" vertical-scroll-proportion="0.26686218" vertical-offset="447" max-vertical-offset="1755">
+        <state line="48" column="31" selection-start="1534" selection-end="1534" vertical-scroll-proportion="0.0" vertical-offset="447" max-vertical-offset="1755">
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <marker date="1405192063136" expanded="true" signature="1690:1795" placeholder="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/drone/processor/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="21" selection-start="781" selection-end="781" vertical-scroll-proportion="0.27509654" vertical-offset="0" max-vertical-offset="1275">
+          <folding />
         </state>
       </provider>
     </entry>
