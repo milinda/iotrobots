@@ -18,83 +18,57 @@ class SplitSentenceBolt(storm.BasicBolt):
     def __init__(self):
         self.trackingSensorModule = TrackingSensorModule()
         self.p = Popen(["nice", "-n", "15", "avconv", "-i", "-",
-                   "-probesize", "2048", "-flags", "low_delay", "-f",
-                   "rawvideo", "-pix_fmt", 'rgb24', "-"],
-                  stdin=PIPE, stdout=PIPE, stderr=open('/dev/null', 'w'),
-                  bufsize=0, preexec_fn=set_death_signal_int)
+                        "-probesize", "2048", "-flags", "low_delay", "-f",
+                        "rawvideo", "-pix_fmt", 'rgb24', "-"],
+                       stdin=PIPE, stdout=PIPE, stderr=open('/dev/null', 'w'),
+                       bufsize=0, preexec_fn=set_death_signal_int)
         t = Thread(target=self.enqueue_output, args=(self.p.stdout, (360, 640)))
-        t.daemon = True # thread dies with the program
+        t.daemon = True
+        t.start()
+
+        # send_thread = Thread(target=self.send_queue)
+        # send_thread.daemon = True
+        # send_thread.start()
+
         self.q = Queue.Queue()
         self.time_queue = Queue.Queue()
-        self.tcount = 0
-        self.emitcount = 0
-        self.started_decode = 0
-        self.diff = []
-        t.start()
+
+        # counting the tuples emitted
+        self.emit_count = 0
+        self.tuple_count = 0
+        self.time_removed = 0
 
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
-
+        self.p.stdin.write(frame)
         time = tup.values[1]
         self.time_queue.put(time)
+        self.tuple_count += 1
 
-        # storm.log("Before write $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        self.p.stdin.write(frame)
-        # storm.log("After write &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        self.tcount += 1
-        while not self.q.empty() and not self.time_queue.empty():
-            if len(self.diff) > 10 and not self.started_decode:
-                equal = 1
-                cd = 0
-                pd = 0
-                d = 0
-                for x in range(0, 10):
-                    cd = self.diff[-1 - x] - self.diff[-2 - x]
-                    if x == 0:
-                        pd = cd
-                    if pd != cd:
-                        equal = 0
-                    pd = cd
-                    d = self.diff[-2 - x]
+        if self.time_queue.qsize() >= 10 and self.tuple_count > 130 and not self.time_removed:
+            for x in range(0, 9):
+                self.time_queue.get()
+            self.time_removed = 1
+            storm.log("done................")
 
-                if equal:
-                    # storm.log(("size of time queue *************************************************************************** " + str(self.time_queue.qsize())))
-                    for x in range(0, d - 1):
-                        self.time_queue.get()
-                    self.started_decode = 1
-
-            list = []
+        while not self.q.empty():
+            msg = self.q.get()
             time = self.time_queue.get()
-            list.append(self.q.get())
-            list.append(time)
+            self.emit_count += 1
+            storm.emit([msg, time])
 
-            storm.log(("size of time queue " + str(self.time_queue.qsize())))
-            storm.log(("size of message queue " + str(self.q.qsize())))
+        storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " + str(self.q.qsize()) + " TiC: " + str(self.time_queue.qsize()))
 
-            # if (self.time_queue.qsize() != self.q.qsize()):
-            #     with self.q.mutex:
-            #         self.q.queue.clear()
-            #         while not self.time_queue.empty():
-            #             self.time_queue.get()
-            #self.q.queue.clear()
-            self.emitcount += 1
-            storm.log(("emit count " + str(self.emitcount)))
-            storm.log(("tuple count " + str(self.tcount) + "\n\n"))
-
-            self.diff.append(self.tcount - self.emitcount)
-
-            storm.emit(list)
+    def send_queue(self):
+        while True:
+            msg = self.q.get()
+            storm.emit([msg, str(10000)])
 
     def enqueue_output(self, out, frame_size):
         frame_size_bytes = frame_size[0] * frame_size[1] * 3
 
-        #print "frame: ", frame_size_bytes
         while True:
-            #self.q.put("before")
             buffer_str = out.read(frame_size_bytes)
-            #self.q.put("after")
-            #message["control"] = {"hover" : "true1"}
-            #storm.emit(["{topic1:section4}"])
             im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
             im = im.reshape((frame_size[0], frame_size[1], 3))
             circles = self.trackingSensorModule.detectCircles(im)
@@ -110,18 +84,24 @@ class SplitSentenceBolt(storm.BasicBolt):
             else:
                 message["control"] = {"hover" : "true2"}
 
-
             io = StringIO()
             json.dump(message, io)
-            # storm.log("Before put %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             self.q.put(io.getvalue())
+            # storm.log("hello")
+            # storm.emit([io.getvalue(), str(10000)])
+
             #storm.emit([io.getvalue()])
+
 
 # Logic for making ffmpeg terminate on the death of this process
 def set_death_signal(signal):
     libc = ctypes.CDLL('libc.so.6')
     PR_SET_DEATHSIG = 1
     libc.prctl(PR_SET_DEATHSIG, signal)
+
+
+
+
 
 def set_death_signal_int():
     if sys.platform != 'darwin':

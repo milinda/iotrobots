@@ -98,7 +98,7 @@ public class SphereTrackingTopology {
 
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
-            //System.out.println(body);
+//            System.out.println(body);
             String encodedBytes = Base64.encodeBase64String(body);
             tuples.add(encodedBytes);
 
