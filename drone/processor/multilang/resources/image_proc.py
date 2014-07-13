@@ -36,6 +36,7 @@ class SplitSentenceBolt(storm.BasicBolt):
         self.emit_count = 0
         self.tuple_count = 0
         self.time_removed = 0
+        self.diff = []
 
         send_thread = Thread(target=self.send_queue)
         send_thread.daemon = True
@@ -66,12 +67,32 @@ class SplitSentenceBolt(storm.BasicBolt):
         # storm.log("hello")
         while 1:
             with lock :
-                if self.time_queue.qsize() >= 10 and self.tuple_count > 130 and not self.time_removed:
-                    for x in range(0, 8):
-                        self.time_queue.get()
-                    self.time_removed = 1
+                # if self.time_queue.qsize() >= 10 and self.tuple_count > 130 and not self.time_removed:
+                #     for x in range(0, 8):
+                #         self.time_queue.get()
+                #     self.time_removed = 1
+                # storm.log("hello1")
 
-                storm.log("hello1")
+                if len(self.diff) > 100 and not self.time_removed:
+                    equal = 1
+                    cd = 0
+                    pd = 0
+                    d = 0
+                    for x in range(0, 99):
+                        cd = self.diff[-1 - x] - self.diff[-2 - x]
+                        if x == 0:
+                            pd = cd
+                        if pd != cd:
+                            equal = 0
+                        pd = cd
+                        d = self.diff[-2 - x]
+
+                    if equal:
+                        # storm.log(("size of time queue *************************************************************************** " + str(self.time_queue.qsize())))
+                        for x in range(0, d - 1):
+                            self.time_queue.get()
+                        self.time_removed = 1
+
             msg = self.q.get()
             time = self.time_queue.get()
             self.emit_count += 1
@@ -80,6 +101,7 @@ class SplitSentenceBolt(storm.BasicBolt):
                 storm.log("hello2")
                 storm.emit([msg, time])
                 storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " + str(self.q.qsize()) + " TiC: " + str(self.time_queue.qsize()))
+                self.diff.append(self.tuple_count - self.emit_count)
 
     def enqueue_output(self, out, frame_size):
         frame_size_bytes = frame_size[0] * frame_size[1] * 3
