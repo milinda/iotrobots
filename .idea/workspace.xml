@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ece4fde1-8cb2-42a6-b78d-423b4ae93fee" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/frame/frame_sender.py" afterPath="$PROJECT_DIR$/drone/frame/frame_sender.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" afterPath="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -15,7 +16,7 @@
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/iotrobots$frame_sender.coverage" NAME="frame_sender Coverage Results" MODIFIED="1405228645527" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/drone/frame" />
+    <SUITE FILE_PATH="coverage/iotrobots$frame_sender.coverage" NAME="frame_sender Coverage Results" MODIFIED="1405264557499" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/drone/frame" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
@@ -236,10 +237,10 @@
           <file leaf-file-name="image_proc.py" pinned="false" current="true" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state line="91" column="47" selection-start="3223" selection-end="3223" vertical-scroll-proportion="0.67535543" vertical-offset="1080" max-vertical-offset="2250">
+                <state line="94" column="43" selection-start="3341" selection-end="3341" vertical-scroll-proportion="0.2639296" vertical-offset="1140" max-vertical-offset="2325">
                   <folding>
                     <element signature="e#0#12#0" expanded="true" />
-                    <marker date="1405228631189" expanded="true" signature="1771:1882" placeholder="..." />
+                    <marker date="1405264545969" expanded="true" signature="1893:2004" placeholder="..." />
                   </folding>
                 </state>
               </provider>
@@ -265,8 +266,10 @@
           <file leaf-file-name="frame_sender.py" pinned="false" current="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/drone/frame/frame_sender.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state line="78" column="12" selection-start="2123" selection-end="2123" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1305">
-                  <folding />
+                <state line="35" column="22" selection-start="1199" selection-end="1229" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1485">
+                  <folding>
+                    <element signature="e#0#11#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -383,7 +386,7 @@
           <file leaf-file-name="FollowerTopology.java" pinned="false" current="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/turtlebot/processor/src/main/java/cgl/iotrobots/turtlebot/storm/FollowerTopology.java">
               <provider selected="true" editor-type-id="text-editor">
-                <state line="113" column="0" selection-start="4266" selection-end="4266" vertical-scroll-proportion="-0.8445946" vertical-offset="1695" max-vertical-offset="3045">
+                <state line="113" column="0" selection-start="4266" selection-end="4266" vertical-scroll-proportion="-0.35885167" vertical-offset="1695" max-vertical-offset="3045">
                   <folding />
                 </state>
               </provider>
@@ -419,13 +422,13 @@
         <option value="$PROJECT_DIR$/drone/pom.xml" />
         <option value="$PROJECT_DIR$/turtlebot/pom.xml" />
         <option value="$PROJECT_DIR$/drone/processor/pom.xml" />
-        <option value="$PROJECT_DIR$/drone/frame/frame_sender.py" />
         <option value="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/SphereTrackingTopology.java" />
         <option value="$PROJECT_DIR$/../incubator-storm/storm-core/src/jvm/backtype/storm/utils/ShellProcess.java" />
         <option value="$PROJECT_DIR$/../incubator-storm/storm-core/src/jvm/backtype/storm/multilang/JsonSerializer.java" />
         <option value="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/ShellBoltN.java" />
         <option value="$PROJECT_DIR$/drone/processor/src/main/java/cgl/iotrobots/st/storm/Decoder.java" />
         <option value="$PROJECT_DIR$/drone/processor/multilang/resources/storm.py" />
+        <option value="$PROJECT_DIR$/drone/frame/frame_sender.py" />
         <option value="$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py" />
       </list>
     </option>
@@ -1193,7 +1196,7 @@
       <workItem from="1405127574502" duration="1564000" />
       <workItem from="1405129152721" duration="136000" />
       <workItem from="1405134529809" duration="18861000" />
-      <workItem from="1405213372550" duration="10343000" />
+      <workItem from="1405213372550" duration="15261000" />
     </task>
     <task id="LOCAL-00001" summary="reformatting the code">
       <created>1404928951930</created>
@@ -1239,11 +1242,15 @@
       <created>1405226781339</created>
       <updated>1405226781339</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="adding timestamps&#10;">
+      <created>1405228690928</created>
+      <updated>1405228690928</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="82132000" />
+    <option name="totallyTimeSpent" value="87050000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1985" y="24" width="1855" height="1176" extended-state="6" />
@@ -1270,7 +1277,7 @@
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27137342" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21345836" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.55391705" sideWeight="0.4997242" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.48294932" sideWeight="0.4997242" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -1499,7 +1506,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/turtlebot/processor/src/main/java/cgl/iotrobots/turtlebot/storm/FollowerTopology.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="113" column="0" selection-start="4266" selection-end="4266" vertical-scroll-proportion="-0.8445946" vertical-offset="1695" max-vertical-offset="3045">
+        <state line="113" column="0" selection-start="4266" selection-end="4266" vertical-scroll-proportion="-0.35885167" vertical-offset="1695" max-vertical-offset="3045">
           <folding />
         </state>
       </provider>
@@ -1651,6 +1658,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/drone/processor/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="21" selection-start="781" selection-end="781" vertical-scroll-proportion="0.0" vertical-offset="450" max-vertical-offset="1275">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/land.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1036">
@@ -1660,26 +1674,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/drone/processor/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="21" selection-start="781" selection-end="781" vertical-scroll-proportion="0.0" vertical-offset="450" max-vertical-offset="1275">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/drone/frame/frame_sender.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="12" selection-start="2123" selection-end="2123" vertical-scroll-proportion="0.0" vertical-offset="282" max-vertical-offset="1305">
-          <folding />
+        <state line="35" column="22" selection-start="1199" selection-end="1229" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1485">
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/drone/processor/multilang/resources/image_proc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="91" column="47" selection-start="3223" selection-end="3223" vertical-scroll-proportion="0.67535543" vertical-offset="1080" max-vertical-offset="2250">
+        <state line="94" column="43" selection-start="3341" selection-end="3341" vertical-scroll-proportion="0.2639296" vertical-offset="1140" max-vertical-offset="2325">
           <folding>
             <element signature="e#0#12#0" expanded="true" />
-            <marker date="1405228631189" expanded="true" signature="1771:1882" placeholder="..." />
+            <marker date="1405264545969" expanded="true" signature="1893:2004" placeholder="..." />
           </folding>
         </state>
       </provider>

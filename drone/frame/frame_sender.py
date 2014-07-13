@@ -24,14 +24,21 @@ def recv_commands():
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
 
+    average = 0.0
     count = 0
-    while count == 0:
+    run = 0
+    while run == 0:
         method_frame, header_frame, body = channel.basic_get('control')
         if method_frame:
+
             channel.basic_ack(method_frame.delivery_tag)
 
+            latency = int(round(time.time() * 1000)) - long(header_frame.headers["time"])
+            if latency < 150:
+                count += 1
+                average = average + (latency - average) / count
             #print header_frame.headers["time"]
-            print "latency ", str(int(round(time.time() * 1000)) - long(header_frame.headers["time"]))
+            print "latency ", str(latency), " average: ", str(average)
             d = json.loads(body)
             print body
 

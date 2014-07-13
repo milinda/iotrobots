@@ -31,6 +31,7 @@ class SplitSentenceBolt(storm.BasicBolt):
         self.q = Queue.Queue()
 
         self.time_queue = Queue.Queue()
+        self.time_queue2 = Queue.Queue()
 
         # counting the tuples emitted
         self.emit_count = 0
@@ -45,8 +46,10 @@ class SplitSentenceBolt(storm.BasicBolt):
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
         self.p.stdin.write(frame)
-        time = tup.values[1]
-        self.time_queue.put(time)
+        t = tup.values[1]
+        curtime = int(round(time.time() * 1000))
+        self.time_queue2.put(curtime)
+        self.time_queue.put(t)
         self.tuple_count += 1
 
         # if self.time_queue.qsize() >= 10 and self.tuple_count > 130 and not self.time_removed:
@@ -89,18 +92,20 @@ class SplitSentenceBolt(storm.BasicBolt):
 
                     if equal:
                         # storm.log(("size of time queue *************************************************************************** " + str(self.time_queue.qsize())))
-                        for x in range(0, d - 1):
+                        for x in range(0, d):
                             self.time_queue.get()
+                            self.time_queue2.get()
                         self.time_removed = 1
 
             msg = self.q.get()
-            time = self.time_queue.get()
+            t = self.time_queue.get()
+            t2 = self.time_queue2.get()
+            curtime = int(round(time.time() * 1000))
             self.emit_count += 1
 
             with lock :
-                storm.log("hello2")
-                storm.emit([msg, time])
-                storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " + str(self.q.qsize()) + " TiC: " + str(self.time_queue.qsize()))
+                storm.emit([msg, t])
+                storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " + str(self.q.qsize()) + " TiC: " + str(self.time_queue.qsize()) + " LAT: " + str(curtime - t2))
                 self.diff.append(self.tuple_count - self.emit_count)
 
     def enqueue_output(self, out, frame_size):
