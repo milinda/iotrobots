@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -13,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import sys
 import os
 import traceback
@@ -84,10 +87,10 @@ def sendpid(heartbeatdir):
 
 def emit(*args, **kwargs):
     __emit(*args, **kwargs)
-    return readTaskIds()
+
 
 def emitDirect(task, *args, **kwargs):
-    kwargs[directTask] = task
+    kwargs["directTask"] = task
     __emit(*args, **kwargs)
 
 def __emit(*args, **kwargs):
@@ -104,7 +107,7 @@ def emitBolt(tup, stream=None, anchors = [], directTask=None):
     m = {"command": "emit"}
     if stream is not None:
         m["stream"] = stream
-    m["anchors"] = map(lambda a: a.id, anchors)
+    # m["anchors"] = map(lambda a: a.id, anchors)
     if directTask is not None:
         m["task"] = directTask
     m["tuple"] = tup
@@ -127,6 +130,9 @@ def ack(tup):
 def fail(tup):
     sendMsgToParent({"command": "fail", "id": tup.id})
 
+def reportError(msg):
+    sendMsgToParent({"command": "error", "msg": msg})
+
 def log(msg):
     sendMsgToParent({"command": "log", "msg": msg})
 
@@ -135,7 +141,7 @@ def initComponent():
     sendpid(setupInfo['pidDir'])
     return [setupInfo['conf'], setupInfo['context']]
 
-class Tuple:
+class Tuple(object):
     def __init__(self, id, component, stream, task, values):
         self.id = id
         self.component = component
@@ -148,7 +154,7 @@ class Tuple:
             self.__class__.__name__,
             ''.join(' %s=%r' % (k, self.__dict__[k]) for k in sorted(self.__dict__.keys())))
 
-class Bolt:
+class Bolt(object):
     def initialize(self, stormconf, context):
         pass
 
@@ -159,15 +165,15 @@ class Bolt:
         global MODE
         MODE = Bolt
         conf, context = initComponent()
-        self.initialize(conf, context)
         try:
+            self.initialize(conf, context)
             while True:
                 tup = readTuple()
                 self.process(tup)
         except Exception, e:
-            log(traceback.format_exc(e))
+            reportError(traceback.format_exc(e))
 
-class BasicBolt:
+class BasicBolt(object):
     def initialize(self, stormconf, context):
         pass
 
@@ -179,17 +185,17 @@ class BasicBolt:
         MODE = Bolt
         global ANCHOR_TUPLE
         conf, context = initComponent()
-        self.initialize(conf, context)
         try:
+            self.initialize(conf, context)
             while True:
                 tup = readTuple()
                 ANCHOR_TUPLE = tup
                 self.process(tup)
                 ack(tup)
         except Exception, e:
-            log(traceback.format_exc(e))
+            reportError(traceback.format_exc(e))
 
-class Spout:
+class Spout(object):
     def initialize(self, conf, context):
         pass
 
@@ -206,8 +212,8 @@ class Spout:
         global MODE
         MODE = Spout
         conf, context = initComponent()
-        self.initialize(conf, context)
         try:
+            self.initialize(conf, context)
             while True:
                 msg = readCommand()
                 if msg["command"] == "next":
@@ -218,4 +224,4 @@ class Spout:
                     self.fail(msg["id"])
                 sync()
         except Exception, e:
-            log(traceback.format_exc(e))
+            reportError(traceback.format_exc(e))

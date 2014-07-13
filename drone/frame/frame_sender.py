@@ -3,6 +3,7 @@ import json
 import threading
 from threading  import Thread
 import time
+import Queue
 
 def send_frames():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
@@ -53,5 +54,33 @@ def main():
 
     t.join()
 
+def consume():
+    global queue
+    while True:
+        queue.put("Hello")
+
+def produce():
+    global queue
+    while True:
+        print queue.get()
+
+def test():
+    global queue
+
+    queue = Queue.Queue()
+    t = Thread(target=consume)
+    t.daemon = True
+    t.start()
+
+    t = Thread(target=produce)
+    t.daemon = True
+    t.start()
+
+    t.join()
+
 if __name__ == "__main__":
     main()
+    # try:
+    #     test()
+    # except:
+    #     print "hello"

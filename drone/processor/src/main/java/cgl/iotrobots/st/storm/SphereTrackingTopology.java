@@ -30,7 +30,7 @@ import java.util.Map;
 public class SphereTrackingTopology {
     private static Logger LOG = LoggerFactory.getLogger(SphereTrackingTopology.class);
 
-    public static class ImageProcessing extends ShellBolt implements IRichBolt {
+    public static class ImageProcessing extends ShellBoltN implements IRichBolt {
         public ImageProcessing() {
             super("python", "image_proc.py");
         }
