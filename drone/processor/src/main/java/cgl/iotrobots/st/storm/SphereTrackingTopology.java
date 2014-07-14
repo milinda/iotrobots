@@ -32,7 +32,7 @@ public class SphereTrackingTopology {
 
     public static class ImageProcessing extends ShellBoltN implements IRichBolt {
         public ImageProcessing() {
-            super("python", "image_proc.py");
+            super("python", "DroneFrameProcess.py");
         }
 
         @Override
