@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 import logging
-from resources.lib import ar2video, libardrone
+import ar2video, libardrone
 
 """
 This module provides access to the data provided by the AR.Drone.

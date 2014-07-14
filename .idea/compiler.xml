@@ -25,10 +25,6 @@
         <module name="drone-commons" />
         <module name="drone-processor" />
         <module name="drone-sensor" />
-        <module name="iotrobots-sensor" />
-        <module name="turtle-processor" />
-        <module name="turtlebot-commons" />
-        <module name="turtlebot-controller" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -37,11 +33,6 @@
       <module name="drone-sensor" target="1.6" />
       <module name="iotrobots" target="1.6" />
       <module name="iotrobots-drone-parent" target="1.6" />
-      <module name="iotrobots-sensor" target="1.6" />
-      <module name="iotrobots-turtlebot-parent" target="1.6" />
-      <module name="turtle-processor" target="1.6" />
-      <module name="turtlebot-commons" target="1.6" />
-      <module name="turtlebot-controller" target="1.6" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -17,7 +17,7 @@ import ControlModule
 
 lock = threading.RLock()
 
-class DroneFrameProcessBolt(storm.BasicBolt):
+class DroneFrameProcessBolt(storm.Bolt):
     def __init__(self):
         self.p = Popen(["nice", "-n", "15", "avconv", "-i", "-",
                         "-probesize", "2048", "-flags", "low_delay", "-f",
@@ -55,29 +55,30 @@ class DroneFrameProcessBolt(storm.BasicBolt):
         self.local_time_queue.put(curtime)
         self.time_queue.put(t)
         self.tuple_count += 1
+        with lock:
+            storm.ack(tup)
 
     def send_queue(self):
         while 1:
-            with lock :
-                if len(self.diff) > 100 and not self.time_removed:
-                    equal = 1
-                    cd = 0
-                    pd = 0
-                    d = 0
-                    for x in range(0, 99):
-                        cd = self.diff[-1 - x] - self.diff[-2 - x]
-                        if x == 0:
-                            pd = cd
-                        if pd != cd:
-                            equal = 0
+            if len(self.diff) > 100 and not self.time_removed:
+                equal = 1
+                cd = 0
+                pd = 0
+                d = 0
+                for x in range(0, 99):
+                    cd = self.diff[-1 - x] - self.diff[-2 - x]
+                    if x == 0:
                         pd = cd
-                        d = self.diff[-2 - x]
+                    if pd != cd:
+                        equal = 0
+                    pd = cd
+                    d = self.diff[-2 - x]
 
-                    if equal:
-                        for x in range(0, d):
-                            self.time_queue.get()
-                            self.local_time_queue.get()
-                        self.time_removed = 1
+                if equal:
+                    for x in range(0, d):
+                        self.time_queue.get()
+                        self.local_time_queue.get()
+                    self.time_removed = 1
 
             msg = self.frame_queue.get()
             t = self.time_queue.get()
@@ -99,7 +100,9 @@ class DroneFrameProcessBolt(storm.BasicBolt):
             im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
             im = im.reshape((frame_size[0], frame_size[1], 3))
 
-            targets = self.tracking.do(im)
+            frame = ControlModule.ImageFrame(None, im)
+
+            targets = self.tracking.do(frame)
             command = self.planing.do(None, targets)
 
             message = {}
