@@ -2,7 +2,7 @@ package cgl.iotrobots.turtlebot.storm;
 
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
-import cgl.iotrobots.turtlebot.commons.Compressor
+import cgl.iotrobots.turtlebot.commons.Compressor;
 
 public class PositionCalculator {
 

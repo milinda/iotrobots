@@ -3,6 +3,7 @@ package cgl.iotrobots.turtlebot;
 import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
+import cgl.iotrobots.turtlebot.commons.Compressor
 import com.google.common.base.Preconditions;
 //import com.google.common.collect.Lists;
 import com.jcraft.jzlib.Inflater;
@@ -99,7 +100,8 @@ public class TurtleController {
                 try {
                     Object o = messages.take();
                     if (o instanceof byte[]) {
-                        int[] dist = unCompress((byte[]) o);
+                        Compressor compressor = new Compressor();
+                        int[] dist = compressor.unCompr((byte[]) o);
                         BufferedImage image = getImage(dist);
                         ui.setImage(image);
                         //detect(ui, dist);
@@ -124,34 +126,6 @@ public class TurtleController {
         }
         ui.setObstacle(false);
     }*/
-
-    public static int[] unCompress(byte []data) {
-        int err;
-        byte[] inverted = new byte[307200];
-        Inflater inflater = new Inflater();
-        inflater.setInput(data);
-
-        while (true) {
-            inflater.setOutput(inverted);
-            err = inflater.inflate(JZlib.Z_NO_FLUSH);
-            if (err == JZlib.Z_STREAM_END) break;
-            CHECK_ERR(inflater, err, "inflate large");
-        }
-
-        err = inflater.end();
-        CHECK_ERR(inflater, err, "inflateEnd");
-
-        int[] dist = new int[307200];
-        for(int i=0; i<307200; i++) {
-            if(inverted[i]==0) {
-                dist[i] = 0;
-                continue;
-            }
-            dist[i] = (inverted[i] & 0xFF);
-            dist[i] = (int)(90300 / (dist[i] + 21.575)); //distance given in mm
-        }
-        return dist;
-    }
 
     public Motion calculatePosition(int[] dist) {
 
@@ -263,12 +237,4 @@ public class TurtleController {
         return im;
     }
 
-    static void CHECK_ERR(ZStream z, int err, String msg) {
-        if (err != JZlib.Z_OK) {
-            if (z.msg != null) System.out.print(z.msg + " ");
-            System.out.println(msg + " error: " + err);
-
-            System.exit(1);
-        }
-    }
 }
