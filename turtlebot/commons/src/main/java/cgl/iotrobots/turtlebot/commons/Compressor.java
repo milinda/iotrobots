@@ -1,12 +1,15 @@
+package cgl.iotrobots.turtlebot.commons;
+
 import com.jcraft.jzlib.*;
 import java.nio.ByteBuffer;
 
 public class Compressor {
 
+    private byte inverted[] = new byte[1024];
+
     public Compressor() {
-	byte inverted[] = new byte[1024];
 	for(int i = 0; i < 1024; i++) {
-	    inverted[i] = (byte) (90300 / (1000 * 0.1236 * Math.tan(i / 2842 + 1.1863)) - 21.575);
+	    this.inverted[i] = (byte) (90300 / (1000 * 0.1236 * Math.tan(i / 2842 + 1.1863)) - 21.575);
 	}
     }
 
@@ -17,7 +20,7 @@ public class Compressor {
 	    int lo = frame.get(i) & 0xFF;
 	    int hi = frame.get(i+1) & 0xFF;
 	    int disp = hi << 8 | lo;
-	    if (disp > 60 && disp < 1012) data[p] = inverted[disp];
+	    if (disp > 60 && disp < 1012) data[p] = this.inverted[disp];
 	    else data[p] = 0;
 	    p++;
 	}
@@ -55,12 +58,12 @@ public class Compressor {
 
     public int[] unCompr(byte[] data) {
 	int err;
-        byte[] inverted = new byte[307200];
+        byte[] invertedD = new byte[307200];
         Inflater inflater = new Inflater();
         inflater.setInput(data);
 	
         while (true) {
-            inflater.setOutput(inverted);
+            inflater.setOutput(invertedD);
             err = inflater.inflate(JZlib.Z_NO_FLUSH);
             if (err == JZlib.Z_STREAM_END) break;
             CHECK_ERR(inflater, err, "inflate large");
@@ -71,11 +74,11 @@ public class Compressor {
 
         int[] dist = new int[307200];
         for(int i=0; i<307200; i++) {
-            if(inverted[i]==0) {
+            if(invertedD[i]==0) {
                 dist[i] = 0;
                 continue;
             }
-            dist[i] = (inverted[i] & 0xFF);
+            dist[i] = (invertedD[i] & 0xFF);
             dist[i] = (int)(90300 / (dist[i] + 21.575)); //distance given in mm
         }
         return dist;
