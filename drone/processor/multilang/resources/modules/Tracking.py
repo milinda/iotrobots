@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 
+class ImageFrame:
+    def __init__(self,header,pixels):
+        self.header = header
+        self.pixels = pixels
+
 class Target:
     def __init__(self,found,x,y,w,h):
         #x,y: Estimated position of target on ground plane, relative to drone (in meters)

@@ -13,7 +13,8 @@ import ctypes
 from subprocess import PIPE, Popen
 from StringIO import StringIO
 
-import ControlModule
+from modules import Planning
+from modules import Tracking
 
 lock = threading.RLock()
 
@@ -40,12 +41,8 @@ class DroneFrameProcessBolt(storm.Bolt):
         self.diff = []
 
         # the control modules
-        self.tracking = ControlModule.Tracking()
-        self.planing = ControlModule.Planning()
-
-        send_thread = Thread(target=self.send_queue)
-        send_thread.daemon = True
-        send_thread.start()
+        self.tracking = Tracking.Tracking()
+        self.planing = Planning.Planning()
 
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
@@ -58,8 +55,29 @@ class DroneFrameProcessBolt(storm.Bolt):
         with lock:
             storm.ack(tup)
 
-    def send_queue(self):
-        while 1:
+    def enqueue_output(self, out, frame_size):
+        frame_size_bytes = frame_size[0] * frame_size[1] * 3
+
+        while True:
+            buffer_str = out.read(frame_size_bytes)
+            im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
+            im = im.reshape((frame_size[0], frame_size[1], 3))
+
+            frame = Tracking.ImageFrame(None, im)
+
+            targets = self.tracking.do(frame)
+            command = self.planing.do(None, targets)
+
+            message = {}
+            if command is not None:
+                message["control"] = {"position" : [command.tiltx, command.tilty]}
+            else:
+                message["control"] = {"hover" : "true"}
+
+            io = StringIO()
+            json.dump(message, io)
+            self.frame_queue.put(io.getvalue())
+
             if len(self.diff) > 100 and not self.time_removed:
                 equal = 1
                 cd = 0
@@ -91,29 +109,6 @@ class DroneFrameProcessBolt(storm.Bolt):
                 storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " +
                           str(self.frame_queue.qsize()) + " TiC: " + str(self.time_queue.qsize()) + " LAT: " + str(current_time - t2))
                 self.diff.append(self.tuple_count - self.emit_count)
-
-    def enqueue_output(self, out, frame_size):
-        frame_size_bytes = frame_size[0] * frame_size[1] * 3
-
-        while True:
-            buffer_str = out.read(frame_size_bytes)
-            im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
-            im = im.reshape((frame_size[0], frame_size[1], 3))
-
-            frame = ControlModule.ImageFrame(None, im)
-
-            targets = self.tracking.do(frame)
-            command = self.planing.do(None, targets)
-
-            message = {}
-            if command is not None:
-                message["control"] = {"position" : [command.tiltx, command.tilty]}
-            else:
-                message["control"] = {"hover" : "true"}
-
-            io = StringIO()
-            json.dump(message, io)
-            self.frame_queue.put(io.getvalue())
 
 # Logic for making ffmpeg terminate on the death of this process
 def set_death_signal(signal):
