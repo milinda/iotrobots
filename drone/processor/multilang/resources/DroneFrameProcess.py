@@ -18,6 +18,8 @@ from modules import Tracking
 
 lock = threading.RLock()
 
+# this is the class we interface with storm. This will process the incoming messages by decoding them,
+# do the image processing and create a command and emit it.
 class DroneFrameProcessBolt(storm.Bolt):
     def __init__(self):
         self.p = Popen(["nice", "-n", "15", "avconv", "-i", "-",
@@ -36,18 +38,22 @@ class DroneFrameProcessBolt(storm.Bolt):
 
         # counting the tuples emitted
         self.emit_count = 0
+        # frames received
         self.tuple_count = 0
+        # weather we have removed the times from the time queue
         self.time_removed = 0
+        # used to keep the difference between frames recieved and messages emitted
         self.diff = []
 
         # the control modules
         self.tracking = Tracking.Tracking()
         self.planing = Planning.Planning()
 
-        send_thread = Thread(target=self.send_queue)
+        send_thread = Thread(target=self.emit_message)
         send_thread.daemon = True
         send_thread.start()
 
+    # this method will be called by storm when there is an incoming frame
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
         self.p.stdin.write(frame)
@@ -59,7 +65,8 @@ class DroneFrameProcessBolt(storm.Bolt):
         with lock:
             storm.ack(tup)
 
-    def send_queue(self):
+    # emit a message to storm, the message is a command in the json format
+    def emit_message(self):
         while 1:
             if len(self.diff) > 100 and not self.time_removed:
                 equal = 1
@@ -87,33 +94,38 @@ class DroneFrameProcessBolt(storm.Bolt):
             current_time = int(round(time.time() * 1000))
             self.emit_count += 1
 
+            # acquire the lock to avoid storm and the message processing thread do emit and ack at the same time
             with lock :
                 storm.emit([msg, t])
                 storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " +
                           str(self.frame_queue.qsize()) + " TiC: " + str(self.time_queue.qsize()) + " LAT: " + str(current_time - t2))
+
+            if not self.time_removed
                 self.diff.append(self.tuple_count - self.emit_count)
 
+    # process the image frame and produce a DroneCommand
+    def process_frame(self, buffer_str, frame_size):
+        frame_size_bytes = frame_size[0] * frame_size[1] * 3
+
+        im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
+        im = im.reshape((frame_size[0], frame_size[1], 3))
+        frame = Tracking.ImageFrame(None, im)
+        targets = self.tracking.do(frame)
+        command = self.planing.do(None, targets)
+
+        return command
+
+    # read the output of the decoder and process it
     def enqueue_output(self, out, frame_size):
         frame_size_bytes = frame_size[0] * frame_size[1] * 3
 
         while True:
             buffer_str = out.read(frame_size_bytes)
-            im = np.frombuffer(buffer_str, count=frame_size_bytes, dtype=np.uint8)
-            im = im.reshape((frame_size[0], frame_size[1], 3))
-
-            frame = Tracking.ImageFrame(None, im)
-
-            targets = self.tracking.do(frame)
-            command = self.planing.do(None, targets)
-
-            message = {}
-            if command is not None:
-                message["control"] = {"position" : [command.tiltx, command.tilty]}
-            else:
-                message["control"] = {"hover" : "true"}
-
+            command = self.process_frame(buffer_str, frame_size)
+            message = {"command": [command.tiltx, command.tilty, command.spin, command.velocity_z]}
             io = StringIO()
             json.dump(message, io)
+
             self.frame_queue.put(io.getvalue())
 
 # Logic for making ffmpeg terminate on the death of this process
