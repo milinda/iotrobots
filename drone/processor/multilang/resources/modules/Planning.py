@@ -2,7 +2,7 @@ from lib import libardrone
 
 class Planning():
     def do(self, droneNavData, targets):
-        if(len(targets) == 1):
+        if(len(targets) >= 1):
             if targets[0].found == True:
                 x = targets[0].x
                 y = targets[0].y
