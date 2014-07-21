@@ -25,7 +25,7 @@ public class SendFrame_new {
             factory.setHost(args[0]);
             final Connection connection = factory.newConnection();
             final Channel channel = connection.createChannel();
-            final String exchange_name = "kinect_frames"
+            final String exchange_name = "kinect_frames";
             // CREATE EXCHANGE
             channel.exchangeDeclare(exchange_name, "fanout");
 
@@ -108,7 +108,7 @@ public class SendFrame_new {
                                 System.exit(0);
                             }
                 }
-
+                }
                 );
             }catch(IOException e){
                 System.exit(0);
