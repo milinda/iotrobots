@@ -100,7 +100,7 @@ class DroneFrameProcessBolt(storm.Bolt):
                 storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " +
                           str(self.frame_queue.qsize()) + " TiC: " + str(self.time_queue.qsize()) + " LAT: " + str(current_time - t2))
 
-            if not self.time_removed
+            if not self.time_removed:
                 self.diff.append(self.tuple_count - self.emit_count)
 
     # process the image frame and produce a DroneCommand
