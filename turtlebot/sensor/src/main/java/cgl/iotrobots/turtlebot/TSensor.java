@@ -53,7 +53,7 @@ public class TSensor extends AbstractSensor {
         String rosMaster = (String) context.getProperty(ROS_MASTER);
 
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.102", new URI("http://149.160.205.153:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic(localIp, new URI(rosMaster));
         } catch (URISyntaxException e) {
             LOG.error("Failed to connect", e);
         }
