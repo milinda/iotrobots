@@ -4,7 +4,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MessageProperties;
 
 import org.openkinect.freenect.*;
-import com.jcraft.jzlib.*;
+import org.xerial.snappy.Snappy;
 
 import java.io.*;
 import java.io.IOException;
@@ -68,41 +68,10 @@ public class SendFrame_new {
                             }
 
                             // COMPRESS DATA
-                            int err;
-                            int comprLen = 65000;
-                            byte[] compr = new byte[comprLen];
-
-                            Deflater deflater = null;
+                       
+                            // COMPRESS AND PUBLISH COMPRESSED DATA
                             try {
-                                deflater = new Deflater(JZlib.Z_BEST_SPEED);
-                            } catch (GZIPException e) {
-                            System.exit(0);
-                            }
-
-                            deflater.setInput(data);
-                            deflater.setOutput(compr);
-
-                            err = deflater.deflate(JZlib.Z_NO_FLUSH);
-                            CHECK_ERR(deflater, err, "deflate");
-                            if (deflater.avail_in != 0) {
-                                System.out.println("deflate not greedy");
-                                System.exit(1);
-                            }
-
-                            err = deflater.deflate(JZlib.Z_FINISH);
-                            if (err != JZlib.Z_STREAM_END) {
-                                System.out.println("deflate should report Z_STREAM_END");
-                                System.exit(1);
-                            }
-                            err = deflater.end();
-
-			    /*byte out[] = new byte[(int) deflater.total_out];
-                for (int i = 0; i < out.length; i++) {
-				out[i] = compr[i];
-				}*/
-                            CHECK_ERR(deflater, err, "deflateEnd");
-                            // PUBLISH COMPRESSED DATA
-                            try {
+                            	byte[] compr = Snappy.compress(data);
                                 channel.basicPublish(exchange_name, "", null, compr);
                             } catch (IOException e) {
                                 System.exit(0);
@@ -114,15 +83,6 @@ public class SendFrame_new {
                 System.exit(0);
             }
         }
-
-
-    static void CHECK_ERR(ZStream z, int err, String msg) {
-        if (err != JZlib.Z_OK) {
-            if (z.msg != null) System.out.print(z.msg + " ");
-            System.out.println(msg + " error: " + err);
-            System.exit(1);
-        }
-    }
 
     static void addShutDownHook(final Channel channel, final Connection connection) {
         // CLOSE CLEANLY ON EXIT
