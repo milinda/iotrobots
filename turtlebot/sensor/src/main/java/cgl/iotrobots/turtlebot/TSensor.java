@@ -22,6 +22,10 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+
 public class TSensor extends AbstractSensor {
     private static Logger LOG = LoggerFactory.getLogger(TSensor.class);
 
@@ -91,7 +95,16 @@ public class TSensor extends AbstractSensor {
                     try {
                         Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
                         String time = (String) ((MessageContext) message).getProperties().get("time");
-                        System.out.println(System.currentTimeMillis() - Long.parseLong(time));
+                        
+                        try {
+                            File file = new File ("/home/leif/LatencyTest.txt");
+                            PrintWriter writer = new PrintWriter (file);
+                            writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
+                            writer.close();
+                        } catch (FileNotFoundException e) {
+                            System.exit(1);
+                        }
+                        
                         controller.setMotion(motion);
                         System.out.println("Message received " + message.toString());
                     } catch (IOException e) {
