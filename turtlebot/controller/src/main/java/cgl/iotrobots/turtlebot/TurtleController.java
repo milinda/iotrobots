@@ -185,13 +185,11 @@ public class TurtleController {
             }
 
             //System.out.format("Centroid at %f %f %f with %d points\n", totX, totY, totZ, n);
-            /*if (Math.abs(totX * x_scale_) >= .1) {
-                if(Math.abs(totX) > .05) System.out.println("XTurn Detected!!!!");
-                else System.out.println("XTurn deactivated");
+            if (Math.abs(totX * x_scale_) >= .1) {
                 return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, (-1)*totX * x_scale_));
             } else {
                 return new Motion(new Velocity((totZ - goal_z_) * z_scale_, 0, 0), new Velocity(0, 0, 0));
-            }*/
+            }
 
         } else {
             // System.out.println("No valid points detected, stopping the robot");
