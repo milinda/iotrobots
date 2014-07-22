@@ -12,6 +12,7 @@ Deploy the sensor
 1. Build the sensor module and copy the jar with dependencies to repository/sensors directory of IOTCloud
 2. Go to IOTCloud master and Run the command
 
-./bin/iotcloud jar repository/sensors/iotrobots-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.turtlebot.TSensor -url amqp://localhost:5672
+./bin/iotcloud jar ~/kinect3.0/iotrobots/turtlebot/sensor/target/iotrobots-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.turtlebot.TSensor -local_ip (ip of the machine running iotcloud) -ros_master http://(ip of the turtlebot laptop):11311 -url amqp://localhost:5672 
+
 
 -url argument gives the URL of the RabbitMQ server, where the TurtleBot receives kinect messages
