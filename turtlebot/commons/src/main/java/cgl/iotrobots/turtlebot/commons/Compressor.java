@@ -1,7 +1,8 @@
 package cgl.iotrobots.turtlebot.commons;
 
-import com.jcraft.jzlib.*;
+import org.xerial.snappy.Snappy;
 import java.nio.ByteBuffer;
+import java.io.IOException;
 
 public class Compressor {
 
@@ -24,53 +25,16 @@ public class Compressor {
 	    else data[p] = 0;
 	    p++;
 	}
-
-	int err;
-	byte[] compr = new byte[65000];
-
-	Deflater deflater = null;
-	try {
-	    deflater = new Deflater(JZlib.Z_BEST_SPEED);
-	} catch (GZIPException e) {
-	    System.exit(0);
-	}
-	
-	deflater.setInput(data);
-	deflater.setOutput(compr);
-	
-	err = deflater.deflate(JZlib.Z_NO_FLUSH);
-	CHECK_ERR(deflater, err, "deflate");
-	if (deflater.avail_in != 0) {
-	    System.out.println("deflate not greedy");
-	    System.exit(1);
-	}
-	
-	err = deflater.deflate(JZlib.Z_FINISH);
-	if (err != JZlib.Z_STREAM_END) {
-	    System.out.println("deflate should report Z_STREAM_END");
-	    System.exit(1);
-	}
-	err = deflater.end();
-	CHECK_ERR(deflater, err, "deflateEnd");
-
-	return compr;
+        try {
+            byte[] compr = Snappy.compress(data);
+	    return compr;
+        } catch (IOException e) {
+            System.exit(1);
+        }
     }
 
     public int[] unCompr(byte[] data) {
-	int err;
-        byte[] invertedD = new byte[307200];
-        Inflater inflater = new Inflater();
-        inflater.setInput(data);
-	
-        while (true) {
-            inflater.setOutput(invertedD);
-            err = inflater.inflate(JZlib.Z_NO_FLUSH);
-            if (err == JZlib.Z_STREAM_END) break;
-            CHECK_ERR(inflater, err, "inflate large");
-        }
-
-        err = inflater.end();
-        CHECK_ERR(inflater, err, "inflateEnd");
+        byte[] invertedD = Snappy.uncompress(data);
 
         int[] dist = new int[307200];
         for(int i=0; i<307200; i++) {
@@ -84,11 +48,4 @@ public class Compressor {
         return dist;
     }
 
-    private void CHECK_ERR(ZStream z, int err, String msg) {
-        if (err != JZlib.Z_OK) {
-            if (z.msg != null) System.out.print(z.msg + " ");
-            System.out.println(msg + " error: " + err);
-            System.exit(1);
-        }
-    }
 }
