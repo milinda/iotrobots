@@ -4,12 +4,16 @@ import threading
 from threading  import Thread
 import time
 import Queue
+import sys
 
 def send_frames():
+    # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    # connection = pika.BlockingConnection(parameters)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
-
+    # try:
     for x in range(0, 1596):
         data = file_read(x)
         channel.basic_publish(exchange='drone',
@@ -17,10 +21,17 @@ def send_frames():
                                    body =data,
                                    properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
         time.sleep(.03)
+    # except:
+    #     e = sys.exc_info()[0]
+    #     raise e
 
 
 def recv_commands():
+    # parameters = pika.URLParameters('amqp://149.165.159.3:5672/')
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    # connection = pika.BlockingConnection(parameters)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
 
@@ -43,7 +54,7 @@ def recv_commands():
             print body
 
 def file_read(i):
-    f = open('output/' + str(i), 'r')
+    f = open('frames/output/' + str(i), 'r')
     data = f.read()
     f.close()
     return data
