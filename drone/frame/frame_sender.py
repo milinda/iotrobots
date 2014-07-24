@@ -54,7 +54,7 @@ def recv_commands():
             print body
 
 def file_read(i):
-    f = open('frames/output/' + str(i), 'r')
+    f = open('output/' + str(i), 'r')
     data = f.read()
     f.close()
     return data
