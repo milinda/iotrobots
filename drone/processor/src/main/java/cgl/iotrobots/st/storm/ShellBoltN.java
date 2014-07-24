@@ -21,9 +21,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-/**
- * Created by supun on 7/12/14.
- */
 public class ShellBoltN implements IBolt {
     public static Logger LOG = LoggerFactory.getLogger(ShellBoltN.class);
     Process _subprocess;

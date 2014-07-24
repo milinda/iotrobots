@@ -3,12 +3,9 @@ package cgl.iotrobots.st.storm;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.task.ShellBolt;
-import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.rabbitmq.client.AMQP;
@@ -66,9 +63,9 @@ public class SphereTrackingTopology {
         String name = cmd.getOptionValue("name");
         boolean local = cmd.hasOption("local");
 
-        builder.setSpout("frame_receive", new RabbitMQSpout(new SpoutConfigurator(url), r), 1);
+        builder.setSpout("frame_receive", new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
         builder.setBolt("decode_process", new ImageProcessing()).shuffleGrouping("frame_receive");
-        builder.setBolt("send_command", new RabbitMQBolt(new BoltConfigurator(url), r)).shuffleGrouping("decode_process");
+        builder.setBolt("send_command", new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping("decode_process");
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -114,17 +111,16 @@ public class SphereTrackingTopology {
             Map<String, Object> props = new HashMap<String, Object>();
             props.put("time", time);
 
-            // System.out.println("Sending message" + motion);
             return new RabbitMQMessage(null, null, null,
                     new AMQP.BasicProperties.Builder().headers(props).build(),
                     tuple.getValue(0).toString().getBytes());
         }
     }
 
-    private static class SpoutConfigurator implements RabbitMQConfigurator {
+    private static class ReceiveSpoutConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://localhost:5672";
 
-        private SpoutConfigurator(String url) {
+        private ReceiveSpoutConfigurator(String url) {
             this.url = url;
         }
 
@@ -167,7 +163,7 @@ public class SphereTrackingTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields("frame", "time"));
+            outputFieldsDeclarer.declare(new Fields(Constants.FRAME_FIELD, Constants.TIME_FIELD));
         }
 
         @Override
@@ -181,10 +177,10 @@ public class SphereTrackingTopology {
         }
     }
 
-    private static class BoltConfigurator implements RabbitMQConfigurator {
+    private static class OutputBoltConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://localhost:5672";
 
-        private BoltConfigurator(String url) {
+        private OutputBoltConfigurator(String url) {
             this.url = url;
         }
 
@@ -227,7 +223,7 @@ public class SphereTrackingTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields("control"));
+            outputFieldsDeclarer.declare(new Fields(Constants.CONTROL_FIELD));
         }
 
         @Override
