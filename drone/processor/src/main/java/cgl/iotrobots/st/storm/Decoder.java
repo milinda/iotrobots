@@ -1,5 +1,6 @@
 package cgl.iotrobots.st.storm;
 
+import com.sun.org.apache.xml.internal.utils.SerializableLocatorImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,7 @@ import java.util.concurrent.BlockingQueue;
 /**
  * Starts a decoding process and do the decoding
  */
-public class Decoder {
+public class Decoder implements Serializable {
     private Logger LOG = LoggerFactory.getLogger(Decoder.class);
 
     private BlockingQueue<byte []> outputQueue;

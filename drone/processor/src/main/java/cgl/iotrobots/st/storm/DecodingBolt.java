@@ -10,6 +10,8 @@ import backtype.storm.tuple.Tuple;
 import java.util.Map;
 
 public class DecodingBolt extends BaseRichBolt {
+    private Decoder decoder;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
 
@@ -22,6 +24,6 @@ public class DecodingBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("frame", "time"));
+        outputFieldsDeclarer.declare(new Fields(Constants.FRAME_FIELD, Constants.TIME_FIELD));
     }
 }
