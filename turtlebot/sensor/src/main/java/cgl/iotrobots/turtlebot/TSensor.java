@@ -50,6 +50,8 @@ public class TSensor extends AbstractSensor {
         final BlockingQueue receivingQueue = new LinkedBlockingQueue();
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
+        double numBytes=0;
+        long secs=0;
 
         // register with ros_java
         NodeConfiguration nodeConfiguration = null;
@@ -79,6 +81,9 @@ public class TSensor extends AbstractSensor {
                         byte[] body = (byte[]) receivingQueue.take();
                         Map<String, Object> props = new HashMap<String, Object>();
                         props.put("time", Long.toString(System.currentTimeMillis()));
+                        
+                        numBytes = numBytes + body.length;
+                        
                         sendChannel.publish(body, props);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -96,14 +101,20 @@ public class TSensor extends AbstractSensor {
                         Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
-                        try {
+                        secs = System.currentTimeMillis() - Long.parseLong(time);
+                        if(time>1000) {
+                            System.out.println("numBytes: " + numBytes);
+                            numBytes=0;
+                            secs=0;
+                        }
+                        /*try {
                             File file = new File ("/home/leif/LatencyTest.txt");
                             PrintWriter writer = new PrintWriter (file);
                             writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
                             writer.close();
                         } catch (FileNotFoundException e) {
                             System.exit(1);
-                        }
+                        }*/
                         
                         controller.setMotion(motion);
                         System.out.println("Message received " + message.toString());
