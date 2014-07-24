@@ -102,7 +102,7 @@ public class TSensor extends AbstractSensor {
                         Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
-                        if((System.currentTimeMillis() - starTime)>1000) {
+                        if((System.currentTimeMillis() - starTime)>100000) {
                             System.out.println("numBytes: " + numBytes);
                             numBytes=0;
                             startTime=System.currentTimeMillis();
