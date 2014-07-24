@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.concurrent.BlockingQueue;
 
+/**
+ * Starts a decoding process and do the decoding
+ */
 public class Decoder {
     private Logger LOG = LoggerFactory.getLogger(Decoder.class);
 
