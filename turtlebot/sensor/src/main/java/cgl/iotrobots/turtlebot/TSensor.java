@@ -51,7 +51,7 @@ public class TSensor extends AbstractSensor {
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
         double numBytes=0;
-        long secs=0;
+        long startTime;
 
         // register with ros_java
         NodeConfiguration nodeConfiguration = null;
@@ -94,6 +94,7 @@ public class TSensor extends AbstractSensor {
         t.start();
 
         startListen(receiveChannel, new cgl.iotcloud.core.MessageReceiver() {
+            startTime=System.currentTimeMillis();
             @Override
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
@@ -101,11 +102,10 @@ public class TSensor extends AbstractSensor {
                         Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
-                        secs = System.currentTimeMillis() - Long.parseLong(time);
-                        if(time>1000) {
+                        if((System.currentTimeMillis() - starTime)>100000) {
                             System.out.println("numBytes: " + numBytes);
                             numBytes=0;
-                            secs=0;
+                            startTime=System.currentTimeMillis();
                         }
                         /*try {
                             File file = new File ("/home/leif/LatencyTest.txt");
