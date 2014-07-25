@@ -8,13 +8,19 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class DecodingBolt extends BaseRichBolt {
     private Decoder decoder;
 
+    private BlockingQueue<DecoderMessage> messages;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        messages = new ArrayBlockingQueue<DecoderMessage>(1024);
 
+        this.decoder = new Decoder(messages);
     }
 
     @Override

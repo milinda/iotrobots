@@ -13,7 +13,7 @@ import java.util.concurrent.BlockingQueue;
 public class Decoder implements Serializable {
     private Logger LOG = LoggerFactory.getLogger(Decoder.class);
 
-    private BlockingQueue<byte []> outputQueue;
+    private BlockingQueue<DecoderMessage> outputQueue;
 
     /**
      * The size of the image
@@ -24,7 +24,7 @@ public class Decoder implements Serializable {
      */
     private Process proc;
 
-    public Decoder(BlockingQueue<byte []> outputQueue) {
+    public Decoder(BlockingQueue<DecoderMessage> outputQueue) {
         this.outputQueue = outputQueue;
     }
 
@@ -43,11 +43,11 @@ public class Decoder implements Serializable {
         }
     }
 
-    public void write(byte []message) {
+    public void write(DecoderMessage message) {
         if (proc != null) {
             OutputStream stream = proc.getOutputStream();
             try {
-                stream.write(message);
+                stream.write(message.getMessage());
             } catch (IOException e) {
                 LOG.error("Failed to write the frame to decoder", e);
             }
@@ -77,7 +77,8 @@ public class Decoder implements Serializable {
                 byte output[] = new byte[frameSize];
                 isr.readFully(output);
 
-                outputQueue.put(output);
+                DecoderMessage message = new DecoderMessage(output, System.currentTimeMillis());
+                outputQueue.put(message);
             } catch (IOException e) {
                 LOG.error("Error reading output stream from the decoder.", e);
             } catch (InterruptedException ignored) {
