@@ -1,9 +1,29 @@
+/*
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
+
 package cgl.iotrobots.st.storm;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
@@ -15,34 +35,13 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
-import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SphereTrackingTopology {
-    private static Logger LOG = LoggerFactory.getLogger(SphereTrackingTopology.class);
-
-    public static class ImageProcessing extends ShellBoltN implements IRichBolt {
-        public ImageProcessing() {
-            super("python", "DroneFrameProcessBolt.py");
-        }
-
-        @Override
-        public void declareOutputFields(OutputFieldsDeclarer declarer) {
-            declarer.declare(new Fields("image", "time"));
-        }
-
-        @Override
-        public Map<String, Object> getComponentConfiguration() {
-            return null;
-        }
-    }
-
+public class DroneProcessorTopology {
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
         ErrorReporter r = new ErrorReporter() {
@@ -64,8 +63,10 @@ public class SphereTrackingTopology {
         boolean local = cmd.hasOption("local");
 
         builder.setSpout("frame_receive", new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
-        builder.setBolt("decode_process", new ImageProcessing()).shuffleGrouping("frame_receive");
-        builder.setBolt("send_command", new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping("decode_process");
+        builder.setBolt("decode", new DecodingBolt()).shuffleGrouping("frame_receive");
+        builder.setBolt("tracking", new TrackingBolt()).shuffleGrouping("decode");
+        builder.setBolt("planing", new PlanningBolt()).shuffleGrouping("tracking");
+        builder.setBolt("send_command", new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping("planing");
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -78,42 +79,9 @@ public class SphereTrackingTopology {
             // deploy on a local cluster
             conf.setMaxTaskParallelism(3);
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("image_proc", conf, builder.createTopology());
+            cluster.submitTopology("drone", conf, builder.createTopology());
             Thread.sleep(1000000);
             cluster.shutdown();
-        }
-    }
-
-    private static class Base64Builder implements MessageBuilder {
-        @Override
-        public List<Object> deSerialize(RabbitMQMessage message) {
-            Object time = null;
-            AMQP.BasicProperties properties = message.getProperties();
-            if (properties != null && properties.getHeaders() != null) {
-                time = properties.getHeaders().get("time");
-            }
-
-            byte []body = message.getBody();
-            List<Object> tuples = new ArrayList<Object>();
-            String encodedBytes = Base64.encodeBase64String(body);
-            tuples.add(encodedBytes);
-
-            if (time != null) {
-                tuples.add(time.toString());
-            }
-
-            return tuples;
-        }
-
-        @Override
-        public RabbitMQMessage serialize(Tuple tuple) {
-            String time = (String) tuple.getValueByField("time");
-            Map<String, Object> props = new HashMap<String, Object>();
-            props.put("time", time);
-
-            return new RabbitMQMessage(null, null, null,
-                    new AMQP.BasicProperties.Builder().headers(props).build(),
-                    tuple.getValue(0).toString().getBytes());
         }
     }
 
@@ -158,7 +126,7 @@ public class SphereTrackingTopology {
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new Base64Builder();
+            return new ReceiveBuilder();
         }
 
         @Override
@@ -218,7 +186,7 @@ public class SphereTrackingTopology {
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new Base64Builder();
+            return new ReceiveBuilder();
         }
 
         @Override
@@ -241,4 +209,37 @@ public class SphereTrackingTopology {
             };
         }
     }
+
+    private static class ReceiveBuilder implements MessageBuilder {
+        @Override
+        public List<Object> deSerialize(RabbitMQMessage message) {
+            Object time = null;
+            AMQP.BasicProperties properties = message.getProperties();
+            if (properties != null && properties.getHeaders() != null) {
+                time = properties.getHeaders().get("time");
+            }
+
+            byte []body = message.getBody();
+            List<Object> tuples = new ArrayList<Object>();
+            tuples.add(body);
+
+            if (time != null) {
+                tuples.add(time.toString());
+            }
+
+            return tuples;
+        }
+
+        @Override
+        public RabbitMQMessage serialize(Tuple tuple) {
+            String time = (String) tuple.getValueByField("time");
+            Map<String, Object> props = new HashMap<String, Object>();
+            props.put("time", time);
+
+            return new RabbitMQMessage(null, null, null,
+                    new AMQP.BasicProperties.Builder().headers(props).build(),
+                    tuple.getValue(0).toString().getBytes());
+        }
+    }
+
 }

@@ -1,11 +1,11 @@
 package cgl.iotrobots.st.storm;
 
-import com.sun.org.apache.xml.internal.utils.SerializableLocatorImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Starts a decoding process and do the decoding
@@ -14,6 +14,8 @@ public class Decoder implements Serializable {
     private Logger LOG = LoggerFactory.getLogger(Decoder.class);
 
     private BlockingQueue<DecoderMessage> outputQueue;
+
+    private BlockingQueue<Long> time = new LinkedBlockingQueue<Long>();
 
     /**
      * The size of the image
