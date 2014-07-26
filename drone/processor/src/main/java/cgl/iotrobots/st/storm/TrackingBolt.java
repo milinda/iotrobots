@@ -13,7 +13,7 @@ public class TrackingBolt extends ShellBoltN implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("image", "time"));
+        declarer.declare(new Fields("targets", "time"));
     }
 
     @Override

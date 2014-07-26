@@ -26,6 +26,14 @@ class PlanningBolt(storm.Bolt):
 
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
-        pass
+        targets = tup.get(0)
+        original_time = tup.get(1)
+        command = self.planing.do(None, targets)
+
+        message = {"command": [command.tiltx, command.tilty, command.spin, command.velocity_z]}
+        io = StringIO()
+        json.dump(message, io)
+
+        storm.emit([io.getvalue(), original_time])
 
 PlanningBolt().run()

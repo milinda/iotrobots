@@ -19,13 +19,13 @@ class TrackingBolt(storm.Bolt):
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
+        original_time = tup.values[1]
 
         im = np.frombuffer(frame, count=frame_size_bytes, dtype=np.uint8)
         im = im.reshape((frame_size[0], frame_size[1], 3))
         frame = Tracking.ImageFrame(None, im)
         targets = self.tracking.do(frame)
 
-        storm.emit(targets)
-        pass
+        storm.emit([targets, original_time])
 
 TrackingBolt.run()
