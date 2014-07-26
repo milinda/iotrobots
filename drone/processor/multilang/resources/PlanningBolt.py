@@ -14,7 +14,6 @@ from subprocess import PIPE, Popen
 from StringIO import StringIO
 
 from modules import Planning
-from modules import Tracking
 
 lock = threading.RLock()
 

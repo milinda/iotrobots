@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class TrackingBolt extends ShellBolt implements IRichBolt {
     public TrackingBolt() {
-        super("python", "DroneFrameProcessBolt.py");
+        super("python", "TrackingBolt.py");
     }
 
     @Override

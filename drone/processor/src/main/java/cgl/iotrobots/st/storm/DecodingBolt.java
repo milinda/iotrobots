@@ -6,6 +6,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,14 +57,18 @@ public class DecodingBolt extends BaseRichBolt {
     private class SendingThread implements Runnable {
         @Override
         public void run() {
-            try {
-                DecoderMessage message = messages.take();
-                List<Object> list = new ArrayList<Object>();
-                list.add(message.getMessage());
-                list.add(message.getTime());
+            while (true) {
+                try {
+                    DecoderMessage message = messages.take();
+                    List<Object> list = new ArrayList<Object>();
+                    LOG.info("output decoded frame");
+                    String encodedBytes = Base64.encodeBase64String(message.getMessage());
+                    list.add(encodedBytes);
+                    list.add(message.getTime());
 
-                outputCollector.emit(list);
-            } catch (InterruptedException ignored) {
+                    outputCollector.emit(list);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
     }

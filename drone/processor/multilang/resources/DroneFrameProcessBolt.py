@@ -25,7 +25,7 @@ class DroneFrameProcessBolt(storm.Bolt):
         self.p = Popen(["nice", "-n", "15", "avconv", "-i", "-",
                         "-probesize", "2048", "-flags", "low_delay", "-f",
                         "rawvideo", "-pix_fmt", 'rgb24', "-"],
-                       stdin=PIPE, stdout=PIPE, stderr=open('/dev/null', 'w'),
+                       stdin=PIPE, stdout=PIPE, stderr=open('/home/supun/error.txt', 'w'),
                        bufsize=0, preexec_fn=set_death_signal_int)
         t = Thread(target=self.enqueue_output, args=(self.p.stdout, (360, 640)))
         t.daemon = True

@@ -74,16 +74,18 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
-            try {
-                DataInputStream isr = new DataInputStream(is);
-                byte output[] = new byte[frameSize];
-                isr.readFully(output);
+            while (true) {
+                try {
+                    DataInputStream isr = new DataInputStream(is);
+                    byte output[] = new byte[frameSize];
+                    isr.readFully(output);
 
-                DecoderMessage message = new DecoderMessage(output, Long.toString(System.currentTimeMillis()));
-                outputQueue.put(message);
-            } catch (IOException e) {
-                LOG.error("Error reading output stream from the decoder.", e);
-            } catch (InterruptedException ignored) {
+                    DecoderMessage message = new DecoderMessage(output, Long.toString(System.currentTimeMillis()));
+                    outputQueue.put(message);
+                } catch (IOException e) {
+                    LOG.error("Error reading output stream from the decoder.", e);
+                } catch (InterruptedException ignored) {
+                }
             }
         }
     }
@@ -98,14 +100,16 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
-            try {
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader br = new BufferedReader(isr);
-                String line;
-                while ((line = br.readLine()) != null)
-                    LOG.error(type + " > " + line);
-            } catch (IOException e) {
-                LOG.error("Failed to read error output from decoder", e);
+            while (true) {
+                try {
+                    InputStreamReader isr = new InputStreamReader(is);
+                    BufferedReader br = new BufferedReader(isr);
+                    String line;
+                    while ((line = br.readLine()) != null)
+                        LOG.error(type + " > " + line);
+                } catch (IOException e) {
+                    LOG.error("Failed to read error output from decoder", e);
+                }
             }
         }
     }
