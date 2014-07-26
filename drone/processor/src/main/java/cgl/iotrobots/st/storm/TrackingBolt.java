@@ -1,12 +1,13 @@
 package cgl.iotrobots.st.storm;
 
+import backtype.storm.task.ShellBolt;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 
 import java.util.Map;
 
-public class TrackingBolt extends ShellBoltN implements IRichBolt {
+public class TrackingBolt extends ShellBolt implements IRichBolt {
     public TrackingBolt() {
         super("python", "DroneFrameProcessBolt.py");
     }

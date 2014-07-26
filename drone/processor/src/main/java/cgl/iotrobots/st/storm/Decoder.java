@@ -79,7 +79,7 @@ public class Decoder implements Serializable {
                 byte output[] = new byte[frameSize];
                 isr.readFully(output);
 
-                DecoderMessage message = new DecoderMessage(output, System.currentTimeMillis());
+                DecoderMessage message = new DecoderMessage(output, Long.toString(System.currentTimeMillis()));
                 outputQueue.put(message);
             } catch (IOException e) {
                 LOG.error("Error reading output stream from the decoder.", e);

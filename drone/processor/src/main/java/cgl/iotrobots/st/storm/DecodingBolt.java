@@ -29,15 +29,21 @@ public class DecodingBolt extends BaseRichBolt {
         this.messages = new ArrayBlockingQueue<DecoderMessage>(1024);
         this.outputCollector = outputCollector;
         this.decoder = new Decoder(messages);
-
+        this.decoder.start();
         Thread sendThread = new Thread(new SendingThread());
         sendThread.start();
     }
 
     @Override
+    public void cleanup() {
+        super.cleanup();
+        decoder.close();
+    }
+
+    @Override
     public void execute(Tuple tuple) {
         DecoderMessage message = new DecoderMessage((byte [])tuple.getValueByField(Constants.FRAME_FIELD),
-                (Long)tuple.getValueByField(Constants.TIME_FIELD));
+                (String)tuple.getValueByField(Constants.TIME_FIELD));
         this.decoder.write(message);
         this.outputCollector.ack(tuple);
     }

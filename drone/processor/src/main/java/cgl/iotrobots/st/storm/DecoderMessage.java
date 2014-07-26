@@ -3,9 +3,9 @@ package cgl.iotrobots.st.storm;
 public class DecoderMessage {
     private byte []message;
 
-    private long time;
+    private String time;
 
-    public DecoderMessage(byte[] message, long time) {
+    public DecoderMessage(byte[] message, String time) {
         this.message = message;
         this.time = time;
     }
@@ -14,7 +14,7 @@ public class DecoderMessage {
         this.message = message;
     }
 
-    public void setTime(long time) {
+    public void setTime(String time) {
         this.time = time;
     }
 
@@ -22,7 +22,7 @@ public class DecoderMessage {
         return message;
     }
 
-    public long getTime() {
+    public String getTime() {
         return time;
     }
 }
