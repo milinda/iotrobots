@@ -8,7 +8,7 @@ from modules import Tracking
 
 
 frame_size = (360, 640)
-frame_size_bytes = frame_size[0] * frame_size[1]
+frame_size_bytes = frame_size[0] * frame_size[1] * 3
 
 # this is the class we interface with storm. This will process the incoming messages by decoding them,
 # do the image processing and create a command and emit it.
