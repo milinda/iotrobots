@@ -20,7 +20,7 @@ public class Decoder implements Serializable {
     /**
      * The size of the image
      */
-    private static final int frameSize = 233 * 123;
+    private static final int frameSize = 360 * 640 * 3;
     /**
      * The process we create
      */

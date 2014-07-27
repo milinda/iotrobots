@@ -28,4 +28,4 @@ class TrackingBolt(storm.Bolt):
 
         storm.emit([targets, original_time])
 
-TrackingBolt.run()
+TrackingBolt().run()
