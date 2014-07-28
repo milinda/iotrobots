@@ -3,6 +3,7 @@ import storm
 import base64
 import json
 import numpy as np
+from StringIO import StringIO
 
 from modules import Tracking
 
@@ -26,6 +27,13 @@ class TrackingBolt(storm.Bolt):
         frame = Tracking.ImageFrame(None, im)
         targets = self.tracking.do(frame)
 
-        storm.emit([targets, original_time])
+        targets_message = []
+        for target in targets:
+            targets_message.append({'found': target.found, 'x': target.x, 'y': target.y, 'h': target.h, 'w': target.w})
+
+        io = StringIO()
+        json.dump(targets_message, io)
+        storm.log(io.getvalue())
+        storm.emit([targets_message, original_time])
 
 TrackingBolt().run()

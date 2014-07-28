@@ -14,6 +14,7 @@ from subprocess import PIPE, Popen
 from StringIO import StringIO
 
 from modules import Planning
+from modules import Tracking
 
 lock = threading.RLock()
 
@@ -25,7 +26,14 @@ class PlanningBolt(storm.Bolt):
 
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
-        targets = tup.values[0]
+        targets_message = tup.values[0]
+
+        targets = []
+        # json_object = json.loads(targets_message)
+        for o in targets_message:
+            t = Tracking.Tracking(o["found"], o["x"], o["y"], o["w"], o["h"])
+            targets.append(t)
+
         original_time = tup.values[1]
         command = self.planing.do(None, targets)
 
