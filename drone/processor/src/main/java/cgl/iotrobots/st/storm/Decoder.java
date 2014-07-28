@@ -109,7 +109,7 @@ public class Decoder implements Serializable {
                     long decodeStartTime = decodingLatQueue.take();
                     long decodeLat = currentTime - decodeStartTime;
 
-                    if (outCount.get() > 500 && !timeRemoved) {
+                    if (outCount.get() > 200) {
                         timeQueue.clear();
                         decodingLatQueue.clear();
                         timeRemoved = true;
