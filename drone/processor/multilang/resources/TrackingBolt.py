@@ -29,8 +29,8 @@ class TrackingBolt(storm.BasicBolt):
 
         targets_message = []
         for target in targets:
-            targets_message.append({'found': target.found, 'x': target.x, 'y': target.y, 'h': target.h, 'w': target.w})
-            # targets_message.append({'found': 1, 'x': 1, 'y': 2, 'h': 3.5, 'w': 4.5})
+            # targets_message.append({'found': target.found, 'x': target.x, 'y': target.y, 'h': target.h, 'w': target.w})
+            targets_message.append({'found': 1, 'x': 1, 'y': 2, 'h': 3.5, 'w': 4.5})
         # io = StringIO()
         # json.dump(targets_message, io)
         # storm.log(target.found)

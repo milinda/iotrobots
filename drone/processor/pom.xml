@@ -75,6 +75,28 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>java -XX:+HeapDumpOnOutOfMemoryError</executable>
+                    <includeProjectDependencies>true</includeProjectDependencies>
+                    <includePluginDependencies>false</includePluginDependencies>
+                    <classpathScope>compile</classpathScope>
+                    <mainClass>cgl.iotrobots.st.storm.DroneProcessorTopology</mainClass>
+                    <commandlineArgs>-url amqp://localhost:5672 -local -name drone</commandlineArgs>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
