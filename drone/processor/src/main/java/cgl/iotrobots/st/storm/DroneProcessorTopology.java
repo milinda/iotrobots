@@ -28,6 +28,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import clojure.lang.Cons;
 import com.rabbitmq.client.AMQP;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
@@ -52,21 +53,21 @@ public class DroneProcessorTopology {
         };
 
         Options options = new Options();
-        options.addOption("url", true, "URL of the AMQP Broker");
-        options.addOption("name", true, "Name of the topology");
-        options.addOption("local", false, "Weather we want run locally");
+        options.addOption(Constants.ARGS_URL, true, "URL of the AMQP Broker");
+        options.addOption(Constants.ARGS_NAME, true, "Name of the topology");
+        options.addOption(Constants.ARGS_LOCAL, false, "Weather we want run locally");
 
         CommandLineParser commandLineParser = new BasicParser();
         CommandLine cmd = commandLineParser.parse(options, args);
-        String url = cmd.getOptionValue("url");
-        String name = cmd.getOptionValue("name");
-        boolean local = cmd.hasOption("local");
+        String url = cmd.getOptionValue(Constants.ARGS_URL);
+        String name = cmd.getOptionValue(Constants.ARGS_NAME);
+        boolean local = cmd.hasOption(Constants.ARGS_LOCAL);
 
-        builder.setSpout("frame_receive", new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
-        builder.setBolt("decode", new DecodingBolt()).shuffleGrouping("frame_receive");
-        builder.setBolt("tracking", new TrackingBolt()).shuffleGrouping("decode");
-        builder.setBolt("planing", new PlanningBolt()).shuffleGrouping("tracking");
-        builder.setBolt("send_command", new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping("planing");
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
+        builder.setBolt(Constants.DECODE_BOLT, new DecodingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
+        builder.setBolt(Constants.TRACKING_BOLT, new TrackingBolt()).shuffleGrouping(Constants.DECODE_BOLT);
+        builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.TRACKING_BOLT);
+        builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -232,9 +233,9 @@ public class DroneProcessorTopology {
 
         @Override
         public RabbitMQMessage serialize(Tuple tuple) {
-            String time = (String) tuple.getValueByField("time");
+            String time = (String) tuple.getValueByField(Constants.TIME_FIELD);
             Map<String, Object> props = new HashMap<String, Object>();
-            props.put("time", time);
+            props.put(Constants.TIME_FIELD, time);
 
             return new RabbitMQMessage(null, null, null,
                     new AMQP.BasicProperties.Builder().headers(props).build(),

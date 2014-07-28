@@ -31,7 +31,7 @@ class PlanningBolt(storm.BasicBolt):
         targets = []
         # json_object = json.loads(targets_message)
         for o in targets_message:
-            t = Tracking.Target(o["found"], o["x"], o["y"], o["w"], o["h"])
+            t = Tracking.Target(o["found"], float(o["x"]), float(o["y"]), float(o["w"]), float(o["h"]))
             targets.append(t)
 
         original_time = tup.values[1]
