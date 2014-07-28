@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,7 +16,9 @@ public class Decoder implements Serializable {
 
     private BlockingQueue<DecoderMessage> outputQueue;
 
-    private BlockingQueue<Long> time = new LinkedBlockingQueue<Long>();
+    private BlockingQueue<String> timeQueue = new LinkedBlockingQueue<String>();
+
+    private ArrayList<Integer> diff = new ArrayList<Integer>(100);
 
     /**
      * The size of the image
@@ -25,6 +28,12 @@ public class Decoder implements Serializable {
      * The process we create
      */
     private Process proc;
+
+    private boolean timeRemoved = false;
+
+    private int inCount = 0;
+
+    private int outCount = 0;
 
     public Decoder(BlockingQueue<DecoderMessage> outputQueue) {
         this.outputQueue = outputQueue;
@@ -49,9 +58,12 @@ public class Decoder implements Serializable {
         if (proc != null) {
             OutputStream stream = proc.getOutputStream();
             try {
+                inCount++;
+                timeQueue.put(message.getTime());
                 stream.write(message.getMessage());
             } catch (IOException e) {
                 LOG.error("Failed to write the frame to decoder", e);
+            } catch (InterruptedException ignored) {
             }
         } else {
             throw new IllegalStateException("The process should be created before calling the write");
@@ -74,15 +86,45 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
-
             while (true) {
                 try {
                     DataInputStream isr = new DataInputStream(is);
                     byte output[] = new byte[frameSize];
                     isr.readFully(output);
 
-                    DecoderMessage message = new DecoderMessage(output, Long.toString(System.currentTimeMillis()));
+                    if (inCount > 100 && !timeRemoved) {
+                        boolean equal = true;
+                        long cd = 0;
+                        long pd = 0;
+                        long d = 0;
+                        for (int x = 0; x < 99; x++) {
+                            cd = diff.get(x) - diff.get(x + 1);
+                            if (x == 0) {
+                                pd = cd;
+                            }
+                            if (pd != cd) {
+                                equal = false;
+                            }
+                            pd = cd;
+                            d = diff.get(x + 1);
+                        }
+
+                        if (equal) {
+                            for (int x = 0; x < d; x++) {
+                                timeQueue.poll();
+                                timeRemoved = true;
+                            }
+                        }
+                    }
+
+                    outCount ++;
+
+                    String time = timeQueue.take();
+                    DecoderMessage message = new DecoderMessage(output, time);
                     outputQueue.put(message);
+                    if (!timeRemoved) {
+                        diff.add(inCount - outCount);
+                    }
                 } catch (IOException e) {
                     LOG.error("Error reading output stream from the decoder.", e);
                 } catch (InterruptedException ignored) {

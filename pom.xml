@@ -108,6 +108,19 @@
                 <artifactId>storm-rabbitmq</artifactId>
                 <version>${storm.bcs.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.4</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>17.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
