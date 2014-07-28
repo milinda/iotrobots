@@ -74,7 +74,7 @@ public class DroneProcessorTopology {
 
         // we are going to deploy on a real cluster
         if (!local) {
-            conf.setNumWorkers(3);
+            conf.setNumWorkers(5);
             StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
             // deploy on a local cluster
