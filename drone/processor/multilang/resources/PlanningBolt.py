@@ -20,7 +20,7 @@ lock = threading.RLock()
 
 # this is the class we interface with storm. This will process the incoming messages by decoding them,
 # do the image processing and create a command and emit it.
-class PlanningBolt(storm.Bolt):
+class PlanningBolt(storm.BasicBolt):
     def __init__(self):
         self.planing = Planning.Planning()
 
@@ -31,7 +31,7 @@ class PlanningBolt(storm.Bolt):
         targets = []
         # json_object = json.loads(targets_message)
         for o in targets_message:
-            t = Tracking.Tracking(o["found"], o["x"], o["y"], o["w"], o["h"])
+            t = Tracking.Target(o["found"], o["x"], o["y"], o["w"], o["h"])
             targets.append(t)
 
         original_time = tup.values[1]

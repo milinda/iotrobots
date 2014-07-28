@@ -74,6 +74,7 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
+
             while (true) {
                 try {
                     DataInputStream isr = new DataInputStream(is);

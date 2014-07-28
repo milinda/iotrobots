@@ -61,7 +61,7 @@ public class DecodingBolt extends BaseRichBolt {
                 try {
                     DecoderMessage message = messages.take();
                     List<Object> list = new ArrayList<Object>();
-                    LOG.info("output decoded frame");
+                    LOG.info("output decoded frame :" + messages.size());
                     String encodedBytes = Base64.encodeBase64String(message.getMessage());
                     list.add(encodedBytes);
                     list.add(message.getTime());

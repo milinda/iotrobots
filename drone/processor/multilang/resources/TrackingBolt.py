@@ -13,7 +13,7 @@ frame_size_bytes = frame_size[0] * frame_size[1] * 3
 
 # this is the class we interface with storm. This will process the incoming messages by decoding them,
 # do the image processing and create a command and emit it.
-class TrackingBolt(storm.Bolt):
+class TrackingBolt(storm.BasicBolt):
     def __init__(self):
         self.tracking = Tracking.Tracking()
 
@@ -30,10 +30,10 @@ class TrackingBolt(storm.Bolt):
         targets_message = []
         for target in targets:
             targets_message.append({'found': target.found, 'x': target.x, 'y': target.y, 'h': target.h, 'w': target.w})
-
-        io = StringIO()
-        json.dump(targets_message, io)
-        storm.log(io.getvalue())
+            # targets_message.append({'found': 1, 'x': 1, 'y': 2, 'h': 3.5, 'w': 4.5})
+        # io = StringIO()
+        # json.dump(targets_message, io)
+        # storm.log(target.found)
         storm.emit([targets_message, original_time])
 
 TrackingBolt().run()
