@@ -1,5 +1,6 @@
 package cgl.iotrobots.st.storm;
 
+import backtype.storm.messaging.local;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,6 +8,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Starts a decoding process and do the decoding
@@ -18,7 +22,7 @@ public class Decoder implements Serializable {
 
     private BlockingQueue<String> timeQueue = new LinkedBlockingQueue<String>();
 
-    private ArrayList<Integer> diff = new ArrayList<Integer>(100);
+    private BlockingQueue<Long> decodingLatQueue = new LinkedBlockingQueue<Long>();
 
     /**
      * The size of the image
@@ -31,9 +35,11 @@ public class Decoder implements Serializable {
 
     private boolean timeRemoved = false;
 
-    private int inCount = 0;
+    private AtomicInteger inCount = new AtomicInteger(0);
 
-    private int outCount = 0;
+    private AtomicInteger outCount = new AtomicInteger(0);
+
+    private boolean run = true;
 
     public Decoder(BlockingQueue<DecoderMessage> outputQueue) {
         this.outputQueue = outputQueue;
@@ -58,7 +64,8 @@ public class Decoder implements Serializable {
         if (proc != null) {
             OutputStream stream = proc.getOutputStream();
             try {
-                inCount++;
+                inCount.getAndIncrement();
+                decodingLatQueue.put(System.currentTimeMillis());
                 timeQueue.put(message.getTime());
                 stream.write(message.getMessage());
             } catch (IOException e) {
@@ -71,6 +78,7 @@ public class Decoder implements Serializable {
     }
 
     public void close() {
+        run = false;
         if (proc != null) {
             proc.destroy();
         }
@@ -86,45 +94,27 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
-            while (true) {
+            while (run) {
                 try {
                     DataInputStream isr = new DataInputStream(is);
                     byte output[] = new byte[frameSize];
                     isr.readFully(output);
-
-                    if (inCount > 100 && !timeRemoved) {
-                        boolean equal = true;
-                        long cd = 0;
-                        long pd = 0;
-                        long d = 0;
-                        for (int x = 0; x < 99; x++) {
-                            cd = diff.get(x) - diff.get(x + 1);
-                            if (x == 0) {
-                                pd = cd;
-                            }
-                            if (pd != cd) {
-                                equal = false;
-                            }
-                            pd = cd;
-                            d = diff.get(x + 1);
-                        }
-
-                        if (equal) {
-                            for (int x = 0; x < d; x++) {
-                                timeQueue.poll();
-                                timeRemoved = true;
-                            }
-                        }
-                    }
-
-                    outCount ++;
+                    outCount.getAndIncrement();
 
                     String time = timeQueue.take();
                     DecoderMessage message = new DecoderMessage(output, time);
                     outputQueue.put(message);
-                    if (!timeRemoved) {
-                        diff.add(inCount - outCount);
+
+                    long currentTime = System.currentTimeMillis();
+                    long decodeStartTime = decodingLatQueue.take();
+                    long decodeLat = currentTime - decodeStartTime;
+
+                    if (outCount.get() > 500 && !timeRemoved) {
+                        timeQueue.clear();
+                        decodingLatQueue.clear();
+                        timeRemoved = true;
                     }
+                    LOG.info(" TC: " + inCount + " EC: " + outCount + " TiC: " + timeQueue.size() + " LAT: " + decodeLat);
                 } catch (IOException e) {
                     LOG.error("Error reading output stream from the decoder.", e);
                 } catch (InterruptedException ignored) {
