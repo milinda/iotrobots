@@ -1,16 +1,12 @@
 package cgl.iotrobots.st.storm;
 
-import backtype.storm.messaging.local;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Starts a decoding process and do the decoding
@@ -41,6 +37,10 @@ public class Decoder implements Serializable {
 
     private boolean run = true;
 
+    private String lastTimeReceivd;
+
+    private long lastTime;
+
     public Decoder(BlockingQueue<DecoderMessage> outputQueue) {
         this.outputQueue = outputQueue;
     }
@@ -65,13 +65,15 @@ public class Decoder implements Serializable {
             OutputStream stream = proc.getOutputStream();
             try {
                 inCount.getAndIncrement();
-                decodingLatQueue.put(System.currentTimeMillis());
-                timeQueue.put(message.getTime());
+//                decodingLatQueue.put(System.currentTimeMillis());
+//                timeQueue.put(message.getTime());
+                lastTimeReceivd = message.getTime();
+                lastTime = System.currentTimeMillis();
                 stream.write(message.getMessage());
             } catch (IOException e) {
                 LOG.error("Failed to write the frame to decoder", e);
-            } catch (InterruptedException ignored) {
-            }
+            } /*catch (InterruptedException ignored) {
+            }*/
         } else {
             throw new IllegalStateException("The process should be created before calling the write");
         }
@@ -101,19 +103,20 @@ public class Decoder implements Serializable {
                     isr.readFully(output);
                     outCount.getAndIncrement();
 
-                    String time = timeQueue.take();
-                    DecoderMessage message = new DecoderMessage(output, time);
+//                    String time = timeQueue.take();
+                    DecoderMessage message = new DecoderMessage(output, lastTimeReceivd);
                     outputQueue.put(message);
 
                     long currentTime = System.currentTimeMillis();
-                    long decodeStartTime = decodingLatQueue.take();
-                    long decodeLat = currentTime - decodeStartTime;
+//                    long decodeStartTime = decodingLatQueue.take();
+//                    long decodeLat = currentTime - decodeStartTime;
+                    long decodeLat = currentTime - lastTime;
 
-                    if (outCount.get() > 200) {
-                        timeQueue.clear();
-                        decodingLatQueue.clear();
-                        timeRemoved = true;
-                    }
+//                  if (outCount.get() > 200 && !timeRemoved) {
+                    //timeQueue.clear();
+                    //decodingLatQueue.clear();
+                    timeRemoved = true;
+//                  }
                     LOG.info(" TC: " + inCount + " EC: " + outCount + " TiC: " + timeQueue.size() + " LAT: " + decodeLat);
                 } catch (IOException e) {
                     LOG.error("Error reading output stream from the decoder.", e);
