@@ -28,7 +28,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import clojure.lang.Cons;
 import com.rabbitmq.client.AMQP;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
@@ -36,6 +35,7 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
+import org.apache.commons.codec.binary.Base64;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,11 +63,8 @@ public class DroneProcessorTopology {
         String name = cmd.getOptionValue(Constants.ARGS_NAME);
         boolean local = cmd.hasOption(Constants.ARGS_LOCAL);
 
-        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
-        builder.setBolt(Constants.DECODE_BOLT, new DecodingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
-        builder.setBolt(Constants.TRACKING_BOLT, new TrackingBolt()).shuffleGrouping(Constants.DECODE_BOLT);
-        builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.TRACKING_BOLT);
-        builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
+        //buildAllSeparateTopology(builder, r, url);
+        buildDecodeAndTrackingTopology(builder, r, url);
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -89,11 +86,33 @@ public class DroneProcessorTopology {
         }
     }
 
+    private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
+        builder.setBolt(Constants.DECODE_BOLT, new DecodingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
+        builder.setBolt(Constants.TRACKING_BOLT, new TrackingBolt()).shuffleGrouping(Constants.DECODE_BOLT);
+        builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.TRACKING_BOLT);
+        builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
+    }
+
+    private static void buildAllSeparateTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url, true), r), 1);
+        builder.setBolt(Constants.DECODE_AND_TRACKING_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
+        builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.DECODE_AND_TRACKING_BOLT);
+        builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
+    }
+
     private static class ReceiveSpoutConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://localhost:5672";
 
+        private boolean base64Encode;
+
         private ReceiveSpoutConfigurator(String url) {
             this.url = url;
+        }
+
+        private ReceiveSpoutConfigurator(String url, boolean base64Encode) {
+            this.url = url;
+            this.base64Encode = base64Encode;
         }
 
         @Override
@@ -130,7 +149,7 @@ public class DroneProcessorTopology {
 
         @Override
         public MessageBuilder getMessageBuilder() {
-            return new ReceiveBuilder();
+            return new ReceiveBuilder(base64Encode);
         }
 
         @Override
@@ -215,6 +234,15 @@ public class DroneProcessorTopology {
     }
 
     private static class ReceiveBuilder implements MessageBuilder {
+        private boolean base64Encode = false;
+
+        private ReceiveBuilder(boolean base64Encode) {
+            this.base64Encode = base64Encode;
+        }
+
+        private ReceiveBuilder() {
+        }
+
         @Override
         public List<Object> deSerialize(RabbitMQMessage message) {
             Object time = null;
@@ -225,7 +253,11 @@ public class DroneProcessorTopology {
 
             byte []body = message.getBody();
             List<Object> tuples = new ArrayList<Object>();
-            tuples.add(body);
+            if (!base64Encode) {
+                tuples.add(body);
+            } else {
+                tuples.add(Base64.encodeBase64String(body));
+            }
 
             if (time != null) {
                 tuples.add(time.toString());
