@@ -86,7 +86,7 @@ public class DroneProcessorTopology {
         }
     }
 
-    private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+    private static void buildAllSeparateTopology(TopologyBuilder builder, ErrorReporter r, String url) {
         builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
         builder.setBolt(Constants.DECODE_BOLT, new DecodingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
         builder.setBolt(Constants.TRACKING_BOLT, new TrackingBolt()).shuffleGrouping(Constants.DECODE_BOLT);
@@ -94,7 +94,7 @@ public class DroneProcessorTopology {
         builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
     }
 
-    private static void buildAllSeparateTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+    private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, ErrorReporter r, String url) {
         builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url, true), r), 1);
         builder.setBolt(Constants.DECODE_AND_TRACKING_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
         builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.DECODE_AND_TRACKING_BOLT);
