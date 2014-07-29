@@ -71,6 +71,9 @@ public class DroneProcessorTopology {
 
         Config conf = new Config();
         conf.setDebug(false);
+        // we are not going to track individual messages, message loss is inherent in the decoder
+        // also we cannot replay message because of the decoder
+        conf.put(Config.TOPOLOGY_ACKER_EXECUTORS, 0);
 
         // we are going to deploy on a real cluster
         if (!local) {

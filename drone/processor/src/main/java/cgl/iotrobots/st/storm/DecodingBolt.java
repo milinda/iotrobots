@@ -25,6 +25,8 @@ public class DecodingBolt extends BaseRichBolt {
 
     private OutputCollector outputCollector;
 
+    private boolean run = true;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.messages = new ArrayBlockingQueue<DecoderMessage>(1024);
@@ -37,6 +39,7 @@ public class DecodingBolt extends BaseRichBolt {
 
     @Override
     public void cleanup() {
+        run = false;
         super.cleanup();
         decoder.close();
     }
@@ -57,11 +60,10 @@ public class DecodingBolt extends BaseRichBolt {
     private class SendingThread implements Runnable {
         @Override
         public void run() {
-            while (true) {
+            while (run) {
                 try {
                     DecoderMessage message = messages.take();
                     List<Object> list = new ArrayList<Object>();
-//                    LOG.info("output decoded frame :" + messages.size());
                     String encodedBytes = Base64.encodeBase64String(message.getMessage());
                     list.add(encodedBytes);
                     list.add(message.getTime());
