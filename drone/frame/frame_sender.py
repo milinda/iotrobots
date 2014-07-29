@@ -14,6 +14,7 @@ def send_frames():
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     # try:
+    send_count = 0
     for x in range(0, 1596):
         data = file_read(x)
         channel.basic_publish(exchange='drone',
@@ -21,6 +22,8 @@ def send_frames():
                                    body =data,
                                    properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
         time.sleep(.03)
+        send_count += 1
+        print "send_count: " + str(send_count)
     # except:
     #     e = sys.exc_info()[0]
     #     raise e
@@ -31,27 +34,33 @@ def recv_commands():
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
-
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
 
-    average = 0.0
-    count = 0
-    run = 0
-    while run == 0:
-        method_frame, header_frame, body = channel.basic_get('control')
-        if method_frame:
+    channel.basic_consume(on_message, queue='control')
+    channel.start_consuming()
 
-            channel.basic_ack(method_frame.delivery_tag)
+average = 0.0
+count = 0
+run = 0
+recv_count = 0
+def on_message(channel, method_frame, header_frame, body):
+    global average
+    global count
+    global run
+    global recv_count
 
-            latency = int(round(time.time() * 1000)) - long(header_frame.headers["time"])
-            if latency < 150:
-                count += 1
-                average = average + (latency - average) / count
-            #print header_frame.headers["time"]
-            print "latency ", str(latency), " average: ", str(average)
-            d = json.loads(body)
-            print body
+    channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+    latency = int(round(time.time() * 1000)) - long(header_frame.headers["time"])
+    if latency < 150:
+        count += 1
+        average = average + (latency - average) / count
+    #print header_frame.headers["time"]
+    recv_count += 1
+    print "recv_count: " + str(recv_count) + " latency: ", str(latency), " average: ", str(average)
+    d = json.loads(body)
+    print body
+
 
 def file_read(i):
     f = open('frames/output/' + str(i), 'r')

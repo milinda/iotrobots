@@ -96,6 +96,7 @@ public class DroneMessageSender {
     }
 
     private class Worker implements Runnable {
+        private int commandSendCount = 0;
         @Override
         public void run() {
             boolean run = true;
@@ -105,7 +106,7 @@ public class DroneMessageSender {
                     try {
                         Object message = outQueue.take();
                         if (message instanceof MessageContext) {
-                            MessageContext input = (MessageContext) outQueue.take();
+                            MessageContext input = (MessageContext) message;
 
                             Map<String, Object> props = new HashMap<String, Object>();
                             props.put(TransportConstants.SENSOR_ID, input.getSensorId());
@@ -113,7 +114,8 @@ public class DroneMessageSender {
                             for (Map.Entry<String, Object> e : input.getProperties().entrySet()) {
                                 props.put(e.getKey(), e.getValue());
                             }
-
+                            commandSendCount++;
+                            System.out.println("Command send count: " + commandSendCount);
                             channel.basicPublish(exchangeName, routingKey,
                                     new AMQP.BasicProperties.Builder().headers(props).build(), input.getBody());
                         } else {

@@ -24,8 +24,10 @@ public class STSensor extends AbstractSensor {
 
     private DroneMessageSender controlSender;
 
-    BlockingQueue receivingQueue = new LinkedBlockingQueue();
-    BlockingQueue sendingQueue = new LinkedBlockingQueue();
+    private BlockingQueue receivingQueue = new LinkedBlockingQueue();
+    private BlockingQueue sendingQueue = new LinkedBlockingQueue();
+
+    private int commandRecvCount = 0;
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
@@ -68,13 +70,15 @@ public class STSensor extends AbstractSensor {
         });
         t.start();
 
-        startSend(sendChannel, receivingQueue);
+        // startSend(sendChannel, receivingQueue);
 
         startListen(receiveChannel, new MessageReceiver() {
             @Override
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
                     try {
+                        commandRecvCount++;
+                        System.out.println("Command received count: " + commandRecvCount);
                         sendingQueue.put(message);
                     } catch (InterruptedException e) {
                         LOG.error("Failed to put the message for sending", e);

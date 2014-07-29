@@ -94,7 +94,7 @@ public class DroneMessageReceiver {
 
                             MessageContext messageContext = new MessageContext("default", body, props);
 
-                            System.out.println(body);
+                            //System.out.println(body);
                             inQueue.offer(messageContext);
                             channel.basicAck(deliveryTag, false);
                         }
