@@ -38,17 +38,6 @@ public class ObjectDetectionBolt extends BaseRichBolt {
         } else {
             outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0)), sensorId, time));
         }
-
-
-
-        // boolean detect = objectDetector.detect((byte[]) tuple.getValue(0));
-
-//        if (detect) {
-//            System.out.println("detected object");
-//            outputCollector.emit(Arrays.<Object>asList(new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0))));
-//        } else {
-//            System.out.println("nnnnnnnnnnnnnnnnnnnnnnoooooooooooooooooooooooooo");
-//        }
     }
 
     @Override
