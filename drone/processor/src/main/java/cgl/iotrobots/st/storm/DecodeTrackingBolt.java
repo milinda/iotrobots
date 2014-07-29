@@ -7,6 +7,11 @@ import backtype.storm.tuple.Fields;
 import java.util.Map;
 
 public class DecodeTrackingBolt extends ShellBoltN implements IRichBolt {
+    public DecodeTrackingBolt() {
+        super("python", "DecodeTrackingBolt.py");
+
+    }
+
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(new Fields("targets", "time"));
