@@ -16,9 +16,9 @@ public class Decoder implements Serializable {
 
     private BlockingQueue<DecoderMessage> outputQueue;
 
-    private BlockingQueue<String> timeQueue = new LinkedBlockingQueue<String>();
+    //private BlockingQueue<String> timeQueue = new LinkedBlockingQueue<String>();
 
-    private BlockingQueue<Long> decodingLatQueue = new LinkedBlockingQueue<Long>();
+    //private BlockingQueue<Long> decodingLatQueue = new LinkedBlockingQueue<Long>();
 
     /**
      * The size of the image
@@ -65,15 +65,12 @@ public class Decoder implements Serializable {
             OutputStream stream = proc.getOutputStream();
             try {
                 inCount.getAndIncrement();
-//                decodingLatQueue.put(System.currentTimeMillis());
-//                timeQueue.put(message.getTime());
                 lastTimeReceivd = message.getTime();
                 lastTime = System.currentTimeMillis();
                 stream.write(message.getMessage());
             } catch (IOException e) {
                 LOG.error("Failed to write the frame to decoder", e);
-            } /*catch (InterruptedException ignored) {
-            }*/
+            }
         } else {
             throw new IllegalStateException("The process should be created before calling the write");
         }
@@ -96,28 +93,21 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
+            DataInputStream isr = new DataInputStream(is);
             while (run) {
                 try {
-                    DataInputStream isr = new DataInputStream(is);
                     byte output[] = new byte[frameSize];
                     isr.readFully(output);
                     outCount.getAndIncrement();
 
-//                    String time = timeQueue.take();
                     DecoderMessage message = new DecoderMessage(output, lastTimeReceivd);
                     outputQueue.put(message);
 
                     long currentTime = System.currentTimeMillis();
-//                    long decodeStartTime = decodingLatQueue.take();
-//                    long decodeLat = currentTime - decodeStartTime;
                     long decodeLat = currentTime - lastTime;
 
-//                  if (outCount.get() > 200 && !timeRemoved) {
-                    //timeQueue.clear();
-                    //decodingLatQueue.clear();
                     timeRemoved = true;
-//                  }
-                    LOG.info(" TC: " + inCount + " EC: " + outCount + " TiC: " + timeQueue.size() + " LAT: " + decodeLat);
+                    LOG.info(" TC: " + inCount + " EC: " + outCount + " LAT: " + decodeLat);
                 } catch (IOException e) {
                     LOG.error("Error reading output stream from the decoder.", e);
                 } catch (InterruptedException ignored) {
@@ -136,7 +126,7 @@ public class Decoder implements Serializable {
         }
 
         public void run() {
-            while (true) {
+            while (run) {
                 try {
                     InputStreamReader isr = new InputStreamReader(is);
                     BufferedReader br = new BufferedReader(isr);
