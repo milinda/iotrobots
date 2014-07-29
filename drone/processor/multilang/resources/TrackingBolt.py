@@ -19,6 +19,7 @@ class TrackingBolt(storm.BasicBolt):
 
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
+        start_time = int(round(time.time() * 1000))
         frame =  base64.b64decode(tup.values[0])
         original_time = tup.values[1]
 
@@ -26,6 +27,9 @@ class TrackingBolt(storm.BasicBolt):
         im = im.reshape((frame_size[0], frame_size[1], 3))
         frame = Tracking.ImageFrame(None, im)
         targets = self.tracking.do(frame)
+        end_time = int(round(time.time() * 1000))
+
+        storm.log("Tracking Processing time: " + str(end_time - start_time))
 
         targets_message = []
         for target in targets:
