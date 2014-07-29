@@ -35,15 +35,23 @@ public class DroneProcessorTopology {
         options.addOption(Constants.ARGS_URL, true, "URL of the AMQP Broker");
         options.addOption(Constants.ARGS_NAME, true, "Name of the topology");
         options.addOption(Constants.ARGS_LOCAL, false, "Weather we want run locally");
+        options.addOption(Constants.ARGS_DS_MODE, true, "The distributed mode, specify 0, 1, 2, 3 etc");
 
         CommandLineParser commandLineParser = new BasicParser();
         CommandLine cmd = commandLineParser.parse(options, args);
         String url = cmd.getOptionValue(Constants.ARGS_URL);
         String name = cmd.getOptionValue(Constants.ARGS_NAME);
         boolean local = cmd.hasOption(Constants.ARGS_LOCAL);
+        String dsModeValue = cmd.getOptionValue(Constants.ARGS_DS_MODE);
+        int dsMode = Integer.parseInt(dsModeValue);
 
-        //buildAllSeparateTopology(builder, r, url);
-        buildDecodeAndTrackingTopology(builder, r, url);
+        if (dsMode == 0) {
+            buildAllInOneTopology(builder, r, url);
+        } else if (dsMode == 1) {
+            buildAllSeparateTopology(builder, r, url);
+        } else if (dsMode == 2) {
+            buildDecodeAndTrackingTopology(builder, r, url);
+        }
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -63,6 +71,12 @@ public class DroneProcessorTopology {
             Thread.sleep(1000000);
             cluster.shutdown();
         }
+    }
+
+    private static void buildAllInOneTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url, true), r), 1);
+        builder.setBolt(Constants.ALL_IN_ONE_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
+        builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.ALL_IN_ONE_BOLT);
     }
 
     private static void buildAllSeparateTopology(TopologyBuilder builder, ErrorReporter r, String url) {
