@@ -9,9 +9,9 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>iotrobots-sensor</artifactId>
+    <artifactId>turtle-sensor</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>iotrobots-turtlebot</name>
+    <name>iotrobots-turtle-sensor</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

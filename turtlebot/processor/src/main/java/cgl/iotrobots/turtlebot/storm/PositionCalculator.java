@@ -4,11 +4,18 @@ import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
 import cgl.iotrobots.turtlebot.commons.Compressor;
 
+import java.io.IOException;
+
 public class PositionCalculator {
 
     public Motion calculatePosition(byte[] data) {
         Compressor compressor = new Compressor();
-        int[] dist = compressor.unCompr(data);
+        int[] dist = new int[0];
+        try {
+            dist = compressor.unCompr(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         double max_z_ = 1.0;
         double min_y_ = .1;
         double max_y_ = .5;
