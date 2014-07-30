@@ -138,9 +138,9 @@ public class STSensor extends AbstractSensor {
             Channel sendChannel = createChannel("frameSender", sendProps, Direction.OUT, 1024);
 
             Map navSendProps = new HashMap();
-            sendProps.put("exchange", "storm_drone");
-            sendProps.put("routingKey", "storm_drone_nav_data");
-            sendProps.put("queueName", "storm_drone_nav_data");
+            navSendProps.put("exchange", "storm_drone");
+            navSendProps.put("routingKey", "storm_drone_nav_data");
+            navSendProps.put("queueName", "storm_drone_nav_data");
             Channel navSendChannel = createChannel("navSender", navSendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
