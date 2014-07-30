@@ -13,7 +13,6 @@ import cgl.iotrobots.turtlebot.commons.Motion;
 import com.rabbitmq.client.AMQP;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
