@@ -1,16 +1,12 @@
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.MessageProperties;
 
 import org.openkinect.freenect.*;
 import org.xerial.snappy.Snappy;
 
-import java.io.*;
 import java.io.IOException;
 import java.lang.*;
-import java.util.*;
-import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 
 public class SendFrame_new {
@@ -49,7 +45,6 @@ public class SendFrame_new {
 
             // START DEPTH VIDEO
             dev.startDepth(new DepthHandler() {
-                int numFrame = 0;
                 @Override
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
                     byte[] data = new byte[307200];
