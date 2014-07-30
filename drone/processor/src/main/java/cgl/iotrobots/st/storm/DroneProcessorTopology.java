@@ -89,7 +89,7 @@ public class DroneProcessorTopology {
 
     private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, ErrorReporter r, String url) {
         builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new FrameReceiveSpoutConfigurator(url, true), r), 1);
-        builder.setSpout(Constants.NAV_RECEIVE_SPOUT, new RabbitMQSpout(new FrameReceiveSpoutConfigurator(url, true), r), 1);
+        builder.setSpout(Constants.NAV_RECEIVE_SPOUT, new RabbitMQSpout(new NavReceiveSpoutConfigurator(url), r), 1);
 
         builder.setBolt(Constants.DECODE_AND_TRACKING_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
         builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.DECODE_AND_TRACKING_BOLT);
@@ -99,15 +99,8 @@ public class DroneProcessorTopology {
     private static class NavReceiveSpoutConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://localhost:5672";
 
-        private boolean base64Encode;
-
         private NavReceiveSpoutConfigurator(String url) {
             this.url = url;
-        }
-
-        private NavReceiveSpoutConfigurator(String url, boolean base64Encode) {
-            this.url = url;
-            this.base64Encode = base64Encode;
         }
 
         @Override
