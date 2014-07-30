@@ -22,6 +22,8 @@ public class STSensor extends AbstractSensor {
 
     private DroneMessageReceiver videoReceiver;
 
+    private DroneMessageReceiver navReceiver;
+
     private DroneMessageSender controlSender;
 
     private BlockingQueue frameReceivingQueue = new LinkedBlockingQueue();
@@ -54,10 +56,10 @@ public class STSensor extends AbstractSensor {
         videoReceiver.setRoutingKey("drone_frame");
         videoReceiver.start();
 
-        videoReceiver = new DroneMessageReceiver(navDataReceivingQueue, "drone_nav_data", null, null, brokerURL);
-        videoReceiver.setExchangeName("drone");
-        videoReceiver.setRoutingKey("drone_nav_data");
-        videoReceiver.start();
+        navReceiver = new DroneMessageReceiver(navDataReceivingQueue, "drone_nav_data", null, null, brokerURL);
+        navReceiver.setExchangeName("drone");
+        navReceiver.setRoutingKey("drone_nav_data");
+        navReceiver.start();
 
         controlSender = new DroneMessageSender(sendingQueue, "drone", "control", "control", null, null, brokerURL);
         controlSender.start();
@@ -78,7 +80,7 @@ public class STSensor extends AbstractSensor {
         t.start();
 
 
-        t = new Thread(new Runnable() {
+        Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
@@ -91,7 +93,7 @@ public class STSensor extends AbstractSensor {
                 }
             }
         });
-        t.start();
+        t2.start();
 
         startListen(receiveChannel, new MessageReceiver() {
             @Override
@@ -115,6 +117,9 @@ public class STSensor extends AbstractSensor {
         super.close();
         if (videoReceiver != null) {
             videoReceiver.stop();
+        }
+        if (navReceiver != null) {
+            navReceiver.stop();
         }
     }
 
