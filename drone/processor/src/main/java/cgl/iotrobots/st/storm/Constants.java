@@ -2,12 +2,14 @@ package cgl.iotrobots.st.storm;
 
 public abstract class Constants {
     public static final String FRAME_FIELD = "frame";
+    public static final String NAV_FIELD = "nav";
     public static final String TIME_FIELD = "time";
     public static final String CONTROL_FIELD = "control";
     public static final String COMMAND_FIELD = "command";
     public static final String TARGETS_FIELD = "targets";
 
     public static final String FRAME_RECEIVE_SPOUT = "frame_receive";
+    public static final String NAV_RECEIVE_SPOUT = "nav_receive";
     public static final String DECODE_BOLT = "decode";
     public static final String TRACKING_BOLT = "tracking";
     public static final String PLANING_BOLT = "planing";

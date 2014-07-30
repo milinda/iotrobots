@@ -74,13 +74,13 @@ public class DroneProcessorTopology {
     }
 
     private static void buildAllInOneTopology(TopologyBuilder builder, ErrorReporter r, String url) {
-        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url, true), r), 1);
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new FrameReceiveSpoutConfigurator(url, true), r), 1);
         builder.setBolt(Constants.ALL_IN_ONE_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
         builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.ALL_IN_ONE_BOLT);
     }
 
     private static void buildAllSeparateTopology(TopologyBuilder builder, ErrorReporter r, String url) {
-        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url), r), 1);
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new FrameReceiveSpoutConfigurator(url), r), 1);
         builder.setBolt(Constants.DECODE_BOLT, new DecodingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
         builder.setBolt(Constants.TRACKING_BOLT, new TrackingBolt()).shuffleGrouping(Constants.DECODE_BOLT);
         builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.TRACKING_BOLT);
@@ -88,22 +88,107 @@ public class DroneProcessorTopology {
     }
 
     private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, ErrorReporter r, String url) {
-        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new ReceiveSpoutConfigurator(url, true), r), 1);
+        builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, new RabbitMQSpout(new FrameReceiveSpoutConfigurator(url, true), r), 1);
+        builder.setSpout(Constants.NAV_RECEIVE_SPOUT, new RabbitMQSpout(new FrameReceiveSpoutConfigurator(url, true), r), 1);
+
         builder.setBolt(Constants.DECODE_AND_TRACKING_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
         builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.DECODE_AND_TRACKING_BOLT);
         builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
     }
 
-    private static class ReceiveSpoutConfigurator implements RabbitMQConfigurator {
+    private static class NavReceiveSpoutConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://localhost:5672";
 
         private boolean base64Encode;
 
-        private ReceiveSpoutConfigurator(String url) {
+        private NavReceiveSpoutConfigurator(String url) {
             this.url = url;
         }
 
-        private ReceiveSpoutConfigurator(String url, boolean base64Encode) {
+        private NavReceiveSpoutConfigurator(String url, boolean base64Encode) {
+            this.url = url;
+            this.base64Encode = base64Encode;
+        }
+
+        @Override
+        public String getURL() {
+            return url;
+        }
+
+        @Override
+        public boolean isAutoAcking() {
+            return true;
+        }
+
+        @Override
+        public int getPrefetchCount() {
+            return 1024;
+        }
+
+        @Override
+        public boolean isReQueueOnFail() {
+            return false;
+        }
+
+        @Override
+        public String getConsumerTag() {
+            return "sender";
+        }
+
+        @Override
+        public List<RabbitMQDestination> getQueueName() {
+            List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
+            list.add(new RabbitMQDestination("local-1.storm_drone_nav_data", "storm_drone", "storm_drone_nav_data"));
+            return list;
+        }
+
+        @Override
+        public MessageBuilder getMessageBuilder() {
+            return new NavDataBuilder();
+        }
+
+        @Override
+        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+            outputFieldsDeclarer.declare(new Fields(Constants.NAV_FIELD, Constants.TIME_FIELD));
+        }
+
+        @Override
+        public int queueSize() {
+            return 1024;
+        }
+
+        @Override
+        public RabbitMQDestinationSelector getDestinationSelector() {
+            return null;
+        }
+    }
+
+    private static class NavDataBuilder implements MessageBuilder {
+        @Override
+        public List<Object> deSerialize(RabbitMQMessage rabbitMQMessage) {
+            List<Object> tuples = new ArrayList<Object>();
+            tuples.add(rabbitMQMessage.getBody());
+            tuples.add(System.currentTimeMillis());
+            System.out.println(rabbitMQMessage.getBody());
+            return tuples;
+        }
+
+        @Override
+        public RabbitMQMessage serialize(Tuple tuple) {
+            return null;
+        }
+    }
+
+    private static class FrameReceiveSpoutConfigurator implements RabbitMQConfigurator {
+        private String url = "amqp://localhost:5672";
+
+        private boolean base64Encode;
+
+        private FrameReceiveSpoutConfigurator(String url) {
+            this.url = url;
+        }
+
+        private FrameReceiveSpoutConfigurator(String url, boolean base64Encode) {
             this.url = url;
             this.base64Encode = base64Encode;
         }

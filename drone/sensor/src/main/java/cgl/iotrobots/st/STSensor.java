@@ -24,7 +24,9 @@ public class STSensor extends AbstractSensor {
 
     private DroneMessageSender controlSender;
 
-    private BlockingQueue receivingQueue = new LinkedBlockingQueue();
+    private BlockingQueue frameReceivingQueue = new LinkedBlockingQueue();
+    private BlockingQueue navDataReceivingQueue = new LinkedBlockingQueue();
+
     private BlockingQueue sendingQueue = new LinkedBlockingQueue();
 
     private int commandRecvCount = 0;
@@ -41,16 +43,21 @@ public class STSensor extends AbstractSensor {
 
     @Override
     public void open(SensorContext context) {
-        final Channel sendChannel = context.getChannel("rabbitmq", "sender");
+        final Channel sendChannel = context.getChannel("rabbitmq", "frameSender");
+        final Channel navChannel = context.getChannel("rabbitmq", "navSender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
 
-        videoReceiver = new DroneMessageReceiver(receivingQueue, "drone_frame", null, null, brokerURL);
+        videoReceiver = new DroneMessageReceiver(frameReceivingQueue, "drone_frame", null, null, brokerURL);
         videoReceiver.setExchangeName("drone");
         videoReceiver.setRoutingKey("drone_frame");
         videoReceiver.start();
 
+        videoReceiver = new DroneMessageReceiver(navDataReceivingQueue, "drone_nav_data", null, null, brokerURL);
+        videoReceiver.setExchangeName("drone");
+        videoReceiver.setRoutingKey("drone_nav_data");
+        videoReceiver.start();
 
         controlSender = new DroneMessageSender(sendingQueue, "drone", "control", "control", null, null, brokerURL);
         controlSender.start();
@@ -60,7 +67,7 @@ public class STSensor extends AbstractSensor {
             public void run() {
                 while (true) {
                     try {
-                        MessageContext messageContext = (MessageContext) receivingQueue.take();
+                        MessageContext messageContext = (MessageContext) frameReceivingQueue.take();
                         sendChannel.publish(messageContext);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -70,7 +77,21 @@ public class STSensor extends AbstractSensor {
         });
         t.start();
 
-        // startSend(sendChannel, receivingQueue);
+
+        t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        MessageContext messageContext = (MessageContext) navDataReceivingQueue.take();
+                        navChannel.publish(messageContext);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        t.start();
 
         startListen(receiveChannel, new MessageReceiver() {
             @Override
@@ -109,7 +130,13 @@ public class STSensor extends AbstractSensor {
             sendProps.put("exchange", "storm_drone");
             sendProps.put("routingKey", "storm_drone_frame");
             sendProps.put("queueName", "storm_drone_frame");
-            Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024);
+            Channel sendChannel = createChannel("frameSender", sendProps, Direction.OUT, 1024);
+
+            Map navSendProps = new HashMap();
+            sendProps.put("exchange", "storm_drone");
+            sendProps.put("routingKey", "storm_drone_nav_data");
+            sendProps.put("queueName", "storm_drone_nav_data");
+            Channel navSendChannel = createChannel("navSender", navSendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
             receiveProps.put("queueName", "storm_control");
@@ -119,6 +146,7 @@ public class STSensor extends AbstractSensor {
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
+            context.addChannel("rabbitmq", navSendChannel);
 
             return context;
         }
