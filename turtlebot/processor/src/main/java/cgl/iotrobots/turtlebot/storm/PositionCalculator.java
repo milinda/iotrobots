@@ -2,9 +2,6 @@ package cgl.iotrobots.turtlebot.storm;
 
 import cgl.iotrobots.turtlebot.commons.Motion;
 import cgl.iotrobots.turtlebot.commons.Velocity;
-import cgl.iotrobots.turtlebot.commons.Compressor;
-
-import java.io.IOException;
 
 public class PositionCalculator {
     final double max_z_ = 1.0;
@@ -14,15 +11,7 @@ public class PositionCalculator {
     final double min_x_ = -.2;
     final double goal_z_ = .7;
 
-    public Motion calculatePosition(byte[] data) {
-        Compressor compressor = new Compressor();
-        int[] dist = new int[0];
-        try {
-            dist = compressor.unCompr(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+    public Motion calculatePosition(int[] dist) {
         double z_scale_ = 1, x_scale_ = 5.0;
         double x, y, z;
         double totX = 0, totY = 0, totZ = 0;

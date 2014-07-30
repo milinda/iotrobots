@@ -13,6 +13,11 @@ import cgl.iotrobots.turtlebot.commons.Motion;
 import com.rabbitmq.client.AMQP;
 import com.ss.rabbitmq.*;
 import com.ss.rabbitmq.bolt.RabbitMQBolt;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,23 +39,63 @@ public class FollowerTopology {
             }
         };
 
-        builder.setSpout("kinect_frame_recv", new RabbitMQSpout(new SpoutConfigurator(), r), 1);
-        builder.setBolt("object_detection", new ObjectDetectionBolt()).shuffleGrouping("kinect_frame_recv");
-        builder.setBolt("send_bolt", new RabbitMQBolt(new BoltConfigurator(), r)).shuffleGrouping("object_detection");
+        Options options = new Options();
+        options.addOption(Constants.ARGS_URL, true, "URL of the AMQP Broker");
+        options.addOption(Constants.ARGS_NAME, true, "Name of the topology");
+        options.addOption(Constants.ARGS_LOCAL, false, "Weather we want run locally");
+        options.addOption(Constants.ARGS_DS_MODE, true, "The distributed mode, specify 0, 1, 2, 3 etc");
+
+        CommandLineParser commandLineParser = new BasicParser();
+        CommandLine cmd = commandLineParser.parse(options, args);
+        String url = cmd.getOptionValue(Constants.ARGS_URL);
+        String name = cmd.getOptionValue(Constants.ARGS_NAME);
+        boolean local = cmd.hasOption(Constants.ARGS_LOCAL);
+        String dsModeValue = cmd.getOptionValue(Constants.ARGS_DS_MODE);
+        int dsMode = Integer.parseInt(dsModeValue);
+
+        if (dsMode == 0) {
+            buildAllInOneTopology(builder, r, url);
+        } else if (dsMode == 1) {
+            buildAllSeparateTopology(builder, r, url);
+        } else if (dsMode == 2) {
+            buildDecodeAndTrackingTopology(builder, r, url);
+        }
 
         Config conf = new Config();
         conf.setDebug(false);
+        // we are not going to track individual messages, message loss is inherent in the decoder
+        // also we cannot replay message because of the decoder
+        conf.put(Config.TOPOLOGY_ACKER_EXECUTORS, 0);
 
-        if (args != null && args.length > 0) {
-            conf.setNumWorkers(3);
-            StormSubmitter.submitTopology(args[0], conf, builder.createTopology());
+        // we are going to deploy on a real cluster
+        if (!local) {
+            conf.setNumWorkers(5);
+            StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
+            // deploy on a local cluster
             conf.setMaxTaskParallelism(3);
             LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology("turtle_follower", conf, builder.createTopology());
+            cluster.submitTopology("drone", conf, builder.createTopology());
             Thread.sleep(1000000);
             cluster.shutdown();
         }
+    }
+
+    private static void buildAllInOneTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+        builder.setSpout(Constants.KINECT_FRAME_RECV, new RabbitMQSpout(new SpoutConfigurator(url), r), 1);
+        builder.setBolt(Constants.OBJECT_DETECTION, new ObjectDetectionBolt(true)).shuffleGrouping(Constants.KINECT_FRAME_RECV);
+        builder.setBolt(Constants.SEND_BOLT, new RabbitMQBolt(new BoltConfigurator(url), r)).shuffleGrouping(Constants.OBJECT_DETECTION);
+    }
+
+    private static void buildAllSeparateTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+        builder.setSpout(Constants.KINECT_FRAME_RECV, new RabbitMQSpout(new SpoutConfigurator(url), r), 1);
+        builder.setBolt(Constants.UNCOMPRESS_BOLT, new UncompressBolt()).shuffleGrouping(Constants.KINECT_FRAME_RECV);
+        builder.setBolt(Constants.OBJECT_DETECTION, new ObjectDetectionBolt(false)).shuffleGrouping(Constants.UNCOMPRESS_BOLT);
+        builder.setBolt(Constants.SEND_BOLT, new RabbitMQBolt(new BoltConfigurator(url), r)).shuffleGrouping(Constants.OBJECT_DETECTION);
+    }
+
+    private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, ErrorReporter r, String url) {
+
     }
 
     private static class TurtleMessageBuilder implements MessageBuilder {
@@ -115,6 +160,10 @@ public class FollowerTopology {
     private static class SpoutConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://10.39.1.16:5672";
 
+        private SpoutConfigurator(String url) {
+            this.url = url;
+        }
+
         @Override
         public String getURL() {
             return url;
@@ -170,6 +219,10 @@ public class FollowerTopology {
 
     private static class BoltConfigurator implements RabbitMQConfigurator {
         private String url = "amqp://10.39.1.16:5672";
+
+        private BoltConfigurator(String url) {
+            this.url = url;
+        }
 
         @Override
         public String getURL() {

@@ -9,7 +9,6 @@ import java.util.Map;
 public class DecodeTrackingBolt extends ShellBoltN implements IRichBolt {
     public DecodeTrackingBolt() {
         super("python", "DecodeTrackingBolt.py");
-
     }
 
     @Override

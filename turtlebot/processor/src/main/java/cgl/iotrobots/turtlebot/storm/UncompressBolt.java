@@ -7,7 +7,6 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.turtlebot.commons.Compressor;
-import cgl.iotrobots.turtlebot.commons.Motion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,50 +14,35 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
-public class ObjectDetectionBolt extends BaseRichBolt {
-    private static Logger LOG = LoggerFactory.getLogger(ObjectDetectionBolt.class);
+public class UncompressBolt extends BaseRichBolt {
+    private static Logger LOG = LoggerFactory.getLogger(UncompressBolt.class);
 
     private OutputCollector outputCollector;
 
-    private PositionCalculator positionCalculator;
-
-    private boolean compressed;
-
     private Compressor compressor = new Compressor();
-
-    public ObjectDetectionBolt(boolean compressed) {
-        this.compressed = compressed;
-    }
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
-        this.positionCalculator = new PositionCalculator();
     }
 
     @Override
     public void execute(Tuple tuple) {
-        LOG.info("Got message and sending Motion command");
-        int[] dist;
+        byte []data = (byte[]) tuple.getValue(0);
         try {
-            if (compressed) {
-                byte []data = (byte[]) tuple.getValue(0);
-                dist = compressor.unCompr(data);
-            } else {
-                dist = (int []) tuple.getValue(0);
-            }
-
-            Motion motion = positionCalculator.calculatePosition(dist);
+            int [] dist = compressor.unCompr(data);
             String sensorId = (String) tuple.getValueByField("sensorID");
             String time = (String) tuple.getValueByField("time");
-            outputCollector.emit(Arrays.<Object>asList(motion, sensorId, time));
+            outputCollector.emit(Arrays.<Object>asList(dist, sensorId, time));
         } catch (IOException e) {
-            LOG.error("Failed to uncomress the data", e);
+            LOG.error("Failed to uncompress the data", e);
+        } finally {
+            outputCollector.ack(tuple);
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("control", "sensorID", "time"));
+        outputFieldsDeclarer.declare(new Fields("uncompress_data", "sensorID", "time"));
     }
 }
