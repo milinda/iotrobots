@@ -56,15 +56,12 @@ public class RecvFrame_new {
         System.out.println("Waiting for delivery");
 
         do {
-
             // POP DATA OF QUEUE
             delivery = consumer.nextDelivery();
             int err;
             byte[] data = delivery.getBody();
             byte[] inverted = new byte[307200];
-
             Inflater inflater = new Inflater();
-
             inflater.setInput(data);
 
             // DECOMPRESS
@@ -77,7 +74,6 @@ public class RecvFrame_new {
 
             err = inflater.end();
             CHECK_ERR(inflater, err, "inflateEnd");
-
             // COLOR DISTANCE DATA
             int[] restored = new int[307200];
             int r = 0, b = 0, g = 0, x, y;

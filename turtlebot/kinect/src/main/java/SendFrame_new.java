@@ -50,39 +50,36 @@ public class SendFrame_new {
             // START DEPTH VIDEO
             dev.startDepth(new DepthHandler() {
                 int numFrame = 0;
-
                 @Override
                 public void onFrameReceived(FrameMode mode, ByteBuffer frame, int timestamp) {
-                       	     byte[] data = new byte[307200];
-                       	     int p = 0;
-                            for (int i = 0; i < 614400; i += 2) {
-                                int lo = frame.get(i) & 0xFF;
-                                int hi = frame.get(i + 1) & 0xFF;
-                                int disp = hi << 8 | lo;
-                                if (disp > 60 && disp < 1012) {
-                                    data[p] = inverted[disp];
-                                } else {
-                                    data[p] = 0;
-                                }
-                                p++;
-                            }
-
-                            // COMPRESS DATA
-                       
-                            // COMPRESS AND PUBLISH COMPRESSED DATA
-                            try {
-                            	byte[] compr = Snappy.compress(data);
-                                channel.basicPublish(exchange_name, "", null, compr);
-                            } catch (IOException e) {
-                                System.exit(0);
-                            }
+                    byte[] data = new byte[307200];
+                    int p = 0;
+                    for (int i = 0; i < 614400; i += 2) {
+                        int lo = frame.get(i) & 0xFF;
+                        int hi = frame.get(i + 1) & 0xFF;
+                        int disp = hi << 8 | lo;
+                        if (disp > 60 && disp < 1012) {
+                            data[p] = inverted[disp];
+                        } else {
+                            data[p] = 0;
+                        }
+                        p++;
+                    }
+                    // COMPRESS DATA
+                    // COMPRESS AND PUBLISH COMPRESSED DATA
+                    try {
+                        byte[] compr = Snappy.compress(data);
+                        channel.basicPublish(exchange_name, "", null, compr);
+                    } catch (IOException e) {
+                        System.exit(0);
+                    }
                 }
-                }
-                );
-            }catch(IOException e){
-                System.exit(0);
             }
+            );
+        } catch (IOException e) {
+            System.exit(0);
         }
+    }
 
     static void addShutDownHook(final Channel channel, final Connection connection) {
         // CLOSE CLEANLY ON EXIT
@@ -96,7 +93,6 @@ public class SendFrame_new {
                 } catch (IOException e) {
                     System.exit(0);
                 }
-
                 // SHUT DOWN
                 if (ctx != null) {
                     if (dev != null) {
