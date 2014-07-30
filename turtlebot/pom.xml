@@ -18,7 +18,6 @@
         <module>sensor</module>
         <module>controller</module>
         <module>commons</module>
-        <module>kinect</module>
     </modules>
     <repositories>
     <repository>
