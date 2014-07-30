@@ -15,6 +15,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.codec.binary.Base64;
+import org.jboss.netty.handler.codec.base64.Base64Encoder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -160,7 +161,7 @@ public class DroneProcessorTopology {
         @Override
         public List<Object> deSerialize(RabbitMQMessage rabbitMQMessage) {
             List<Object> tuples = new ArrayList<Object>();
-            tuples.add(rabbitMQMessage.getBody());
+            tuples.add(Base64.encodeBase64(rabbitMQMessage.getBody()));
             tuples.add(System.currentTimeMillis());
             System.out.println(rabbitMQMessage.getBody());
             return tuples;
