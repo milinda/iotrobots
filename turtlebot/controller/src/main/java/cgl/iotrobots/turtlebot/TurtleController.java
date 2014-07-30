@@ -55,10 +55,16 @@ public class TurtleController {
         Thread t = new Thread(new UIUpdater(messages, ui));
         t.start();
         ui.setVisible(true);
+
+        try {
+            test();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void test() throws InterruptedException {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 10; i++) {
             velocities.add(new Motion(new Velocity(-.1, 0, 0), new Velocity(0, 0, 0)));
             Thread.sleep(100);
         }
@@ -77,7 +83,7 @@ public class TurtleController {
         // register with ros_java
         NodeConfiguration nodeConfiguration;
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.95.203", new URI("http://149.160.205.153:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.58", new URI("http://156.56.95.214:11311"));
             TurtleController turtleController = new TurtleController();
             turtleController.start(nodeConfiguration);
         } catch (URISyntaxException e) {
