@@ -26,21 +26,24 @@ class PlanningBolt(storm.BasicBolt):
 
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
-        targets_message = tup.values[0]
+        targets_message = tup.values['targets']
+        nav_data = tup.values['nav']
+        if targets_message:
+            targets = []
+            # json_object = json.loads(targets_message)
+            for o in targets_message:
+                t = Tracking.Target(o["found"], float(o["x"]), float(o["y"]), float(o["w"]), float(o["h"]))
+                targets.append(t)
 
-        targets = []
-        # json_object = json.loads(targets_message)
-        for o in targets_message:
-            t = Tracking.Target(o["found"], float(o["x"]), float(o["y"]), float(o["w"]), float(o["h"]))
-            targets.append(t)
+            original_time = tup.values[1]
+            command = self.planing.do(None, targets)
 
-        original_time = tup.values[1]
-        command = self.planing.do(None, targets)
+            message = {"command": [command.tiltx, command.tilty, command.spin, command.velocity_z]}
+            io = StringIO()
+            json.dump(message, io)
 
-        message = {"command": [command.tiltx, command.tilty, command.spin, command.velocity_z]}
-        io = StringIO()
-        json.dump(message, io)
-
-        storm.emit([io.getvalue(), original_time])
+            storm.emit([io.getvalue(), original_time])
+        elif nav_data:
+            storm.log(nav_data)
 
 PlanningBolt().run()

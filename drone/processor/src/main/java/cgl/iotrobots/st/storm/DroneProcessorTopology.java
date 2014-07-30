@@ -92,7 +92,7 @@ public class DroneProcessorTopology {
         builder.setSpout(Constants.NAV_RECEIVE_SPOUT, new RabbitMQSpout(new NavReceiveSpoutConfigurator(url), r), 1);
 
         builder.setBolt(Constants.DECODE_AND_TRACKING_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT);
-        builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.DECODE_AND_TRACKING_BOLT);
+        builder.setBolt(Constants.PLANING_BOLT, new PlanningBolt()).shuffleGrouping(Constants.DECODE_AND_TRACKING_BOLT).shuffleGrouping(Constants.NAV_RECEIVE_SPOUT);
         builder.setBolt(Constants.SEND_COMMAND_BOLT, new RabbitMQBolt(new OutputBoltConfigurator(url), r)).shuffleGrouping(Constants.PLANING_BOLT);
     }
 
