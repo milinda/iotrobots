@@ -26,8 +26,7 @@ class PlanningBolt(storm.BasicBolt):
 
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
-        targets_message = tup.values['targets']
-        nav_data = tup.values['nav']
+        targets_message = tup.values[0]
         if targets_message:
             targets = []
             # json_object = json.loads(targets_message)
