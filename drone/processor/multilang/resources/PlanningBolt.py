@@ -43,6 +43,7 @@ class PlanningBolt(storm.BasicBolt):
 
             storm.emit([io.getvalue(), original_time])
         elif type(targets_message) is str:
+            nav_data = json.loads(targets_message)
             storm.log(targets_message)
 
 
