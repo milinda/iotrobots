@@ -13,7 +13,7 @@ import org.ros.node.NodeConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -21,10 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import java.io.PrintWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
 
 public class TSensor extends AbstractSensor {
     public static final String TURTLE_STORM_FRAMES_ROUTING_KEY = "turtle_storm_frames";
@@ -113,8 +109,7 @@ public class TSensor extends AbstractSensor {
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
                         try {
-                            File file = new File ("LatencyTest.txt");
-                            PrintWriter writer = new PrintWriter (file);
+                            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("/home/supun/dev/projects/LatencyTest.txt", true)));
                             writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
                             writer.close();
                         } catch (FileNotFoundException e) {
