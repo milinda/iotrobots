@@ -35,7 +35,7 @@ def send_nav_data():
     for x in range(0, 1596):
         channel.basic_publish(exchange='drone',
                               routing_key='drone_nav_data',
-                              body = '[{"hello": 1}, {"hello2":2}]',
+                              body = '{"vy": 0.0, "phi": 2, "psi": -11, "num_frames": 0, "battery": 75, "altitude": 0, "ctrl_state": 131072, "vx": 0.0, "theta": 3, "vz": 0.0}',
                               properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
         time.sleep(.03)
         # print "send_count: " + str(send_count)
