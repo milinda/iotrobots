@@ -161,9 +161,8 @@ public class DroneProcessorTopology {
         @Override
         public List<Object> deSerialize(RabbitMQMessage rabbitMQMessage) {
             List<Object> tuples = new ArrayList<Object>();
-            tuples.add("Hello");
+            tuples.add(new String(rabbitMQMessage.getBody()));
             tuples.add(System.currentTimeMillis());
-            System.out.println(rabbitMQMessage.getBody());
             return tuples;
         }
 

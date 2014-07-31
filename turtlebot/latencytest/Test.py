@@ -8,9 +8,9 @@ import sys
 
 def send_frames():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     # try:
@@ -18,37 +18,37 @@ def send_frames():
     for x in range(0, 1596):
         data = file_read(x)
         channel.basic_publish(exchange='drone',
-                                   routing_key='drone_frame',
-                                   body =data,
-                                   properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
+                              routing_key='drone_frame',
+                              body =data,
+                              properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
         time.sleep(.03)
         send_count += 1
         print "send_count: " + str(send_count)
 
 def send_nav_data():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     for x in range(0, 1596):
         channel.basic_publish(exchange='drone',
                               routing_key='drone_nav_data',
-                              body = '[{"hello": 1}, {"hello2":2}]',
+                              body = 'hello',
                               properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
         time.sleep(.03)
-        # print "send_count: " + str(send_count)
-    # except:
-    #     e = sys.exc_info()[0]
-    #     raise e
+        print "send_count: " + str(send_count)
+        # except:
+        #     e = sys.exc_info()[0]
+        #     raise e
 
 
 def recv_commands():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672/')
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
 
