@@ -109,11 +109,6 @@ public class KinectMessageReceiver {
     public void setExchangeName(String exchangeName) {
         this.exchangeName = exchangeName;
     }
-
-    public static void main(String[] args) {
-        KinectMessageReceiver receiver = new KinectMessageReceiver(new LinkedBlockingQueue(), "drone_frame", null, null, "amqp://localhost:5672");
-        receiver.start();
-    }
 }
 
 

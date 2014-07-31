@@ -27,13 +27,27 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 public class TSensor extends AbstractSensor {
+    public static final String TURTLE_STORM_FRAMES_ROUTING_KEY = "turtle_storm_frames";
+    public static final String TURTLE_STORM_FRAMES_QUEUE_NAME = "turtle_storm_frames";
+    public static final String TURTLE_STORM_CONTROL_QUEUE_NAME = "turtle_storm_control";
+    public static final String TURTLE_STORM_CONTROL_ROUTING_KEY = "turtle_storm_control";
+
     private static Logger LOG = LoggerFactory.getLogger(TSensor.class);
 
+    public static final String TURTLE_FRAMES = "turtle_frames";
+    public static final String TURTLE_EXCHANGE = "turtle";
+    public static final String TURTLE_FRAMES_ROUTING_KEY = "turtle_frames";
+
     public static final String BROKER_URL = "broker_url";
-    public static final String LOCAL_IP = "local_ip";
-    public static final String ROS_MASTER = "ros_master";
+
+    public static final String MODE_ARG = "mode";
+    public static final String URL_ARG = "url";
+    public static final String LOCAL_IP_ARG = "local_ip";
+    public static final String ROS_MASTER_ARG = "ros_master";
 
     private TurtleController controller;
+
+    private boolean run = true;
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
@@ -50,15 +64,15 @@ public class TSensor extends AbstractSensor {
         final BlockingQueue receivingQueue = new LinkedBlockingQueue();
         final Channel sendChannel = context.getChannel("rabbitmq", "sender");
         final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
-        //double numBytes=0;
-        final long startTime;
         // register with ros_java
         NodeConfiguration nodeConfiguration = null;
-        String localIp = (String) context.getProperty(LOCAL_IP);
-        String rosMaster = (String) context.getProperty(ROS_MASTER);
+        String localIp = (String) context.getProperty(LOCAL_IP_ARG);
+        String rosMaster = (String) context.getProperty(ROS_MASTER_ARG);
+        final String mode = (String) context.getProperty(MODE_ARG);
 
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.58", new URI("http://156.56.95.214:11311"));
+            // nodeConfiguration = NodeConfiguration.newPublic("156.56.93.58", new URI("http://156.56.95.214:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic(localIp, new URI(rosMaster));
         } catch (URISyntaxException e) {
             LOG.error("Failed to connect", e);
         }
@@ -66,22 +80,20 @@ public class TSensor extends AbstractSensor {
         controller.start(nodeConfiguration);
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
-        KinectMessageReceiver receiver = new KinectMessageReceiver(receivingQueue, "kinect_controller", null, null, brokerURL);
-        receiver.setExchangeName("kinect_frames");
-        receiver.setRoutingKey("kinect_controller");
+        KinectMessageReceiver receiver = new KinectMessageReceiver(receivingQueue, TURTLE_FRAMES, null, null, brokerURL);
+        receiver.setExchangeName(TURTLE_EXCHANGE);
+        receiver.setRoutingKey(TURTLE_FRAMES_ROUTING_KEY);
         receiver.start();
 
         // startSend(sendChannel, receivingQueue);
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (run) {
                     try {
                         byte[] body = (byte[]) receivingQueue.take();
                         Map<String, Object> props = new HashMap<String, Object>();
                         props.put("time", Long.toString(System.currentTimeMillis()));
-                        
-                        //numBytes = numBytes + body.length;
                         
                         sendChannel.publish(body, props);
                     } catch (InterruptedException e) {
@@ -101,16 +113,18 @@ public class TSensor extends AbstractSensor {
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
                         try {
-                            File file = new File ("/home/leif/LatencyTest.txt");
+                            File file = new File ("LatencyTest.txt");
                             PrintWriter writer = new PrintWriter (file);
                             writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
                             writer.close();
                         } catch (FileNotFoundException e) {
                             System.exit(1);
                         }
-                        
-                        controller.setMotion(motion);
-                        System.out.println("Message received " + message.toString());
+
+                        if (!mode.equals("nt")) {
+                            controller.setMotion(motion);
+                        }
+                        LOG.info("Message received " + message.toString());
                     } catch (IOException e) {
                         LOG.error("Un-expected motion control message");
                     }
@@ -124,6 +138,7 @@ public class TSensor extends AbstractSensor {
 
     @Override
     public void close() {
+        run = false;
         super.close();
         controller.shutDown();
     }
@@ -137,15 +152,15 @@ public class TSensor extends AbstractSensor {
             SensorContext context = new SensorContext(new SensorId("turtle_sensor", "general"));
             context.addProperty(BROKER_URL, brokerUrl);
             Map sendProps = new HashMap();
-            sendProps.put("exchange", "turtle_sensor");
-            sendProps.put("routingKey", "kinect");
-            sendProps.put("queueName", "kinect");
+            sendProps.put("exchange", TURTLE_EXCHANGE);
+            sendProps.put("routingKey", TURTLE_STORM_FRAMES_ROUTING_KEY);
+            sendProps.put("queueName", TURTLE_STORM_FRAMES_QUEUE_NAME);
             Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
-            receiveProps.put("queueName", "control");
-            receiveProps.put("exchange", "turtle_sensor");
-            receiveProps.put("routingKey", "control");
+            receiveProps.put("queueName", TURTLE_STORM_CONTROL_QUEUE_NAME);
+            receiveProps.put("exchange", TURTLE_EXCHANGE);
+            receiveProps.put("routingKey", TURTLE_STORM_CONTROL_ROUTING_KEY);
             Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
@@ -158,25 +173,28 @@ public class TSensor extends AbstractSensor {
     private static Map<String, String> getProperties(String []args) {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
-        options.addOption("url", true, "URL of the AMQP Broker");
-        options.addOption("ros_master", true, "Ros master URL");
-        options.addOption("local_ip", true, "Local IP address");
+        options.addOption(URL_ARG, true, "URL of the AMQP Broker");
+        options.addOption(ROS_MASTER_ARG, true, "Ros master URL");
+        options.addOption(LOCAL_IP_ARG, true, "Local IP address");
+        options.addOption(MODE_ARG, true, "possible options are (nt, t) nt means without connecting to turtle");
 
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
 
-            String url = cmd.getOptionValue("url");
-            String rosMaster = cmd.getOptionValue(ROS_MASTER);
-            String localIp = cmd.getOptionValue(LOCAL_IP);
+            String url = cmd.getOptionValue(URL_ARG);
+            String rosMaster = cmd.getOptionValue(ROS_MASTER_ARG);
+            String localIp = cmd.getOptionValue(LOCAL_IP_ARG);
+            String mode = cmd.getOptionValue(MODE_ARG);
 
             System.out.println(url);
             System.out.println(rosMaster);
             System.out.println(localIp);
 
             conf.put(BROKER_URL, url);
-            conf.put(ROS_MASTER, rosMaster);
-            conf.put(LOCAL_IP, localIp);
+            conf.put(ROS_MASTER_ARG, rosMaster);
+            conf.put(LOCAL_IP_ARG, localIp);
+            conf.put(MODE_ARG, mode);
 
             return conf;
         } catch (ParseException e) {

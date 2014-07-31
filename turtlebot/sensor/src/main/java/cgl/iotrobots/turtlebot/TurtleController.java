@@ -1,7 +1,6 @@
 package cgl.iotrobots.turtlebot;
 
 import cgl.iotrobots.turtlebot.commons.Motion;
-import cgl.iotrobots.turtlebot.commons.Velocity;
 import com.google.common.base.Preconditions;
 import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
@@ -17,8 +16,6 @@ public class TurtleController {
 
     private NodeMainExecutor nodeMainExecutor;
 
-    private BlockingQueue messages = new LinkedBlockingQueue();
-
     public TurtleController() {
         this.turtle = new RosTurtle(velocities, "sensor_controller");
     }
@@ -27,14 +24,6 @@ public class TurtleController {
         Preconditions.checkState(turtle != null);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(turtle, configuration);
-    }
-
-    public void test() throws InterruptedException {
-        for (int i = 0 ;i < 2; i++) {
-            velocities.add(new Motion(new Velocity(-.1, 0, 0), new Velocity(0, 0, 0)));
-            Thread.sleep(100);
-        }
-        Thread.sleep(100);
     }
 
     public void setMotion(Motion motion) {

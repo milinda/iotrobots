@@ -191,7 +191,7 @@ public class FollowerTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("local-1.kinect", "turtle_sensor", "kinect"));
+            list.add(new RabbitMQDestination("local-1.turtle_storm_frames", "turtle", "turtle_storm_frames"));
             return list;
         }
 
@@ -251,7 +251,7 @@ public class FollowerTopology {
         @Override
         public List<RabbitMQDestination> getQueueName() {
             List<RabbitMQDestination> list = new ArrayList<RabbitMQDestination>();
-            list.add(new RabbitMQDestination("local-1.control", "turtle_sensor", "turtle"));
+            list.add(new RabbitMQDestination("local-1.turtle_storm_control", "turtle", "turtle_storm_control"));
             return list;
         }
 
@@ -275,7 +275,7 @@ public class FollowerTopology {
             return new RabbitMQDestinationSelector() {
                 @Override
                 public String select(Tuple tuple) {
-                    return "local-1.control";
+                    return "local-1.turtle_storm_control";
                 }
             };
         }

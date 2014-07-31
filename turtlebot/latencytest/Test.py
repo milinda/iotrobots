@@ -43,7 +43,6 @@ def send_nav_data():
         #     e = sys.exc_info()[0]
         #     raise e
 
-
 def recv_commands():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672/')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))

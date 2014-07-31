@@ -12,8 +12,6 @@ import org.ros.node.topic.Publisher;
 import java.util.concurrent.BlockingQueue;
 
 public class RosTurtle extends AbstractNodeMain {
-    private boolean stop = false;
-
     private BlockingQueue<Motion> velocities;
 
     private String name = "/cn";
@@ -66,9 +64,5 @@ public class RosTurtle extends AbstractNodeMain {
 
     public void onShutdown(Node node) {
         node.shutdown();
-    }
-
-    public void stop() {
-        stop = true;
     }
 }
