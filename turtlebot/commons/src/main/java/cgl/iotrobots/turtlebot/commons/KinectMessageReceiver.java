@@ -61,7 +61,7 @@ public class KinectMessageReceiver {
             channel = conn.createChannel();
 
             if (exchangeName != null && routingKey != null) {
-                channel.exchangeDeclare(exchangeName, "fanout", false);
+                channel.exchangeDeclare(exchangeName, "fanout", true);
                 channel.queueDeclare(this.queueName, true, false, false, null);
                 channel.queueBind(queueName, exchangeName, routingKey);
             }

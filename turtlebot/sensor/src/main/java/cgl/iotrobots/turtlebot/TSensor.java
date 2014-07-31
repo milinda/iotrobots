@@ -31,11 +31,12 @@ public class TSensor extends AbstractSensor {
     public static final String TURTLE_STORM_FRAMES_QUEUE_NAME = "turtle_storm_frames";
     public static final String TURTLE_STORM_CONTROL_QUEUE_NAME = "turtle_storm_control";
     public static final String TURTLE_STORM_CONTROL_ROUTING_KEY = "turtle_storm_control";
+    public static final String TURTLE_EXCHANGE = "turtle";
 
     private static Logger LOG = LoggerFactory.getLogger(TSensor.class);
 
     public static final String TURTLE_FRAMES = "turtle_frames";
-    public static final String TURTLE_EXCHANGE = "turtle";
+    public static final String TURTLE_KINECT_EXCHANGE = "turtle_kinect";
     public static final String TURTLE_FRAMES_ROUTING_KEY = "turtle_frames";
 
     public static final String BROKER_URL = "broker_url";
@@ -51,7 +52,7 @@ public class TSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "iotrobots-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local-1"));
+        SensorSubmitter.submitSensor(properties, "turtle-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local-1"));
     }
 
     @Override
@@ -71,7 +72,6 @@ public class TSensor extends AbstractSensor {
         final String mode = (String) context.getProperty(MODE_ARG);
 
         try {
-            // nodeConfiguration = NodeConfiguration.newPublic("156.56.93.58", new URI("http://156.56.95.214:11311"));
             nodeConfiguration = NodeConfiguration.newPublic(localIp, new URI(rosMaster));
         } catch (URISyntaxException e) {
             LOG.error("Failed to connect", e);
@@ -81,7 +81,7 @@ public class TSensor extends AbstractSensor {
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
         KinectMessageReceiver receiver = new KinectMessageReceiver(receivingQueue, TURTLE_FRAMES, null, null, brokerURL);
-        receiver.setExchangeName(TURTLE_EXCHANGE);
+        receiver.setExchangeName(TURTLE_KINECT_EXCHANGE);
         receiver.setRoutingKey(TURTLE_FRAMES_ROUTING_KEY);
         receiver.start();
 
@@ -148,9 +148,16 @@ public class TSensor extends AbstractSensor {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
             String brokerUrl = (String) conf.get(BROKER_URL);
+            String rosMaster = (String) conf.get(ROS_MASTER_ARG);
+            String localIp = (String) conf.get(LOCAL_IP_ARG);
+            String mode = (String) conf.get(MODE_ARG);
 
             SensorContext context = new SensorContext(new SensorId("turtle_sensor", "general"));
             context.addProperty(BROKER_URL, brokerUrl);
+            context.addProperty(ROS_MASTER_ARG, rosMaster);
+            context.addProperty(LOCAL_IP_ARG, localIp);
+            context.addProperty(MODE_ARG, mode);
+
             Map sendProps = new HashMap();
             sendProps.put("exchange", TURTLE_EXCHANGE);
             sendProps.put("routingKey", TURTLE_STORM_FRAMES_ROUTING_KEY);

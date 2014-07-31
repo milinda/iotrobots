@@ -8,17 +8,17 @@ import sys
 
 def send_frames():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     # try:
     send_count = 0
     for x in range(0, 1596):
         data = file_read(x)
-        channel.basic_publish(exchange='drone',
-                              routing_key='drone_frame',
+        channel.basic_publish(exchange='turtle_kinect',
+                              routing_key='turtle_frames',
                               body =data,
                               properties=pika.BasicProperties(delivery_mode = 2, headers={"time": str(int(round(time.time() * 1000)))}))
         time.sleep(.03)
@@ -27,9 +27,9 @@ def send_frames():
 
 def send_nav_data():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     for x in range(0, 1596):
@@ -84,19 +84,16 @@ def file_read(i):
 
 def main():
     t = Thread(target=send_frames)
-    t.daemon = True # thread dies with the program
-    #self.f = open('test.out', 'w')
+    t.daemon = True
     t.start()
 
-    t = Thread(target=send_nav_data)
-    t.daemon = True # thread dies with the program
-    #self.f = open('test.out', 'w')
-    t.start()
+    # t = Thread(target=send_nav_data)
+    # t.daemon = True
+    # t.start()
 
-    t = Thread(target=recv_commands)
-    t.daemon = True # thread dies with the program
-    #self.f = open('test.out', 'w')
-    t.start()
+    # t = Thread(target=recv_commands)
+    # t.daemon = True
+    # t.start()
 
     t.join()
 
