@@ -19,8 +19,6 @@ public class UncompressBolt extends BaseRichBolt {
 
     private OutputCollector outputCollector;
 
-    private Compressor compressor = new Compressor();
-
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
@@ -30,6 +28,7 @@ public class UncompressBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         byte []data = (byte[]) tuple.getValue(0);
         try {
+            Compressor compressor = new Compressor();
             int [] dist = compressor.unCompr(data);
             String sensorId = (String) tuple.getValueByField("sensorID");
             String time = (String) tuple.getValueByField("time");

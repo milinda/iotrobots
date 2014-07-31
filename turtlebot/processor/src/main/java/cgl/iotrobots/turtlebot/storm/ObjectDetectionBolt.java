@@ -24,8 +24,6 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     private boolean compressed;
 
-    private Compressor compressor = new Compressor();
-
     public ObjectDetectionBolt(boolean compressed) {
         this.compressed = compressed;
     }
@@ -41,6 +39,7 @@ public class ObjectDetectionBolt extends BaseRichBolt {
         LOG.info("Got message and sending Motion command");
         int[] dist;
         try {
+            Compressor compressor = new Compressor();
             if (compressed) {
                 byte []data = (byte[]) tuple.getValue(0);
                 dist = compressor.unCompr(data);
