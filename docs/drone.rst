@@ -95,7 +95,7 @@ We use FutureGrid as our cloud provider to deploy the components. Please read th
 
 Cloud deployment is done using three frameworks.
 
-1. Apache Storm
+1. `Apache Storm <http://www.python.org/>`_.
 2. IOTCloud
 3. RabbitMQ broker
 
@@ -147,4 +147,4 @@ After that you can deploy the new topology with the command
 Make sure we se
 
 
-.. _manual: http://www.python.org/
+.. _manual: http://manual.futuregrid.org/openstackgrizzly.html
