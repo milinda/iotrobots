@@ -156,7 +156,7 @@ Make sure to set the broker ip to the IP address of the machine running the brok
 
 ./bin/storm jar ~/projects/iotrobots/drone/processor/target/drone-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.storm.DroneProcessorTopology -url amqp://broker_ip:5672 -name drone_processor -ds_mode 2
 
-The topology supports 3 modes and this is specified in the ds_mode command. Those three modes are defined as 0, 1 and 2.
+The topology supports 3 modes and this is specified in the ds_mode command line argument. Those three modes are defined as 0, 1 and 2.
 
 0. Deploy with Decode, tracking and planning on the same bolt
 1. Deploy with Decode, tracking and planning on separate bolts
