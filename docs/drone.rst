@@ -91,7 +91,7 @@ There are two components of the project that needs to be deployed to get the dat
 Cloud Deployment
 ----------------
 
-We use FutureGrid as our cloud provider to deploy the components. Please read the FutureGrid OpenStack `manual<http://manual.futuregrid.org/openstackgrizzly.html/>`_ before proceeding.
+We use FutureGrid as our cloud provider to deploy the components. Please read the FutureGrid OpenStack Python_.
 
 Cloud deployment is done using three frameworks.
 
@@ -147,4 +147,4 @@ After that you can deploy the new topology with the command
 Make sure we se
 
 
-
+.. _Python: http://www.python.org/
