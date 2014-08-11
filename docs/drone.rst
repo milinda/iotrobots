@@ -114,7 +114,7 @@ You can find the IPs of these nodes using the nova commands after loggin in to F
 
 The skamburu-storm-nimus-zookeeper node run Apache Storm Nimbus and ZooKeeper. You can deploy the code by logging in to this node.
 
-First log in to Futuregrid. Then use the command
+First log in to Futuregrid. Then use the command::
 
 ssh -l ubuntu -i private_key ip
 
@@ -122,13 +122,11 @@ to log in to the machine.
 
 After you log in go to the ~/projects/iotrobots folder.
 
-Then do a git pull to get your latest changes.
-
-After that do a
+Then do a git pull to get your latest changes. After that you can build the source by using the command::
 
 mvn clean install
 
-to build the project with the changes.
+If the build is successfull you can deploy the new code in Storm.
 
 Now go to ~/deploy/storm
 
