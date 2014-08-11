@@ -162,4 +162,11 @@ The topology supports 3 modes and this is specified in the ds_mode command. Thos
 1. Deploy with Decode, tracking and planning on separate bolts
 2. Deploy with Decode and tracking on the same bolt
 
+Monitor the topology
+--------------------
+
+You can monitor the toplogy by going to the
+
+http://ip_of_the_storm_nimbus_machine:8080/
+
 .. _manual: http://manual.futuregrid.org/openstackgrizzly.html
