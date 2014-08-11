@@ -95,16 +95,16 @@ We use FutureGrid as our cloud provider to deploy the components. Please read th
 
 Cloud deployment is done using three frameworks.
 
-1. `Apache Storm <http://www.python.org/>`_.
-2. IOTCloud
-3. RabbitMQ broker
+1. `Apache Storm <http://www.python.org/>`_
+2. `IOTCloud <https://storm.incubator.apache.org/>`_
+3. `RabbitMQ broker <http://www.rabbitmq.com/>`_
 
 Apache Storm is running on 4 nodes in FugureGrid. These are the nodes running Apache Storm
 
-skamburu-storm-nimus-zookeeper
-skamburu-supervisor-01
-skamburu-supervisor-02
-skamburu-supervisor-03
+- skamburu-storm-nimus-zookeeper
+- skamburu-supervisor-01
+- skamburu-supervisor-02
+- skamburu-supervisor-03
 
 The broker is running on the node: skamburu-broker-01
 
