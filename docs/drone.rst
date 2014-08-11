@@ -120,7 +120,7 @@ The skamburu-storm-nimus-zookeeper node runs Apache Storm Nimbus and ZooKeeper. 
 
 First log in to Futuregrid. Then use the command
 
-... code:: bash
+.. code:: bash
     ssh -l ubuntu -i private_key ip
 
 to log in to the machine.
