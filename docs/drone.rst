@@ -118,35 +118,47 @@ The user can find the IPs of these nodes using the nova commands after logging i
 
 The skamburu-storm-nimus-zookeeper node runs Apache Storm Nimbus and ZooKeeper. The user needs to deploy the code by logging in to this node.
 
-First log in to Futuregrid. Then use the command
+First log in to Futuregrid. Then use the following command to log in to the machine.
 
-.. code-block:: bash
-    ssh -l ubuntu -i private_key ip
+ssh -l ubuntu -i private_key ip_of_the_machine
 
-to log in to the machine.
+Build the changes
+-----------------
 
-After you log in go to the ~/projects/iotrobots folder.
+After log in user need go to the ~/projects/iotrobots folder. This folder contains the source code.
 
-Then do a git pull to get your latest changes. After that you can build the source by using the command::
+Then do a git pull to get the latest changes. After that you can build the source by using the command.
 
 mvn clean install
 
-If the build is successfull you can deploy the new code in Storm.
+If the build is successful you can deploy the new code in Storm.
 
-Now go to ~/deploy/storm
+To deploy the code we need to go to ~/deploy/storm
 
-You need to kill the existing topology to deploy the new topology with the changes
+Kill the existing topology
+--------------------------
 
-You can use
+First make sure to kill the existing topology before deploying the new one with the changes.
+
+We can use the following command to kill the existing one. drone_processor is the name of the running topology.
 
 ./bin/storm kill drone_processor
 
-Where drone_processor is the name of the running topology. Storm will take about 30 seconds to kill the running topology.
+Storm will take about 30 seconds to kill the running topology.
 
-After that you can deploy the new topology with the command
+Deploy the new topology
+-----------------------
+
+After that we can deploy the new topology with the command
 
 Make sure to set the broker ip to the IP address of the machine running the broker skamburu-broker-01.
 
 ./bin/storm jar ~/projects/iotrobots/drone/processor/target/drone-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.storm.DroneProcessorTopology -url amqp://broker_ip:5672 -name drone_processor -ds_mode 2
+
+The topology supports 3 modes and this is specified in the ds_mode command. Those three modes are defined as 0, 1 and 2.
+
+0. Deploy with Decode, tracking and planning on the same bolt
+1. Deploy with Decode, tracking and planning on separate bolts
+2. Deploy with Decode and tracking on the same bolt
 
 .. _manual: http://manual.futuregrid.org/openstackgrizzly.html
