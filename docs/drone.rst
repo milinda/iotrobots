@@ -120,7 +120,7 @@ The skamburu-storm-nimus-zookeeper node runs Apache Storm Nimbus and ZooKeeper. 
 
 First log in to Futuregrid. Then use the command
 
-.. code:: bash
+.. code-block:: bash
     ssh -l ubuntu -i private_key ip
 
 to log in to the machine.
@@ -145,9 +145,8 @@ Where drone_processor is the name of the running topology. Storm will take about
 
 After that you can deploy the new topology with the command
 
+Make sure to set the broker ip to the IP address of the machine running the broker skamburu-broker-01.
+
 ./bin/storm jar ~/projects/iotrobots/drone/processor/target/drone-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.storm.DroneProcessorTopology -url amqp://broker_ip:5672 -name drone_processor -ds_mode 2
-
-Make sure we se
-
 
 .. _manual: http://manual.futuregrid.org/openstackgrizzly.html
