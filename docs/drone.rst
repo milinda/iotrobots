@@ -106,17 +106,22 @@ Apache Storm is running on 4 nodes in FugureGrid. These are the nodes running Ap
 - skamburu-supervisor-02
 - skamburu-supervisor-03
 
-The broker is running on the node: skamburu-broker-01
+The broker is running on the node
 
-The iotcloud is running on the node: skamburu-iot-01
+- skamburu-broker-01
 
-You can find the IPs of these nodes using the nova commands after loggin in to Futuregrid.
+The iotcloud is running on the node
 
-The skamburu-storm-nimus-zookeeper node run Apache Storm Nimbus and ZooKeeper. You can deploy the code by logging in to this node.
+- skamburu-iot-01
 
-First log in to Futuregrid. Then use the command::
+The user can find the IPs of these nodes using the nova commands after logging in to FutureGrid head node.
 
-ssh -l ubuntu -i private_key ip
+The skamburu-storm-nimus-zookeeper node runs Apache Storm Nimbus and ZooKeeper. The user needs to deploy the code by logging in to this node.
+
+First log in to Futuregrid. Then use the command
+
+... code:: bash
+    ssh -l ubuntu -i private_key ip
 
 to log in to the machine.
 
