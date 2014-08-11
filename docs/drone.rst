@@ -87,6 +87,7 @@ Deployment
 ==========
 
 There are two components of the project that needs to be deployed to get the data from the drone and run the processing in the cloud. They are the sensor and the processor.
+The sensor code is static and less likely to change. The processing code changes frequently.
 
 Cloud Deployment
 ----------------
