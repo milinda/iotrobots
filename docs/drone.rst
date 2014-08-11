@@ -65,6 +65,12 @@ iotrobots
 
 After building the above two projects you are ready to build the iotrobots project.
 
+Lets look at the source tree first. The code contains two main components. The processor and the sensor
+
+iotrobots --> drone -->
+                      => processor  [contains code of the stom topology]
+                      => sensor     [the gateway code to relay the messages coming from drone to cloud processing layer]
+
 The source code can be found in
 
 https://github.com/iotcloud/iotrobots.git
@@ -80,4 +86,65 @@ This will build the drone code. If you only need to compile the drone you can do
 Deployment
 ==========
 
-There are two components of the project that needs to be deployed to get the data from the drone and run the processing in the cloud.
+There are two components of the project that needs to be deployed to get the data from the drone and run the processing in the cloud. They are the sensor and the processor.
+
+Cloud Deployment
+----------------
+
+We use FutureGrid as our cloud provider to deploy the components. Please read the FutureGrid OpenStack `manual<http://manual.futuregrid.org/openstackgrizzly.html/>`_ before proceeding.
+
+Cloud deployment is done using three frameworks.
+
+1. Apache Storm
+2. IOTCloud
+3. RabbitMQ broker
+
+Apache Storm is running on 4 nodes in FugureGrid. These are the nodes running Apache Storm
+
+skamburu-storm-nimus-zookeeper
+skamburu-supervisor-01
+skamburu-supervisor-02
+skamburu-supervisor-03
+
+The broker is running on the node: skamburu-broker-01
+
+The iotcloud is running on the node: skamburu-iot-01
+
+You can find the IPs of these nodes using the nova commands after loggin in to Futuregrid.
+
+The skamburu-storm-nimus-zookeeper node run Apache Storm Nimbus and ZooKeeper. You can deploy the code by logging in to this node.
+
+First log in to Futuregrid. Then use the command
+
+ssh -l ubuntu -i private_key ip
+
+to log in to the machine.
+
+After you log in go to the ~/projects/iotrobots folder.
+
+Then do a git pull to get your latest changes.
+
+After that do a
+
+mvn clean install
+
+to build the project with the changes.
+
+Now go to ~/deploy/storm
+
+You need to kill the existing topology to deploy the new topology with the changes
+
+You can use
+
+./bin/storm kill drone_processor
+
+Where drone_processor is the name of the running topology. Storm will take about 30 seconds to kill the running topology.
+
+After that you can deploy the new topology with the command
+
+./bin/storm jar ~/projects/iotrobots/drone/processor/target/drone-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.storm.DroneProcessorTopology -url amqp://broker_ip:5672 -name drone_processor -ds_mode 2
+
+Make sure we se
+
+
+
