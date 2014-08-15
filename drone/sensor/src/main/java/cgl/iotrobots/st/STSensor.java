@@ -48,7 +48,8 @@ public class STSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", STSensor.class.getCanonicalName(), Arrays.asList("local-1"));
+        SensorSubmitter.submitSensor(properties, "drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar",
+                STSensor.class.getCanonicalName(), Arrays.asList("local"));
     }
 
     @Override

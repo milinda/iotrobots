@@ -1,0 +1,25 @@
+zk.servers: ["localhost:2181"]
+zk.root: "/iot/sensors"
+spouts:
+    frame_receive:
+        broker: "rabbitmq"
+        sensor: "drone_sensor"
+        channel: "frameSender"
+        fields: ["frame", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
+    nav_receive:
+        broker: "rabbitmq"
+        sensor: "drone_sensor"
+        channel: "navSender"
+        fields: ["nav", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
+bolts:
+    send_command:
+        broker: "rabbitmq"
+        sensor: "drone_sensor"
+        channel: "cmdReceiver"
+        fields: ["command", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
