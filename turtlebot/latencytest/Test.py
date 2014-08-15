@@ -45,7 +45,7 @@ def send_nav_data():
 
 def recv_commands():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672/')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     # connection = pika.BlockingConnection(parameters)
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
@@ -77,7 +77,7 @@ def on_message(channel, method_frame, header_frame, body):
 
 
 def file_read(i):
-    f = open('output/' + str(i), 'r')
+    f = open('/home/supun/dev/projects/dist/data/kinect/kinect' + str(i + 1), 'r')
     data = f.read()
     f.close()
     return data
