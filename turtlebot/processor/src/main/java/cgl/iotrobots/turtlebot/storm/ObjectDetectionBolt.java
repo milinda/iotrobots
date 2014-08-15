@@ -50,8 +50,8 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
             Motion motion = positionCalculator.calculatePosition(dist);
             byte []body = CommonsUtils.motionToJSON(motion);
-            String sensorId = (String) tuple.getValueByField("sensorID");
-            String time = (String) tuple.getValueByField("time");
+            Object sensorId = tuple.getValueByField("sensorID");
+            Object time = tuple.getValueByField("time");
             outputCollector.emit(Arrays.<Object>asList(body, sensorId, time));
         } catch (IOException e) {
             LOG.error("Failed to uncomress the data", e);
@@ -60,6 +60,6 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("control", "sensorID", "time"));
+        outputFieldsDeclarer.declare(new Fields("body", "sensorID", "time"));
     }
 }

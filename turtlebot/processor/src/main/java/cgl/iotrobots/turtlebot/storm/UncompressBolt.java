@@ -30,8 +30,8 @@ public class UncompressBolt extends BaseRichBolt {
         try {
             Compressor compressor = new Compressor();
             int [] dist = compressor.unCompr(data);
-            String sensorId = (String) tuple.getValueByField("sensorID");
-            String time = (String) tuple.getValueByField("time");
+            Object sensorId = tuple.getValueByField("sensorID");
+            Object time = tuple.getValueByField("time");
             outputCollector.emit(Arrays.<Object>asList(dist, sensorId, time));
         } catch (IOException e) {
             LOG.error("Failed to uncompress the data", e);
