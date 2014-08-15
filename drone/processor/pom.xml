@@ -38,6 +38,10 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+        <dependency>
+            <groupId>sensorstream</groupId>
+            <artifactId>sensorstream-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

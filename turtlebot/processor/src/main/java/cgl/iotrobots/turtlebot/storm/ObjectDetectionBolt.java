@@ -6,6 +6,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.turtlebot.commons.CommonsUtils;
 import cgl.iotrobots.turtlebot.commons.Compressor;
 import cgl.iotrobots.turtlebot.commons.Motion;
 import org.slf4j.Logger;
@@ -48,9 +49,10 @@ public class ObjectDetectionBolt extends BaseRichBolt {
             }
 
             Motion motion = positionCalculator.calculatePosition(dist);
+            byte []body = CommonsUtils.motionToJSON(motion);
             String sensorId = (String) tuple.getValueByField("sensorID");
             String time = (String) tuple.getValueByField("time");
-            outputCollector.emit(Arrays.<Object>asList(motion, sensorId, time));
+            outputCollector.emit(Arrays.<Object>asList(body, sensorId, time));
         } catch (IOException e) {
             LOG.error("Failed to uncomress the data", e);
         }

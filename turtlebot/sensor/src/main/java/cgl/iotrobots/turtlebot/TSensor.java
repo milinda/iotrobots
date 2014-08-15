@@ -28,6 +28,8 @@ public class TSensor extends AbstractSensor {
     public static final String TURTLE_STORM_CONTROL_QUEUE_NAME = "turtle_storm_control";
     public static final String TURTLE_STORM_CONTROL_ROUTING_KEY = "turtle_storm_control";
     public static final String TURTLE_EXCHANGE = "turtle";
+    public static final String CMD_RECV = "cmd_recv";
+    public static final String FRAME_SENDER = "frame_sender";
 
     private static Logger LOG = LoggerFactory.getLogger(TSensor.class);
 
@@ -48,7 +50,7 @@ public class TSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "turtle-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local-1"));
+        SensorSubmitter.submitSensor(properties, "turtle-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local"));
     }
 
     @Override
@@ -59,8 +61,8 @@ public class TSensor extends AbstractSensor {
     @Override
     public void open(SensorContext context) {
         final BlockingQueue receivingQueue = new LinkedBlockingQueue();
-        final Channel sendChannel = context.getChannel("rabbitmq", "sender");
-        final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
+        final Channel sendChannel = context.getChannel("rabbitmq", FRAME_SENDER);
+        final Channel receiveChannel = context.getChannel("rabbitmq", CMD_RECV);
         // register with ros_java
         NodeConfiguration nodeConfiguration = null;
         String localIp = (String) context.getProperty(LOCAL_IP_ARG);
@@ -113,7 +115,7 @@ public class TSensor extends AbstractSensor {
                             writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
                             writer.close();
                         } catch (FileNotFoundException e) {
-                            System.exit(1);
+                            e.printStackTrace();
                         }
 
                         if (!mode.equals("nt")) {
@@ -128,7 +130,7 @@ public class TSensor extends AbstractSensor {
                 }
             }
         });
-        LOG.info("Received request {}", context.getId());
+        LOG.info("Received request for opening sensor: {} with id: {}", context.getSensorID());
     }
 
     @Override
@@ -147,7 +149,7 @@ public class TSensor extends AbstractSensor {
             String localIp = (String) conf.get(LOCAL_IP_ARG);
             String mode = (String) conf.get(MODE_ARG);
 
-            SensorContext context = new SensorContext(new SensorId("turtle_sensor", "general"));
+            SensorContext context = new SensorContext("turtle_sensor");
             context.addProperty(BROKER_URL, brokerUrl);
             context.addProperty(ROS_MASTER_ARG, rosMaster);
             context.addProperty(LOCAL_IP_ARG, localIp);
@@ -157,13 +159,13 @@ public class TSensor extends AbstractSensor {
             sendProps.put("exchange", TURTLE_EXCHANGE);
             sendProps.put("routingKey", TURTLE_STORM_FRAMES_ROUTING_KEY);
             sendProps.put("queueName", TURTLE_STORM_FRAMES_QUEUE_NAME);
-            Channel sendChannel = createChannel("sender", sendProps, Direction.OUT, 1024);
+            Channel sendChannel = createChannel(FRAME_SENDER, sendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
             receiveProps.put("queueName", TURTLE_STORM_CONTROL_QUEUE_NAME);
             receiveProps.put("exchange", TURTLE_EXCHANGE);
             receiveProps.put("routingKey", TURTLE_STORM_CONTROL_ROUTING_KEY);
-            Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024);
+            Channel receiveChannel = createChannel(CMD_RECV, receiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);

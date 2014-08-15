@@ -1,0 +1,18 @@
+zk.servers: ["localhost:2181"]
+zk.root: "/iot/sensors"
+spouts:
+    kinect_frame_recv:
+        broker: "rabbitmq"
+        sensor: "turtle_sensor"
+        channel: "frame_sender"
+        fields: ["frame", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
+bolts:
+    send_bolt:
+        broker: "rabbitmq"
+        sensor: "turtle_sensor"
+        channel: "cmd_recv"
+        fields: ["command", "sensorID", "time"]
+        properties:
+          ackMode: "auto"

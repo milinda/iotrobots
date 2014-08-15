@@ -16,6 +16,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class STSensor extends AbstractSensor {
+    public static final String FRAME_SENDER = "frameSender";
+    public static final String NAV_SENDER = "navSender";
+    public static final String CMD_RECEIVER = "cmdReceiver";
+    public static final String DRONE_EXCHANGE = "storm_drone";
+    public static final String STORM_DRONE_FRAME_QUEUE = "storm_drone_frame";
+    public static final String STORM_DRONE_FRAME_ROUTING_KEY = "storm_drone_frame";
+    public static final String STORM_DRONE_NAV_DATA_ROUTING_KEY = "storm_drone_nav_data";
+    public static final String STORM_DRONE_NAV_DATA_QUEUE = "storm_drone_nav_data";
+    public static final String STORM_CONTROL_QEUUE = "storm_control";
+    public static final String STORM_CONTROL_ROUTING_KEY = "storm_control";
+    public static final String URL_ARG = "url";
     private static Logger LOG = LoggerFactory.getLogger(STSensor.class);
 
     public static final String BROKER_URL = "broker_url";
@@ -33,6 +44,8 @@ public class STSensor extends AbstractSensor {
 
     private int commandRecvCount = 0;
 
+    private boolean run = true;
+
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
         SensorSubmitter.submitSensor(properties, "drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", STSensor.class.getCanonicalName(), Arrays.asList("local-1"));
@@ -45,9 +58,9 @@ public class STSensor extends AbstractSensor {
 
     @Override
     public void open(SensorContext context) {
-        final Channel sendChannel = context.getChannel("rabbitmq", "frameSender");
-        final Channel navChannel = context.getChannel("rabbitmq", "navSender");
-        final Channel receiveChannel = context.getChannel("rabbitmq", "receiver");
+        final Channel sendChannel = context.getChannel("rabbitmq", FRAME_SENDER);
+        final Channel navChannel = context.getChannel("rabbitmq", NAV_SENDER);
+        final Channel receiveChannel = context.getChannel("rabbitmq", CMD_RECEIVER);
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
 
@@ -67,7 +80,7 @@ public class STSensor extends AbstractSensor {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (run) {
                     try {
                         MessageContext messageContext = (MessageContext) frameReceivingQueue.take();
                         sendChannel.publish(messageContext);
@@ -83,7 +96,7 @@ public class STSensor extends AbstractSensor {
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (run) {
                     try {
                         MessageContext messageContext = (MessageContext) navDataReceivingQueue.take();
                         navChannel.publish(messageContext);
@@ -109,17 +122,22 @@ public class STSensor extends AbstractSensor {
                 }
             }
         });
-        LOG.info("Received request {}", context.getId());
+
     }
 
     @Override
     public void close() {
+        run = false;
         super.close();
         if (videoReceiver != null) {
             videoReceiver.stop();
         }
         if (navReceiver != null) {
             navReceiver.stop();
+        }
+
+        if (controlSender != null) {
+            controlSender.stop();
         }
     }
 
@@ -129,25 +147,25 @@ public class STSensor extends AbstractSensor {
         public SensorContext configure(SiteContext siteContext, Map conf) {
             String brokerUrl = (String) conf.get(BROKER_URL);
 
-            SensorContext context = new SensorContext(new SensorId("turtle_sensor", "general"));
+            SensorContext context = new SensorContext("drone_sensor");
             context.addProperty(BROKER_URL, brokerUrl);
             Map sendProps = new HashMap();
-            sendProps.put("exchange", "storm_drone");
-            sendProps.put("routingKey", "storm_drone_frame");
-            sendProps.put("queueName", "storm_drone_frame");
-            Channel sendChannel = createChannel("frameSender", sendProps, Direction.OUT, 1024);
+            sendProps.put("exchange", DRONE_EXCHANGE);
+            sendProps.put("routingKey", STORM_DRONE_FRAME_ROUTING_KEY);
+            sendProps.put("queueName", STORM_DRONE_FRAME_QUEUE);
+            Channel sendChannel = createChannel(FRAME_SENDER, sendProps, Direction.OUT, 1024);
 
             Map navSendProps = new HashMap();
-            navSendProps.put("exchange", "storm_drone");
-            navSendProps.put("routingKey", "storm_drone_nav_data");
-            navSendProps.put("queueName", "storm_drone_nav_data");
-            Channel navSendChannel = createChannel("navSender", navSendProps, Direction.OUT, 1024);
+            navSendProps.put("exchange", DRONE_EXCHANGE);
+            navSendProps.put("routingKey", STORM_DRONE_NAV_DATA_ROUTING_KEY);
+            navSendProps.put("queueName", STORM_DRONE_NAV_DATA_QUEUE);
+            Channel navSendChannel = createChannel(NAV_SENDER, navSendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
-            receiveProps.put("queueName", "storm_control");
-            receiveProps.put("exchange", "storm_drone");
-            receiveProps.put("routingKey", "storm_control");
-            Channel receiveChannel = createChannel("receiver", receiveProps, Direction.IN, 1024);
+            receiveProps.put("queueName", STORM_CONTROL_QEUUE);
+            receiveProps.put("exchange", DRONE_EXCHANGE);
+            receiveProps.put("routingKey", STORM_CONTROL_ROUTING_KEY);
+            Channel receiveChannel = createChannel(CMD_RECEIVER, receiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
@@ -160,13 +178,13 @@ public class STSensor extends AbstractSensor {
     private static Map<String, String> getProperties(String []args) {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
-        options.addOption("url", true, "URL of the AMQP Broker");
+        options.addOption(URL_ARG, true, "URL of the AMQP Broker");
 
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
 
-            String url = cmd.getOptionValue("url");
+            String url = cmd.getOptionValue(URL_ARG);
             conf.put(BROKER_URL, url);
 
             return conf;
