@@ -89,10 +89,10 @@ def main():
     #self.f = open('test.out', 'w')
     t.start()
 
-    t = Thread(target=send_nav_data)
-    t.daemon = True # thread dies with the program
+    # t = Thread(target=send_nav_data)
+    # t.daemon = True # thread dies with the program
     #self.f = open('test.out', 'w')
-    t.start()
+    # t.start()
 
     t = Thread(target=recv_commands)
     t.daemon = True # thread dies with the program

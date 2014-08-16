@@ -14,7 +14,7 @@ public class PlanningBolt extends ShellBolt implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("command", "time"));
+        declarer.declare(new Fields("body", "time", "sensorID"));
     }
 
     @Override

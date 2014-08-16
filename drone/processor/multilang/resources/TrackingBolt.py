@@ -22,6 +22,7 @@ class TrackingBolt(storm.BasicBolt):
         start_time = int(round(time.time() * 1000))
         frame =  base64.b64decode(tup.values[0])
         original_time = tup.values[1]
+        sensorId = tup.values[2]
 
         im = np.frombuffer(frame, count=frame_size_bytes, dtype=np.uint8)
         im = im.reshape((frame_size[0], frame_size[1], 3))
@@ -35,6 +36,6 @@ class TrackingBolt(storm.BasicBolt):
         for target in targets:
             targets_message.append({'found': 1, 'x': str(target.x), 'y': str(target.y), 'h': str(target.h), 'w': str(target.w)})
 
-        storm.emit([targets_message, original_time])
+        storm.emit([targets_message, original_time, sensorId])
 
 TrackingBolt().run()

@@ -39,6 +39,8 @@ public class Decoder implements Serializable {
 
     private String lastTimeReceivd;
 
+    private String lastMessageId;
+
     private long lastTime;
 
     public Decoder(BlockingQueue<DecoderMessage> outputQueue) {
@@ -66,6 +68,8 @@ public class Decoder implements Serializable {
             try {
                 inCount.getAndIncrement();
                 lastTimeReceivd = message.getTime();
+                lastMessageId = message.getSensorId();
+
                 lastTime = System.currentTimeMillis();
                 stream.write(message.getMessage());
             } catch (IOException e) {
@@ -100,7 +104,7 @@ public class Decoder implements Serializable {
                     isr.readFully(output);
                     outCount.getAndIncrement();
 
-                    DecoderMessage message = new DecoderMessage(output, lastTimeReceivd);
+                    DecoderMessage message = new DecoderMessage(output, lastTimeReceivd, lastMessageId);
                     outputQueue.put(message);
 
                     long currentTime = System.currentTimeMillis();

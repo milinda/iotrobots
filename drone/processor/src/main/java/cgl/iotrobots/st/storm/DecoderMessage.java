@@ -5,9 +5,12 @@ public class DecoderMessage {
 
     private String time;
 
-    public DecoderMessage(byte[] message, String time) {
+    private String sensorId;
+
+    public DecoderMessage(byte[] message, String time, String sensorId) {
         this.message = message;
         this.time = time;
+        this.sensorId = sensorId;
     }
 
     public void setMessage(byte[] message) {
@@ -24,5 +27,9 @@ public class DecoderMessage {
 
     public String getTime() {
         return time;
+    }
+
+    public String getSensorId() {
+        return sensorId;
     }
 }

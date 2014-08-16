@@ -27,6 +27,8 @@ class PlanningBolt(storm.BasicBolt):
     # this method will be called by storm when there is an incoming frame
     def process(self, tup):
         targets_message = tup.values[0]
+        sensorId = tup.values[2]
+
         if type(targets_message) is list:
             targets = []
             # json_object = json.loads(targets_message)
@@ -41,7 +43,7 @@ class PlanningBolt(storm.BasicBolt):
             io = StringIO()
             json.dump(message, io)
 
-            storm.emit([io.getvalue(), original_time])
+            storm.emit([io.getvalue(), original_time, sensorId])
         elif type(targets_message) is str:
             nav_data = json.loads(targets_message)
             storm.log(targets_message)

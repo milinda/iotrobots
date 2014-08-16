@@ -46,15 +46,17 @@ public class DecodingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        Object time = tuple.getValueByField(Constants.TIME_FIELD);
+        Object sensorId = tuple.getValueByField("sensorID");
         DecoderMessage message = new DecoderMessage((byte [])tuple.getValueByField(Constants.FRAME_FIELD),
-                (String)tuple.getValueByField(Constants.TIME_FIELD));
+                time.toString(), sensorId.toString());
         this.decoder.write(message);
         this.outputCollector.ack(tuple);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields(Constants.FRAME_FIELD, Constants.TIME_FIELD));
+        outputFieldsDeclarer.declare(new Fields(Constants.FRAME_FIELD, Constants.TIME_FIELD, "sensorID"));
     }
 
     private class SendingThread implements Runnable {
@@ -67,7 +69,7 @@ public class DecodingBolt extends BaseRichBolt {
                     String encodedBytes = Base64.encodeBase64String(message.getMessage());
                     list.add(encodedBytes);
                     list.add(message.getTime());
-
+                    list.add(message.getSensorId());
                     outputCollector.emit(list);
                 } catch (InterruptedException ignored) {
                 }
