@@ -14,7 +14,7 @@ public class TrackingBolt extends ShellBolt implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("targets", "time", "sensorID"));
+        declarer.declare(new Fields("targets", "sensorID", "time"));
     }
 
     @Override

@@ -6,7 +6,7 @@ spouts:
         sensor: "drone_sensor"
         channel: "frameSender"
         fields: ["frame", "sensorID", "time"]
-#        builder: "cgl.iotrobots.st.storm.CustomMessageBuilder"
+        builder: "cgl.iotrobots.st.storm.CustomMessageBuilder"
         properties:
           ackMode: "auto"
     nav_receive:

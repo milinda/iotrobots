@@ -57,10 +57,11 @@ class DroneFrameProcessBolt(storm.Bolt):
     def process(self, tup):
         frame =  base64.b64decode(tup.values[0])
         self.p.stdin.write(frame)
-        t = tup.values[1]
+        t = tup.values[2]
+        sensorId = tup.values[1]
         curtime = int(round(time.time() * 1000))
         self.local_time_queue.put(curtime)
-        self.time_queue.put(t)
+        self.time_queue.put([t, sensorId])
         self.tuple_count += 1
         with lock:
             storm.ack(tup)
@@ -89,14 +90,14 @@ class DroneFrameProcessBolt(storm.Bolt):
                     self.time_removed = 1
 
             msg = self.frame_queue.get()
-            t = self.time_queue.get()
+            [t, sensorId] = self.time_queue.get()
             t2 = self.local_time_queue.get()
             current_time = int(round(time.time() * 1000))
             self.emit_count += 1
 
             # acquire the lock to avoid storm and the message processing thread do emit and ack at the same time
             with lock :
-                storm.emit([msg, t])
+                storm.emit([msg, , t])
                 storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " +
                           str(self.frame_queue.qsize()) + " TiC: " + str(self.time_queue.qsize()) + " LAT: " + str(current_time - t2))
 

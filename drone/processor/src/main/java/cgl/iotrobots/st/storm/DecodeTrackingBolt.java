@@ -13,7 +13,7 @@ public class DecodeTrackingBolt extends ShellBoltN implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("targets", "time", "sensorID"));
+        outputFieldsDeclarer.declare(new Fields("targets", "sensorID", "time"));
     }
 
     @Override

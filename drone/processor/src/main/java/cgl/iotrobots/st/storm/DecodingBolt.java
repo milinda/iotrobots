@@ -56,7 +56,7 @@ public class DecodingBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields(Constants.FRAME_FIELD, Constants.TIME_FIELD, "sensorID"));
+        outputFieldsDeclarer.declare(new Fields(Constants.FRAME_FIELD, "sensorID", Constants.TIME_FIELD));
     }
 
     private class SendingThread implements Runnable {

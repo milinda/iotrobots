@@ -17,7 +17,12 @@ public class CustomMessageBuilder extends DefaultRabbitMQMessageBuilder {
         List<Object> objects = super.deSerialize(o);
 
         byte []body = (byte[]) objects.remove(0);
-        objects.add(0, Base64.encodeBase64(body));
+        objects.add(0, new String(Base64.encodeBase64(body)));
+        Object on = objects.remove(1);
+        objects.add(1, on.toString());
+
+        on = objects.remove(2);
+        objects.add(2, on.toString());
         return objects;
     }
 
