@@ -20,6 +20,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.handler.codec.base64.Base64Encoder;
+import storm.trident.Stream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,12 +49,16 @@ public class DroneProcessorTopology {
         String dsModeValue = cmd.getOptionValue(Constants.ARGS_DS_MODE);
         int dsMode = Integer.parseInt(dsModeValue);
 
+        StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
-            buildAllInOneTopology(builder);
+            streamTopologyBuilder = new StreamTopologyBuilder();
+            buildAllInOneTopology(builder, streamTopologyBuilder);
         } else if (dsMode == 1) {
-            buildAllSeparateTopology(builder);
+            streamTopologyBuilder = new StreamTopologyBuilder("topology_1.yaml");
+            buildAllSeparateTopology(builder, streamTopologyBuilder);
         } else if (dsMode == 2) {
-            buildDecodeAndTrackingTopology(builder);
+            streamTopologyBuilder = new StreamTopologyBuilder();
+            buildDecodeAndTrackingTopology(builder, streamTopologyBuilder);
         }
 
         Config conf = new Config();
@@ -76,8 +81,7 @@ public class DroneProcessorTopology {
         }
     }
 
-    private static void buildAllInOneTopology(TopologyBuilder builder) {
-        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+    private static void buildAllInOneTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
         StreamComponents components = streamTopologyBuilder.buildComponents();
 
         IRichSpout spout = components.getSpouts().get(Constants.FRAME_RECEIVE_SPOUT);
@@ -90,8 +94,7 @@ public class DroneProcessorTopology {
         builder.setBolt(Constants.SEND_COMMAND_BOLT, bolt).shuffleGrouping(Constants.ALL_IN_ONE_BOLT);
     }
 
-    private static void buildAllSeparateTopology(TopologyBuilder builder) {
-        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+    private static void buildAllSeparateTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
         StreamComponents components = streamTopologyBuilder.buildComponents();
 
         IRichSpout spout = components.getSpouts().get(Constants.FRAME_RECEIVE_SPOUT);
@@ -106,8 +109,7 @@ public class DroneProcessorTopology {
         builder.setBolt(Constants.SEND_COMMAND_BOLT, bolt).shuffleGrouping(Constants.PLANING_BOLT);
     }
 
-    private static void buildDecodeAndTrackingTopology(TopologyBuilder builder) {
-        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+    private static void buildDecodeAndTrackingTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
         StreamComponents components = streamTopologyBuilder.buildComponents();
 
         IRichSpout spout = components.getSpouts().get(Constants.FRAME_RECEIVE_SPOUT);
