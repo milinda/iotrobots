@@ -90,7 +90,7 @@ public class DroneProcessorTopology {
 
         builder.setSpout(Constants.FRAME_RECEIVE_SPOUT, spout, 1);
         builder.setSpout(Constants.NAV_RECEIVE_SPOUT, navSpout, 1);
-        builder.setBolt(Constants.ALL_IN_ONE_BOLT, new DecodeTrackingBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT).shuffleGrouping(Constants.NAV_RECEIVE_SPOUT);
+        builder.setBolt(Constants.ALL_IN_ONE_BOLT, new AllInOneBolt()).shuffleGrouping(Constants.FRAME_RECEIVE_SPOUT).shuffleGrouping(Constants.NAV_RECEIVE_SPOUT);
         builder.setBolt(Constants.SEND_COMMAND_BOLT, bolt).shuffleGrouping(Constants.ALL_IN_ONE_BOLT);
     }
 

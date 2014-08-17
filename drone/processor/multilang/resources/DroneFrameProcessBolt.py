@@ -97,7 +97,7 @@ class DroneFrameProcessBolt(storm.Bolt):
 
             # acquire the lock to avoid storm and the message processing thread do emit and ack at the same time
             with lock :
-                storm.emit([msg, , t])
+                storm.emit([msg, sensorId, t])
                 storm.log("EC: " + str(self.emit_count) + " TC: " + str(self.tuple_count) + " MC: " +
                           str(self.frame_queue.qsize()) + " TiC: " + str(self.time_queue.qsize()) + " LAT: " + str(current_time - t2))
 

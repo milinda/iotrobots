@@ -13,7 +13,7 @@ public class AllInOneBolt extends ShellBoltN implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(Constants.COMMAND_FIELD, Constants.TIME_FIELD));
+        declarer.declare(new Fields("body", "sensorID", "time"));
     }
 
     @Override
