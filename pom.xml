@@ -10,6 +10,8 @@
     <modules>
         <module>turtlebot</module>
         <module>drone</module>
+        <module>performance</module>
+        <module>performance</module>
     </modules>
 
     <properties>
@@ -67,6 +69,7 @@
                 <groupId>org.apache.storm</groupId>
                 <artifactId>storm-core</artifactId>
                 <version>${storm.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>

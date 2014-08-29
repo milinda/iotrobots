@@ -75,7 +75,6 @@ def on_message(channel, method_frame, header_frame, body):
     d = json.loads(body)
     print body
 
-
 def file_read(i):
     f = open('/home/supun/dev/projects/dist/data/kinect/kinect' + str(i + 1), 'r')
     data = f.read()
