@@ -8,14 +8,19 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xerial.snappy.Snappy;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 public class CompressDecompressBolt extends BaseRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(CompressDecompressBolt.class);
 
-    public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+    private OutputCollector outputCollector;
 
+    public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        this.outputCollector = outputCollector;
     }
 
     @Override
@@ -27,7 +32,13 @@ public class CompressDecompressBolt extends BaseRichBolt {
         if (data instanceof byte []) {
             byte []inData = (byte[]) data;
 
-
+            try {
+                byte []compressed = Snappy.compress(inData);
+                byte []decompressed = Snappy.uncompress(compressed);
+                outputCollector.emit(Arrays.<Object>asList(decompressed, sensorID, time));
+            } catch (IOException e) {
+                LOG.error("Failed to compress-decompress using snappy");
+            }
         } else {
             LOG.warn("Got un-recognizable data");
         }
