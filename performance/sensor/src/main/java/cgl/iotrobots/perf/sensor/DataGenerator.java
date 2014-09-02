@@ -23,13 +23,10 @@ public class DataGenerator {
 
     private int capacity = 64;
 
-    public DataGenerator(int freq, int size, BlockingQueue<byte[]> messages) {
+    public DataGenerator(int freq, int size, BlockingQueue<byte[]> messages, int capacity) {
         this.freq = freq;
         this.size = size;
         this.messages = messages;
-    }
-
-    public void setCapacity(int capacity) {
         this.capacity = capacity;
     }
 

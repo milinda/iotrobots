@@ -10,9 +10,12 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class PerformanceSensor extends AbstractSensor {
     private static Logger LOG = LoggerFactory.getLogger(PerformanceSensor.class);
@@ -30,9 +33,11 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String DATA_SIZE_ARG = "data";
     public static final String DATA_INTERVAL_ARG = "freq";
 
+    public static final int CAPACITY = 64;
+
     private boolean run = true;
 
-    private byte[] messages;
+    private BlockingQueue<byte []> messages = new ArrayBlockingQueue<byte[]>(64);
 
     private DataGenerator dataGenerator;
 
@@ -55,19 +60,19 @@ public class PerformanceSensor extends AbstractSensor {
 
         String dataSizeString = (String) context.getProperty(DATA_SIZE_ARG);
         String dataIntervalString = (String) context.getProperty(DATA_INTERVAL_ARG);
+        String trp = (String) context.getProperty(TRP_ARG);
 
-        dataGenerator = new DataGenerator()
-
+        dataGenerator = new DataGenerator((Integer.parseInt(dataIntervalString), Integer.parseInt(dataSizeString), messages, CAPACITY);
+        dataGenerator.start();
         // startSend(sendChannel, receivingQueue);
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (run) {
                     try {
+                        byte []body = messages.take();
                         Map<String, Object> props = new HashMap<String, Object>();
                         props.put("time", Long.toString(System.currentTimeMillis()));
-
-
                         sendChannel.publish(body, props);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -81,6 +86,17 @@ public class PerformanceSensor extends AbstractSensor {
             @Override
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
+                    String time = (String) ((MessageContext) message).getProperties().get("time");
+
+                    try {
+                        PrintWriter writer = new PrintWriter(new BufferedWriter(new LatencyWriter("/home/supun/dev/projects/LatencyTest.txt", true)));
+                        writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
+                        writer.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     LOG.info("Message received " + message.toString());
 
                 } else {
