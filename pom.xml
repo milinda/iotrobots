@@ -66,6 +66,12 @@
             </dependency>
 
             <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons.cli.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.storm</groupId>
                 <artifactId>storm-core</artifactId>
                 <version>${storm.version}</version>

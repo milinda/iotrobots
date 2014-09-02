@@ -17,6 +17,10 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
             <groupId>iotcloud2</groupId>
             <artifactId>iotcloud-core</artifactId>
         </dependency>

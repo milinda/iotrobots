@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class PerformanceSensor extends AbstractSensor {
     private static Logger LOG = LoggerFactory.getLogger(PerformanceSensor.class);
@@ -27,14 +25,16 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String DATA_RECEIVER = "data_receiver";
     private static final String PERF_EXCHANGE = "perf";
 
-
     public static final String MODE_ARG = "mode";
     public static final String TRP_ARG = "trp";
     public static final String DATA_SIZE_ARG = "data";
-    public static final String DATA_INTERVAL = "freq";
-    public static final String
+    public static final String DATA_INTERVAL_ARG = "freq";
 
     private boolean run = true;
+
+    private byte[] messages;
+
+    private DataGenerator dataGenerator;
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
@@ -53,6 +53,11 @@ public class PerformanceSensor extends AbstractSensor {
         final Channel sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
         final Channel receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
 
+        String dataSizeString = (String) context.getProperty(DATA_SIZE_ARG);
+        String dataIntervalString = (String) context.getProperty(DATA_INTERVAL_ARG);
+
+        dataGenerator = new DataGenerator()
+
         // startSend(sendChannel, receivingQueue);
         Thread t = new Thread(new Runnable() {
             @Override
@@ -61,6 +66,7 @@ public class PerformanceSensor extends AbstractSensor {
                     try {
                         Map<String, Object> props = new HashMap<String, Object>();
                         props.put("time", Long.toString(System.currentTimeMillis()));
+
 
                         sendChannel.publish(body, props);
                     } catch (InterruptedException e) {
@@ -96,9 +102,15 @@ public class PerformanceSensor extends AbstractSensor {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
             String mode = (String) conf.get(MODE_ARG);
+            String trp = (String) conf.get(TRP_ARG);
+            String dataSize = (String) conf.get(DATA_SIZE_ARG);
+            String dataInterval = (String) conf.get(DATA_INTERVAL_ARG);
 
             SensorContext context = new SensorContext("turtle_sensor");
             context.addProperty(MODE_ARG, mode);
+            context.addProperty(TRP_ARG, trp);
+            context.addProperty(DATA_SIZE_ARG, dataSize);
+            context.addProperty(DATA_INTERVAL_ARG, dataInterval);
 
             Map sendProps = new HashMap();
             sendProps.put("exchange", PERF_EXCHANGE);
@@ -129,9 +141,13 @@ public class PerformanceSensor extends AbstractSensor {
             CommandLine cmd = commandLineParser.parse(options, args);
             String mode = cmd.getOptionValue(MODE_ARG);
             String trp = cmd.getOptionValue(TRP_ARG);
+            String dataSizeString = cmd.getOptionValue(DATA_SIZE_ARG);
+            String dataIntervalString = cmd.getOptionValue(DATA_INTERVAL_ARG);
 
             conf.put(MODE_ARG, mode);
             conf.put(TRP_ARG, trp);
+            conf.put(DATA_SIZE_ARG, dataSizeString);
+            conf.put(DATA_INTERVAL_ARG, dataIntervalString);
 
             return conf;
         } catch (ParseException e) {
