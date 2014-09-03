@@ -1,1 +1,0 @@
-java TimeRenderer 100 500 -barcode -preprocessed
