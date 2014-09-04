@@ -31,6 +31,8 @@ public class PerformanceSensor extends AbstractSensor {
 
     private boolean run = true;
 
+    LatencyWriter latencyWriter;
+
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
         SensorSubmitter.submitSensor(properties, new java.io.File(PerformanceSensor.class.getProtectionDomain()
@@ -48,9 +50,11 @@ public class PerformanceSensor extends AbstractSensor {
         final Channel sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
         final Channel receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
 
-        Map conf = Utils.readStreamConfig();
+        latencyWriter = new LatencyWriter("/tmp/latency.txt");
 
-        Thread t = new Thread(new TestSender(sendChannel, conf));
+        Map conf = Utils.readStreamConfig();
+        final TestSender sender = new TestSender(sendChannel, conf);
+        Thread t = new Thread(sender);
         t.start();
 
         startListen(receiveChannel, new cgl.iotcloud.core.MessageReceiver() {
@@ -60,7 +64,10 @@ public class PerformanceSensor extends AbstractSensor {
                     String time = (String) ((MessageContext) message).getProperties().get("time");
                     long lat = System.currentTimeMillis() - Long.parseLong(time);
 
-
+                    Test t = sender.getCurrentTest();
+                    if (t !=  null) {
+                        t.addResult(lat);
+                    }
 
                     LOG.info("Message received " + message.toString());
 
@@ -85,6 +92,8 @@ public class PerformanceSensor extends AbstractSensor {
 
         int noSensors;
 
+        Test currentTest;
+
         public TestSender(Channel sendChannel, Map conf) {
             this.sendChannel = sendChannel;
 
@@ -108,12 +117,12 @@ public class PerformanceSensor extends AbstractSensor {
                 for (int msgRate : messageRates) {
                     for (int msgSize : messageSizes) {
                         // create a test
-                        Test t = new Test(noMessages, msgSize, msgRate, zkServers, noSensors);
-                        t.start();
+                        currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter);
+                        currentTest.start();
 
-                        BlockingQueue<byte []> messages = t.getMessages();
+                        BlockingQueue<byte []> messages = currentTest.getMessages();
                         for (int i = 0; i < noMessages; i++) {
-                            if (t.canContinue()) {
+                            if (currentTest.canContinue()) {
                                 try {
                                     byte[] body = messages.take();
                                     Map<String, Object> props = new HashMap<String, Object>();
@@ -126,11 +135,14 @@ public class PerformanceSensor extends AbstractSensor {
                                 break;
                             }
                         }
-
-                        t.stop();
+                        currentTest.stop();
                     }
                 }
             }
+        }
+
+        public Test getCurrentTest() {
+            return currentTest;
         }
     }
 

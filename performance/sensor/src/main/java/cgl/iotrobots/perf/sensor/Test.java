@@ -19,7 +19,7 @@ public class Test {
 
     private LatencyWriter writer;
 
-    private List<Integer> results = new ArrayList<Integer>();
+    private List<Long> results = new ArrayList<Long>();
 
     private int noOfMessages;
 
@@ -39,11 +39,12 @@ public class Test {
 
     private boolean error = false;
 
-    public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors) {
+    public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer) {
         this.noOfMessages = noOfMessages;
         this.dataSize = dataSize;
         this.freq = freq;
         this.zkServers = zkServers;
+        this.writer = writer;
         this.noSensors = noSensors;
     }
 
@@ -93,7 +94,7 @@ public class Test {
         if (results.size() > 10) {
             // check weather last ten is increasing values
             int startIndex = results.size() - 10 -1;
-            int currentDifference = 0;
+            long currentDifference = 0;
             boolean increasing = true;
             for (int i = startIndex; i < 10; i++) {
                 if (results.get(i) - results.get(i -1) < currentDifference) {
@@ -113,7 +114,7 @@ public class Test {
         return true;
     }
 
-    public void addResult(int result) {
+    public void addResult(long result) {
         results.add(result);
     }
 

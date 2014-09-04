@@ -14,10 +14,10 @@ public class LatencyWriter {
         }
     }
 
-    public void write(String test, List<Integer> lat) {
+    public void write(String test, List<Long> lat) {
         StringBuilder builder = new StringBuilder();
         builder.append(test);
-        for (Integer l : lat) {
+        for (Long l : lat) {
             builder.append(" ").append(lat.toString());
         }
         writer.println(builder.toString());
