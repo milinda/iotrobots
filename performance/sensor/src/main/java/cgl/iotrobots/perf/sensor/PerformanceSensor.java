@@ -10,11 +10,10 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class PerformanceSensor extends AbstractSensor {
@@ -28,18 +27,9 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String DATA_RECEIVER = "data_receiver";
     private static final String PERF_EXCHANGE = "perf";
 
-    public static final String MODE_ARG = "mode";
     public static final String TRP_ARG = "trp";
-    public static final String DATA_SIZE_ARG = "data";
-    public static final String DATA_INTERVAL_ARG = "freq";
-
-    public static final int CAPACITY = 64;
 
     private boolean run = true;
-
-    private BlockingQueue<byte []> messages = new ArrayBlockingQueue<byte[]>(64);
-
-    private DataGenerator dataGenerator;
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
@@ -58,28 +48,9 @@ public class PerformanceSensor extends AbstractSensor {
         final Channel sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
         final Channel receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
 
-        String dataSizeString = (String) context.getProperty(DATA_SIZE_ARG);
-        String dataIntervalString = (String) context.getProperty(DATA_INTERVAL_ARG);
-        String trp = (String) context.getProperty(TRP_ARG);
+        Map conf = Utils.readStreamConfig();
 
-        dataGenerator = new DataGenerator((Integer.parseInt(dataIntervalString), Integer.parseInt(dataSizeString), messages, CAPACITY);
-        dataGenerator.start();
-        // startSend(sendChannel, receivingQueue);
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (run) {
-                    try {
-                        byte []body = messages.take();
-                        Map<String, Object> props = new HashMap<String, Object>();
-                        props.put("time", Long.toString(System.currentTimeMillis()));
-                        sendChannel.publish(body, props);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
+        Thread t = new Thread(new TestSender(sendChannel, conf));
         t.start();
 
         startListen(receiveChannel, new cgl.iotcloud.core.MessageReceiver() {
@@ -87,16 +58,10 @@ public class PerformanceSensor extends AbstractSensor {
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
                     String time = (String) ((MessageContext) message).getProperties().get("time");
+                    long lat = System.currentTimeMillis() - Long.parseLong(time);
 
-                    try {
-                        PrintWriter writer = new PrintWriter(new BufferedWriter(new LatencyWriter("/home/supun/dev/projects/LatencyTest.txt", true)));
-                        writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
-                        writer.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+
+
                     LOG.info("Message received " + message.toString());
 
                 } else {
@@ -105,6 +70,68 @@ public class PerformanceSensor extends AbstractSensor {
             }
         });
         LOG.info("Received request for opening sensor: {} with id: {}", context.getSensorID());
+    }
+
+    public class TestSender implements Runnable {
+        private Channel sendChannel;
+
+        private List<Integer> messageSizes;
+
+        private List<Integer> messageRates;
+
+        String zkServers;
+
+        int noMessages;
+
+        int noSensors;
+
+        public TestSender(Channel sendChannel, Map conf) {
+            this.sendChannel = sendChannel;
+
+            Object o = conf.get(Constants.MSG_RATES);
+            if (o instanceof List) {
+                messageRates = (List<Integer>) o;
+            }
+
+            o = conf.get(Constants.MSG_SIZES);
+            if (o instanceof List) {
+                messageSizes = (List<Integer>) o;
+            }
+            zkServers = conf.get(Constants.ZK_SERVERS).toString();
+            noMessages = (int) conf.get(Constants.NO_MSGS);
+            noSensors = (int) conf.get(Constants.NO_SENSORS);
+        }
+
+        @Override
+        public void run() {
+            while (run) {
+                for (int msgRate : messageRates) {
+                    for (int msgSize : messageSizes) {
+                        // create a test
+                        Test t = new Test(noMessages, msgSize, msgRate, zkServers, noSensors);
+                        t.start();
+
+                        BlockingQueue<byte []> messages = t.getMessages();
+                        for (int i = 0; i < noMessages; i++) {
+                            if (t.canContinue()) {
+                                try {
+                                    byte[] body = messages.take();
+                                    Map<String, Object> props = new HashMap<String, Object>();
+                                    props.put("time", Long.toString(System.currentTimeMillis()));
+                                    sendChannel.publish(body, props);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+
+                        t.stop();
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -117,24 +144,15 @@ public class PerformanceSensor extends AbstractSensor {
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
-            String mode = (String) conf.get(MODE_ARG);
-            String trp = (String) conf.get(TRP_ARG);
-            String dataSize = (String) conf.get(DATA_SIZE_ARG);
-            String dataInterval = (String) conf.get(DATA_INTERVAL_ARG);
+            SensorContext context = new SensorContext("perf_sensor");
 
-            SensorContext context = new SensorContext("turtle_sensor");
-            context.addProperty(MODE_ARG, mode);
-            context.addProperty(TRP_ARG, trp);
-            context.addProperty(DATA_SIZE_ARG, dataSize);
-            context.addProperty(DATA_INTERVAL_ARG, dataInterval);
-
-            Map sendProps = new HashMap();
+            Map<String, String> sendProps = new HashMap<String, String>();
             sendProps.put("exchange", PERF_EXCHANGE);
             sendProps.put("routingKey", PERF_SEND_DATA_ROUTING_KEY);
             sendProps.put("queueName", PERF_SEND_DATA_QUEUE_NAME);
             Channel sendChannel = createChannel(DATA_SENDER, sendProps, Direction.OUT, 1024);
 
-            Map receiveProps = new HashMap();
+            Map<String, String> receiveProps = new HashMap<String, String>();
             receiveProps.put("queueName", PERF_RECV_QUEUE_NAME);
             receiveProps.put("exchange", PERF_EXCHANGE);
             receiveProps.put("routingKey", PERF_RECV_ROUTING_KEY);
@@ -150,20 +168,12 @@ public class PerformanceSensor extends AbstractSensor {
     private static Map<String, String> getProperties(String []args) {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
-        options.addOption(MODE_ARG, true, "possible options are (nt, t) nt means without connecting to turtle");
         options.addOption(TRP_ARG, true, "k or r");
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
-            String mode = cmd.getOptionValue(MODE_ARG);
             String trp = cmd.getOptionValue(TRP_ARG);
-            String dataSizeString = cmd.getOptionValue(DATA_SIZE_ARG);
-            String dataIntervalString = cmd.getOptionValue(DATA_INTERVAL_ARG);
-
-            conf.put(MODE_ARG, mode);
             conf.put(TRP_ARG, trp);
-            conf.put(DATA_SIZE_ARG, dataSizeString);
-            conf.put(DATA_INTERVAL_ARG, dataIntervalString);
 
             return conf;
         } catch (ParseException e) {
