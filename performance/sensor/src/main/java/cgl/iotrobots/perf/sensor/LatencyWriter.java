@@ -18,9 +18,10 @@ public class LatencyWriter {
         StringBuilder builder = new StringBuilder();
         builder.append(test);
         for (Long l : lat) {
-            builder.append(" ").append(lat.toString());
+            builder.append(" ").append(l.toString());
         }
         writer.println(builder.toString());
+        writer.flush();
     }
 
     public void close() {

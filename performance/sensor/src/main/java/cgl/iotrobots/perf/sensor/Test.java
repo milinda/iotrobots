@@ -69,17 +69,17 @@ public class Test {
         if (error) {
             // immediately write and stop
             writer.write(getTestName(), results);
-        }
-
-        // wait until all the results arrive
-        while (!error && results.size() < noOfMessages) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ignore) {
+        } else {
+            // wait until all the results arrive
+            while (!error && results.size() < noOfMessages) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignore) {
+                }
             }
-        }
 
-        writer.write(getTestName(), results);
+            writer.write(getTestName(), results);
+        }
         try {
             barrier.leave();
         } catch (Exception e) {
@@ -99,18 +99,16 @@ public class Test {
         if (results.size() > 10) {
             // check weather last ten is increasing values
             int startIndex = results.size() - 10;
-            long currentDifference = 0;
             boolean increasing = true;
-            for (int i = startIndex; i < 10; i++) {
-                if (results.get(i) - results.get(i -1) < currentDifference) {
+            for (int i = startIndex; i < startIndex + 10; i++) {
+                if (results.get(i) <= results.get(i -1)) {
                     increasing = false;
                     break;
-                } else {
-                    currentDifference = results.get(i) - results.get(i - 1);
                 }
             }
 
             if (increasing) {
+                LOG.error("********** The latencies are increasing, stopping the test **********");
                 error = true;
             }
 

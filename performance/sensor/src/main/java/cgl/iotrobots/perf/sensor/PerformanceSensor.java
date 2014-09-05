@@ -75,7 +75,7 @@ public class PerformanceSensor extends AbstractSensor {
                     } else {
                         LOG.warn("Message received without a test being set");
                     }
-                    LOG.info("Message received " + message.toString());
+//                    LOG.info("Message received " + message.toString());
                 } else {
                     LOG.error("Unexpected message");
                 }
@@ -119,30 +119,35 @@ public class PerformanceSensor extends AbstractSensor {
         @Override
         public void run() {
             while (run) {
-                for (int msgRate : messageRates) {
-                    for (int msgSize : messageSizes) {
-                        // create a test
-                        currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter);
-                        currentTest.start();
+                for (int j = 0; j < 3; j++) {
+                    for (int msgRate : messageRates) {
+                        for (int msgSize : messageSizes) {
+                            // create a test
+                            LOG.info("Starting new test with rate: {} and size: {}", msgRate, msgSize);
+                            currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter);
+                            currentTest.start();
 
-                        BlockingQueue<byte []> messages = currentTest.getMessages();
-                        for (int i = 0; i < noMessages; i++) {
-                            if (currentTest.canContinue()) {
-                                try {
-                                    byte[] body = messages.take();
-                                    Map<String, Object> props = new HashMap<String, Object>();
-                                    props.put("time", Long.toString(System.currentTimeMillis()));
-                                    sendChannel.publish(body, props);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                            BlockingQueue<byte []> messages = currentTest.getMessages();
+                            for (int i = 0; i < noMessages; i++) {
+                                if (currentTest.canContinue()) {
+                                    try {
+                                        byte[] body = messages.take();
+                                        Map<String, Object> props = new HashMap<String, Object>();
+                                        props.put("time", Long.toString(System.currentTimeMillis()));
+                                        sendChannel.publish(body, props);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    break;
                                 }
-                            } else {
-                                break;
                             }
+                            currentTest.stop();
                         }
-                        currentTest.stop();
                     }
                 }
+                run = false;
+                LOG.info("************* Finishing the sending *********************");
             }
         }
 
@@ -153,7 +158,14 @@ public class PerformanceSensor extends AbstractSensor {
 
     @Override
     public void close() {
+
+
         run = false;
+
+        if (latencyWriter != null) {
+            latencyWriter.close();
+        }
+
         super.close();
     }
 
