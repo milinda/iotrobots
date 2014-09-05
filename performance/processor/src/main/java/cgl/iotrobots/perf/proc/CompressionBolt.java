@@ -45,6 +45,6 @@ public class CompressionBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields(Constants.DATA_FILED, Constants.SENSOR_ID_FIELD, Constants.TIME_FIELD));
+        outputFieldsDeclarer.declare(new Fields("body", Constants.SENSOR_ID_FIELD, Constants.TIME_FIELD));
     }
 }

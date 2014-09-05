@@ -13,6 +13,10 @@
     <artifactId>performance-processor</artifactId>
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>storm-bcs</groupId>
             <artifactId>storm-rabbitmq</artifactId>
         </dependency>
@@ -23,6 +27,12 @@
         <dependency>
             <groupId>sensorstream</groupId>
             <artifactId>sensorstream-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.storm</groupId>
@@ -35,6 +45,11 @@
         <dependency>
             <groupId>org.xerial.snappy</groupId>
             <artifactId>snappy-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.4</version>
         </dependency>
     </dependencies>
     <build>

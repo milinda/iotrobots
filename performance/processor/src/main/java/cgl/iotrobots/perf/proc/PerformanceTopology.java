@@ -34,9 +34,9 @@ public class PerformanceTopology {
         StreamTopologyBuilder streamTopologyBuilder;
 
         if (trpValue.equals("k")) {
-            streamTopologyBuilder = new StreamTopologyBuilder("kafka_topology.xml");
+            streamTopologyBuilder = new StreamTopologyBuilder("kafka_topology.yaml");
         } else {
-            streamTopologyBuilder = new StreamTopologyBuilder("rabbitmq_topology.xml");
+            streamTopologyBuilder = new StreamTopologyBuilder("rabbitmq_topology.yaml");
         }
 
         if (dsMode == 0) {
@@ -84,7 +84,7 @@ public class PerformanceTopology {
         IRichBolt bolt = components.getBolts().get(Constants.SEND_DATA_BOLT);
 
         builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.COMPRESS_DECOMPRESS_BOLT, new CompressDecompressBolt(), 1);
+        builder.setBolt(Constants.COMPRESS_DECOMPRESS_BOLT, new CompressDecompressBolt(), 1).shuffleGrouping(Constants.DATA_RECEIVE_SPOUT);
         builder.setBolt(Constants.SEND_DATA_BOLT, bolt).shuffleGrouping(Constants.COMPRESS_DECOMPRESS_BOLT);
     }
 
@@ -95,8 +95,8 @@ public class PerformanceTopology {
         IRichBolt bolt = components.getBolts().get(Constants.SEND_DATA_BOLT);
 
         builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.COMPRESS_BOLT, new CompressDecompressBolt(), 1);
-        builder.setBolt(Constants.DECOMPRESS_BOLT, new DeCompressionBolt(), 1);
+        builder.setBolt(Constants.COMPRESS_BOLT, new CompressDecompressBolt(), 1).shuffleGrouping(Constants.DATA_RECEIVE_SPOUT);
+        builder.setBolt(Constants.DECOMPRESS_BOLT, new DeCompressionBolt(), 1).shuffleGrouping(Constants.COMPRESS_BOLT);
         builder.setBolt(Constants.SEND_DATA_BOLT, bolt).shuffleGrouping(Constants.DECOMPRESS_BOLT);
     }
 }

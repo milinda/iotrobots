@@ -9,6 +9,8 @@ import cgl.iotcloud.core.transport.TransportConstants;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.management.resources.agent_zh_CN;
+import sun.net.www.content.text.plain;
 
 import java.io.File;
 import java.util.Arrays;
@@ -28,7 +30,7 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String DATA_RECEIVER = "data_receiver";
     private static final String PERF_EXCHANGE = "perf";
 
-    public static final String TRP_ARG = "trp";
+    public static final String TRP_ARG = "f";
 
     private boolean run = true;
 
@@ -52,10 +54,10 @@ public class PerformanceSensor extends AbstractSensor {
     public void open(SensorContext context) {
         final Channel sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
         final Channel receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
-
+        String trp = (String) context.getProperty(TRP_ARG);
         latencyWriter = new LatencyWriter("/tmp/latency.txt");
 
-        Map conf = Utils.readStreamConfig();
+        Map conf = Utils.loadConfiguration(trp);
         final TestSender sender = new TestSender(sendChannel, conf);
         Thread t = new Thread(sender);
         t.start();
@@ -159,7 +161,10 @@ public class PerformanceSensor extends AbstractSensor {
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
-            SensorContext context = new SensorContext("perf_sensor");
+            String trp = (String) conf.get(TRP_ARG);
+
+            SensorContext context = new SensorContext("data_sensor");
+            context.addProperty(TRP_ARG, trp);
 
             Map<String, String> sendProps = new HashMap<String, String>();
             sendProps.put("exchange", PERF_EXCHANGE);

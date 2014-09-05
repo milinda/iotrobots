@@ -11,6 +11,6 @@ public class Constants {
     public static final String ARGS_DS_MODE = "ds_mode";
     public static final String ARGS_TRP = "trp";
     public static final String TIME_FIELD = "time";
-    public static final String DATA_FILED = "data";
+    public static final String DATA_FILED = "body";
     public static final String SENSOR_ID_FIELD = "sensorID";
 }

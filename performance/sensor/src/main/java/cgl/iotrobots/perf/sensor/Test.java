@@ -51,6 +51,7 @@ public class Test {
     public void start() {
         dataGenerator = new DataGenerator(freq, dataSize, messages, 8);
         client = CuratorFrameworkFactory.newClient(zkServers, new ExponentialBackoffRetry(1000, 3));
+        client.start();
 
         barrier = new DistributedDoubleBarrier(client, "/test/barrier", noSensors);
         try {
@@ -97,7 +98,7 @@ public class Test {
     public boolean canContinue() {
         if (results.size() > 10) {
             // check weather last ten is increasing values
-            int startIndex = results.size() - 10 -1;
+            int startIndex = results.size() - 10;
             long currentDifference = 0;
             boolean increasing = true;
             for (int i = startIndex; i < 10; i++) {
