@@ -84,6 +84,10 @@ public class Test {
         } catch (Exception e) {
             LOG.error("Failed to leave the barrier", e);
         }
+
+        if (client != null) {
+            client.close();
+        }
     }
 
     public String getTestName() {

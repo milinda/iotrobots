@@ -10,6 +10,7 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +36,10 @@ public class PerformanceSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, new java.io.File(PerformanceSensor.class.getProtectionDomain()
-                .getCodeSource().getLocation().getPath()).getName(),
+        String jarName = new File(PerformanceSensor.class.getProtectionDomain()
+                .getCodeSource().getLocation().getPath()).getName();
+        System.out.println(jarName);
+        SensorSubmitter.submitSensor(properties, jarName,
                 PerformanceSensor.class.getCanonicalName(), Arrays.asList("local"));
     }
 
@@ -67,10 +70,10 @@ public class PerformanceSensor extends AbstractSensor {
                     Test t = sender.getCurrentTest();
                     if (t !=  null) {
                         t.addResult(lat);
+                    } else {
+                        LOG.warn("Message received without a test being set");
                     }
-
                     LOG.info("Message received " + message.toString());
-
                 } else {
                     LOG.error("Unexpected message");
                 }
@@ -107,8 +110,8 @@ public class PerformanceSensor extends AbstractSensor {
                 messageSizes = (List<Integer>) o;
             }
             zkServers = conf.get(Constants.ZK_SERVERS).toString();
-            noMessages = (int) conf.get(Constants.NO_MSGS);
-            noSensors = (int) conf.get(Constants.NO_SENSORS);
+            noMessages = (Integer) conf.get(Constants.NO_MSGS);
+            noSensors = (Integer) conf.get(Constants.NO_SENSORS);
         }
 
         @Override
