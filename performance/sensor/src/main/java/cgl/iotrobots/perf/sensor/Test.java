@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Test {
     private static Logger LOG = LoggerFactory.getLogger(Test.class);
@@ -55,7 +56,7 @@ public class Test {
 
         barrier = new DistributedDoubleBarrier(client, "/test/barrier", noSensors);
         try {
-            barrier.enter();
+            barrier.enter(5, TimeUnit.MINUTES);
         } catch (Exception e) {
             LOG.error("Failed to enter the barrier", e);
         }
