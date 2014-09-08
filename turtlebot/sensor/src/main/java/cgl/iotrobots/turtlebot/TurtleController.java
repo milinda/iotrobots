@@ -1,7 +1,6 @@
 package cgl.iotrobots.turtlebot;
 
 import cgl.iotrobots.turtlebot.commons.Motion;
-import com.google.common.base.Preconditions;
 import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
@@ -21,7 +20,6 @@ public class TurtleController {
     }
 
     public void start(NodeConfiguration configuration) {
-        Preconditions.checkState(turtle != null);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(turtle, configuration);
     }
