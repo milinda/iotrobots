@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Test {
     private static Logger LOG = LoggerFactory.getLogger(Test.class);
+    private final int testNo;
 
     private DataGenerator dataGenerator;
 
@@ -40,13 +41,14 @@ public class Test {
 
     private boolean error = false;
 
-    public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer) {
+    public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer, int testNo) {
         this.noOfMessages = noOfMessages;
         this.dataSize = dataSize;
         this.freq = freq;
         this.zkServers = zkServers;
         this.writer = writer;
         this.noSensors = noSensors;
+        this.testNo = testNo;
     }
 
     public void start() {
@@ -54,7 +56,7 @@ public class Test {
         client = CuratorFrameworkFactory.newClient(zkServers, new ExponentialBackoffRetry(1000, 3));
         client.start();
 
-        barrier = new DistributedDoubleBarrier(client, "/test/barrier", noSensors);
+        barrier = new DistributedDoubleBarrier(client, "/test/barrier/" + testNo, noSensors);
         try {
             barrier.enter(5, TimeUnit.MINUTES);
         } catch (Exception e) {

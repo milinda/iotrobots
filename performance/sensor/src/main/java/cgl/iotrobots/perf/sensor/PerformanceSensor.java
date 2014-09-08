@@ -7,6 +7,10 @@ import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.TransportConstants;
 import org.apache.commons.cli.*;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.utils.CloseableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.management.resources.agent_zh_CN;
@@ -119,12 +123,13 @@ public class PerformanceSensor extends AbstractSensor {
         @Override
         public void run() {
             while (run) {
+                int no = 0;
                 for (int j = 0; j < 3; j++) {
                     for (int msgRate : messageRates) {
                         for (int msgSize : messageSizes) {
                             // create a test
                             LOG.info("Starting new test with rate: {} and size: {}", msgRate, msgSize);
-                            currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter);
+                            currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter, no++);
                             currentTest.start();
 
                             BlockingQueue<byte []> messages = currentTest.getMessages();
