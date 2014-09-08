@@ -17,7 +17,7 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-cli</groupId>
+            <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
         <dependency>
