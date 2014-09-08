@@ -36,7 +36,7 @@ public class DataGenerator {
 
         TimerTask task = new Task();
         timer = new Timer(true);
-        timer.scheduleAtFixedRate(task, 0, freq);
+        timer.scheduleAtFixedRate(task, 0, 1000 / freq);
     }
 
     public void stop() {

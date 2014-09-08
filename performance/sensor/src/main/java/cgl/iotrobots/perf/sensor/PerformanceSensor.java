@@ -7,9 +7,16 @@ import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.TransportConstants;
 import org.apache.commons.cli.*;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.utils.CloseableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.management.resources.agent_zh_CN;
+import sun.net.www.content.text.plain;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +34,7 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String DATA_RECEIVER = "data_receiver";
     private static final String PERF_EXCHANGE = "perf";
 
-    public static final String TRP_ARG = "trp";
+    public static final String TRP_ARG = "f";
 
     private boolean run = true;
 
@@ -35,8 +42,10 @@ public class PerformanceSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, new java.io.File(PerformanceSensor.class.getProtectionDomain()
-                .getCodeSource().getLocation().getPath()).getName(),
+        String jarName = new File(PerformanceSensor.class.getProtectionDomain()
+                .getCodeSource().getLocation().getPath()).getName();
+        System.out.println(jarName);
+        SensorSubmitter.submitSensor(properties, jarName,
                 PerformanceSensor.class.getCanonicalName(), Arrays.asList("local"));
     }
 
@@ -49,10 +58,10 @@ public class PerformanceSensor extends AbstractSensor {
     public void open(SensorContext context) {
         final Channel sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
         final Channel receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
-
+        String trp = (String) context.getProperty(TRP_ARG);
         latencyWriter = new LatencyWriter("/tmp/latency.txt");
 
-        Map conf = Utils.readStreamConfig();
+        Map conf = Utils.loadConfiguration(trp);
         final TestSender sender = new TestSender(sendChannel, conf);
         Thread t = new Thread(sender);
         t.start();
@@ -67,10 +76,10 @@ public class PerformanceSensor extends AbstractSensor {
                     Test t = sender.getCurrentTest();
                     if (t !=  null) {
                         t.addResult(lat);
+                    } else {
+                        LOG.warn("Message received without a test being set");
                     }
-
-                    LOG.info("Message received " + message.toString());
-
+//                    LOG.info("Message received " + message.toString());
                 } else {
                     LOG.error("Unexpected message");
                 }
@@ -107,37 +116,43 @@ public class PerformanceSensor extends AbstractSensor {
                 messageSizes = (List<Integer>) o;
             }
             zkServers = conf.get(Constants.ZK_SERVERS).toString();
-            noMessages = (int) conf.get(Constants.NO_MSGS);
-            noSensors = (int) conf.get(Constants.NO_SENSORS);
+            noMessages = (Integer) conf.get(Constants.NO_MSGS);
+            noSensors = (Integer) conf.get(Constants.NO_SENSORS);
         }
 
         @Override
         public void run() {
             while (run) {
-                for (int msgRate : messageRates) {
-                    for (int msgSize : messageSizes) {
-                        // create a test
-                        currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter);
-                        currentTest.start();
+                int no = 0;
+                for (int j = 0; j < 3; j++) {
+                    for (int msgRate : messageRates) {
+                        for (int msgSize : messageSizes) {
+                            // create a test
+                            LOG.info("Starting new test with rate: {} and size: {}", msgRate, msgSize);
+                            currentTest = new Test(noMessages, msgSize, msgRate, zkServers, noSensors, latencyWriter, no++);
+                            currentTest.start();
 
-                        BlockingQueue<byte []> messages = currentTest.getMessages();
-                        for (int i = 0; i < noMessages; i++) {
-                            if (currentTest.canContinue()) {
-                                try {
-                                    byte[] body = messages.take();
-                                    Map<String, Object> props = new HashMap<String, Object>();
-                                    props.put("time", Long.toString(System.currentTimeMillis()));
-                                    sendChannel.publish(body, props);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                            BlockingQueue<byte []> messages = currentTest.getMessages();
+                            for (int i = 0; i < noMessages; i++) {
+                                if (currentTest.canContinue()) {
+                                    try {
+                                        byte[] body = messages.take();
+                                        Map<String, Object> props = new HashMap<String, Object>();
+                                        props.put("time", Long.toString(System.currentTimeMillis()));
+                                        sendChannel.publish(body, props);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    break;
                                 }
-                            } else {
-                                break;
                             }
+                            currentTest.stop();
                         }
-                        currentTest.stop();
                     }
                 }
+                run = false;
+                LOG.info("************* Finishing the sending *********************");
             }
         }
 
@@ -148,7 +163,14 @@ public class PerformanceSensor extends AbstractSensor {
 
     @Override
     public void close() {
+
+
         run = false;
+
+        if (latencyWriter != null) {
+            latencyWriter.close();
+        }
+
         super.close();
     }
 
@@ -156,7 +178,10 @@ public class PerformanceSensor extends AbstractSensor {
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
-            SensorContext context = new SensorContext("perf_sensor");
+            String trp = (String) conf.get(TRP_ARG);
+
+            SensorContext context = new SensorContext("data_sensor");
+            context.addProperty(TRP_ARG, trp);
 
             Map<String, String> sendProps = new HashMap<String, String>();
             sendProps.put("exchange", PERF_EXCHANGE);

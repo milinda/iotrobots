@@ -49,6 +49,7 @@
             <groupId>iotcloud2</groupId>
             <artifactId>iotcloud-core</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

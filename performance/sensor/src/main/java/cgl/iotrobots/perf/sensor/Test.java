@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Test {
     private static Logger LOG = LoggerFactory.getLogger(Test.class);
+    private final int testNo;
 
     private DataGenerator dataGenerator;
 
@@ -39,22 +41,24 @@ public class Test {
 
     private boolean error = false;
 
-    public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer) {
+    public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer, int testNo) {
         this.noOfMessages = noOfMessages;
         this.dataSize = dataSize;
         this.freq = freq;
         this.zkServers = zkServers;
         this.writer = writer;
         this.noSensors = noSensors;
+        this.testNo = testNo;
     }
 
     public void start() {
         dataGenerator = new DataGenerator(freq, dataSize, messages, 8);
         client = CuratorFrameworkFactory.newClient(zkServers, new ExponentialBackoffRetry(1000, 3));
+        client.start();
 
-        barrier = new DistributedDoubleBarrier(client, "/test/barrier", noSensors);
+        barrier = new DistributedDoubleBarrier(client, "/test/barrier/" + testNo, noSensors);
         try {
-            barrier.enter();
+            barrier.enter(5, TimeUnit.MINUTES);
         } catch (Exception e) {
             LOG.error("Failed to enter the barrier", e);
         }
@@ -68,21 +72,25 @@ public class Test {
         if (error) {
             // immediately write and stop
             writer.write(getTestName(), results);
-        }
-
-        // wait until all the results arrive
-        while (!error && results.size() < noOfMessages) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ignore) {
+        } else {
+            // wait until all the results arrive
+            while (!error && results.size() < noOfMessages) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignore) {
+                }
             }
-        }
 
-        writer.write(getTestName(), results);
+            writer.write(getTestName(), results);
+        }
         try {
             barrier.leave();
         } catch (Exception e) {
             LOG.error("Failed to leave the barrier", e);
+        }
+
+        if (client != null) {
+            client.close();
         }
     }
 
@@ -93,19 +101,17 @@ public class Test {
     public boolean canContinue() {
         if (results.size() > 10) {
             // check weather last ten is increasing values
-            int startIndex = results.size() - 10 -1;
-            long currentDifference = 0;
+            int startIndex = results.size() - 10;
             boolean increasing = true;
-            for (int i = startIndex; i < 10; i++) {
-                if (results.get(i) - results.get(i -1) < currentDifference) {
+            for (int i = startIndex; i < startIndex + 10; i++) {
+                if (results.get(i) <= results.get(i -1)) {
                     increasing = false;
                     break;
-                } else {
-                    currentDifference = results.get(i) - results.get(i - 1);
                 }
             }
 
             if (increasing) {
+                LOG.error("********** The latencies are increasing, stopping the test **********");
                 error = true;
             }
 

@@ -49,6 +49,12 @@
         <dependency>
             <groupId>iotcloud2</groupId>
             <artifactId>iotcloud-rabbitmq</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>iotcloud2</groupId>
+            <artifactId>iotcloud-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

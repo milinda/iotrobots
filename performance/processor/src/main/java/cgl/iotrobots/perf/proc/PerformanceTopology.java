@@ -6,6 +6,7 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import org.apache.commons.cli.BasicParser;
@@ -34,9 +35,9 @@ public class PerformanceTopology {
         StreamTopologyBuilder streamTopologyBuilder;
 
         if (trpValue.equals("k")) {
-            streamTopologyBuilder = new StreamTopologyBuilder("kafka_topology.xml");
+            streamTopologyBuilder = new StreamTopologyBuilder("kafka_topology.yaml");
         } else {
-            streamTopologyBuilder = new StreamTopologyBuilder("rabbitmq_topology.xml");
+            streamTopologyBuilder = new StreamTopologyBuilder("rabbitmq_topology.yaml");
         }
 
         if (dsMode == 0) {
@@ -59,7 +60,7 @@ public class PerformanceTopology {
             StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
             // deploy on a local cluster
-            conf.setMaxTaskParallelism(3);
+            conf.setMaxTaskParallelism(4);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("perf", conf, builder.createTopology());
             Thread.sleep(1000000);
@@ -73,8 +74,8 @@ public class PerformanceTopology {
         IRichSpout spout = components.getSpouts().get(Constants.DATA_RECEIVE_SPOUT);
         IRichBolt bolt = components.getBolts().get(Constants.SEND_DATA_BOLT);
 
-        builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.SEND_DATA_BOLT, bolt).shuffleGrouping(Constants.DATA_RECEIVE_SPOUT);
+        builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 4);
+        builder.setBolt(Constants.SEND_DATA_BOLT, bolt, 4).fieldsGrouping(Constants.DATA_RECEIVE_SPOUT, new Fields(Constants.SENSOR_ID_FIELD));
     }
 
     private static void allInOneTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
@@ -83,9 +84,9 @@ public class PerformanceTopology {
         IRichSpout spout = components.getSpouts().get(Constants.DATA_RECEIVE_SPOUT);
         IRichBolt bolt = components.getBolts().get(Constants.SEND_DATA_BOLT);
 
-        builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.COMPRESS_DECOMPRESS_BOLT, new CompressDecompressBolt(), 1);
-        builder.setBolt(Constants.SEND_DATA_BOLT, bolt).shuffleGrouping(Constants.COMPRESS_DECOMPRESS_BOLT);
+        builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 4);
+        builder.setBolt(Constants.COMPRESS_DECOMPRESS_BOLT, new CompressDecompressBolt(), 4).fieldsGrouping(Constants.DATA_RECEIVE_SPOUT, new Fields(Constants.SENSOR_ID_FIELD));
+        builder.setBolt(Constants.SEND_DATA_BOLT, bolt, 4).fieldsGrouping(Constants.COMPRESS_DECOMPRESS_BOLT, new Fields(Constants.SENSOR_ID_FIELD));
     }
 
     private static void allSeparateTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
@@ -95,8 +96,8 @@ public class PerformanceTopology {
         IRichBolt bolt = components.getBolts().get(Constants.SEND_DATA_BOLT);
 
         builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.COMPRESS_BOLT, new CompressDecompressBolt(), 1);
-        builder.setBolt(Constants.DECOMPRESS_BOLT, new DeCompressionBolt(), 1);
-        builder.setBolt(Constants.SEND_DATA_BOLT, bolt).shuffleGrouping(Constants.DECOMPRESS_BOLT);
+        builder.setBolt(Constants.COMPRESS_BOLT, new CompressDecompressBolt(), 1).fieldsGrouping(Constants.DATA_RECEIVE_SPOUT, new Fields(Constants.SENSOR_ID_FIELD));
+        builder.setBolt(Constants.DECOMPRESS_BOLT, new DeCompressionBolt(), 1).fieldsGrouping(Constants.COMPRESS_BOLT, new Fields(Constants.SENSOR_ID_FIELD));
+        builder.setBolt(Constants.SEND_DATA_BOLT, bolt).fieldsGrouping(Constants.DECOMPRESS_BOLT, new Fields(Constants.SENSOR_ID_FIELD));
     }
 }
