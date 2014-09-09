@@ -2,7 +2,7 @@ zk.servers: ["10.39.1.21:2181"]
 zk.root: "/iot/sensors"
 topology.name: "wordcount"
 spouts:
-    sentence_receive:
+    data_receive:
         broker: "kafka"
         sensor: "data_sensor"
         channel: "data_sender"
@@ -12,7 +12,7 @@ spouts:
           broker.zk.servers: "10.39.1.21:2181"
           broker.zk.root: "/brokers"
 bolts:
-    count_send:
+    data_send:
         broker: "kafka"
         sensor: "data_sensor"
         channel: "data_sender"
