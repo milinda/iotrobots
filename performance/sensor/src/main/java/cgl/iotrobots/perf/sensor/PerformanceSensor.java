@@ -193,11 +193,10 @@ public class PerformanceSensor extends AbstractSensor {
         public SensorContext configure(SiteContext siteContext, Map conf) {
             String file = (String) conf.get(FILE_ARG);
             String trp = (String) conf.get(TRP_ARG);
+            SensorContext context = new SensorContext("data_sensor");
+            context.addProperty(FILE_ARG, file);
+            context.addProperty(TRP_ARG, trp);
             if (trp.equals("r")) {
-                SensorContext context = new SensorContext("data_sensor");
-                context.addProperty(FILE_ARG, file);
-                context.addProperty(TRP_ARG, trp);
-
                 Map<String, String> sendProps = new HashMap<String, String>();
                 sendProps.put("exchange", PERF_EXCHANGE);
                 sendProps.put("routingKey", PERF_SEND_DATA_ROUTING_KEY);
@@ -215,9 +214,6 @@ public class PerformanceSensor extends AbstractSensor {
 
                 return context;
             } else {
-                SensorContext context = new SensorContext("data_sensor");
-                context.addProperty(FILE_ARG, file);
-
                 Map<String, String> sendProps = new HashMap<String, String>();
                 sendProps.put("topic", PERF_SEND_DATA_QUEUE_NAME);
                 sendProps.put("serializerClass", "kafka.serializer.DefaultEncoder");
