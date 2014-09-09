@@ -1,25 +1,22 @@
-zk.servers: ["localhost:2181"]
+zk.servers: ["10.39.1.21:2181"]
 zk.root: "/iot/sensors"
+topology.name: "wordcount"
 spouts:
-    frame_receive:
-        broker: "rabbitmq"
-        sensor: "drone_sensor"
-        channel: "frameSender"
-        fields: ["frame", "sensorID", "time"]
+    sentence_receive:
+        broker: "kafka"
+        sensor: "data_sensor"
+        channel: "data_sender"
+        fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"
-    nav_receive:
-        broker: "rabbitmq"
-        sensor: "drone_sensor"
-        channel: "navSender"
-        fields: ["nav", "sensorID", "time"]
-        properties:
-          ackMode: "auto"
+          broker.zk.servers: "10.39.1.21:2181"
+          broker.zk.root: "/brokers"
 bolts:
-    send_command:
-        broker: "rabbitmq"
-        sensor: "drone_sensor"
-        channel: "cmdReceiver"
-        fields: ["command", "sensorID", "time"]
+    count_send:
+        broker: "kafka"
+        sensor: "data_sensor"
+        channel: "data_sender"
+        fields: ["body", "sensorID", "time"]
         properties:
-          ackMode: "auto"
+          request.required.acks: "0"
+          metadata.broker.list: "10.39.1.21:9092"
