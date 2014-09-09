@@ -35,6 +35,8 @@ public class PerformanceSensor extends AbstractSensor {
     private static final String PERF_EXCHANGE = "perf";
 
     public static final String TRP_ARG = "f";
+    public static final String NO_SENSORS_ARG = "n";
+    public static final String SITES_ARG = "s";
 
     private boolean run = true;
 
@@ -45,8 +47,17 @@ public class PerformanceSensor extends AbstractSensor {
         String jarName = new File(PerformanceSensor.class.getProtectionDomain()
                 .getCodeSource().getLocation().getPath()).getName();
         System.out.println(jarName);
-        SensorSubmitter.submitSensor(properties, jarName,
-                PerformanceSensor.class.getCanonicalName(), Arrays.asList("local"));
+
+        String noSensors = properties.get(NO_SENSORS_ARG);
+        String sites = properties.get(SITES_ARG);
+
+        int no = Integer.parseInt(noSensors);
+        String []s = sites.split(" ");
+
+        for (int i = 0; i < no; i++) {
+            SensorSubmitter.submitSensor(properties, jarName,
+                    PerformanceSensor.class.getCanonicalName(), Arrays.asList(s));
+        }
     }
 
     @Override
@@ -206,11 +217,18 @@ public class PerformanceSensor extends AbstractSensor {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
         options.addOption(TRP_ARG, true, "k or r");
+        options.addOption(NO_SENSORS_ARG, true, "no of sensors per site");
+        options.addOption(SITES_ARG, true, "list of sites");
+
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
             String trp = cmd.getOptionValue(TRP_ARG);
+            String noSensors = cmd.getOptionValue(NO_SENSORS_ARG);
+            String sites = cmd.getOptionValue(SITES_ARG);
             conf.put(TRP_ARG, trp);
+            conf.put(NO_SENSORS_ARG, noSensors);
+            conf.put(SITES_ARG, sites);
 
             return conf;
         } catch (ParseException e) {
