@@ -76,6 +76,7 @@ public class Test {
             // wait until all the results arrive
             while (!error && results.size() < noOfMessages) {
                 try {
+                    LOG.info("Waiting for messages, expected: {}, receive: {}", results.size(), noOfMessages);
                     Thread.sleep(10);
                 } catch (InterruptedException ignore) {
                 }
