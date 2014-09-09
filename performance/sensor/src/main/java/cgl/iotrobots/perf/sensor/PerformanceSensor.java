@@ -196,6 +196,7 @@ public class PerformanceSensor extends AbstractSensor {
             if (trp.equals("r")) {
                 SensorContext context = new SensorContext("data_sensor");
                 context.addProperty(FILE_ARG, file);
+                context.addProperty(TRP_ARG, trp);
 
                 Map<String, String> sendProps = new HashMap<String, String>();
                 sendProps.put("exchange", PERF_EXCHANGE);
