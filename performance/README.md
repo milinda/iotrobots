@@ -6,4 +6,4 @@ Topology
 Sensor
 ======
 
-./bin/iotcloud jar repository/sensors/performance-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.perf.sensor.PerformanceSensor -f ~/projects/test.yaml
+./bin/iotcloud jar repository/sensors/performance-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.perf.sensor.PerformanceSensor -f ~/projects/test.yaml -n 2 -s "iot1 iot2" -t k
