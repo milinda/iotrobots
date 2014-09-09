@@ -80,7 +80,7 @@ public class Test {
                 try {
                     LOG.info("Waiting for messages, expected: {}, receive: {}", noOfMessages, results.size());
                     Thread.sleep(1000);
-                    totalWait += 100;
+                    totalWait += 1000;
                 } catch (InterruptedException ignore) {
                 }
             }
