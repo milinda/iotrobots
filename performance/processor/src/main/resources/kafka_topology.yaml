@@ -15,7 +15,7 @@ bolts:
     data_send:
         broker: "kafka"
         sensor: "data_sensor"
-        channel: "data_sender"
+        channel: "data_receiver"
         fields: ["body", "sensorID", "time"]
         properties:
           request.required.acks: "0"
