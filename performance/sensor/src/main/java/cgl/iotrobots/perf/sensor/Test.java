@@ -70,18 +70,19 @@ public class Test {
         dataGenerator.stop();
 
         if (error) {
+            LOG.info("Done Receive with test msgRate: {}, msgSize: {}, expectedCount: {}, receivedCount: {}", freq, dataSize, noOfMessages, results.size());
             // immediately write and stop
             writer.write(getTestName(), results);
         } else {
             // wait until all the results arrive
             while (!error && results.size() < noOfMessages) {
                 try {
-                    LOG.info("Waiting for messages, expected: {}, receive: {}", results.size(), noOfMessages);
+                    LOG.info("Waiting for messages, expected: {}, receive: {}", noOfMessages, results.size());
                     Thread.sleep(10);
                 } catch (InterruptedException ignore) {
                 }
             }
-
+            LOG.info("Done Receive with test msgRate: {}, msgSize: {}, expectedCount: {}, receivedCount: {}", freq, dataSize, noOfMessages, results.size());
             writer.write(getTestName(), results);
         }
         try {

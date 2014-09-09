@@ -158,6 +158,7 @@ public class PerformanceSensor extends AbstractSensor {
                                     break;
                                 }
                             }
+                            LOG.info("Done Sending with test msgRate: {}, msgSize: {}", msgRate, msgSize);
                             currentTest.stop();
                         }
                     }
