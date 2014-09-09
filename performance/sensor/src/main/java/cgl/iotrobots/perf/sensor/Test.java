@@ -75,10 +75,12 @@ public class Test {
             writer.write(getTestName(), results);
         } else {
             // wait until all the results arrive
-            while (!error && results.size() < noOfMessages) {
+            int totalWait = 0;
+            while (!error && results.size() < noOfMessages && totalWait < 10000) {
                 try {
                     LOG.info("Waiting for messages, expected: {}, receive: {}", noOfMessages, results.size());
-                    Thread.sleep(10);
+                    Thread.sleep(1000);
+                    totalWait += 100;
                 } catch (InterruptedException ignore) {
                 }
             }
