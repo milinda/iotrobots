@@ -7,14 +7,8 @@ import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.TransportConstants;
 import org.apache.commons.cli.*;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.curator.utils.CloseableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.management.resources.agent_zh_CN;
-import sun.net.www.content.text.plain;
 
 import java.io.File;
 import java.util.Arrays;
@@ -34,9 +28,10 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String DATA_RECEIVER = "data_receiver";
     private static final String PERF_EXCHANGE = "perf";
 
-    public static final String TRP_ARG = "f";
+    public static final String FILE_ARG = "f";
     public static final String NO_SENSORS_ARG = "n";
     public static final String SITES_ARG = "s";
+    public static final String TRP_ARG = "t";
 
     private boolean run = true;
 
@@ -67,12 +62,21 @@ public class PerformanceSensor extends AbstractSensor {
 
     @Override
     public void open(SensorContext context) {
-        final Channel sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
-        final Channel receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
+        Channel sendChannel;
+        Channel receiveChannel;
+        String file = (String) context.getProperty(FILE_ARG);
         String trp = (String) context.getProperty(TRP_ARG);
         latencyWriter = new LatencyWriter("/tmp/latency.txt");
 
-        Map conf = Utils.loadConfiguration(trp);
+        if (trp.equals("r")) {
+            sendChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_SENDER);
+            receiveChannel = context.getChannel(TransportConstants.TRANSPORT_RABBITMQ, DATA_RECEIVER);
+        } else {
+            sendChannel = context.getChannel(TransportConstants.TRANSPORT_KAFKA, DATA_SENDER);
+            receiveChannel = context.getChannel(TransportConstants.TRANSPORT_KAFKA, DATA_RECEIVER);
+        }
+
+        Map conf = Utils.loadConfiguration(file);
         final TestSender sender = new TestSender(sendChannel, conf);
         Thread t = new Thread(sender);
         t.start();
@@ -90,7 +94,6 @@ public class PerformanceSensor extends AbstractSensor {
                     } else {
                         LOG.warn("Message received without a test being set");
                     }
-//                    LOG.info("Message received " + message.toString());
                 } else {
                     LOG.error("Unexpected message");
                 }
@@ -175,8 +178,6 @@ public class PerformanceSensor extends AbstractSensor {
 
     @Override
     public void close() {
-
-
         run = false;
 
         if (latencyWriter != null) {
@@ -190,46 +191,70 @@ public class PerformanceSensor extends AbstractSensor {
     private class STSensorConfigurator extends AbstractConfigurator {
         @Override
         public SensorContext configure(SiteContext siteContext, Map conf) {
+            String file = (String) conf.get(FILE_ARG);
             String trp = (String) conf.get(TRP_ARG);
+            if (trp.equals("r")) {
+                SensorContext context = new SensorContext("data_sensor");
+                context.addProperty(FILE_ARG, file);
 
-            SensorContext context = new SensorContext("data_sensor");
-            context.addProperty(TRP_ARG, trp);
+                Map<String, String> sendProps = new HashMap<String, String>();
+                sendProps.put("exchange", PERF_EXCHANGE);
+                sendProps.put("routingKey", PERF_SEND_DATA_ROUTING_KEY);
+                sendProps.put("queueName", PERF_SEND_DATA_QUEUE_NAME);
+                Channel sendChannel = createChannel(DATA_SENDER, sendProps, Direction.OUT, 1024);
 
-            Map<String, String> sendProps = new HashMap<String, String>();
-            sendProps.put("exchange", PERF_EXCHANGE);
-            sendProps.put("routingKey", PERF_SEND_DATA_ROUTING_KEY);
-            sendProps.put("queueName", PERF_SEND_DATA_QUEUE_NAME);
-            Channel sendChannel = createChannel(DATA_SENDER, sendProps, Direction.OUT, 1024);
+                Map<String, String> receiveProps = new HashMap<String, String>();
+                receiveProps.put("queueName", PERF_RECV_QUEUE_NAME);
+                receiveProps.put("exchange", PERF_EXCHANGE);
+                receiveProps.put("routingKey", PERF_RECV_ROUTING_KEY);
+                Channel receiveChannel = createChannel(DATA_RECEIVER, receiveProps, Direction.IN, 1024);
 
-            Map<String, String> receiveProps = new HashMap<String, String>();
-            receiveProps.put("queueName", PERF_RECV_QUEUE_NAME);
-            receiveProps.put("exchange", PERF_EXCHANGE);
-            receiveProps.put("routingKey", PERF_RECV_ROUTING_KEY);
-            Channel receiveChannel = createChannel(DATA_RECEIVER, receiveProps, Direction.IN, 1024);
+                context.addChannel(TransportConstants.TRANSPORT_RABBITMQ, sendChannel);
+                context.addChannel(TransportConstants.TRANSPORT_RABBITMQ, receiveChannel);
 
-            context.addChannel(TransportConstants.TRANSPORT_RABBITMQ, sendChannel);
-            context.addChannel(TransportConstants.TRANSPORT_RABBITMQ, receiveChannel);
+                return context;
+            } else {
+                SensorContext context = new SensorContext("data_sensor");
+                context.addProperty(FILE_ARG, file);
 
-            return context;
+                Map<String, String> sendProps = new HashMap<String, String>();
+                sendProps.put("topic", PERF_SEND_DATA_QUEUE_NAME);
+                sendProps.put("serializerClass", "kafka.serializer.DefaultEncoder");
+                Channel sendChannel = createChannel(DATA_SENDER, sendProps, Direction.OUT, 1024);
+                sendChannel.setGrouped(true);
+
+                Map<String, String> receiveProps = new HashMap<String, String>();
+                receiveProps.put("topic", PERF_RECV_QUEUE_NAME);
+                Channel receiveChannel = createChannel(DATA_RECEIVER, receiveProps, Direction.IN, 1024);
+                receiveChannel.setGrouped(true);
+
+                context.addChannel(TransportConstants.TRANSPORT_KAFKA, sendChannel);
+                context.addChannel(TransportConstants.TRANSPORT_KAFKA, receiveChannel);
+
+                return context;
+            }
         }
     }
 
     private static Map<String, String> getProperties(String []args) {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
-        options.addOption(TRP_ARG, true, "k or r");
+        options.addOption(FILE_ARG, true, "the test.yaml file path");
         options.addOption(NO_SENSORS_ARG, true, "no of sensors per site");
         options.addOption(SITES_ARG, true, "list of sites");
-
+        options.addOption(TRP_ARG, true, "the transport to be used, k or r");
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
-            String trp = cmd.getOptionValue(TRP_ARG);
+            String file = cmd.getOptionValue(FILE_ARG);
             String noSensors = cmd.getOptionValue(NO_SENSORS_ARG);
             String sites = cmd.getOptionValue(SITES_ARG);
-            conf.put(TRP_ARG, trp);
+            String trp = cmd.getOptionValue(TRP_ARG);
+
+            conf.put(FILE_ARG, file);
             conf.put(NO_SENSORS_ARG, noSensors);
             conf.put(SITES_ARG, sites);
+            conf.put(TRP_ARG, trp);
 
             return conf;
         } catch (ParseException e) {
