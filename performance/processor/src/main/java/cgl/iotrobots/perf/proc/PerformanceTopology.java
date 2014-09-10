@@ -84,8 +84,8 @@ public class PerformanceTopology {
         IRichSpout spout = components.getSpouts().get(Constants.DATA_RECEIVE_SPOUT);
         IRichBolt bolt = components.getBolts().get(Constants.SEND_DATA_BOLT);
 
-        builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 4);
-        builder.setBolt(Constants.COMPRESS_DECOMPRESS_BOLT, new CompressDecompressBolt(), 4).fieldsGrouping(Constants.DATA_RECEIVE_SPOUT, new Fields(Constants.SENSOR_ID_FIELD));
+        builder.setSpout(Constants.DATA_RECEIVE_SPOUT, spout, 2);
+        builder.setBolt(Constants.COMPRESS_DECOMPRESS_BOLT, new CompressDecompressBolt(), 1).fieldsGrouping(Constants.DATA_RECEIVE_SPOUT, new Fields(Constants.SENSOR_ID_FIELD));
         builder.setBolt(Constants.SEND_DATA_BOLT, bolt, 4).fieldsGrouping(Constants.COMPRESS_DECOMPRESS_BOLT, new Fields(Constants.SENSOR_ID_FIELD));
     }
 
