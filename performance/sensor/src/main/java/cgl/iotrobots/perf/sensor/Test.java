@@ -76,7 +76,7 @@ public class Test {
         } else {
             // wait until all the results arrive
             int totalWait = 0;
-            while (!error && results.size() < noOfMessages && totalWait < 10000) {
+            while (!error && results.size() < noOfMessages && totalWait < 60000) {
                 try {
                     LOG.info("Waiting for messages, expected: {}, receive: {}", noOfMessages, results.size());
                     Thread.sleep(1000);
