@@ -7,6 +7,7 @@ import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.TransportConstants;
 import org.apache.commons.cli.*;
+import org.apache.thrift.transport.TFileTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ public class PerformanceSensor extends AbstractSensor {
     public static final String NO_SENSORS_ARG = "n";
     public static final String SITES_ARG = "s";
     public static final String TRP_ARG = "t";
+    public static final String GROUP_ARG = "g";
 
     private boolean run = true;
 
@@ -66,6 +68,8 @@ public class PerformanceSensor extends AbstractSensor {
         Channel receiveChannel;
         String file = (String) context.getProperty(FILE_ARG);
         String trp = (String) context.getProperty(TRP_ARG);
+        String group = (String) context.getProperty(GROUP_ARG);
+
         latencyWriter = new LatencyWriter("/tmp/latency.txt");
 
         if (trp.equals("r")) {
@@ -193,21 +197,29 @@ public class PerformanceSensor extends AbstractSensor {
         public SensorContext configure(SiteContext siteContext, Map conf) {
             String file = (String) conf.get(FILE_ARG);
             String trp = (String) conf.get(TRP_ARG);
+            String group = (String) conf.get(GROUP_ARG);
             SensorContext context = new SensorContext("data_sensor");
             context.addProperty(FILE_ARG, file);
             context.addProperty(TRP_ARG, trp);
+            context.addProperty(GROUP_ARG, group);
             if (trp.equals("r")) {
+                boolean g = false;
+                if (group.equals("1")) {
+                    g = true;
+                }
                 Map<String, String> sendProps = new HashMap<String, String>();
                 sendProps.put("exchange", PERF_EXCHANGE);
                 sendProps.put("routingKey", PERF_SEND_DATA_ROUTING_KEY);
                 sendProps.put("queueName", PERF_SEND_DATA_QUEUE_NAME);
                 Channel sendChannel = createChannel(DATA_SENDER, sendProps, Direction.OUT, 1024);
+                sendChannel.setGrouped(g);
 
                 Map<String, String> receiveProps = new HashMap<String, String>();
                 receiveProps.put("queueName", PERF_RECV_QUEUE_NAME);
                 receiveProps.put("exchange", PERF_EXCHANGE);
                 receiveProps.put("routingKey", PERF_RECV_ROUTING_KEY);
                 Channel receiveChannel = createChannel(DATA_RECEIVER, receiveProps, Direction.IN, 1024);
+                receiveChannel.setGrouped(g);
 
                 context.addChannel(TransportConstants.TRANSPORT_RABBITMQ, sendChannel);
                 context.addChannel(TransportConstants.TRANSPORT_RABBITMQ, receiveChannel);
@@ -240,6 +252,7 @@ public class PerformanceSensor extends AbstractSensor {
         options.addOption(NO_SENSORS_ARG, true, "no of sensors per site");
         options.addOption(SITES_ARG, true, "list of sites");
         options.addOption(TRP_ARG, true, "the transport to be used, k or r");
+        options.addOption(GROUP_ARG, false, "group");
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
@@ -247,6 +260,11 @@ public class PerformanceSensor extends AbstractSensor {
             String noSensors = cmd.getOptionValue(NO_SENSORS_ARG);
             String sites = cmd.getOptionValue(SITES_ARG);
             String trp = cmd.getOptionValue(TRP_ARG);
+            if (cmd.hasOption(GROUP_ARG)) {
+                conf.put(GROUP_ARG, "1");
+            } else {
+                conf.put(GROUP_ARG, "0");
+            }
 
             conf.put(FILE_ARG, file);
             conf.put(NO_SENSORS_ARG, noSensors);
