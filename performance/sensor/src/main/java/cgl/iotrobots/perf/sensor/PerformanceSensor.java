@@ -6,6 +6,7 @@ import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
 import cgl.iotcloud.core.transport.TransportConstants;
+import cgl.iotcloud.core.zk.ClientFactory;
 import org.apache.commons.cli.*;
 import org.apache.thrift.transport.TFileTransport;
 import org.slf4j.Logger;
@@ -187,6 +188,9 @@ public class PerformanceSensor extends AbstractSensor {
         if (latencyWriter != null) {
             latencyWriter.close();
         }
+
+        ClientFactory clientFactory = ClientFactory.getInstance();
+        clientFactory.close();
 
         super.close();
     }

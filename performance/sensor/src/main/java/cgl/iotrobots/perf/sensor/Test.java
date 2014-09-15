@@ -1,9 +1,8 @@
 package cgl.iotrobots.perf.sensor;
 
+import cgl.iotcloud.core.zk.ClientFactory;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.barriers.DistributedDoubleBarrier;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +52,9 @@ public class Test {
 
     public void start() {
         dataGenerator = new DataGenerator(freq, dataSize, messages, 8);
-        client = CuratorFrameworkFactory.newClient(zkServers, new ExponentialBackoffRetry(1000, 3));
-        client.start();
+        ClientFactory clientFactory = ClientFactory.getInstance();
+        clientFactory.setAddress(zkServers);
+        client = clientFactory.getClient();
 
         barrier = new DistributedDoubleBarrier(client, "/test/barrier/" + testNo, noSensors);
         try {
@@ -91,10 +91,6 @@ public class Test {
             barrier.leave();
         } catch (Exception e) {
             LOG.error("Failed to leave the barrier", e);
-        }
-
-        if (client != null) {
-            client.close();
         }
     }
 
