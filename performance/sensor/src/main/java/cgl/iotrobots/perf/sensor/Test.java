@@ -132,14 +132,19 @@ public class Test {
             // check weather last ten is increasing values
             int startIndex = results.size() - 10;
             boolean increasing = true;
+            boolean large = true;
             for (int i = startIndex; i < startIndex + 10; i++) {
                 if (results.get(i) <= results.get(i -1)) {
                     increasing = false;
                     break;
                 }
+
+                if (results.get(i) < 1000) {
+                    large = false;
+                }
             }
 
-            if (increasing) {
+            if (increasing || large) {
                 LOG.error("********** The latencies are increasing, stopping the test **********");
                 error = true;
             }
