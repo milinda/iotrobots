@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Test {
     private static Logger LOG = LoggerFactory.getLogger(Test.class);
@@ -39,6 +41,8 @@ public class Test {
     private BlockingQueue<byte []> messages = new ArrayBlockingQueue<byte[]>(8);
 
     private boolean error = false;
+
+    private Lock lock = new ReentrantLock();
 
     public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer, int testNo) {
         this.noOfMessages = noOfMessages;
@@ -72,7 +76,12 @@ public class Test {
         if (error) {
             LOG.info("Done Receive with test msgRate: {}, msgSize: {}, expectedCount: {}, receivedCount: {}", freq, dataSize, noOfMessages, results.size());
             // immediately write and stop
-            writer.write(getTestName(), results);
+            lock.lock();
+            try {
+                writer.write(getTestName(), results);
+            } finally {
+                lock.unlock();
+            }
         } else {
             // wait until all the results arrive
             int totalWait = 0;
@@ -85,7 +94,12 @@ public class Test {
                 }
             }
             LOG.info("Done Receive with test msgRate: {}, msgSize: {}, expectedCount: {}, receivedCount: {}", freq, dataSize, noOfMessages, results.size());
-            writer.write(getTestName(), results);
+            lock.lock();
+            try {
+                writer.write(getTestName(), results);
+            } finally {
+                lock.unlock();
+            }
         }
         try {
             barrier.leave();
@@ -121,7 +135,12 @@ public class Test {
     }
 
     public void addResult(long result) {
-        results.add(result);
+        lock.lock();
+        try {
+            results.add(result);
+        }finally {
+            lock.unlock();
+        }
     }
 
     public BlockingQueue<byte[]> getMessages() {
