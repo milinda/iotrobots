@@ -44,6 +44,8 @@ public class Test {
 
     private Lock lock = new ReentrantLock();
 
+    private int sendCount = 0;
+
     public Test(int noOfMessages, int dataSize, int freq, String zkServers, int noSensors, LatencyWriter writer, int testNo) {
         this.noOfMessages = noOfMessages;
         this.dataSize = dataSize;
@@ -76,6 +78,15 @@ public class Test {
         if (error) {
             LOG.info("Done Receive with test msgRate: {}, msgSize: {}, expectedCount: {}, receivedCount: {}", freq, dataSize, noOfMessages, results.size());
             // immediately write and stop
+            int totalWait = 0;
+            while (sendCount > results.size() && totalWait < 60000) {
+                try {
+                    Thread.sleep(1000);
+                    totalWait += 1000;
+                } catch (InterruptedException ignore) {
+                }
+            }
+
             lock.lock();
             try {
                 writer.write(getTestName(), results);
@@ -106,6 +117,10 @@ public class Test {
         } catch (Exception e) {
             LOG.error("Failed to leave the barrier", e);
         }
+    }
+
+    public void incCount() {
+        sendCount++;
     }
 
     public String getTestName() {

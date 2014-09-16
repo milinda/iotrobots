@@ -155,6 +155,7 @@ public class PerformanceSensor extends AbstractSensor {
                             for (int i = 0; i < noMessages; i++) {
                                 if (currentTest.canContinue()) {
                                     try {
+                                        currentTest.incCount();
                                         byte[] body = messages.take();
                                         Map<String, Object> props = new HashMap<String, Object>();
                                         props.put("time", Long.toString(System.currentTimeMillis()));
