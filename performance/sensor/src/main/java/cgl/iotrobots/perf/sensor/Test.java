@@ -139,7 +139,7 @@ public class Test {
                     break;
                 }
 
-                if (results.get(i) < 1000) {
+                if (results.get(i) < 2000) {
                     large = false;
                 }
             }
