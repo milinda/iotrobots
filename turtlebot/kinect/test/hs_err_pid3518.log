@@ -265,7 +265,7 @@ Heap after GC invocations=57 (full 0):
 }
 
 Deoptimization events (1 events):
-Event: 1.839 Thread 0x00007ffc9820c000 Uncommon trap: reason=unloaded action=reinterpret pc=0x00007ffc88788f68 method=SendFrame_new$1.onFrameReceived(Lorg/openkinect/freenect/FrameMode;Ljava/nio/ByteBuffer;I)V @ 122
+Event: 1.839 Thread 0x00007ffc9820c000 Uncommon trap: reason=unloaded action=reinterpret pc=0x00007ffc88788f68 method=SendFrameN$1.onFrameReceived(Lorg/openkinect/freenect/FrameMode;Ljava/nio/ByteBuffer;I)V @ 122
 
 Internal exceptions (10 events):
 Event: 1.696 Thread 0x00007ffc9820c000 Exception <a 'java/security/PrivilegedActionException'> (0x00000000ec6336c8) thrown at [/HUDSON/workspace/8-2-build-linux-amd64/jdk8u5/2488/hotspot/src/share/vm/prims/jvm.cpp, line 1248]
@@ -490,7 +490,7 @@ ed100000-100000000 ---p 00000000 00:00 0
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 
 VM Arguments:
-java_command: SendFrame_new localhost kinect_frames
+java_command: SendFrameN localhost kinect_frames
 java_class_path (initial): .:../lib/commons-io-1.2.jar:../lib/commons-cli-1.1.jar:../lib/rabbitmq-client.jar:../lib/jna-4.1.0.jar:../lib/freenect-jna.jar:../lib/jzlib.jar
 Launcher Type: SUN_STANDARD
 

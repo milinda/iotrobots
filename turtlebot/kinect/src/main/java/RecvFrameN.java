@@ -1,18 +1,16 @@
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.MessageProperties;
 import com.rabbitmq.client.QueueingConsumer;
 
-import org.openkinect.freenect.*;
 import com.jcraft.jzlib.*;
+import org.xerial.snappy.Snappy;
 
 import java.io.*;
 import java.lang.*;
-import java.util.*;
 import java.awt.image.BufferedImage;
 
-public class RecvFrame_new {
+public class RecvFrameN {
     public static void main(String[] args) throws InterruptedException, IOException {
         final ImageUI ui = new ImageUI();
         Thread t = new Thread(new Runnable() {
@@ -25,7 +23,7 @@ public class RecvFrame_new {
 
         // RABBITMQ DECLARATIONS
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        factory.setHost("149.165.159.39");
         final Connection connection = factory.newConnection();
         final Channel channel = connection.createChannel();
         String exchange_name = "kinect_frames";
@@ -60,20 +58,9 @@ public class RecvFrame_new {
             delivery = consumer.nextDelivery();
             int err;
             byte[] data = delivery.getBody();
-            byte[] inverted = new byte[307200];
-            Inflater inflater = new Inflater();
-            inflater.setInput(data);
+            byte[] inverted = Snappy.uncompress(data);
 
-            // DECOMPRESS
-            while (true) {
-                inflater.setOutput(inverted);
-                err = inflater.inflate(JZlib.Z_NO_FLUSH);
-                if (err == JZlib.Z_STREAM_END) break;
-                CHECK_ERR(inflater, err, "inflate large");
-            }
 
-            err = inflater.end();
-            CHECK_ERR(inflater, err, "inflateEnd");
             // COLOR DISTANCE DATA
             int[] restored = new int[307200];
             int r = 0, b = 0, g = 0, x, y;

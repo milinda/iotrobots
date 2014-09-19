@@ -1,3 +1,21 @@
+Build the Kinect Driver
+=======================
+
+Get the libfreenect source version 4.0.3
+
+https://github.com/OpenKinect/libfreenect/releases
+
+Extract the tar and go inside the tar. Execute the following commands
+
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+sudo ldconfig /usr/local/lib64/
+
+This will build the libfreenect in your system
+
 Deploy on Storm
 ===============
 
