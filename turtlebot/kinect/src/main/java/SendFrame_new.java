@@ -14,7 +14,7 @@ public class SendFrame_new {
     private static Context ctx = null;
     private static Device dev = null;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         try {
             // ESTABLISH RABBITMQ CONNECTION
             ConnectionFactory factory = new ConnectionFactory();
@@ -71,7 +71,8 @@ public class SendFrame_new {
                 }
             }
             );
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             System.exit(0);
         }
     }
