@@ -26,13 +26,13 @@ public class TurtleMessageReceiver {
     private String routingKey;
 
     public TurtleMessageReceiver(String queueName,
-                                 ExecutorService executorService,
-                                 Address []addresses,
+                                 String routingKey,
+                                 String exchangeName,
                                  String url) {
-        this.executorService = executorService;
         this.queueName = queueName;
-        this.addresses = addresses;
         this.url = url;
+        this.routingKey = routingKey;
+        this.exchangeName = exchangeName;
     }
 
     public void start() {
@@ -76,7 +76,7 @@ public class TurtleMessageReceiver {
                                     props.put(e.getKey(), e.getValue());
                                 }
                             }
-                            String time = (String) props.get("time");
+                            String time = props.get("time").toString();
                             System.out.println(System.currentTimeMillis() - Long.parseLong(time));
                             channel.basicAck(deliveryTag, false);
                         }

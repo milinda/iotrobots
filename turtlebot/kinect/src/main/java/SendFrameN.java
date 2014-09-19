@@ -38,7 +38,7 @@ public class SendFrameN {
                 t_gamma[i] = (int) (1000 * 0.1236 * Math.tan(i / 2842.5 + 1.1863));
                 inverted[i] = (byte) (90300 / t_gamma[i] - 21.575);
             }
-            TurtleMessageReceiver turtleMessageReceiver = new TurtleMessageReceiver("turtle_control", null, null, args[0]);
+            TurtleMessageReceiver turtleMessageReceiver = new TurtleMessageReceiver("turtle_control", "turtle_control", "turtle_kinect", args[0]);
             turtleMessageReceiver.start();
 //            startKinect();
             readFromFile();
