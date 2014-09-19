@@ -75,7 +75,7 @@ public class SendFrameN {
             buffer.flip();
             byte[] data = compress(buffer, inverted);
             send(channel, exchange_name, data);
-            Thread.sleep(33);
+            Thread.sleep(28);
         }
     }
 
