@@ -1,3 +1,4 @@
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
@@ -9,6 +10,8 @@ import java.io.*;
 import java.lang.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SendFrameN {
     private static Context ctx = null;
@@ -47,8 +50,9 @@ public class SendFrameN {
     private static class KinectDepthHandler implements DepthHandler {
         @Override
         public void onFrameReceived(FrameMode frameMode, ByteBuffer byteBuffer, int i) {
+            long time = System.currentTimeMillis();
             byte []compressed = compress(byteBuffer, inverted);
-            send(channel, exchange_name, compressed);
+            send(channel, exchange_name, compressed, time);
         }
     }
 
@@ -73,8 +77,9 @@ public class SendFrameN {
             ByteBuffer buffer = ByteBuffer.allocate(614400);
             inChannel.read(buffer);
             buffer.flip();
+            long time = System.currentTimeMillis();
             byte[] data = compress(buffer, inverted);
-            send(channel, exchange_name, data);
+            send(channel, exchange_name, data, time);
             Thread.sleep(28);
         }
     }
@@ -128,9 +133,11 @@ public class SendFrameN {
         return data;
     }
 
-    private static void send(Channel channel, String exchange_name, byte[] data) {
+    private static void send(Channel channel, String exchange_name, byte[] data, long time) {
         try {
-            channel.basicPublish(exchange_name, "", null, data);
+            Map<String, Object> props = new HashMap<String, Object>();
+            props.put("time", time);
+            channel.basicPublish(exchange_name, "", new AMQP.BasicProperties.Builder().headers(props).build(), data);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(0);

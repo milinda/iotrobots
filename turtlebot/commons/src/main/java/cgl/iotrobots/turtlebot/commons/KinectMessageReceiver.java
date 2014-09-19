@@ -1,8 +1,12 @@
 package cgl.iotrobots.turtlebot.commons;
 
+import cgl.iotcloud.core.msg.MessageContext;
+import cgl.iotcloud.core.transport.TransportConstants;
 import com.rabbitmq.client.*;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -75,8 +79,15 @@ public class KinectMessageReceiver {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
+                            Map<String, Object> props = new HashMap<String, Object>();
+                            if (properties != null && properties.getHeaders() != null) {
+                                for (Map.Entry<String, Object> e : properties.getHeaders().entrySet()) {
+                                    props.put(e.getKey(), e.getValue());
+                                }
+                            }
+                            MessageContext msgContext = new MessageContext(null, body, props);
                             //System.out.println("recv: exchange: " + exchangeName + " queue: " + queueName);
-                            inQueue.offer(body);
+                            inQueue.offer(msgContext);
                             channel.basicAck(deliveryTag, false);
                         }
                     });

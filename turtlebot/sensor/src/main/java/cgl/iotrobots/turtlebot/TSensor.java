@@ -89,11 +89,8 @@ public class TSensor extends AbstractSensor {
             public void run() {
                 while (run) {
                     try {
-                        byte[] body = (byte[]) receivingQueue.take();
-                        Map<String, Object> props = new HashMap<String, Object>();
-                        props.put("time", Long.toString(System.currentTimeMillis()));
-                        
-                        sendChannel.publish(body, props);
+                        MessageContext msgContext = (MessageContext) receivingQueue.take();
+                        sendChannel.publish(msgContext.getBody(), msgContext.getProperties());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
