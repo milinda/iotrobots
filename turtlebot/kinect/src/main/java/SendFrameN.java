@@ -26,7 +26,7 @@ public class SendFrameN {
     public static void main(String[] args) {
         try {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(args[0]);
+            factory.setUri(args[0]);
             final Connection connection = factory.newConnection();
             channel = connection.createChannel();
             channel.exchangeDeclare(exchange_name, "fanout", true);
@@ -38,7 +38,8 @@ public class SendFrameN {
                 t_gamma[i] = (int) (1000 * 0.1236 * Math.tan(i / 2842.5 + 1.1863));
                 inverted[i] = (byte) (90300 / t_gamma[i] - 21.575);
             }
-
+            TurtleMessageReceiver turtleMessageReceiver = new TurtleMessageReceiver("turtle_control", null, null, args[0]);
+            turtleMessageReceiver.start();
 //            startKinect();
             readFromFile();
         } catch (Exception e) {
