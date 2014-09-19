@@ -21,7 +21,7 @@ public class SendFrameN {
     private static int[] t_gamma;
     private static byte[] inverted;
     private static Channel channel;
-    private static final String exchange_name = "kinect_frames";
+    private static final String exchange_name = "turtle_kinect";
 
     public static void main(String[] args) {
         try {
@@ -29,7 +29,7 @@ public class SendFrameN {
             factory.setHost(args[0]);
             final Connection connection = factory.newConnection();
             channel = connection.createChannel();
-            channel.exchangeDeclare(exchange_name, "fanout");
+            channel.exchangeDeclare(exchange_name, "fanout", true);
             addShutDownHook(channel, connection);
 
             t_gamma = new int[1024];
@@ -137,7 +137,7 @@ public class SendFrameN {
         try {
             Map<String, Object> props = new HashMap<String, Object>();
             props.put("time", time);
-            channel.basicPublish(exchange_name, "", new AMQP.BasicProperties.Builder().headers(props).build(), data);
+            channel.basicPublish(exchange_name, "turtle_frames", new AMQP.BasicProperties.Builder().headers(props).build(), data);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(0);

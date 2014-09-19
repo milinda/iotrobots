@@ -8,6 +8,7 @@ import cgl.iotcloud.core.transport.Direction;
 import cgl.iotrobots.turtlebot.commons.CommonsUtils;
 import cgl.iotrobots.turtlebot.commons.KinectMessageReceiver;
 import cgl.iotrobots.turtlebot.commons.Motion;
+import cgl.iotrobots.turtlebot.commons.TurtleMessageSender;
 import org.apache.commons.cli.*;
 import org.ros.node.NodeConfiguration;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ public class TSensor extends AbstractSensor {
     public static final String TURTLE_FRAMES = "turtle_frames";
     public static final String TURTLE_KINECT_EXCHANGE = "turtle_kinect";
     public static final String TURTLE_FRAMES_ROUTING_KEY = "turtle_frames";
+    public static final String TURTLE_CONTROL = "turtle_control";
 
     public static final String BROKER_URL = "broker_url";
 
@@ -45,6 +47,8 @@ public class TSensor extends AbstractSensor {
     public static final String ROS_MASTER_ARG = "ros_master";
 
     private TurtleController controller;
+
+    private TurtleMessageSender messageSender;
 
     private boolean run = true;
 
@@ -68,6 +72,11 @@ public class TSensor extends AbstractSensor {
         String localIp = (String) context.getProperty(LOCAL_IP_ARG);
         String rosMaster = (String) context.getProperty(ROS_MASTER_ARG);
         final String mode = (String) context.getProperty(MODE_ARG);
+        String brokerURL = (String) context.getProperty(BROKER_URL);
+
+        if (mode.equals("nt")) {
+            messageSender = new TurtleMessageSender(brokerURL, TURTLE_KINECT_EXCHANGE, TURTLE_CONTROL);
+        }
 
         try {
             nodeConfiguration = NodeConfiguration.newPublic(localIp, new URI(rosMaster));
@@ -77,7 +86,7 @@ public class TSensor extends AbstractSensor {
         controller = new TurtleController();
         controller.start(nodeConfiguration);
 
-        String brokerURL = (String) context.getProperty(BROKER_URL);
+
         KinectMessageReceiver receiver = new KinectMessageReceiver(receivingQueue, TURTLE_FRAMES, null, null, brokerURL);
         receiver.setExchangeName(TURTLE_KINECT_EXCHANGE);
         receiver.setRoutingKey(TURTLE_FRAMES_ROUTING_KEY);
@@ -104,7 +113,8 @@ public class TSensor extends AbstractSensor {
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
                     try {
-                        Motion motion = CommonsUtils.jsonToMotion(((MessageContext) message).getBody());
+                        byte[] body = ((MessageContext) message).getBody();
+                        Motion motion = CommonsUtils.jsonToMotion(body);
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
                         try {
@@ -117,6 +127,8 @@ public class TSensor extends AbstractSensor {
 
                         if (!mode.equals("nt")) {
                             controller.setMotion(motion);
+                        } else {
+                            messageSender.send(body, ((MessageContext) message).getProperties());
                         }
                         LOG.info("Message received " + message.toString());
                     } catch (IOException e) {

@@ -23,10 +23,10 @@ public class RecvFrameN {
 
         // RABBITMQ DECLARATIONS
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("149.165.159.39");
+        factory.setHost(args[0]);
         final Connection connection = factory.newConnection();
         final Channel channel = connection.createChannel();
-        String exchange_name = "kinect_frames";
+        String exchange_name = "turtle_kinect";
 
         // BIND EXCHANGE TO QUEUE
         channel.exchangeDeclare(exchange_name, "fanout");

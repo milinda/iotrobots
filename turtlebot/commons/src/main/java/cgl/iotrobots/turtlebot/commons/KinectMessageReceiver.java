@@ -85,7 +85,7 @@ public class KinectMessageReceiver {
                                     props.put(e.getKey(), e.getValue());
                                 }
                             }
-                            MessageContext msgContext = new MessageContext(null, body, props);
+                            MessageContext msgContext = new MessageContext("test", body, props);
                             //System.out.println("recv: exchange: " + exchangeName + " queue: " + queueName);
                             inQueue.offer(msgContext);
                             channel.basicAck(deliveryTag, false);
