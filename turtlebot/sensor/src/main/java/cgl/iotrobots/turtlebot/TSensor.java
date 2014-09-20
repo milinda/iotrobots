@@ -45,6 +45,8 @@ public class TSensor extends AbstractSensor {
     public static final String URL_ARG = "url";
     public static final String LOCAL_IP_ARG = "local_ip";
     public static final String ROS_MASTER_ARG = "ros_master";
+    public static final String NO_SENSORS_ARG = "n";
+    public static final String SITES_ARG = "s";
 
     private TurtleController controller;
 
@@ -54,7 +56,20 @@ public class TSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "turtle-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local"));
+//        SensorSubmitter.submitSensor(properties, "turtle-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar", TSensor.class.getCanonicalName(), Arrays.asList("local"));
+
+        String jarName = new File(TSensor.class.getProtectionDomain()
+                .getCodeSource().getLocation().getPath()).getName();
+        String noSensors = properties.get(NO_SENSORS_ARG);
+        String sites = properties.get(SITES_ARG);
+
+        int no = Integer.parseInt(noSensors);
+        String []s = sites.split(" ");
+
+        for (int i = 0; i < no; i++) {
+            SensorSubmitter.submitSensor(properties, jarName,
+                    TSensor.class.getCanonicalName(), Arrays.asList(s));
+        }
     }
 
     @Override
@@ -190,6 +205,9 @@ public class TSensor extends AbstractSensor {
         options.addOption(ROS_MASTER_ARG, true, "Ros master URL");
         options.addOption(LOCAL_IP_ARG, true, "Local IP address");
         options.addOption(MODE_ARG, true, "possible options are (nt, t) nt means without connecting to turtle");
+        options.addOption(SITES_ARG, true, "list of sites");
+        options.addOption(NO_SENSORS_ARG, true, "no of sensors per site");
+        options.addOption(SITES_ARG, true, "list of sites");
 
         CommandLineParser commandLineParser = new BasicParser();
         try {
@@ -199,6 +217,8 @@ public class TSensor extends AbstractSensor {
             String rosMaster = cmd.getOptionValue(ROS_MASTER_ARG);
             String localIp = cmd.getOptionValue(LOCAL_IP_ARG);
             String mode = cmd.getOptionValue(MODE_ARG);
+            String noSensors = cmd.getOptionValue(NO_SENSORS_ARG);
+            String sites = cmd.getOptionValue(SITES_ARG);
 
             System.out.println(url);
             System.out.println(rosMaster);
@@ -208,6 +228,8 @@ public class TSensor extends AbstractSensor {
             conf.put(ROS_MASTER_ARG, rosMaster);
             conf.put(LOCAL_IP_ARG, localIp);
             conf.put(MODE_ARG, mode);
+            conf.put(NO_SENSORS_ARG, noSensors);
+            conf.put(SITES_ARG, sites);
 
             return conf;
         } catch (ParseException e) {
