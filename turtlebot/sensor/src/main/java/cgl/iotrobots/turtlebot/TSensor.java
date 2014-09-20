@@ -117,13 +117,13 @@ public class TSensor extends AbstractSensor {
                         Motion motion = CommonsUtils.jsonToMotion(body);
                         String time = (String) ((MessageContext) message).getProperties().get("time");
                         
-                        try {
-                            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("/home/supun/dev/projects/LatencyTest.txt", true)));
-                            writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
-                            writer.close();
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("/home/supun/dev/projects/LatencyTest.txt", true)));
+//                            writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
+//                            writer.close();
+//                        } catch (FileNotFoundException e) {
+//                            e.printStackTrace();
+//                        }
 
                         if (!mode.equals("nt")) {
                             controller.setMotion(motion);
