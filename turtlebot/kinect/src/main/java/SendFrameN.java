@@ -81,7 +81,7 @@ public class SendFrameN {
             long time = System.currentTimeMillis();
             byte[] data = compress(buffer, inverted);
             send(channel, exchange_name, data, time);
-            Thread.sleep(20);
+            Thread.sleep(35);
         }
     }
 
