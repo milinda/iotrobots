@@ -10,5 +10,9 @@ public abstract class Constants {
     public static final String OBJECT_DETECTION = "object_detection";
     public static final String SEND_BOLT = "send_bolt";
     public static final String UNCOMPRESS_BOLT = "uncompress";
+
+    public static final String TIME_FIELD = "time";
+    public static final String DATA_FILED = "body";
+    public static final String SENSOR_ID_FIELD = "sensorID";
 }
 

@@ -89,9 +89,9 @@ public class FollowerTopology {
         IRichSpout spout = components.getSpouts().get(Constants.KINECT_FRAME_RECV);
         IRichBolt bolt = components.getBolts().get(Constants.SEND_BOLT);
 
-        builder.setSpout(Constants.KINECT_FRAME_RECV, spout, 1);
-        builder.setBolt(Constants.OBJECT_DETECTION, new ObjectDetectionBolt(true)).shuffleGrouping(Constants.KINECT_FRAME_RECV);
-        builder.setBolt(Constants.SEND_BOLT, bolt).shuffleGrouping(Constants.OBJECT_DETECTION);
+        builder.setSpout(Constants.KINECT_FRAME_RECV, spout, 4);
+        builder.setBolt(Constants.OBJECT_DETECTION, new ObjectDetectionBolt(true), 4).fieldsGrouping(Constants.KINECT_FRAME_RECV, new Fields(Constants.SENSOR_ID_FIELD));
+        builder.setBolt(Constants.SEND_BOLT, bolt, 4).fieldsGrouping(Constants.OBJECT_DETECTION, new Fields(Constants.SENSOR_ID_FIELD));
     }
 
     private static void buildAllSeparateTopology(TopologyBuilder builder) {
