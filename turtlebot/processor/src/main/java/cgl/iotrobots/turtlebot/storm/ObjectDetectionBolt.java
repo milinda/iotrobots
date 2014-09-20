@@ -37,7 +37,7 @@ public class ObjectDetectionBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        LOG.info("Got message and sending Motion command");
+//        LOG.info("Got message and sending Motion command");
         int[] dist;
         try {
             Compressor compressor = new Compressor();

@@ -46,7 +46,7 @@ public class PositionCalculator {
             totX /= n;
             totY /= n;
             totZ /= n;
-            System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
+//            System.out.format("x %f, y %f, z %f\n", totX, totY, totZ);
 
             if (Math.abs(totZ - max_z_) < 0.01) {
                 return new Motion(new Velocity(0, 0, 0), new Velocity(0, 0, 0));

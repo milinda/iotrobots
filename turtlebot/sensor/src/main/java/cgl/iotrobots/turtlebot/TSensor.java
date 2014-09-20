@@ -75,7 +75,7 @@ public class TSensor extends AbstractSensor {
         String brokerURL = (String) context.getProperty(BROKER_URL);
 
         if (mode.equals("nt")) {
-            messageSender = new TurtleMessageSender(brokerURL, TURTLE_KINECT_EXCHANGE, TURTLE_CONTROL);
+            messageSender = new TurtleMessageSender(brokerURL, TURTLE_CONTROL, TURTLE_CONTROL);
         }
 
         try {
@@ -130,7 +130,7 @@ public class TSensor extends AbstractSensor {
                         } else {
                             messageSender.send(body, ((MessageContext) message).getProperties());
                         }
-                        LOG.info("Message received " + message.toString());
+//                        LOG.info("Message received " + message.toString());
                     } catch (IOException e) {
                         LOG.error("Un-expected motion control message");
                     }
