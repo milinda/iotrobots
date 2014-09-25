@@ -144,8 +144,13 @@ public class Test {
                 }
             }
 
-            if (increasing || large) {
+            if (increasing) {
                 LOG.error("********** The latencies are increasing, stopping the test **********");
+                error = true;
+            }
+
+            if (large) {
+                LOG.error("********** The latencies are large, stopping the test **********");
                 error = true;
             }
 
