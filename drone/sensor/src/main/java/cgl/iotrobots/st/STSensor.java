@@ -9,6 +9,7 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class STSensor extends AbstractSensor {
     public static final String STORM_CONTROL_QEUUE = "storm_control";
     public static final String STORM_CONTROL_ROUTING_KEY = "storm_control";
     public static final String URL_ARG = "url";
+    public static final String SITES_ARG = "s";
     private static Logger LOG = LoggerFactory.getLogger(STSensor.class);
 
     public static final String BROKER_URL = "broker_url";
@@ -48,8 +50,13 @@ public class STSensor extends AbstractSensor {
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
-        SensorSubmitter.submitSensor(properties, "drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar",
-                STSensor.class.getCanonicalName(), Arrays.asList("local"));
+        String sites = properties.get(SITES_ARG);
+        String []s = sites.split(" ");
+
+        String jarName = new File(STSensor.class.getProtectionDomain()
+                .getCodeSource().getLocation().getPath()).getName();
+        SensorSubmitter.submitSensor(properties, jarName,
+                STSensor.class.getCanonicalName(), Arrays.asList(s));
     }
 
     @Override
@@ -180,13 +187,17 @@ public class STSensor extends AbstractSensor {
         Map<String, String> conf = new HashMap<String, String>();
         Options options = new Options();
         options.addOption(URL_ARG, true, "URL of the AMQP Broker");
+        options.addOption(SITES_ARG, true, "list of sites");
 
         CommandLineParser commandLineParser = new BasicParser();
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
 
             String url = cmd.getOptionValue(URL_ARG);
+            String sites = cmd.getOptionValue(SITES_ARG);
+
             conf.put(BROKER_URL, url);
+            conf.put(SITES_ARG, sites);
 
             return conf;
         } catch (ParseException e) {
