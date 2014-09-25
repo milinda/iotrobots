@@ -8,9 +8,9 @@ import sys
 
 def send_frames():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     # try:
@@ -27,9 +27,9 @@ def send_frames():
 
 def send_nav_data():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     for x in range(0, 1596):
@@ -46,9 +46,9 @@ def send_nav_data():
 
 def recv_commands():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672/')
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
 
