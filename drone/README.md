@@ -1,3 +1,16 @@
+OpenCV installation
+===================
+
+First do the following steps
+
+apt-get install build-essential python-dev
+sudo apt-get install python-numpy
+sudo apt-get install cmake checkinstall
+
+Follow the steps in
+
+https://github.com/jayrambhia/Install-OpenCV/tree/master/Ubuntu
+
 Deploy on Storm
 ===============
 
