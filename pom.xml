@@ -11,6 +11,7 @@
         <module>turtlebot</module>
         <module>drone</module>
         <module>performance</module>
+        <module>slam</module>
     </modules>
 
     <properties>
