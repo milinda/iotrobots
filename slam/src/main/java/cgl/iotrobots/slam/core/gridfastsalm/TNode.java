@@ -29,4 +29,18 @@ public class TNode {
 
     /**visit flag (internally used)*/
     boolean flag;
+
+    public TNode(OrientedPoint p, double w, TNode n, int c) {
+        pose = p;
+        weight = w;
+        childs = c;
+        parent = n;
+        reading = null;
+        gweight = 0;
+        if (n != null) {
+            n.childs++;
+        }
+        flag = false;
+        accWeight = 0;
+    }
 }

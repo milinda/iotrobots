@@ -1,11 +1,11 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
-import cgl.iotrobots.slam.core.scanmatcher.ScanMatcherMap;
+import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 
 public class Particle {
     /** The map */
-    ScanMatcherMap map;
+    GMap map;
     /** The pose of the robot */
     OrientedPoint pose;
 
@@ -25,4 +25,18 @@ public class Particle {
 
     /** Entry to the trajectory tree */
     TNode node;
+
+    public Particle(GMap map) {
+        this.map = map;
+        pose = new OrientedPoint(0, 0);
+        weight = 0;
+        weightSum = 0;
+        gweight = 0;
+        previousIndex = 0;
+        node = null;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
 }
