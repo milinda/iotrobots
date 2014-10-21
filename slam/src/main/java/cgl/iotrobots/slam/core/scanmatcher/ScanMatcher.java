@@ -4,6 +4,7 @@ import cgl.iotrobots.slam.core.utils.Covariance3;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.PointPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,126 @@ public class ScanMatcher {
         m_gaussianSigma = sigma;
         m_likelihoodSigma = likelihoodSigma;
         m_likelihoodSkip = likelihoodSkip;
+    }
+
+    double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, ScanMatcherMap map, OrientedPoint<Double> init, double []readings){
+        List<ScoredMove> moveList =  new ArrayList<ScoredMove>();
+        double bestScore=-1;
+        OrientedPoint currentPose=init;
+        ScoredMove sm={currentPose,0,0};
+        int matched=likelihoodAndScore(sm.score, sm.likelihood, map, currentPose, readings);
+        double currentScore=sm.score;
+        moveList.push_back(sm);
+        double adelta=m_optAngularDelta, ldelta=m_optLinearDelta;
+        unsigned int refinement=0;
+        enum Move{Front, Back, Left, Right, TurnLeft, TurnRight, Done};
+        do{
+            if (bestScore>=currentScore){
+                refinement++;
+                adelta*=.5;
+                ldelta*=.5;
+            }
+            bestScore=currentScore;
+            OrientedPoint bestLocalPose=currentPose;
+            OrientedPoint localPose=currentPose;
+
+            Move move=Front;
+            do {
+                localPose=currentPose;
+                switch(move){
+                    case Front:
+                        localPose.x+=ldelta;
+                        move=Back;
+                        break;
+                    case Back:
+                        localPose.x-=ldelta;
+                        move=Left;
+                        break;
+                    case Left:
+                        localPose.y-=ldelta;
+                        move=Right;
+                        break;
+                    case Right:
+                        localPose.y+=ldelta;
+                        move=TurnLeft;
+                        break;
+                    case TurnLeft:
+                        localPose.theta+=adelta;
+                        move=TurnRight;
+                        break;
+                    case TurnRight:
+                        localPose.theta-=adelta;
+                        move=Done;
+                        break;
+                    default:;
+                }
+                double localScore, localLikelihood;
+                //update the score
+                matched=likelihoodAndScore(localScore, localLikelihood, map, localPose, readings);
+                if (localScore>currentScore){
+                    currentScore=localScore;
+                    bestLocalPose=localPose;
+                }
+                sm.score=localScore;
+                sm.likelihood=localLikelihood;
+                sm.pose=localPose;
+                moveList.push_back(sm);
+                //update the move list
+            } while(move!=Done);
+            currentPose=bestLocalPose;
+            //cout << __PRETTY_FUNCTION__ << "currentScore=" << currentScore<< endl;
+            //here we look for the best move;
+        }while (currentScore>bestScore || refinement<m_optRecursiveIterations);
+        //cout << __PRETTY_FUNCTION__ << "bestScore=" << bestScore<< endl;
+
+        //normalize the likelihood
+        double lmin=1e9;
+        double lmax=-1e9;
+        for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
+            lmin=it->likelihood<lmin?it->likelihood:lmin;
+            lmax=it->likelihood>lmax?it->likelihood:lmax;
+        }
+        //cout << "lmin=" << lmin << " lmax=" << lmax<< endl;
+        for (ScoredMoveList::iterator it=moveList.begin(); it!=moveList.end(); it++){
+            it->likelihood=exp(it->likelihood-lmax);
+            //cout << "l=" << it->likelihood << endl;
+        }
+        //compute the mean
+        OrientedPoint mean(0,0,0);
+        double lacc=0;
+        for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
+            mean=mean+it->pose*it->likelihood;
+            lacc+=it->likelihood;
+        }
+        mean=mean*(1./lacc);
+        //OrientedPoint delta=mean-currentPose;
+        //cout << "delta.x=" << delta.x << " delta.y=" << delta.y << " delta.theta=" << delta.theta << endl;
+        CovarianceMatrix cov={0.,0.,0.,0.,0.,0.};
+        for (ScoredMoveList::const_iterator it=moveList.begin(); it!=moveList.end(); it++){
+            OrientedPoint delta=it->pose-mean;
+            delta.theta=atan2(sin(delta.theta), cos(delta.theta));
+            cov.xx+=delta.x*delta.x*it->likelihood;
+            cov.yy+=delta.y*delta.y*it->likelihood;
+            cov.tt+=delta.theta*delta.theta*it->likelihood;
+            cov.xy+=delta.x*delta.y*it->likelihood;
+            cov.xt+=delta.x*delta.theta*it->likelihood;
+            cov.yt+=delta.y*delta.theta*it->likelihood;
+        }
+        cov.xx/=lacc, cov.xy/=lacc, cov.xt/=lacc, cov.yy/=lacc, cov.yt/=lacc, cov.tt/=lacc;
+
+        _mean=currentPose;
+        _cov=cov;
+        return bestScore;
+    }
+
+    void setLaserParameters
+            (int beams, double angles[], OrientedPoint<Double> lpose){
+        if (m_laserAngles == null)
+            delete [] m_laserAngles;
+        m_laserPose= lpose;
+        m_laserBeams=beams;
+        m_laserAngles=new double[beams];
+        memcpy(m_laserAngles, angles, sizeof(double)*m_laserBeams);
     }
 
     public LikeliHood likelihood
@@ -129,7 +250,7 @@ public class ScanMatcher {
     public int likelihoodAndScore(double s, double l, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
         l = 0;
         s = 0;
-        double angle = m_laserAngles + m_initialBeamsSkip;
+        int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
 
         lp.x += Math.cos(p.theta) * m_laserPose.x - Math.sin(p.theta) * m_laserPose.y;
@@ -139,18 +260,18 @@ public class ScanMatcher {
         int skip = 0;
         int c = 0;
         double freeDelta=map.getDelta()*m_freeCellRatio;
-        for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++){
+        for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
             skip=skip>m_likelihoodSkip?0:skip;
-            if (*r>m_usableRange) continue;
-            if (skip) continue;
-            Point phit=lp;
-            phit.x+=*r*cos(lp.theta+*angle);
-            phit.y+=*r*sin(lp.theta+*angle);
+            if (readings[rIndex]>m_usableRange) continue;
+            if (skip != 0) continue;
+            Point<Double> phit = new Point<Double>(lp.x, lp.y);
+            phit.x+=readings[rIndex]*Math.cos(lp.theta +m_laserAngles[angleIndex]);
+            phit.y+=readings[rIndex]*Math.sin(lp.theta +m_laserAngles[angleIndex]);
             IntPoint iphit=map.world2map(phit);
-            Point pfree=lp;
-            pfree.x+=(*r-freeDelta)*cos(lp.theta+*angle);
-            pfree.y+=(*r-freeDelta)*sin(lp.theta+*angle);
+            Point<Double> pfree = new Point<Double>(lp.x, lp.y);
+            pfree.x+=(readings[rIndex]-freeDelta)*Math.cos(lp.theta +m_laserAngles[angleIndex]);
+            pfree.y+=(readings[rIndex]-freeDelta)*Math.sin(lp.theta +m_laserAngles[angleIndex]);
             pfree=pfree-phit;
             IntPoint ipfree=map.world2map(pfree);
             boolean found=false;
@@ -194,54 +315,54 @@ public class ScanMatcher {
         lp.theta+=m_laserPose.theta;
         int skip=0;
         double freeDelta=map.getDelta()*m_freeCellRatio;
-        std::list<PointPair> pairs;
+        List<PointPair> pairs = new ArrayList<PointPair>();
 
-        for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++){
+        for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
             skip = skip > m_likelihoodSkip ? 0 : skip;
-            if (readings[rIndex] > m_usableRange || readings[rIndex]==0.0) continue;
+            if (readings[rIndex] > m_usableRange || readings[rIndex] == 0.0) continue;
             if (skip != 0) continue;
-            Point<Double> phit= new Point<Double>(lp.x, lp.y);
+            Point<Double> phit = new Point<Double>(lp.x, lp.y);
 
-            phit.x+=readings[rIndex]* Math.cos(lp.theta + m_laserAngles[angleIndex]);
-            phit.y+=readings[rIndex] * Math.sin(lp.theta + m_laserAngles[angleIndex]);
-            IntPoint iphit=map.world2map(phit);
-            Point pfree=lp;
-            pfree.x+=(readings[rIndex]-map.getDelta()*freeDelta)*Math.cos(lp.theta +*angle);
-            pfree.y+=(readings[rIndex]-map.getDelta()*freeDelta)*Math.sin(lp.theta +*angle);
-            pfree=pfree-phit;
-            IntPoint ipfree=map.world2map(pfree);
-            bool found=false;
-            Point bestMu(0.,0.);
-            Point bestCell(0.,0.);
-            for (int xx=-m_kernelSize; xx<=m_kernelSize; xx++)
-                for (int yy=-m_kernelSize; yy<=m_kernelSize; yy++){
-                    IntPoint pr=iphit+IntPoint(xx,yy);
-                    IntPoint pf=pr+ipfree;
+            phit.x += readings[rIndex] * Math.cos(lp.theta + m_laserAngles[angleIndex]);
+            phit.y += readings[rIndex] * Math.sin(lp.theta + m_laserAngles[angleIndex]);
+            IntPoint iphit = map.world2map(phit);
+
+            Point<Double> pfree = new Point<Double>(lp.x, lp.y);
+            pfree.x += (readings[rIndex] - map.getDelta() * freeDelta) * Math.cos(lp.theta + m_laserAngles[angleIndex]);
+            pfree.y += (readings[rIndex] - map.getDelta() * freeDelta) * Math.sin(lp.theta + m_laserAngles[angleIndex]);
+            pfree.x  = pfree.x - phit.x;
+            pfree.y  = pfree.y - phit.y;
+
+            IntPoint ipfree = map.world2map(pfree);
+            boolean found = false;
+            Point<Double> bestMu = new Point<Double>(0., 0.);
+            Point<Double> bestCell = new Point<Double>(0., 0.);
+            for (int xx = -m_kernelSize; xx <= m_kernelSize; xx++)
+                for (int yy = -m_kernelSize; yy <= m_kernelSize; yy++) {
+                    IntPoint pr = iphit + IntPoint(xx, yy);
+                    IntPoint pf = pr + ipfree;
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    const PointAccumulator& cell=map.cell(pr);
-                    const PointAccumulator& fcell=map.cell(pf);
-                    if (((double)cell )> m_fullnessThreshold && ((double)fcell )<m_fullnessThreshold){
-                        Point mu=phit-cell.mean();
-                        if (!found){
-                            bestMu=mu;
-                            bestCell=cell.mean();
-                            found=true;
-                        }else
-                        if((mu*mu)<(bestMu*bestMu)){
-                            bestMu=mu;
-                            bestCell=cell.mean();
+                    const PointAccumulator & cell = map.cell(pr);
+                    const PointAccumulator & fcell = map.cell(pf);
+                    if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
+                        Point mu = phit - cell.mean();
+                        if (!found) {
+                            bestMu = mu;
+                            bestCell = cell.mean();
+                            found = true;
+                        } else if ((mu * mu) < (bestMu * bestMu)) {
+                            bestMu = mu;
+                            bestCell = cell.mean();
                         }
 
                     }
                     //}
                 }
-            if (found){
-                pairs.push_back(std::make_pair(phit, bestCell));
-                //std::cerr << "(" << phit.x-bestCell.x << "," << phit.y-bestCell.y << ") ";
+            if (found) {
+                pairs.add(new PointPair(phit, bestCell));
             }
-            //std::cerr << std::endl;
         }
 
         OrientedPoint<Double> result = new OrientedPoint<Double>(0.0,0.0,0.0);
@@ -271,10 +392,11 @@ public class ScanMatcher {
             phit.x += readings[rIndex] * Math.cos(lp.theta + m_laserAngles[angleIndex]);
             phit.y += readings[rIndex] * Math.sin(lp.theta + m_laserAngles[angleIndex]);
             IntPoint iphit = map.world2map(phit);
-            Point pfree = lp;
-            pfree.x += ( * rIndex - map.getDelta() * freeDelta)*Math.cos(lp.theta + m_laserAngles[angleIndex]);
-            pfree.y += ( * rIndex - map.getDelta() * freeDelta)*Math.sin(lp.theta + m_laserAngles[angleIndex]);
-            pfree = pfree - phit;
+            Point<Double> pfree = new Point<Double>(lp.x, lp.y);
+            pfree.x += ( readings[rIndex] - map.getDelta() * freeDelta)*Math.cos(lp.theta + m_laserAngles[angleIndex]);
+            pfree.y += ( readings[rIndex] - map.getDelta() * freeDelta)*Math.sin(lp.theta + m_laserAngles[angleIndex]);
+            pfree.x  = pfree.x - phit.x;
+            pfree.y  = pfree.y - phit.y;
             IntPoint ipfree = map.world2map(pfree);
             boolean found = false;
             Point<Double> bestMu = new Point<Double>(0., 0.);
@@ -284,8 +406,8 @@ public class ScanMatcher {
                     IntPoint pf = pr + ipfree;
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    const PointAccumulator & cell = map.cell(pr);
-                    const PointAccumulator & fcell = map.cell(pf);
+                    PointAccumulator cell = map.cell(pr);
+                    PointAccumulator fcell = map.cell(pf);
                     if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
                         Point mu = phit - cell.mean();
                         if (!found) {
