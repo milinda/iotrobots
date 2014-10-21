@@ -185,28 +185,30 @@ public class ScanMatcher {
         return c;
     }
 
-    double icpStep(OrientedPoint<Double> pret, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint p, double []readings) {
-        const double * angle=m_laserAngles+m_initialBeamsSkip;
-        OrientedPoint lp=p;
-        lp.x+=cos(p.theta)*m_laserPose.x-sin(p.theta)*m_laserPose.y;
-        lp.y+=sin(p.theta)*m_laserPose.x+cos(p.theta)*m_laserPose.y;
+    double icpStep(OrientedPoint<Double> pret, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
+        int angleIndex = m_initialBeamsSkip;
+        OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
+
+        lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
+        lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
         lp.theta+=m_laserPose.theta;
-        unsigned int skip=0;
+        int skip=0;
         double freeDelta=map.getDelta()*m_freeCellRatio;
         std::list<PointPair> pairs;
 
-        for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++){
+        for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++){
             skip++;
-            skip=skip>m_likelihoodSkip?0:skip;
-            if (*r>m_usableRange||*r==0.0) continue;
-            if (skip) continue;
-            Point phit=lp;
-            phit.x+=*r*cos(lp.theta+*angle);
-            phit.y+=*r*sin(lp.theta+*angle);
+            skip = skip > m_likelihoodSkip ? 0 : skip;
+            if (readings[rIndex] > m_usableRange || readings[rIndex]==0.0) continue;
+            if (skip != 0) continue;
+            Point<Double> phit= new Point<Double>(lp.x, lp.y);
+
+            phit.x+=readings[rIndex]* Math.cos(lp.theta + m_laserAngles[angleIndex]);
+            phit.y+=readings[rIndex] * Math.sin(lp.theta + m_laserAngles[angleIndex]);
             IntPoint iphit=map.world2map(phit);
             Point pfree=lp;
-            pfree.x+=(*r-map.getDelta()*freeDelta)*cos(lp.theta+*angle);
-            pfree.y+=(*r-map.getDelta()*freeDelta)*sin(lp.theta+*angle);
+            pfree.x+=(readings[rIndex]-map.getDelta()*freeDelta)*Math.cos(lp.theta +*angle);
+            pfree.y+=(readings[rIndex]-map.getDelta()*freeDelta)*Math.sin(lp.theta +*angle);
             pfree=pfree-phit;
             IntPoint ipfree=map.world2map(pfree);
             bool found=false;
@@ -242,13 +244,13 @@ public class ScanMatcher {
             //std::cerr << std::endl;
         }
 
-        OrientedPoint result(0,0,0);
+        OrientedPoint<Double> result = new OrientedPoint<Double>(0.0,0.0,0.0);
         //double icpError=icpNonlinearStep(result,pairs);
-        std::cerr << "result(" << pairs.size() << ")=" << result.x << " " << result.y << " " << result.theta << std::endl;
+        LOG.error("result(" + pairs.size() + ")=" + result.x + " " + result.y + " " + result.theta);
         pret.x=p.x+result.x;
         pret.y=p.y+result.y;
         pret.theta=p.theta+result.theta;
-        pret.theta=atan2(sin(pret.theta), cos(pret.theta));
+        pret.theta=Math.atan2(Math.sin(pret.theta), Math.cos(pret.theta));
         return score(map, p, readings);
     }
 
@@ -261,7 +263,7 @@ public class ScanMatcher {
         lp.theta += m_laserPose.theta;
         int skip = 0;
         double freeDelta = map.getDelta() * m_freeCellRatio;
-        for (int rIndex = m_initialBeamsSkip; rIndex < m_laserBeams; rIndex++, angleIndex++) {
+        for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
             skip = skip > m_likelihoodSkip ? 0 : skip;
             if (skip != 0 || readings[rIndex] > m_usableRange || readings[rIndex] == 0.0) continue;
