@@ -450,14 +450,13 @@ public class GridSlamProcessor {
         // sum of the weights in the leafs
         double aw=0;
 
-        std::vector<double>::iterator w=m_weights.begin();
-        for (ParticleVector::iterator it=m_particles.begin(); it!=m_particles.end(); it++){
-            double weight=*w;
+        int count = 0;
+        for (Particle it : m_particles){
+            double weight=m_weights.get(count++);
             aw+=weight;
-            TNode * n=it->node;
-            n->accWeight=weight;
-            lastNodeWeight+=propagateWeight(n->parent,n->accWeight);
-            w++;
+            TNode n=it.node;
+            n.accWeight=weight;
+            lastNodeWeight+=propagateWeight(n.parent, n.accWeight);
         }
 
         if (Math.abs(aw-1.0) > 0.0001 || Math.abs(lastNodeWeight-1.0) > 0.0001) {
@@ -470,7 +469,6 @@ public class GridSlamProcessor {
      If the scan matching fails, the particle gets a default likelihood.*/
     void scanMatch(double []plainReading){
         // sample a new pose from each scan in the reference
-
         double sumScore=0;
         for (Particle it : m_particles){
             OrientedPoint<Double> corrected;
@@ -478,7 +476,7 @@ public class GridSlamProcessor {
             score = m_matcher.optimize(corrected, it->map, it->pose, plainReading);
             //    it->pose=corrected;
             if (score>m_minimumScore){
-                it->pose=corrected;
+                it.pose=corrected;
             } else {
                 LOG.info("Scan Matching Failed, using odometry. Likelihood=" + l);
                 LOG.info("lp:" + m_lastPartPose.x + " "  + m_lastPartPose.y + " " + m_lastPartPose.theta);

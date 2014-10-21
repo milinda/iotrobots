@@ -12,10 +12,14 @@ public class GMap <Cell, Storage> {
     public GMap(int mapSizeX, int mapSizeY, double delta) {
 
     }
+
     public GMap(Point center, double worldSizeX, double worldSizeY, double delta) {
 
     }
+
     public GMap(Point center, double xmin, double ymin, double xmax, double ymax, double delta) {
 
     }
+
+
 }
