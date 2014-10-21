@@ -7,7 +7,7 @@ public class Particle {
     /** The map */
     GMap map;
     /** The pose of the robot */
-    OrientedPoint pose;
+    OrientedPoint<Double> pose;
 
     /** The pose of the robot at the previous time frame (used for computing thr odometry displacements) */
     OrientedPoint previousPose;
@@ -28,7 +28,7 @@ public class Particle {
 
     public Particle(GMap map) {
         this.map = map;
-        pose = new OrientedPoint(0, 0);
+        pose = new OrientedPoint<Double>(0.0, 0.0);
         weight = 0;
         weightSum = 0;
         gweight = 0;

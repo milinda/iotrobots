@@ -5,7 +5,7 @@ import cgl.iotrobots.slam.core.utils.OrientedPoint;
 
 public class TNode {
     /**The pose of the robot*/
-    OrientedPoint pose;
+    OrientedPoint<Double> pose;
 
     /**The weight of the particle*/
     double weight;
@@ -30,7 +30,7 @@ public class TNode {
     /**visit flag (internally used)*/
     boolean flag;
 
-    public TNode(OrientedPoint p, double w, TNode n, int c) {
+    public TNode(OrientedPoint<Double> p, double w, TNode n, int c) {
         pose = p;
         weight = w;
         childs = c;
