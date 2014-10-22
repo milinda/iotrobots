@@ -49,4 +49,10 @@ public class OrientedPoint<T> extends Point<T> {
         double y = p1.y * p2.y;
         return x + y;
     }
+
+    public static OrientedPoint<Double> mulN(OrientedPoint<Double> p1, double p2) {
+        double x = p1.x * p2;
+        double y = p1.y * p2;
+        return new OrientedPoint<Double>(x, y, p1.theta * p2);
+    }
 }
