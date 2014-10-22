@@ -110,7 +110,7 @@ public class ScanMatcher {
                         localPose.theta-=adelta;
                         move=Move.Done;
                         break;
-                    default:;
+                    default:
                 }
                 double localScore = 0, localLikelihood = 0;
                 //update the score

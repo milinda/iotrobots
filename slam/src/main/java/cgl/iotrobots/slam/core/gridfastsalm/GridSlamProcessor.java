@@ -97,7 +97,7 @@ public class GridSlamProcessor {
         m_resampleThreshold = resampleThreshold;
     }
 
-    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, OrientedPoint initialPose) {
+    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, OrientedPoint<Double> initialPose) {
         m_xmin = xmin;
         m_ymin = ymin;
         m_xmax = xmax;
