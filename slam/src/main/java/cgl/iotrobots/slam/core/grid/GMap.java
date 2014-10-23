@@ -19,52 +19,83 @@ public class GMap {
     }
 
     public GMap(Point<Double> center, double worldSizeX, double worldSizeY, double delta) {
-        m_center=center;
-        m_worldSizeX = xmax-xmin;
-        m_worldSizeY = ymax-ymin;
-        m_delta=delta;
-        m_mapSizeX = m_storage.getXSize()<<m_storage.getPatchSize();
-        m_mapSizeY = m_storage.getYSize()<<m_storage.getPatchSize();
-        m_sizeX2 = (int)round((m_center.x-xmin)/m_delta);
-        m_sizeY2 = (int)round((m_center.y-ymin)/m_delta);
+        m_center = center;
+        m_worldSizeX = xmax - xmin;
+        m_worldSizeY = ymax - ymin;
+        m_delta = delta;
+        m_mapSizeX = m_storage.getXSize() << m_storage.getPatchSize();
+        m_mapSizeY = m_storage.getYSize() << m_storage.getPatchSize();
+        m_sizeX2 = (int) Math.round((m_center.x - xmin) / m_delta);
+        m_sizeY2 = (int) Math.round((m_center.y - ymin) / m_delta);
     }
 
-    public GMap(Point center, double xmin, double ymin, double xmax, double ymax, double delta) {
-        m_center=center;
-        m_worldSizeX=worldSizeX;
-        m_worldSizeY=worldSizeY;
-        m_delta=delta;
-        m_mapSizeX=m_storage.getXSize()<<m_storage.getPatchSize();
-        m_mapSizeY=m_storage.getYSize()<<m_storage.getPatchSize();
-        m_sizeX2=m_mapSizeX>>1;
-        m_sizeY2=m_mapSizeY>>1;
+    public GMap(Point<Double> center, double xmin, double ymin, double xmax, double ymax, double delta) {
+        m_center = center;
+        m_worldSizeX = worldSizeX;
+        m_worldSizeY = worldSizeY;
+        m_delta = delta;
+        m_mapSizeX = m_storage.getXSize() << m_storage.getPatchSize();
+        m_mapSizeY = m_storage.getYSize() << m_storage.getPatchSize();
+        m_sizeX2 = m_mapSizeX >> 1;
+        m_sizeY2 = m_mapSizeY >> 1;
     }
 
-    Map<Cell,Storage,isClass>::Map(int mapSizeX, int mapSizeY, double delta):
-    m_storage(mapSizeX, mapSizeY){
+    Point getCenter() {return m_center;}
+    double getWorldSizeX() {return m_worldSizeX;}
+    double getWorldSizeY() {return m_worldSizeY;}
+    int getMapSizeX() {return m_mapSizeX;}
+    int getMapSizeY() {return m_mapSizeY;}
+    double getDelta() { return m_delta;}
+    double getMapResolution() { return m_delta;}
+    double getResolution() { return m_delta;}
 
+    void getSize(double & xmin, double& ymin, double& xmax, double& ymax) const {
+        Point min=map2world(0,0), max=map2world(IntPoint(m_mapSizeX-1, m_mapSizeY-1));
+        xmin=min.x, ymin=min.y,  xmax=max.x, ymax=max.y;
     }
 
-    template <class Cell, class Storage, const bool isClass>
-    Map<Cell,Storage,isClass>::Map(const Point& center, double worldSizeX, double worldSizeY, double delta):
-    m_storage((int)ceil(worldSizeX/delta), (int)ceil(worldSizeY/delta)){
-
+    Cell cell(int x, int y) {
+        return cell(IntPoint(x, y));
     }
 
-    template <class Cell, class Storage, const bool isClass>
-    Map<Cell,Storage,isClass>::Map(const Point& center, double xmin, double ymin, double xmax, double ymax, double delta):
-    m_storage((int)ceil((xmax-xmin)/delta), (int)ceil((ymax-ymin)/delta)){
 
+    Cell cell(int x, int y) const  {
+        return cell(IntPoint(x, y));
+    }
+
+    Cell cell(const IntPoint& p) const;
+
+    Cell cell(double x, double y) {
+        return cell(Point(x, y));
+    }
+
+
+    boolean Cell& cell(double x, double y) const {
+        return cell(Point(x, y));
+    }
+
+    boolean isInside(int x, int y) const {
+        return m_storage.cellState(IntPoint(x,y))&Inside;
+    }
+    boolean isInside(const IntPoint& p) const {
+        return m_storage.cellState(p)&Inside;
+    }
+
+    boolean isInside(double x, double y) const {
+        return m_storage.cellState(world2map(x,y))&Inside;
+    }
+    boolean isInside(const Point& p) const {
+        return m_storage.cellState(world2map(p))&Inside;
     }
 
     void resize(double xmin, double ymin, double xmax, double ymax){
         Point<Integer> imin = world2map(xmin, ymin);
         Point<Integer> imax=world2map(xmax, ymax);
         int pxmin, pymin, pxmax, pymax;
-        pxmin=(int)floor((float)imin.x/(1<<m_storage.getPatchMagnitude()));
-        pxmax=(int)ceil((float)imax.x/(1<<m_storage.getPatchMagnitude()));
-        pymin=(int)floor((float)imin.y/(1<<m_storage.getPatchMagnitude()));
-        pymax=(int)ceil((float)imax.y/(1<<m_storage.getPatchMagnitude()));
+        pxmin=(int)Math.floor((float) imin.x / (1 << m_storage.getPatchMagnitude()));
+        pxmax=(int)Math.ceil((float) imax.x / (1 << m_storage.getPatchMagnitude()));
+        pymin=(int)Math.floor((float) imin.y / (1 << m_storage.getPatchMagnitude()));
+        pymax=(int)Math.ceil((float) imax.y / (1 << m_storage.getPatchMagnitude()));
         m_storage.resize(pxmin, pymin, pxmax, pymax);
         m_mapSizeX=m_storage.getXSize()<<m_storage.getPatchSize();
         m_mapSizeY=m_storage.getYSize()<<m_storage.getPatchSize();
@@ -82,10 +113,10 @@ public class GMap {
         imin=Math.min(imin, new Point<Integer>(0,0));
         imax=Math.max(imax, Point<Integer>(m_mapSizeX-1,m_mapSizeY-1));
         int pxmin, pymin, pxmax, pymax;
-        pxmin=(int)floor((float)imin.x/(1<<m_storage.getPatchMagnitude()));
-        pxmax=(int)ceil((float)imax.x/(1<<m_storage.getPatchMagnitude()));
-        pymin=(int)floor((float)imin.y/(1<<m_storage.getPatchMagnitude()));
-        pymax=(int)ceil((float)imax.y/(1<<m_storage.getPatchMagnitude()));
+        pxmin=(int)Math.floor((float) imin.x / (1 << m_storage.getPatchMagnitude()));
+        pxmax=(int)Math.ceil((float) imax.x / (1 << m_storage.getPatchMagnitude()));
+        pymin=(int)Math.floor((float) imin.y / (1 << m_storage.getPatchMagnitude()));
+        pymax=(int)Math.ceil((float) imax.y / (1 << m_storage.getPatchMagnitude()));
         m_storage.resize(pxmin, pymin, pxmax, pymax);
         m_mapSizeX=m_storage.getXSize()<<m_storage.getPatchSize();
         m_mapSizeY=m_storage.getYSize()<<m_storage.getPatchSize();
@@ -96,17 +127,17 @@ public class GMap {
     }
 
 
-    Point<Integer> world2map(Point& p) const{
-        return new Point<Integer>( (int)round((p.x-m_center.x)/m_delta)+m_sizeX2, (int)round((p.y-m_center.y)/m_delta)+m_sizeY2);
+    Point<Integer> world2map(Point<Double> p) {
+        return new Point<Integer>( (int)Math.round((p.x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((p.y-m_center.y)/m_delta)+m_sizeY2);
     }
 
-    Point map2world(Point<Integer>& p) const{
-        return Point( (p.x-m_sizeX2)*m_delta,
-                (p.y-m_sizeY2)*m_delta)+m_center;
+    Point<Double> map2world(Point<Integer> p) {
+        return new Point<Double>( (p.x-m_sizeX2)*m_delta + m_center.x,
+                (p.y-m_sizeY2)*m_delta + m_center.y);
     }
 
 
-    Cell& Map<Cell,Storage,isClass>::cell(const IntPoint& p) {
+    Cell cell(Point<Integer> p) {
         AccessibilityState s=m_storage.cellState(p);
         if (! s&Inside)
             assert(0);
@@ -118,8 +149,8 @@ public class GMap {
     }
 
 
-    Cell& Map<Cell,Storage,isClass>::cell(const Point& p) {
-        IntPoint ip=world2map(p);
+    Cell cell(Point p) {
+        Point<Integer> ip=world2map(p);
         AccessibilityState s=m_storage.cellState(ip);
         if (! s&Inside)
             assert(0);
@@ -130,7 +161,7 @@ public class GMap {
     }
 
 
-            const Cell& Map<Cell,Storage,isClass>::cell(const IntPoint& p) const {
+    Cell cell(Point<Integer> p) const {
         AccessibilityState s=m_storage.cellState(p);
         //if (! s&Inside) assert(0);
         if (s&Allocated)
@@ -139,40 +170,40 @@ public class GMap {
     }
 
 
-            const  Cell& Map<Cell,Storage,isClass>::cell(const Point& p) const {
-        IntPoint ip=world2map(p);
+    Cell cell(Point p) {
+        Point<Integer> ip=world2map(p);
         AccessibilityState s=m_storage.cellState(ip);
         //if (! s&Inside) assert(0);
-        if (s&Allocated)
+        if (s & Allocated)
             return m_storage.cell(ip);
         return  m_unknown;
     }
 
 
-//FIXME check why the last line of the map is corrupted.
-
-    DoubleArray2D* toDoubleArray() {
-        DoubleArray2D* darr=new DoubleArray2D(getMapSizeX()-1, getMapSizeY()-1);
-        for(int x=0; x<getMapSizeX()-1; x++)
-            for(int y=0; y<getMapSizeY()-1; y++){
-                IntPoint p(x,y);
-                darr->cell(p)=cell(p);
+    //FIXME check why the last line of the map is corrupted.
+    Array2D toDoubleArray() {
+        Array2D darr= new Array2D(getMapSizeX()-1, getMapSizeY()-1);
+        for(int x=0; x<getMapSizeX()-1; x++) {
+            for (int y = 0; y < getMapSizeY() - 1; y++) {
+                Point<Integer> p = new Point<Integer>(x, y);
+                darr.cell(p) = cell(p);
             }
+        }
         return darr;
     }
 
 
 
-    Map<double, DoubleArray2D, false>* toDoubleMap() const{
-//FIXME size the map so that m_center will be setted accordingly
-        Point pmin=map2world(IntPoint(0,0));
-        Point pmax=map2world(getMapSizeX()-1,getMapSizeY()-1);
-        Point center=(pmax+pmin)*0.5;
-        Map<double, DoubleArray2D, false>*  plainMap=new Map<double, DoubleArray2D, false>(center, (pmax-pmin).x, (pmax-pmin).y, getDelta());
+    GMap toDoubleMap() {
+        //FIXME size the map so that m_center will be setted accordingly
+        Point<Double> pmin = map2world(new Point<Integer>(0,0));
+        Point<Double> pmax= map2world(new Point<Integer>(getMapSizeX()-1,getMapSizeY()-1));
+        Point<Double> center = new Point<Double>((pmax.x + pmin.x) * 0.5, (pmax.y + pmin.y) * 0.5);
+        GMap  plainMap=new GMap(center, (pmax.x-pmin.x), (pmax.x-pmin.y), getDelta());
         for(int x=0; x<getMapSizeX()-1; x++)
             for(int y=0; y<getMapSizeY()-1; y++){
-                IntPoint p(x,y);
-                plainMap->cell(p)=cell(p);
+                Point<Integer> p = new Point<Integer>(x,y);
+                plainMap.cell(p) = cell(p);
             }
         return plainMap;
     }
