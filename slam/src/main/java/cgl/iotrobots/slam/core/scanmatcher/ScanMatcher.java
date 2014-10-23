@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
+import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.utils.Covariance3;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
@@ -246,7 +247,7 @@ public class ScanMatcher {
         return new LikeliHood(lmax, mean, cov, Math.log(lcum)+lmax);
     }
 
-    public int likelihoodAndScore(double s, double l, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
+    public int likelihoodAndScore(double s, double l, GMap<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
         l = 0;
         s = 0;
         int angleIndex = m_initialBeamsSkip;
@@ -258,7 +259,7 @@ public class ScanMatcher {
         double noHit = nullLikelihood / (m_likelihoodSigma);
         int skip = 0;
         int c = 0;
-        double freeDelta=map.getDelta()*m_freeCellRatio;
+        double freeDelta = map.getDelta()*m_freeCellRatio;
         for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
             skip=skip>m_likelihoodSkip?0:skip;
@@ -267,12 +268,14 @@ public class ScanMatcher {
             Point<Double> phit = new Point<Double>(lp.x, lp.y);
             phit.x+=readings[rIndex]*Math.cos(lp.theta +m_laserAngles[angleIndex]);
             phit.y+=readings[rIndex]*Math.sin(lp.theta +m_laserAngles[angleIndex]);
-            IntPoint iphit=map.world2map(phit);
+            Point<Integer> iphit=map.world2map(phit);
             Point<Double> pfree = new Point<Double>(lp.x, lp.y);
             pfree.x+=(readings[rIndex]-freeDelta)*Math.cos(lp.theta +m_laserAngles[angleIndex]);
             pfree.y+=(readings[rIndex]-freeDelta)*Math.sin(lp.theta +m_laserAngles[angleIndex]);
-            pfree=pfree-phit;
-            IntPoint ipfree=map.world2map(pfree);
+            pfree.x  = pfree.x - phit.x;
+            pfree.y  = pfree.y - phit.y;
+
+            Point<Integer> ipfree = map.world2map(pfree);
             boolean found=false;
             Point<Double> bestMu = new Point<Double>(0.0, 0.0);
             for (int xx=-m_kernelSize; xx<=m_kernelSize; xx++)

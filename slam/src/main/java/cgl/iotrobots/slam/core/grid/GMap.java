@@ -2,10 +2,10 @@ package cgl.iotrobots.slam.core.grid;
 
 import cgl.iotrobots.slam.core.utils.Point;
 
-public class GMap <Cell, Storage> {
+public class GMap {
     Point<Double> m_center;
     double m_worldSizeX, m_worldSizeY, m_delta;
-    Storage m_storage;
+    HierarchicalArray2D m_storage;
     int m_mapSizeX, m_mapSizeY;
     int m_sizeX2, m_sizeY2;
 
@@ -20,13 +20,13 @@ public class GMap <Cell, Storage> {
 
     public GMap(Point<Double> center, double worldSizeX, double worldSizeY, double delta) {
         m_center=center;
-        m_worldSizeX=xmax-xmin;
-        m_worldSizeY=ymax-ymin;
+        m_worldSizeX = xmax-xmin;
+        m_worldSizeY = ymax-ymin;
         m_delta=delta;
-        m_mapSizeX=m_storage.getXSize()<<m_storage.getPatchSize();
-        m_mapSizeY=m_storage.getYSize()<<m_storage.getPatchSize();
-        m_sizeX2=(int)round((m_center.x-xmin)/m_delta);
-        m_sizeY2=(int)round((m_center.y-ymin)/m_delta);
+        m_mapSizeX = m_storage.getXSize()<<m_storage.getPatchSize();
+        m_mapSizeY = m_storage.getYSize()<<m_storage.getPatchSize();
+        m_sizeX2 = (int)round((m_center.x-xmin)/m_delta);
+        m_sizeY2 = (int)round((m_center.y-ymin)/m_delta);
     }
 
     public GMap(Point center, double xmin, double ymin, double xmax, double ymax, double delta) {
@@ -106,7 +106,6 @@ public class GMap <Cell, Storage> {
     }
 
 
-    template <class Cell, class Storage, const bool isClass>
     Cell& Map<Cell,Storage,isClass>::cell(const IntPoint& p) {
         AccessibilityState s=m_storage.cellState(p);
         if (! s&Inside)
