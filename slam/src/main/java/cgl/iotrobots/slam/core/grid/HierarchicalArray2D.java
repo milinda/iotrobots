@@ -30,21 +30,37 @@ public class HierarchicalArray2D {
         assign(hg);
     }
 
-    public int getPatchSize() {return m_patchMagnitude;}
-    public int getPatchMagnitude() {return m_patchMagnitude;}
+    public int getPatchSize() {
+        return m_patchMagnitude;
+    }
+    public int getPatchMagnitude() {
+        return m_patchMagnitude;
+    }
 
-    public Cell cell(Point<Integer> p) { return cell(p.x, p.y); }
-    public boolean isAllocated(Point<Integer> p)  { return isAllocated(p.x,p.y);}
-    public AccessibilityState cellState(const IntPoint& p) const { return cellState(p.x,p.y); }
-    public Point<Integer> patchIndexes(const IntPoint& p) const { return patchIndexes(p.x,p.y);}
+    public Cell cell(Point<Integer> p) {
+        return cell(p.x, p.y);
+    }
 
-    public void setActiveArea(const PointSet&, bool patchCoords=false);
-    PointSet& getActiveArea() const {return m_activeArea; }
+    public boolean isAllocated(Point<Integer> p)  {
+        return isAllocated(p.x,p.y);
+    }
+
+    public AccessibilityState cellState(Point<Integer> p) {
+        return cellState(p.x,p.y);
+    }
+
+    public Point<Integer> patchIndexes(Point<Integer> p) {
+        return patchIndexes(p.x,p.y);
+    }
+
+    Set<Point<Integer>> getActiveArea() {
+        return m_activeArea;
+    }
 
     public void assign(HierarchicalArray2D hg) {
         array2D.m_xsize = hg.array2D.m_xsize;
         array2D.m_ysize = hg.array2D.m_ysize;
-        array2D.m_cells = new PointAccumulator[array2D.m_xsize][array2D.m_ysize];
+        array2D.m_cells = new Cell[array2D.m_xsize][array2D.m_ysize];
 
         for (int x = 0; x < array2D.m_xsize; x++) {
             System.arraycopy(hg.array2D.m_cells[x], 0, array2D.m_cells[x], 0, array2D.m_ysize);
@@ -104,18 +120,19 @@ public class HierarchicalArray2D {
     }
 
 
-    AccessibilityState  cellState(int x, int y) const {
-        if (this.isInside(patchIndexes(x,y))) {
-            if(isAllocated(x,y))
-                return (AccessibilityState)((int)Inside|(int)Allocated);
-            else
-                return Inside;
+    AccessibilityState  cellState(int x, int y) {
+        if (array2D.isInside(patchIndexes(x, y))) {
+            if (isAllocated(x,y)) {
+                return AccessibilityState.Inside | AccessibilityState.Allocated);
+            }
+            else {
+                return AccessibilityState.Inside;
+            }
         }
-        return Outside;
+        return AccessibilityState.Outside;
     }
 
-    template <class Cell>
-    void HierarchicalArray2D<Cell>::allocActiveArea(){
+    void allocActiveArea(){
         for (PointSet::const_iterator it= m_activeArea.begin(); it!=m_activeArea.end(); ++it){
             const autoptr< Array2D<Cell> >& ptr=this->m_cells[it->x][it->y];
             Array2D<Cell>* patch=0;
@@ -128,28 +145,18 @@ public class HierarchicalArray2D {
         }
     }
 
-    template <class Cell>
-    bool HierarchicalArray2D<Cell>::isAllocated(int x, int y) const{
-        IntPoint c=patchIndexes(x,y);
-        autoptr< Array2D<Cell> >& ptr=this->m_cells[c.x][c.y];
-        return (ptr != 0);
+    boolean isAllocated(int x, int y) {
+        Point<Integer> c=patchIndexes(x,y);
+        Cell val = array2D.m_cells[c.x][c.y];
+        return (val != null);
     }
 
-    template <class Cell>
-    IntPoint HierarchicalArray2D<Cell>::patchIndexes(int x, int y) const{
-        if (x>=0 && y>=0)
-            return IntPoint(x>>m_patchMagnitude, y>>m_patchMagnitude);
-        return IntPoint(-1, -1);
-    }
-
-    template <class Cell>
-    Cell& HierarchicalArray2D<Cell>::cell(int x, int y){
-        IntPoint c=patchIndexes(x,y);
-        assert(this->isInside(c.x, c.y));
-        if (!this->m_cells[c.x][c.y]){
-            Array2D<Cell>* patch=createPatch(IntPoint(x,y));
-            this->m_cells[c.x][c.y]=autoptr< Array2D<Cell> >(patch);
-            //cerr << "!!! FATAL: your dick is going to fall down" << endl;
+    Cell cell(int x, int y){
+        Point<Integer> c = patchIndexes(x,y);
+        assert(array2D.isInside(c.x, c.y));
+        if (array2D.m_cells[c.x][c.y] != null){
+            Array2D patch= createPatch(new Point<Integer>(x,y));
+            array2D.m_cells[c.x][c.y] = patch;
         }
         autoptr< Array2D<Cell> >& ptr=this->m_cells[c.x][c.y];
         return (*ptr).cell(IntPoint(x-(c.x<<m_patchMagnitude),y-(c.y<<m_patchMagnitude)));

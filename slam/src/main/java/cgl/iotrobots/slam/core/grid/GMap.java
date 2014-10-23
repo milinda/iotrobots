@@ -59,22 +59,20 @@ public class GMap {
     }
 
 
-    Cell cell(int x, int y) const  {
-        return cell(IntPoint(x, y));
+    Cell cell(int x, int y) {
+        return cell(new Point<Integer>(x, y));
     }
-
-    Cell cell(const IntPoint& p) const;
 
     Cell cell(double x, double y) {
-        return cell(Point(x, y));
+        return cell(Point<Double>(x, y));
     }
 
 
-    boolean Cell& cell(double x, double y) const {
-        return cell(Point(x, y));
+    boolean Cell cell(double x, double y) {
+        return cell(new Point<Double>(x, y));
     }
 
-    boolean isInside(int x, int y) const {
+    boolean isInside(int x, int y) {
         return m_storage.cellState(IntPoint(x,y))&Inside;
     }
     boolean isInside(const IntPoint& p) const {
