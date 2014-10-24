@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class HierarchicalArray2D {
+public class HierarchicalArray2D implements Storage {
     Array2D array2D;
     Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
     int m_patchMagnitude;
@@ -120,10 +120,10 @@ public class HierarchicalArray2D {
     }
 
 
-    AccessibilityState  cellState(int x, int y) {
-        if (array2D.isInside(patchIndexes(x, y))) {
+    public AccessibilityState  cellState(int x, int y) {
+        if (array2D.isInside(patchIndexes(new Point<Integer>(x, y)))) {
             if (isAllocated(x,y)) {
-                return AccessibilityState.Inside | AccessibilityState.Allocated);
+                return AccessibilityState.Inside | AccessibilityState.Allocated;
             }
             else {
                 return AccessibilityState.Inside;
@@ -145,13 +145,13 @@ public class HierarchicalArray2D {
         }
     }
 
-    boolean isAllocated(int x, int y) {
+    public boolean isAllocated(int x, int y) {
         Point<Integer> c=patchIndexes(x,y);
         Cell val = array2D.m_cells[c.x][c.y];
         return (val != null);
     }
 
-    Cell cell(int x, int y){
+    public Cell cell(int x, int y){
         Point<Integer> c = patchIndexes(x,y);
         assert(array2D.isInside(c.x, c.y));
         if (array2D.m_cells[c.x][c.y] != null){
@@ -159,13 +159,6 @@ public class HierarchicalArray2D {
             array2D.m_cells[c.x][c.y] = patch;
         }
         autoptr< Array2D<Cell> >& ptr=this->m_cells[c.x][c.y];
-        return (*ptr).cell(IntPoint(x-(c.x<<m_patchMagnitude),y-(c.y<<m_patchMagnitude)));
-    }
-
-     Cell cell(int x, int y) const{
-        assert(isAllocated(x,y));
-        IntPoint c=patchIndexes(x,y);
-        const autoptr< Array2D<Cell> >& ptr=this->m_cells[c.x][c.y];
         return (*ptr).cell(IntPoint(x-(c.x<<m_patchMagnitude),y-(c.y<<m_patchMagnitude)));
     }
 }

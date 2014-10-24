@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.core.grid;
 
+import cgl.iotrobots.slam.core.utils.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,10 @@ public class Array2D {
 
     public boolean isInside(int x, int y) {
         return x >=0 && y >=0 && x< m_xsize && y<m_ysize;
+    }
+
+    public boolean isInside(Point<Integer> p) {
+        return p.x >=0 && p.y >=0 && p.x< m_xsize && p.y<m_ysize;
     }
 
     public Cell cell(int x, int y) {

@@ -29,4 +29,8 @@ public class PointAccumulator implements Cell {
         double x = (double) n * SIGHT_INC / (double) visits;
         return -(x * Math.log(x) + (1 - x) * Math.log(1 - x));
     }
+
+    Point<Double> mean() {
+        return new Point<Double>(1.0 /(acc.x * n), 1.0 /(n *acc.y));
+    }
 }

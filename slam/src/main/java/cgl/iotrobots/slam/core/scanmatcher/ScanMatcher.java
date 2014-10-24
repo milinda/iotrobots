@@ -182,7 +182,7 @@ public class ScanMatcher {
     }
 
     public LikeliHood likelihood
-            (double _lmax, OrientedPoint<Double> _mean, Covariance3 _cov, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double[] readings) {
+            (double _lmax, OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> p, double[] readings) {
         List<ScoredMove> moveList = new ArrayList<ScoredMove>();
 
         for (double xx = -m_llsamplerange; xx <= m_llsamplerange; xx += m_llsamplestep) {
@@ -247,7 +247,7 @@ public class ScanMatcher {
         return new LikeliHood(lmax, mean, cov, Math.log(lcum)+lmax);
     }
 
-    public int likelihoodAndScore(double s, double l, GMap<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
+    public int likelihoodAndScore(double s, double l, GMap map, OrientedPoint<Double> p, double []readings) {
         l = 0;
         s = 0;
         int angleIndex = m_initialBeamsSkip;
@@ -280,8 +280,8 @@ public class ScanMatcher {
             Point<Double> bestMu = new Point<Double>(0.0, 0.0);
             for (int xx=-m_kernelSize; xx<=m_kernelSize; xx++)
                 for (int yy=-m_kernelSize; yy<=m_kernelSize; yy++){
-                    Point<Integer> pr= iphit + IntPoint(xx,yy);
-                    Point<Integer> pf= pr+ipfree;
+                    Point<Integer> pr = new Point<Integer>(iphit.x + xx, iphit.y + yy);
+                    Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
                     PointAccumulator cell = map.cell(pr);
@@ -308,7 +308,7 @@ public class ScanMatcher {
         return c;
     }
 
-    double icpStep(OrientedPoint<Double> pret, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
+    double icpStep(OrientedPoint<Double> pret, GMap map, OrientedPoint<Double> p, double []readings) {
         int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
 
@@ -346,8 +346,9 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    const PointAccumulator & cell = map.cell(pr);
-                    const PointAccumulator & fcell = map.cell(pf);
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
+
                     if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
                         Point<Double> mu = phit - cell.mean();
 
@@ -378,7 +379,7 @@ public class ScanMatcher {
         return score(map, p, readings);
     }
 
-    double score(Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double[] readings) {
+    double score(GMap map, OrientedPoint<Double> p, double[] readings) {
         double s = 0;
         int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
