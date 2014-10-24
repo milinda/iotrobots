@@ -43,4 +43,8 @@ public class TNode {
         flag = false;
         accWeight = 0;
     }
+
+    public TNode(TNode t) {
+
+    }
 }

@@ -62,6 +62,108 @@ public class ScanMatcher {
         m_likelihoodSkip = likelihoodSkip;
     }
 
+    void computeActiveArea(GMap map, OrientedPoint<Double> p, double readings){
+        if (m_activeAreaComputed)
+            return;
+        PointSet activeArea;
+        OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
+        lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
+        lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
+        lp.theta+=m_laserPose.theta;
+        Point<Integer> p0 = map.world2map(lp);
+        double []angle = m_laserAngles;
+
+        for (const double* r=readings; r<readings+m_laserBeams; r++, angle++)
+        if (m_generateMap){
+            double d=*r;
+            if (d>m_laserMaxRange)
+                continue;
+            if (d>m_usableRange)
+                d=m_usableRange;
+
+            Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+            Point<Integer> p1=map.world2map(phit);
+
+            d+=map.getDelta();
+            //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+            //IntPoint p2=map.world2map(phit2);
+            List<Point<Integer>> linePoints = new ArrayList<Point<Integer>>();
+            GridLineTraversalLine line = new GridLineTraversalLine();
+            line.points = linePoints;
+            //GridLineTraversal::gridLine(p0, p2, &line);
+            line.gridLine(p0, p1, line);
+            for (int i=0; i<line.points.size()-1; i++){
+                activeArea.insert(map.storage().patchIndexes(linePoints[i]));
+            }
+            if (d<=m_usableRange){
+                activeArea.insert(map.storage().patchIndexes(p1));
+                //activeArea.insert(map.storage().patchIndexes(p2));
+            }
+        } else {
+            if (*r>m_laserMaxRange||*r>m_usableRange) continue;
+            Point phit=lp;
+            phit.x+=*r*cos(lp.theta+*angle);
+            phit.y+=*r*sin(lp.theta+*angle);
+            IntPoint p1=map.world2map(phit);
+            assert(p1.x>=0 && p1.y>=0);
+            IntPoint cp=map.storage().patchIndexes(p1);
+            assert(cp.x>=0 && cp.y>=0);
+            activeArea.insert(cp);
+
+        }
+        //this allocates the unallocated cells in the active area of the map
+        //cout << "activeArea::size() " << activeArea.size() << endl;
+        map.storage().setActiveArea(activeArea, true);
+        m_activeAreaComputed=true;
+    }
+
+    void registerScan(GMap map, OrientedPoint<Double> p, double[] readings){
+        if (!m_activeAreaComputed)
+            computeActiveArea(map, p, readings);
+
+        //this operation replicates the cells that will be changed in the registration operation
+        map.storage().allocActiveArea();
+
+        OrientedPoint lp=p;
+        lp.x+=cos(p.theta)*m_laserPose.x-sin(p.theta)*m_laserPose.y;
+        lp.y+=sin(p.theta)*m_laserPose.x+cos(p.theta)*m_laserPose.y;
+        lp.theta+=m_laserPose.theta;
+        IntPoint p0=map.world2map(lp);
+        const double * angle=m_laserAngles;
+        for (const double* r=readings; r<readings+m_laserBeams; r++, angle++)
+        if (m_generateMap){
+            double d=*r;
+            if (d>m_laserMaxRange)
+                continue;
+            if (d>m_usableRange)
+                d=m_usableRange;
+            Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+            IntPoint p1=map.world2map(phit);
+
+            d+=map.getDelta();
+            //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+            //IntPoint p2=map.world2map(phit2);
+            IntPoint linePoints[20000] ;
+            GridLineTraversalLine line;
+            line.points=linePoints;
+            //GridLineTraversal::gridLine(p0, p2, &line);
+            GridLineTraversal::gridLine(p0, p1, &line);
+            for (int i=0; i<line.num_points-1; i++){
+                map.cell(line.points[i]).update(false, Point(0,0));
+            }
+            if (d<=m_usableRange){
+                map.cell(p1).update(true,phit);
+                //	map.cell(p2).update(true,phit);
+            }
+        } else {
+            if (*r>m_laserMaxRange||*r>m_usableRange) continue;
+            Point phit=lp;
+            phit.x+=*r*cos(lp.theta+*angle);
+            phit.y+=*r*sin(lp.theta+*angle);
+            map.cell(phit).update(true,phit);
+        }
+    }
+
     double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> init, double []readings){
         List<ScoredMove> moveList =  new ArrayList<ScoredMove>();
         double bestScore=-1;
@@ -179,6 +281,10 @@ public class ScanMatcher {
         m_laserBeams=beams;
         m_laserAngles=new double[beams];
         m_laserAngles = angles;
+    }
+
+    public void invalidateActiveArea(){
+        m_activeAreaComputed=false;
     }
 
     public LikeliHood likelihood

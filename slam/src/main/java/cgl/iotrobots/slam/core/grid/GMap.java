@@ -115,7 +115,7 @@ public class GMap {
     }
 
 
-    public Point<Integer> world2map(Point<Double> p) {
+    public Point<Integer> world2map(Point<Integer> p) {
         return new Point<Integer>( (int)Math.round((p.x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((p.y-m_center.y)/m_delta)+m_sizeY2);
     }
 
@@ -125,7 +125,7 @@ public class GMap {
     }
 
     public Cell cell(Point<Integer> p) {
-        Point<Integer> ip=world2map(p);
+        Point<Integer> ip= world2map(p);
         AccessibilityState s=m_storage.cellState(ip);
         //if (! s&Inside) assert(0);
         if (s == AccessibilityState.Allocated)
