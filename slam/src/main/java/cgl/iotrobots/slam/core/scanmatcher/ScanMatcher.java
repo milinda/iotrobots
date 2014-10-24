@@ -9,9 +9,7 @@ import cgl.iotrobots.slam.core.utils.PointPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ScanMatcher {
     private static Logger LOG = LoggerFactory.getLogger(ScanMatcher.class);
@@ -62,29 +60,30 @@ public class ScanMatcher {
         m_likelihoodSkip = likelihoodSkip;
     }
 
-    void computeActiveArea(GMap map, OrientedPoint<Double> p, double readings){
+    void computeActiveArea(GMap map, OrientedPoint<Double> p, double[] readings){
         if (m_activeAreaComputed)
             return;
-        PointSet activeArea;
+        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>();
         OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
         lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
         lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
         lp.theta+=m_laserPose.theta;
         Point<Integer> p0 = map.world2map(lp);
-        double []angle = m_laserAngles;
 
-        for (const double* r=readings; r<readings+m_laserBeams; r++, angle++)
+        int readingIndex = 0;
+        int angleIndex = 0;
+        for (readingIndex = 0; readingIndex < m_laserBeams; readingIndex++, angleIndex++)
         if (m_generateMap){
-            double d=*r;
+            double d=readings[readingIndex];
             if (d>m_laserMaxRange)
                 continue;
             if (d>m_usableRange)
                 d=m_usableRange;
 
-            Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
-            Point<Integer> p1=map.world2map(phit);
+            Point<Double> phit=  new Point<Double>(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x,d * Math.sin(lp.theta+ m_laserAngles[angleIndex]) + lp.y);
+            Point<Integer> p1 = map.world2map(phit);
 
-            d+=map.getDelta();
+            d += map.getDelta();
             //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
             //IntPoint p2=map.world2map(phit2);
             List<Point<Integer>> linePoints = new ArrayList<Point<Integer>>();
@@ -93,27 +92,31 @@ public class ScanMatcher {
             //GridLineTraversal::gridLine(p0, p2, &line);
             line.gridLine(p0, p1, line);
             for (int i=0; i<line.points.size()-1; i++){
-                activeArea.insert(map.storage().patchIndexes(linePoints[i]));
+                activeArea.add(map.getStorage().patchIndexes(linePoints[i]));
             }
             if (d<=m_usableRange){
-                activeArea.insert(map.storage().patchIndexes(p1));
+                activeArea.add(map.getStorage().patchIndexes(p1));
                 //activeArea.insert(map.storage().patchIndexes(p2));
             }
         } else {
-            if (*r>m_laserMaxRange||*r>m_usableRange) continue;
-            Point phit=lp;
-            phit.x+=*r*cos(lp.theta+*angle);
-            phit.y+=*r*sin(lp.theta+*angle);
-            IntPoint p1=map.world2map(phit);
+            double r = readings[readingIndex];
+            double angle = m_laserAngles[angleIndex];
+            if (readings[readingIndex] > m_laserMaxRange ||readings[readingIndex]>m_usableRange) {
+                continue;
+            }
+            Point<Double> phit= new Point<Double>(lp.x, lp.y);
+            phit.x+=r*Math.cos(lp.theta+angle);
+            phit.y+=r*Math.sin(lp.theta+angle);
+            Point<Integer> p1=map.world2map(phit);
             assert(p1.x>=0 && p1.y>=0);
-            IntPoint cp=map.storage().patchIndexes(p1);
+            Point<Integer> cp=map.getStorage().patchIndexes(p1);
             assert(cp.x>=0 && cp.y>=0);
-            activeArea.insert(cp);
+            activeArea.add(cp);
 
         }
         //this allocates the unallocated cells in the active area of the map
         //cout << "activeArea::size() " << activeArea.size() << endl;
-        map.storage().setActiveArea(activeArea, true);
+        map.getStorage().setActiveArea(activeArea, true);
         m_activeAreaComputed=true;
     }
 
@@ -122,11 +125,11 @@ public class ScanMatcher {
             computeActiveArea(map, p, readings);
 
         //this operation replicates the cells that will be changed in the registration operation
-        map.storage().allocActiveArea();
+        map.getStorage().allocActiveArea();
 
         OrientedPoint lp=p;
-        lp.x+=cos(p.theta)*m_laserPose.x-sin(p.theta)*m_laserPose.y;
-        lp.y+=sin(p.theta)*m_laserPose.x+cos(p.theta)*m_laserPose.y;
+        lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
+        lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
         lp.theta+=m_laserPose.theta;
         IntPoint p0=map.world2map(lp);
         const double * angle=m_laserAngles;

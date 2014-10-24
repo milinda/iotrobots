@@ -50,6 +50,10 @@ public class GMap {
     public double getMapResolution() { return m_delta;}
     public double getResolution() { return m_delta;}
 
+    public Storage getStorage() {
+        return m_storage;
+    }
+
     public Size getSize(double xmin, double ymin, double xmax, double ymax) {
         Point<Double> min=map2world(new Point<Integer>(0,0)), max=map2world(new Point<Integer>(m_mapSizeX-1, m_mapSizeY-1));
         return new Size(min.x, min.y, max.x, max.y);
