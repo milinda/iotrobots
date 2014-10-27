@@ -45,4 +45,8 @@ public class RangeSensor extends Sensor {
     public List<Beam> beams() {
         return m_beams;
     }
+
+    public OrientedPoint<Double> getPose() {
+        return m_pose;
+    }
 }

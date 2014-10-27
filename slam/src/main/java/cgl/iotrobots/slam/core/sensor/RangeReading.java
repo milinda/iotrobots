@@ -1,8 +1,10 @@
 package cgl.iotrobots.slam.core.sensor;
 
+import cgl.iotrobots.slam.core.grid.DoubleCell;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RangeReading extends SensorReading {
@@ -50,4 +52,60 @@ public class RangeReading extends SensorReading {
         }
         return ab;
     }
+
+    List<Point<Double>> cartesianForm(double maxRange) {
+        RangeSensor rangeSensor= (RangeSensor) getSensor();
+        int m_beams = rangeSensor.beams().size();
+        List<Point<Double>> cartesianPoints = new ArrayList<Point<Double>>(m_beams);
+        double px,py,ps,pc;
+        px = rangeSensor.getPose().x;
+        py = rangeSensor.getPose().y;
+        ps=Math.sin(rangeSensor.getPose().theta);
+        pc=Math.cos(rangeSensor.getPose().theta);
+        for (int i=0; i<m_beams; i++){
+            double rho=get(i);
+            double s=rangeSensor.beams().get(i).s;
+            double c=rangeSensor.beams().get(i).c;
+            if (rho>=maxRange){
+                cartesianPoints.add(i, new Point<Double>(0.0, 0.0));
+            } else {
+                Point<Double> p=new Point<Double>(rangeSensor.beams().get(i).pose.x+c*rho, rangeSensor.beams().get(i).pose.y+s*rho);
+                cartesianPoints.add(new Point<Double>(px+pc*p.x-ps*p.y, py+ps*p.x+pc*p.y));
+            }
+        }
+        return cartesianPoints;
+    }
+
+    int rawView(double []v, double density) {
+        if (density==0){
+            for (int i=0; i < size(); i++)
+                v[i]=(*this)[i];
+        } else {
+            Point lastPoint(0,0);
+            uint suppressed=0;
+            for (unsigned int i=0; i<size(); i++){
+                const RangeSensor* rs=dynamic_cast<const RangeSensor*>(getSensor());
+                assert(rs);
+                Point lp(
+                        cos(rs->beams()[i].pose.theta)*(*this)[i],
+                        sin(rs->beams()[i].pose.theta)*(*this)[i]);
+                Point dp=lastPoint-lp;
+                double distance=sqrt(dp*dp);
+                if (distance<density){
+                    //				v[i]=MAXDOUBLE;
+                    v[i]=std::numeric_limits<double>::max();
+                    suppressed++;
+                }
+                else{
+                    lastPoint=lp;
+                    v[i]=(*this)[i];
+                }
+                //std::cerr<< __PRETTY_FUNCTION__ << std::endl;
+                //std::cerr<< "suppressed " << suppressed <<"/"<<size() << std::endl;
+            }
+        }
+        //	return size();
+        return static_cast<unsigned int>(size());
+
+    };
 }
