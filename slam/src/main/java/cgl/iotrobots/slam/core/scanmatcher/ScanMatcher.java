@@ -167,7 +167,7 @@ public class ScanMatcher {
         }
     }
 
-    double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> init, double []readings){
+    double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> init, double []readings){
         List<ScoredMove> moveList =  new ArrayList<ScoredMove>();
         double bestScore=-1;
         OrientedPoint<Double> currentPose=init;
