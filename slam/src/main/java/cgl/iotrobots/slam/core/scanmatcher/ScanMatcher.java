@@ -2,7 +2,6 @@ package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.utils.Covariance3;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
 import cgl.iotrobots.slam.core.utils.PointPair;
@@ -40,7 +39,7 @@ public class ScanMatcher {
     int m_initialBeamsSkip;
 
     boolean m_activeAreaComputed;
-    enum Move{Front, Back, Left, Right, TurnLeft, TurnRight, Done};
+    enum Move{Front, Back, Left, Right, TurnLeft, TurnRight, Done}
     /**
      * laser parameters
      */
@@ -278,7 +277,7 @@ public class ScanMatcher {
         return bestScore;
     }
 
-    void setLaserParameters
+    public void setLaserParameters
             (int beams, double angles[], OrientedPoint<Double> lpose){
         m_laserPose= lpose;
         m_laserBeams=beams;

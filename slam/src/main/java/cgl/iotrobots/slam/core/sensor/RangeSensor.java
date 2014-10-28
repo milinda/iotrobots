@@ -36,10 +36,10 @@ public class RangeSensor extends Sensor {
     }
 
     public class Beam {
-        OrientedPoint<Double> pose;
-        double span;
-        double maxRange;
-        double s, c;
+        public OrientedPoint<Double> pose;
+        public double span;
+        public double maxRange;
+        public double s, c;
     }
 
     public List<Beam> beams() {

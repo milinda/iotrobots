@@ -2,9 +2,7 @@ package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
-import cgl.iotrobots.slam.core.sensor.OdometryReading;
-import cgl.iotrobots.slam.core.sensor.OdometrySensor;
-import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
 import com.google.common.collect.ArrayListMultimap;
@@ -15,10 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -81,6 +76,13 @@ public class GridSlamProcessor {
                                int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         m_obsSigmaGain = likelihoodGain;
         m_matcher.setMatchingParameters(urange, range, sigma, kernsize, lopt, aopt, iterations, likelihoodSigma, likelihoodSkip);
+        LOG.info(" -maxUrange " + urange
+                + " -maxUrange " + range
+                + " -sigma     " + sigma
+                + " -kernelSize " + kernsize
+                + " -lstep " + lopt
+                + " -lobsGain " + m_obsSigmaGain
+                + " -astep " + aopt);
     }
 
     public void setMotionModelParameters
@@ -89,12 +91,31 @@ public class GridSlamProcessor {
         m_motionModel.srt = srt;
         m_motionModel.str = str;
         m_motionModel.stt = stt;
+        LOG.info(" -srr " + srr + " -srt " + srt + " -str " + str + " -stt " + stt);
     }
 
     public void setUpdateDistances(double linear, double angular, double resampleThreshold) {
         m_linearThresholdDistance = linear;
         m_angularThresholdDistance = angular;
         m_resampleThreshold = resampleThreshold;
+        LOG.info(" -linearUpdate " + linear
+                + " -angularUpdate "+ angular
+                + " -resampleThreshold " + m_resampleThreshold );
+    }
+
+    public void setSensorMap(Map<String, Sensor> smap){
+    /*
+      Construct the angle table for the sensor
+
+      FIXME For now detect the readings of only the front laser, and assume its pose is in the center of the robot
+    */
+        RangeSensor rangeSensor= (RangeSensor) smap.get("ROBOTLASER1");
+        m_beams = rangeSensor.beams().size();
+        double []angles=new double[rangeSensor.beams().size()];
+        for (int i=0; i<m_beams; i++){
+            angles[i]=rangeSensor.beams().get(i).pose.theta;
+        }
+        m_matcher.setLaserParameters(m_beams, angles, rangeSensor.getPose());
     }
 
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, OrientedPoint<Double> initialPose) {
@@ -104,21 +125,26 @@ public class GridSlamProcessor {
         m_ymax = ymax;
         m_delta = delta;
 
+        LOG.info(" -xmin " + m_xmin + " -xmax " + m_xmax + " -ymin " + m_ymin
+                + " -ymax " + m_ymax + " -delta " + m_delta + " -particles " + size);
+
         m_particles.clear();
 
         TNode node = new TNode(initialPose, 0, null, 0);
         GMap lmap = new GMap(new Point<Double>((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
         for (int i = 0; i < size; i++) {
             int lastIndex = m_particles.size() - 1;
-            m_particles.add(new Particle(lmap));
-            m_particles.get(lastIndex).pose = initialPose;
-            m_particles.get(lastIndex).previousPose = initialPose;
-            m_particles.get(lastIndex).setWeight(0);
-            m_particles.get(lastIndex).previousIndex = 0;
+            Particle p = new Particle(lmap);
+
+            p.pose = initialPose;
+            p.previousPose = initialPose;
+            p.setWeight(0);
+            p.previousIndex = 0;
+            m_particles.add(p);
             // this is not needed
             //		m_particles.back().node=new TNode(initialPose, 0, node, 0);
             // we use the root directly
-            m_particles.get(lastIndex).node = node;
+            p.node = node;
         }
 
 
@@ -131,7 +157,7 @@ public class GridSlamProcessor {
     public void processTruePos(OdometryReading o) {
         OdometrySensor os = (OdometrySensor) o.getSensor();
         if (os != null && os.isIdeal() && m_outputStream != null) {
-            // TODO:write something
+            LOG.info("SIMULATOR_POS " +  o.getPose().x + " " + o.getPose().y + " ");
         }
     }
 
@@ -690,8 +716,8 @@ public class GridSlamProcessor {
 
             for (Particle it : m_particles){
                 //compute the position relative to the path;
-                double s=Math.sin(oldPose.theta-it.pose.theta),
-                        c=Math.cos(oldPose.theta-it.pose.theta);
+                double s=Math.sin(oldPose.theta - it.pose.theta),
+                        c=Math.cos(oldPose.theta - it.pose.theta);
 
                 it.pose.x+=c*dp.x-s*dp.y;
                 it.pose.y+=s*dp.x+c*dp.y;
