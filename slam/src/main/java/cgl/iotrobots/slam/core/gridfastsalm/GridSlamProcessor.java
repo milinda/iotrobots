@@ -900,45 +900,4 @@ public class GridSlamProcessor {
             }
         }
     }
-
-    double propagateWeight(GridSlamProcessor::TNode* n, double weight){
-        if (!n)
-            return weight;
-        double w=0;
-        n->visitCounter++;
-        n->accWeight+=weight;
-        if (n->visitCounter==n->childs){
-            w=propagateWeight(n->parent,n->accWeight);
-        }
-        assert(n->visitCounter<=n->childs);
-        return w;
-    }
-
-    double GridSlamProcessor::propagateWeights(){
-        // don't calls this function directly, use updateTreeWeights(..) !
-
-        // all nodes must be resetted to zero and weights normalized
-
-        // the accumulated weight of the root
-        double lastNodeWeight=0;
-        // sum of the weights in the leafs
-        double aw=0;
-
-        std::vector<double>::iterator w=m_weights.begin();
-        for (ParticleVector::iterator it=m_particles.begin(); it!=m_particles.end(); it++){
-            double weight=*w;
-            aw+=weight;
-            TNode * n=it->node;
-            n->accWeight=weight;
-            lastNodeWeight+=propagateWeight(n->parent,n->accWeight);
-            w++;
-        }
-
-        if (fabs(aw-1.0) > 0.0001 || fabs(lastNodeWeight-1.0) > 0.0001) {
-            cerr + "ERROR: ";
-            cerr + "root->accWeight=" + lastNodeWeight + "    sum_leaf_weights=" + aw + endl;
-            assert(0);
-        }
-        return lastNodeWeight;
-    }
 }
