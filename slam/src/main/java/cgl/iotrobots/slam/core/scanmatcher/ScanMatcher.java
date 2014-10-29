@@ -277,6 +277,80 @@ public class ScanMatcher {
         return bestScore;
     }
 
+    public double optimize(OrientedPoint<Double> pnew, GMap map, OrientedPoint<Double> init, double []readings) {
+        double bestScore=-1;
+        OrientedPoint<Double> currentPose=init;
+        double currentScore=score(map, currentPose, readings);
+        double adelta=m_optAngularDelta, ldelta=m_optLinearDelta;
+        int refinement=0;
+        int c_iterations=0;
+        do{
+            if (bestScore>=currentScore){
+                refinement++;
+                adelta*=.5;
+                ldelta*=.5;
+            }
+            bestScore=currentScore;
+            OrientedPoint<Double> bestLocalPose=currentPose;
+            OrientedPoint<Double> localPose=currentPose;
+
+            Move move=Move.Front;
+            do {
+                localPose=currentPose;
+                switch(move){
+                    case Front:
+                        localPose.x+=ldelta;
+                        move=Move.Back;
+                        break;
+                    case Back:
+                        localPose.x-=ldelta;
+                        move=Move.Left;
+                        break;
+                    case Left:
+                        localPose.y-=ldelta;
+                        move=Move.Right;
+                        break;
+                    case Right:
+                        localPose.y+=ldelta;
+                        move=Move.TurnLeft;
+                        break;
+                    case TurnLeft:
+                        localPose.theta+=adelta;
+                        move=Move.TurnRight;
+                        break;
+                    case TurnRight:
+                        localPose.theta-=adelta;
+                        move=Move.Done;
+                        break;
+                    default:
+                }
+                double localScore=score(map, localPose, readings);
+                if (localScore>currentScore){
+                    currentScore=localScore;
+                    bestLocalPose=localPose;
+                }
+                c_iterations++;
+            } while(move!=Move.Done);
+            currentPose=bestLocalPose;
+        }while (currentScore>bestScore || refinement<m_optRecursiveIterations);
+        pnew.x=currentPose.x;
+        pnew.y=currentPose.y;
+        pnew.theta=currentPose.theta;
+        return bestScore;
+    }
+
+
+
+    void ScanMatcher::setLaserParameters
+            (unsigned int beams, double* angles, const OrientedPoint& lpose){
+        if (m_laserAngles)
+            delete [] m_laserAngles;
+        m_laserPose=lpose;
+        m_laserBeams=beams;
+        m_laserAngles=new double[beams];
+        memcpy(m_laserAngles, angles, sizeof(double)*m_laserBeams);
+    }
+
     public void setLaserParameters
             (int beams, double angles[], OrientedPoint<Double> lpose){
         m_laserPose= lpose;
@@ -355,9 +429,21 @@ public class ScanMatcher {
         return new LikeliHood(lmax, mean, cov, Math.log(lcum)+lmax);
     }
 
-    public int likelihoodAndScore(double s, double l, GMap map, OrientedPoint<Double> p, double []readings) {
-        l = 0;
-        s = 0;
+    public class LikeliHoodAndScore {
+        public double s;
+        public double l;
+        public double c;
+
+        public LikeliHoodAndScore(double s, double l, double c) {
+            this.s = s;
+            this.l = l;
+            this.c = c;
+        }
+    }
+
+    public LikeliHoodAndScore likelihoodAndScore(GMap map, OrientedPoint<Double> p, double []readings) {
+        double l = 0;
+        double s = 0;
         int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
 
@@ -413,7 +499,7 @@ public class ScanMatcher {
                 l+=(found)?f:noHit;
             }
         }
-        return c;
+        return new LikeliHoodAndScore(s, l, c);
     }
 
     double icpStep(OrientedPoint<Double> pret, GMap map, OrientedPoint<Double> p, double []readings) {

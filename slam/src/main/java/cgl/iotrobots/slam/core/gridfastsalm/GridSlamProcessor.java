@@ -513,7 +513,7 @@ public class GridSlamProcessor {
         aux = reversed;
         boolean first = true;
         double oldWeight = 0;
-        OrientedPoint<Double> oldPose;
+        OrientedPoint<Double> oldPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
         while (aux != null) {
             if (first) {
                 oldPose = aux.pose;
@@ -528,7 +528,7 @@ public class GridSlamProcessor {
 
             double[] plainReading = new double[m_beams];
             for (int i = 0; i < m_beams; i++) {
-                plainReading[i] = ( * (aux.reading))[i];
+                plainReading[i] = aux.reading.get(i);
             }
 
 
@@ -544,13 +544,13 @@ public class GridSlamProcessor {
 
                 //register the scan
                 m_matcher.invalidateActiveArea();
-                m_matcher.computeActiveArea(it -> map, it -> pose, plainReading);
+                m_matcher.computeActiveArea(it.map, it .pose, plainReading);
                 it.weight += dw;
                 it.weightSum += dw;
 
                 // this should not work, since it->weight is not the correct weight!
                 //			it->node=new TNode(it->pose, it->weight, it->node);
-                it.node = new TNode(it.pose, 0.0, it.node);
+                it.node = new TNode(it.pose, 0.0, it.node, 0);
                 //update the weight
             }
 
@@ -619,11 +619,11 @@ public class GridSlamProcessor {
 
     /**Just scan match every single particle.
      If the scan matching fails, the particle gets a default likelihood.*/
-    void scanMatch(double []plainReading){
+    public void scanMatch(double []plainReading){
         // sample a new pose from each scan in the reference
         double sumScore=0;
         for (Particle it : m_particles){
-            OrientedPoint<Double> corrected;
+            OrientedPoint<Double> corrected = new OrientedPoint<Double>(0.0, 0.0, 0.0);
             double score, l, s;
             score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
@@ -635,7 +635,10 @@ public class GridSlamProcessor {
                 LOG.info("op:" + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta);
             }
 
-            m_matcher.likelihoodAndScore(s, l, it.map, it.pose, plainReading);
+            ScanMatcher.LikeliHoodAndScore score1 = m_matcher.likelihoodAndScore(it.map, it.pose, plainReading);
+            l = score1.l;
+            s = score1.s;
+
             sumScore+=score;
             it.weight+=l;
             it.weightSum+=l;
@@ -799,105 +802,5 @@ public class GridSlamProcessor {
 
         return v;
 
-    }
-
-    void integrateScanSequence(TNode node){
-        //reverse the list
-        TNode aux = node;
-        TNode reversed= null;
-        double count=0;
-        while(aux!=null){
-            TNode newnode=new TNode(aux);
-            newnode.parent=reversed;
-            reversed=newnode;
-            aux=aux.parent;
-            count++;
-        }
-
-        //attach the path to each particle and compute the map;
-
-        LOG.info("Restoring State Nodes=" + count);
-
-        aux=reversed;
-        boolean first=true;
-        double oldWeight=0;
-        OrientedPoint<Double> oldPose;
-        while (aux!=null){
-            if (first){
-                oldPose=aux.pose;
-                first=false;
-                oldWeight=aux.weight;
-            }
-
-            OrientedPoint<Double> dp = new OrientedPoint<Double>(aux.pose.y - oldPose.y, aux.pose.y-oldPose.y, aux.pose.theta-oldPose.theta);
-            double dw=aux.weight-oldWeight;
-            oldPose=aux.pose;
-
-
-            double []plainReading = new double[m_beams];
-            for(int i=0; i<m_beams; i++) {
-                plainReading[i] = aux.reading[i];
-            }
-
-
-            for (Particle it : m_particles){
-                //compute the position relative to the path;
-                double s=Math.sin(oldPose.theta - it.pose.theta),
-                        c=Math.cos(oldPose.theta - it.pose.theta);
-
-                it.pose.x+=c*dp.x-s*dp.y;
-                it.pose.y+=s*dp.x+c*dp.y;
-                it.pose.theta+=dp.theta;
-                it.pose.theta=Math.atan2(Math.sin(it.pose.theta), Math.cos(it.pose.theta));
-
-                //register the scan
-                m_matcher.invalidateActiveArea();
-                m_matcher.computeActiveArea(it->map, it->pose, plainReading);
-                it->weight+=dw;
-                it->weightSum+=dw;
-
-                // this should not work, since it->weight is not the correct weight!
-                //			it->node=new TNode(it->pose, it->weight, it->node);
-                it->node=new TNode(it->pose, 0.0, it->node);
-                //update the weight
-            }
-
-            delete [] plainReading;
-            aux=aux->parent;
-        }
-
-        //destroy the path
-        aux=reversed;
-        while (reversed){
-            aux=reversed;
-            reversed=reversed->parent;
-            delete aux;
-        }
-    }
-
-//END State Save/Restore
-
-//BEGIN
-
-    void  GridSlamProcessor::updateTreeWeights(bool weightsAlreadyNormalized){
-
-        if (!weightsAlreadyNormalized) {
-            normalize();
-        }
-        resetTree();
-        propagateWeights();
-    }
-
-    void GridSlamProcessor::resetTree(){
-        // don't calls this function directly, use updateTreeWeights(..) !
-
-        for (ParticleVector::iterator it=m_particles.begin(); it!=m_particles.end(); it++){
-            TNode* n=it->node;
-            while (n){
-                n->accWeight=0;
-                n->visitCounter=0;
-                n=n->parent;
-            }
-        }
     }
 }
