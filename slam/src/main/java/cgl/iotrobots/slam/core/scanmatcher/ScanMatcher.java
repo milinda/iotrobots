@@ -59,7 +59,7 @@ public class ScanMatcher {
         m_likelihoodSkip = likelihoodSkip;
     }
 
-    void computeActiveArea(GMap map, OrientedPoint<Double> p, double[] readings){
+    public void computeActiveArea(GMap map, OrientedPoint<Double> p, double[] readings){
         if (m_activeAreaComputed)
             return;
         Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>();
@@ -119,7 +119,7 @@ public class ScanMatcher {
         m_activeAreaComputed=true;
     }
 
-    void registerScan(GMap map, OrientedPoint<Double> p, double[] readings){
+    public void registerScan(GMap map, OrientedPoint<Double> p, double[] readings){
         if (!m_activeAreaComputed)
             computeActiveArea(map, p, readings);
 
@@ -166,7 +166,7 @@ public class ScanMatcher {
         }
     }
 
-    double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> init, double []readings){
+    public double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> init, double []readings){
         List<ScoredMove> moveList =  new ArrayList<ScoredMove>();
         double bestScore=-1;
         OrientedPoint<Double> currentPose=init;

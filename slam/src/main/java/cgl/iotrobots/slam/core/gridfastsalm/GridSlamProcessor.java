@@ -1,6 +1,7 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
@@ -157,11 +158,11 @@ public class GridSlamProcessor {
     public void processTruePos(OdometryReading o) {
         OdometrySensor os = (OdometrySensor) o.getSensor();
         if (os != null && os.isIdeal() && m_outputStream != null) {
-            LOG.info("SIMULATOR_POS " +  o.getPose().x + " " + o.getPose().y + " ");
+            LOG.info("SIMULATOR_POS x:" +  o.getPose().x + " y:" + o.getPose().y + " theta: " + o.getPose().theta);
         }
     }
 
-    public void processScan(RangeReading reading, int adaptParticles) {
+    public boolean processScan(RangeReading reading, int adaptParticles) {
         OrientedPoint<Double> relPose = reading.getPose();
         if (m_count == 0) {
             m_lastPartPose = m_odoPose = relPose;
@@ -171,10 +172,15 @@ public class GridSlamProcessor {
             p.pose = m_motionModel.drawFromMotion(p.pose, relPose, m_odoPose);
         }
 
-        // todo outto to file
+        LOG.info("ODOM " + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta + " " + reading.getTime());
+        LOG.info("ODO_UPDATE " + m_particles.size() + " ");
+        for (Particle p : m_particles) {
+            LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.weight);
+        }
+        LOG.info("ODO_UPDATE Time {}", reading.getTime());
 
         //TODO invoke the callback
-        // onOdometryUpdate();
+        onOdometryUpdate();
 
         OrientedPoint<Double> move = OrientedPoint.minus(relPose, m_odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
@@ -205,81 +211,63 @@ public class GridSlamProcessor {
                 || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
             last_update_time_ = reading.getTime();
 
-            if (m_outputStream != null) {
-                m_outputStream.write(setiosflags(ios::fixed) << setprecision(6);
-                m_outputStream << "FRAME " << m_readingCount;
-                m_outputStream << " " << m_linearDistance;
-                m_outputStream << " " << m_angularDistance << endl;
-            }
+            LOG.info("FRAME " + m_readingCount + " " + m_linearDistance + " " + m_angularDistance);
 
             LOG.info("update frame " + m_readingCount + "update ld=" + m_linearDistance + " ad=" + m_angularDistance);
             LOG.info("Laser Pose= " + reading.getPose().x + " " + reading.getPose().y + " " + reading.getPose().theta);
 
             //this is for converting the reading in a scan-matcher feedable form
             assert (reading.size() == m_beams);
-            double []plainReading = new double[m_beams];
-            for (int i = 0; i<m_beams; i++){
+            double[] plainReading = new double[m_beams];
+            for (int i = 0; i < m_beams; i++) {
                 plainReading[i] = reading.get(i);
             }
             LOG.info("m_count " + m_count);
 
             RangeReading reading_copy =
-                    new RangeReading(reading.size(), & (reading[0]),
-                    static_cast <const RangeSensor * > (reading.getSensor()),
-                    reading.getTime());
+                    new RangeReading(reading.size(), reading.get(0),
+                            (RangeSensor) reading.getSensor(),
+                            reading.getTime());
 
             if (m_count > 0) {
                 scanMatch(plainReading);
-                if (m_outputStream.is_open()) {
-                    m_outputStream << "LASER_READING " << reading.size() << " ";
-                    m_outputStream << setiosflags(ios::fixed) << setprecision(2);
-                    for (RangeReading::const_iterator b = reading.begin(); b != reading.end() ;
-                    b++){
-                        m_outputStream <<*b << " ";
-                    }
-                    OrientedPoint p = reading.getPose();
-                    m_outputStream << setiosflags(ios::fixed) << setprecision(6);
-                    m_outputStream << p.x << " " << p.y << " " << p.theta << " " << reading.getTime() << endl;
-                    m_outputStream << "SM_UPDATE " << m_particles.size() << " ";
-                    for (ParticleVector::const_iterator it = m_particles.begin(); it != m_particles.end() ;
-                    it++){
-                        const OrientedPoint & pose = it -> pose;
-                        m_outputStream << setiosflags(ios::fixed) << setprecision(3) << pose.x << " " << pose.y << " ";
-                        m_outputStream << setiosflags(ios::fixed) << setprecision(6) << pose.theta << " " << it -> weight << " ";
-                    }
-                    m_outputStream << endl;
+
+                LOG.debug("LASER_READING " + reading.size() + " ");
+                for (Double b : reading) {
+                    LOG.debug(b + " ");
+                }
+                OrientedPoint p = reading.getPose();
+
+                LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
+                LOG.debug("SM_UPDATE " + m_particles.size() + " ");
+                for (Particle it : m_particles) {
+                    OrientedPoint pose = it.pose;
+                    LOG.debug(pose.x + " " + pose.y + " ");
+                    LOG.debug(pose.theta + " " + it.weight + " ");
                 }
                 onScanmatchUpdate();
 
                 updateTreeWeights(false);
 
-                LOG.info("neff= " + m_neff);
-                if (m_outputStream.is_open()) {
-                    m_outputStream << setiosflags(ios::fixed) << setprecision(6);
-                    m_outputStream << "NEFF " << m_neff << endl;
-                }
+                LOG.info("neff = " + m_neff);
                 resample(plainReading, adaptParticles, reading_copy);
             } else {
-                m_infoStream << "Registering First Scan" << endl;
-                for (ParticleVector::iterator it = m_particles.begin(); it != m_particles.end() ;
-                it++){
+                LOG.info("Registering First Scan");
+                for (Particle it : m_particles) {
                     m_matcher.invalidateActiveArea();
-                    m_matcher.computeActiveArea(it -> map, it -> pose, plainReading);
-                    m_matcher.registerScan(it -> map, it -> pose, plainReading);
+                    m_matcher.computeActiveArea(it.map, it.pose, plainReading);
+                    m_matcher.registerScan(it.map, it.pose, plainReading);
 
                     // cyr: not needed anymore, particles refer to the root in the beginning!
-                    TNode * node = new TNode(it -> pose, 0., it -> node, 0);
+                    TNode node = new TNode(it.pose, 0., it.node, 0);
                     //node->reading=0;
-                    node -> reading = reading_copy;
-                    it -> node = node;
+                    node.reading = reading_copy;
+                    it.node = node;
 
                 }
             }
-            //		cerr  << "Tree: normalizing, resetting and propagating weights at the end..." ;
             updateTreeWeights(false);
-            //		cerr  << ".done!" <<endl;
 
-            delete[] plainReading;
             m_lastPartPose = m_odoPose; //update the past pose for the next iteration
             m_linearDistance = 0;
             m_angularDistance = 0;
@@ -287,16 +275,154 @@ public class GridSlamProcessor {
             processed = true;
 
             //keep ready for the next step
-            for (ParticleVector::iterator it = m_particles.begin(); it != m_particles.end() ;
-            it++){
-                it -> previousPose = it -> pose;
+            for (Particle it : m_particles) {
+                it.previousPose = it.pose;
             }
 
         }
-        if (m_outputStream.is_open())
-            m_outputStream << flush;
         m_readingCount++;
         return processed;
+    }
+
+    void updateTreeWeights(boolean weightsAlreadyNormalized) {
+
+        if (!weightsAlreadyNormalized) {
+            normalize();
+        }
+        resetTree();
+        propagateWeights();
+    }
+
+    void normalize() {
+        //normalize the log m_weights
+        double gain = 1. / (m_obsSigmaGain * m_particles.size());
+        double lmax = Double.MAX_VALUE;
+        for (Particle it : m_particles) {
+            lmax = it.weight > lmax ? it.weight : lmax;
+        }
+
+        m_weights.clear();
+        double wcum = 0;
+        m_neff = 0;
+        for (Particle it : m_particles) {
+            double w = Math.exp(gain * (it.weight - lmax));
+            m_weights.add(w);
+            wcum += w;
+        }
+
+        m_neff = 0;
+        for (Double it : m_weights) {
+            it = it / wcum;
+            double w = it;
+            m_neff += w * w;
+        }
+        m_neff = 1. / m_neff;
+    }
+
+    public boolean resample(double[] plainReading, int adaptSize, RangeReading reading) {
+        boolean hasResampled = false;
+        List<TNode> oldGeneration = new ArrayList<TNode>();
+        for (Particle m_particle : m_particles) {
+            oldGeneration.add(m_particle.node);
+        }
+
+        if (m_neff < m_resampleThreshold * m_particles.size()) {
+            LOG.info("*************RESAMPLE***************");
+
+            UniformResampler resampler = new UniformResampler();
+            m_indexes = resampler.resampleIndexes(m_weights, adaptSize);
+
+
+            StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(m_indexes.size());
+            for (Integer it : m_indexes) {
+                m_outputStream.append(it).append(" ");
+            }
+            LOG.debug(m_outputStream.toString());
+
+
+            onResampleUpdate();
+            //BEGIN: BUILDING TREE
+            List<Particle> temp = new ArrayList<Particle>();
+            int j = 0;
+            List<Integer> deletedParticles = new ArrayList<Integer>();        //this is for deleteing the particles which have been resampled away.
+
+            //	 	cerr << "Existing Nodes:" ;
+            for (int i = 0; i < m_indexes.size(); i++) {
+                //			cerr << " " << m_indexes[i];
+                while (j < m_indexes.get(i)) {
+                    deletedParticles.add(j);
+                    j++;
+                }
+                if (j == m_indexes.get(i))
+                    j++;
+                Particle p = m_particles.get(m_indexes.get(i));
+                TNode node = null;
+                TNode oldNode = oldGeneration.get(m_indexes.get(i));
+                //			cerr << i << "->" << m_indexes[i] << "B("<<oldNode->childs <<") ";
+                node = new TNode(p.pose, 0, oldNode, 0);
+                //node->reading=0;
+                node.reading = reading;
+                //			cerr << "A("<<node->parent->childs <<") " <<endl;
+
+                temp.add(p);
+                p.node = node;
+                p.previousIndex = m_indexes.get(i);
+            }
+            while (j < m_indexes.size()) {
+                deletedParticles.add(j);
+                j++;
+            }
+            //		cerr << endl;
+            m_outputStream = new StringBuilder("Deleting Nodes:");
+            for (int i = 0; i < deletedParticles.size(); i++) {
+                m_outputStream.append(" ").append(deletedParticles.get(i));
+                m_particles.get(deletedParticles.get(i)).node = null;
+            }
+            m_outputStream.append(" Done");
+            LOG.debug(m_outputStream.toString());
+
+            //END: BUILDING TREE
+            LOG.debug("Deleting old particles...");
+            m_particles.clear();
+            LOG.debug("Done");
+            LOG.debug("Copying Particles and  Registering  scans...");
+            for (Particle it : m_particles) {
+                it.setWeight(0);
+                m_matcher.invalidateActiveArea();
+                m_matcher.registerScan(it.map, it.pose, plainReading);
+                m_particles.add(it);
+            }
+            hasResampled = true;
+        } else {
+            int index = 0;
+            LOG.debug("Registering Scans:");
+            Iterator<TNode> node_it = oldGeneration.iterator();
+            for (Particle it : m_particles) {
+                //create a new node in the particle tree and add it to the old tree
+                //BEGIN: BUILDING TREE
+                TNode node = null;
+                node = new TNode(it.pose, 0.0, node_it.next(), 0);
+
+                //node->reading=0;
+                node.reading = reading;
+                it.node = node;
+
+                //END: BUILDING TREE
+                m_matcher.invalidateActiveArea();
+                m_matcher.registerScan(it.map, it.pose, plainReading);
+                it.previousIndex = index;
+                index++;
+            }
+        }
+        return hasResampled;
+    }
+
+    private void onResampleUpdate() {
+
+    }
+
+    private void onOdometryUpdate() {
+
     }
 
     private void onScanmatchUpdate() {
@@ -499,7 +625,7 @@ public class GridSlamProcessor {
         for (Particle it : m_particles){
             OrientedPoint<Double> corrected;
             double score, l, s;
-            score = m_matcher.optimize(corrected, it->map, it->pose, plainReading);
+            score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score>m_minimumScore){
                 it.pose=corrected;
@@ -509,15 +635,15 @@ public class GridSlamProcessor {
                 LOG.info("op:" + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta);
             }
 
-            m_matcher.likelihoodAndScore(s, l, it->map, it->pose, plainReading);
+            m_matcher.likelihoodAndScore(s, l, it.map, it.pose, plainReading);
             sumScore+=score;
-            it->weight+=l;
-            it->weightSum+=l;
+            it.weight+=l;
+            it.weightSum+=l;
 
             //set up the selective copy of the active area
             //by detaching the areas that will be updated
             m_matcher.invalidateActiveArea();
-            m_matcher.computeActiveArea(it->map, it->pose, plainReading);
+            m_matcher.computeActiveArea(it.map, it.pose, plainReading);
         }
         LOG.info("Average Scan Matching Score=" + sumScore / m_particles.size());
     }
@@ -564,12 +690,12 @@ public class GridSlamProcessor {
             for (TNode it=p.first; it!=p.second; it++){
                 assert(it->second->parent==it->first);
                 (it->second)->parent=newnode;
-                //cerr << "PS(" << it->first << ", "<< it->second << ")";
+                //cerr + "PS(" + it->first + ", "+ it->second + ")";
                 childs++;
             }
-            ////cerr << endl;
+            ////cerr + endl;
             parentCache.erase(p.first, p.second);
-            //cerr << __PRETTY_FUNCTION__ << ": parentCache.size(POSTERASE)=" << parentCache.size() << endl;
+            //cerr + __PRETTY_FUNCTION__ + ": parentCache.size(POSTERASE)=" + parentCache.size() + endl;
             assert(childs==newnode->childs);
 
             //unmark the node
@@ -582,14 +708,14 @@ public class GridSlamProcessor {
             }
             //insert the parent in the cache
         }
-        //cerr << __PRETTY_FUNCTION__ << " : checking cloned trajectories" << endl;
+        //cerr + __PRETTY_FUNCTION__ + " : checking cloned trajectories" + endl;
         for (unsigned int i=0; i<v.size(); i++){
             TNode* node= v[i];
             while (node){
-                //cerr <<".";
+                //cerr +".";
                 node=node->parent;
             }
-            //cerr << endl;
+            //cerr + endl;
         }
 
         return v;
@@ -614,22 +740,22 @@ public class GridSlamProcessor {
             assert(newnode->childs==0);
             if (newnode->parent){
                 parentCache.insert(make_pair(newnode->parent, newnode));
-                //cerr << __PRETTY_FUNCTION__ << ": node " << newnode->parent << " flag=" << newnode->parent->flag<< endl;
+                //cerr + __PRETTY_FUNCTION__ + ": node " + newnode->parent + " flag=" + newnode->parent->flag+ endl;
                 if (! newnode->parent->flag){
-                    //cerr << __PRETTY_FUNCTION__ << ": node " << newnode->parent << " flag=" << newnode->parent->flag<< endl;
+                    //cerr + __PRETTY_FUNCTION__ + ": node " + newnode->parent + " flag=" + newnode->parent->flag+ endl;
                     newnode->parent->flag=true;
                     border.push_back(newnode->parent);
                 }
             }
         }
 
-        //cerr << __PRETTY_FUNCTION__ << ": border.size(INITIAL)=" << border.size() << endl;
-        //cerr << __PRETTY_FUNCTION__ << ": parentCache.size()=" << parentCache.size() << endl;
+        //cerr + __PRETTY_FUNCTION__ + ": border.size(INITIAL)=" + border.size() + endl;
+        //cerr + __PRETTY_FUNCTION__ + ": parentCache.size()=" + parentCache.size() + endl;
         while (! border.empty()){
-            //cerr << __PRETTY_FUNCTION__ << ": border.size(PREPROCESS)=" << border.size() << endl;
-            //cerr << __PRETTY_FUNCTION__ << ": parentCache.size(PREPROCESS)=" << parentCache.size() << endl;
+            //cerr + __PRETTY_FUNCTION__ + ": border.size(PREPROCESS)=" + border.size() + endl;
+            //cerr + __PRETTY_FUNCTION__ + ": parentCache.size(PREPROCESS)=" + parentCache.size() + endl;
             const TNode* node=border.front();
-            //cerr << __PRETTY_FUNCTION__ << ": node " << node << endl;
+            //cerr + __PRETTY_FUNCTION__ + ": node " + node + endl;
             border.pop_front();
             if (! node)
                 continue;
@@ -643,12 +769,12 @@ public class GridSlamProcessor {
             for (TNodeMultimap::iterator it=p.first; it!=p.second; it++){
                 assert(it->second->parent==it->first);
                 (it->second)->parent=newnode;
-                //cerr << "PS(" << it->first << ", "<< it->second << ")";
+                //cerr + "PS(" + it->first + ", "+ it->second + ")";
                 childs++;
             }
-            ////cerr << endl;
+            ////cerr + endl;
             parentCache.erase(p.first, p.second);
-            //cerr << __PRETTY_FUNCTION__ << ": parentCache.size(POSTERASE)=" << parentCache.size() << endl;
+            //cerr + __PRETTY_FUNCTION__ + ": parentCache.size(POSTERASE)=" + parentCache.size() + endl;
             assert(childs==newnode->childs);
 
             //unmark the node
@@ -661,14 +787,14 @@ public class GridSlamProcessor {
             }
             //insert the parent in the cache
         }
-        //cerr << __PRETTY_FUNCTION__ << " : checking cloned trajectories" << endl;
+        //cerr + __PRETTY_FUNCTION__ + " : checking cloned trajectories" + endl;
         for (unsigned int i=0; i<v.size(); i++){
             TNode* node= v[i];
             while (node){
-                //cerr <<".";
+                //cerr +".";
                 node=node->parent;
             }
-            //cerr << endl;
+            //cerr + endl;
         }
 
         return v;
@@ -809,8 +935,8 @@ public class GridSlamProcessor {
         }
 
         if (fabs(aw-1.0) > 0.0001 || fabs(lastNodeWeight-1.0) > 0.0001) {
-            cerr << "ERROR: ";
-            cerr << "root->accWeight=" << lastNodeWeight << "    sum_leaf_weights=" << aw << endl;
+            cerr + "ERROR: ";
+            cerr + "root->accWeight=" + lastNodeWeight + "    sum_leaf_weights=" + aw + endl;
             assert(0);
         }
         return lastNodeWeight;
