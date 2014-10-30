@@ -339,33 +339,25 @@ public class ScanMatcher {
         return bestScore;
     }
 
-
-
-    void ScanMatcher::setLaserParameters
-            (unsigned int beams, double* angles, const OrientedPoint& lpose){
-        if (m_laserAngles)
-            delete [] m_laserAngles;
+    void setLaserParameters
+            (int beams, double []angles, OrientedPoint<Double> lpose){
         m_laserPose=lpose;
         m_laserBeams=beams;
         m_laserAngles=new double[beams];
-        memcpy(m_laserAngles, angles, sizeof(double)*m_laserBeams);
+        System.arraycopy(angles, 0, m_laserAngles, 0, angles.length);
     }
 
-    public void setLaserParameters
-            (int beams, double angles[], OrientedPoint<Double> lpose){
-        m_laserPose= lpose;
-        m_laserBeams=beams;
-        m_laserAngles=new double[beams];
-        m_laserAngles = angles;
-    }
 
     public void invalidateActiveArea(){
         m_activeAreaComputed=false;
     }
 
     public LikeliHood likelihood
-            (double _lmax, OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> p, double[] readings) {
-        List<ScoredMove> moveList = new ArrayList<ScoredMove>();
+            (GMap map, OrientedPoint<Double> p, double[] readings) {
+        double _lmax;
+        OrientedPoint<Double> _mean;
+        Covariance3 _cov;
+                List<ScoredMove> moveList = new ArrayList<ScoredMove>();
 
         for (double xx = -m_llsamplerange; xx <= m_llsamplerange; xx += m_llsamplestep) {
             for (double yy = -m_llsamplerange; yy <= m_llsamplerange; yy += m_llsamplestep) {

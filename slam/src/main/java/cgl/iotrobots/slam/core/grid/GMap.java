@@ -41,7 +41,7 @@ public class GMap {
         m_sizeY2 = (int) Math.round((m_center.y - ymin) / m_delta);
     }
 
-    public Point getCenter() {return m_center;}
+    public Point<Double> getCenter() {return m_center;}
     public double getWorldSizeX() {return m_worldSizeX;}
     public double getWorldSizeY() {return m_worldSizeY;}
     public int getMapSizeX() {return m_mapSizeX;}
