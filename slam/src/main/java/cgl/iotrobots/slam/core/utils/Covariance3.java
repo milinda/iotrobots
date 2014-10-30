@@ -3,6 +3,9 @@ package cgl.iotrobots.slam.core.utils;
 public class Covariance3 {
     public double xx, yy, tt, xy, xt, yt;
 
+    public Covariance3() {
+    }
+
     public Covariance3(double xx, double yy, double tt, double xy, double xt, double yt) {
         this.xx = xx;
         this.yy = yy;

@@ -171,6 +171,25 @@ public class ScanMatcher {
         }
     }
 
+    public double icpOptimize(OrientedPoint<Double> pnew, GMap map, OrientedPoint<Double> init, double[] readings) {
+        double currentScore;
+        double sc = score(map, init, readings);
+        OrientedPoint<Double> start = init;
+        pnew.x = init.x;
+        pnew.y = init.y;
+        pnew.theta = init.theta;
+        int iterations = 0;
+        do {
+            currentScore = sc;
+            sc = icpStep(pnew, map, start, readings);
+            //cerr << "pstart=" << start.x << " " <<start.y << " " << start.theta << endl;
+            //cerr << "pret=" << pnew.x << " " <<pnew.y << " " << pnew.theta << endl;
+            start = pnew;
+            iterations++;
+        } while (sc > currentScore);
+        return currentScore;
+    }
+
     public double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> init, double []readings){
         List<ScoredMove> moveList =  new ArrayList<ScoredMove>();
         double bestScore=-1;
@@ -226,7 +245,7 @@ public class ScanMatcher {
                 }
                 double localScore = 0, localLikelihood = 0;
                 //update the score
-                LikeliHoodAndScore ls =likelihoodAndScore(map, localPose, readings);
+                ls =likelihoodAndScore(map, localPose, readings);
                 localLikelihood = ls.s;
                 localLikelihood = ls.l;
                 if (localScore>currentScore){

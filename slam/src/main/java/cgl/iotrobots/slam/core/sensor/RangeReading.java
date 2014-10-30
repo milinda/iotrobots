@@ -28,7 +28,7 @@ public class RangeReading extends SensorReading {
         this.m_pose = pose;
     }
 
-    int activeBeams(double density) {
+    public int activeBeams(double density) {
         if (density == 0.) {
             return size();
         }
@@ -52,7 +52,7 @@ public class RangeReading extends SensorReading {
         return ab;
     }
 
-    List<Point<Double>> cartesianForm(double maxRange) {
+    public List<Point<Double>> cartesianForm(double maxRange) {
         RangeSensor rangeSensor = (RangeSensor) getSensor();
         int m_beams = rangeSensor.beams().size();
         List<Point<Double>> cartesianPoints = new ArrayList<Point<Double>>(m_beams);
@@ -75,7 +75,7 @@ public class RangeReading extends SensorReading {
         return cartesianPoints;
     }
 
-    int rawView(double[] v, double density) {
+    public int rawView(double[] v, double density) {
         if (density == 0) {
             for (int i = 0; i < size(); i++)
                 v[i] = this.get(i);

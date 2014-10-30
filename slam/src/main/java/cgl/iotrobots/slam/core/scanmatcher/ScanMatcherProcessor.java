@@ -4,8 +4,10 @@ import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
+import cgl.iotrobots.slam.core.utils.Covariance3;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,64 +92,55 @@ public class ScanMatcherProcessor {
 
         double lin_move= OrientedPoint.mulD(move, move);
         if (lin_move>m_maxMove){
-            LOG. "Too big jump in the log file: " << lin_move << endl;
-            cerr << "relPose=" << relPose.x << " " <<relPose.y << endl;
-            cerr << "ignoring" << endl;
+            LOG.error("Too big jump in the log file: {} relPose= {} {} ignoring",  lin_move, relPose.x, relPose.y);
             return;
             //assert(0);
-            dth=0;
-            move.x=move.y=move.theta=0;
+            //dth=0;
+            //move.x= move.y=move.theta=0.0;
         }
 
-        double s=sin(dth), c=cos(dth);
-        OrientedPoint dPose;
+        double s=Math.sin(dth), c=Math.cos(dth);
+        OrientedPoint<Double> dPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
         dPose.x=c*move.x-s*move.y;
         dPose.y=s*move.x+c*move.y;
         dPose.theta=move.theta;
 
-        #ifdef SCANMATHCERPROCESSOR_DEBUG
-        cout << "abs-move x="<< dPose.x <<  " y=" << dPose.y << " theta=" << dPose.theta << endl;
-        #endif
-                m_pose=m_pose+dPose;
-        m_pose.theta=atan2(sin(m_pose.theta), cos(m_pose.theta));
 
-        #ifdef SCANMATHCERPROCESSOR_DEBUG
-        cout << "StartPose: x="
-                << m_pose.x << " y=" << m_pose.y << " theta=" << m_pose.theta << endl;
-        #endif
+        LOG.debug("abs-move x=" + dPose.x +  " y=" + dPose.y + " theta=" + dPose.theta);
 
-                m_odoPose=relPose; //update the past pose for the next iteration
+        m_pose = OrientedPoint.plus(m_pose, dPose);
+        m_pose.theta=Math.atan2(Math.sin(m_pose.theta), Math.cos(m_pose.theta));
+
+        LOG.debug(m_pose.x + " y=" + m_pose.y + " theta=" + m_pose.theta);
+        
+        m_odoPose=relPose; //update the past pose for the next iteration
 
 
         //FIXME here I assume that everithing is referred to the center of the robot,
         //while the offset of the laser has to be taken into account
 
         assert(reading.size()==m_beams);
-/*
-	double * plainReading = new double[m_beams];
-#ifdef SCANMATHCERPROCESSOR_DEBUG
-	cout << "PackedReadings ";
-#endif
-	for(unsigned int i=0; i<m_beams; i++){
-		plainReading[i]=reading[i];
-#ifdef SCANMATHCERPROCESSOR_DEBUG
-		cout << plainReading[i] << " ";
-#endif
-	}
-*/
-        double * plainReading = new double[m_beams];
+        /*
+            double * plainReading = new double[m_beams];
+        #ifdef SCANMATHCERPROCESSOR_DEBUG
+            cout << "PackedReadings ";
+        #endif
+            for(unsigned int i=0; i<m_beams; i++){
+                plainReading[i]=reading[i];
+        #ifdef SCANMATHCERPROCESSOR_DEBUG
+                cout << plainReading[i] << " ";
+        #endif
+            }
+        */
+        double []plainReading = new double[m_beams];
         reading.rawView(plainReading, m_map.getDelta());
 
-
-        #ifdef SCANMATHCERPROCESSOR_DEBUG
-        cout << endl;
-        #endif
         //the final stuff: scan match the pose
         double score=0;
-        OrientedPoint newPose=m_pose;
-        if (m_count){
+        OrientedPoint<Double> newPose=m_pose;
+        if (m_count > 0){
             if(m_computeCovariance){
-                ScanMatcher::CovarianceMatrix cov;
+                Covariance3 cov = new Covariance3();
                 score=m_matcher.optimize(newPose, cov, m_map, m_pose, plainReading);
                         /*
 			gsl_matrix* m=gsl_matrix_alloc(3,3);
@@ -157,9 +150,9 @@ public class ScanMatcherProcessor {
 			gsl_matrix* evec=gsl_matrix_alloc(3,3);
 			gsl_vector* eval=gsl_vector_alloc(3);
                         */
-                double m[3][3];
-                double evec[3][3];
-                double eval[3];
+                double m[][] = new double[3][3];
+                double evec[][] = new double[3][3];
+                double eval[] = new double[3];
                 m[0][0] = cov.xx;
                 m[0][1] = cov.xy;
                 m[0][2] = cov.xt;
@@ -171,17 +164,17 @@ public class ScanMatcherProcessor {
                 m[2][2] = cov.tt;
 
                 //gsl_eigen_symmv (m, eval,  evec, m_eigenspace);
-                eigen_decomposition(m,evec,eval);
-                #ifdef SCANMATHCERPROCESSOR_DEBUG
+                Stat.eigen_decomposition(m, evec, eval);
+                
                 //cout << "evals=" << gsl_vector_get(eval, 0) <<  " " << gsl_vector_get(eval, 1)<< " " << gsl_vector_get(eval, 2)<<endl;
-                cout << "evals=" << eval[0] <<  " " << eval[1]<< " " << eval[2]<<endl;
-                #endif
+                LOG.debug("evals=" + eval[0] +  " " + eval[1]+ " " + eval[2]);
+                
                 //gsl_matrix_free(m);
                 //gsl_matrix_free(evec);
                 //gsl_vector_free(eval);
             } else {
                 if (useICP){
-                    cerr << "USING ICP" << endl;
+                    LOG.debug("USING ICP");
                     score=m_matcher.icpOptimize(newPose, m_map, m_pose, plainReading);
                 }else
                     score=m_matcher.optimize(newPose, m_map, m_pose, plainReading);
@@ -190,31 +183,26 @@ public class ScanMatcherProcessor {
 
         }
         //...and register the scan
-        if (!m_count || score<m_regScore){
-            #ifdef SCANMATHCERPROCESSOR_DEBUG
-            cout << "Registering" << endl;
-            #endif
+        if (m_count == 0 || score<m_regScore){
+            
+            LOG.debug("Registering");
             m_matcher.invalidateActiveArea();
             if (score<m_critScore){
-                #ifdef SCANMATHCERPROCESSOR_DEBUG
-                cout << "New Scan added, using odo pose" << endl;
-                #endif
+                
+                LOG.debug("New Scan added, using odo pose");
                 m_matcher.registerScan(m_map, m_pose, plainReading);
             } else {
                 m_matcher.registerScan(m_map, newPose, plainReading);
-                #ifdef SCANMATHCERPROCESSOR_DEBUG
-                cout << "New Scan added, using matched pose" << endl;
-                #endif
+                
+                LOG.debug("New Scan added, using matched pose");
             }
         }
 
-        #ifdef SCANMATHCERPROCESSOR_DEBUG
-        cout << " FinalPose: x="
-                << newPose.x << " y=" << newPose.y << " theta=" << newPose.theta << endl;
-        cout << "score=" << score << endl;
-        #endif
-                m_pose=newPose;
-        delete [] plainReading;
+        
+        LOG.debug(" FinalPose: x="
+                + newPose.x + " y=" + newPose.y + " theta=" + newPose.theta );
+        LOG.debug("score=" + score);
+        m_pose=newPose;
         m_count++;
     }
 }
