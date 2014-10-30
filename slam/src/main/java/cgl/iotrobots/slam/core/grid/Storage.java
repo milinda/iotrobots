@@ -2,6 +2,8 @@ package cgl.iotrobots.slam.core.grid;
 
 import cgl.iotrobots.slam.core.utils.Point;
 
+import java.util.Set;
+
 public interface Storage {
     public int getXSize();
 
@@ -28,4 +30,8 @@ public interface Storage {
     AccessibilityState cellState(Point<Integer> p);
 
     Point<Integer> patchIndexes(Point<Integer> p);
+
+    void setActiveArea(Set<Point<Integer>> aa, boolean patchCoords);
+
+    public void allocActiveArea();
 }

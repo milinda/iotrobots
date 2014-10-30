@@ -126,43 +126,48 @@ public class ScanMatcher {
         //this operation replicates the cells that will be changed in the registration operation
         map.getStorage().allocActiveArea();
 
-        OrientedPoint lp=p;
+        OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
         lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
         lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
         lp.theta+=m_laserPose.theta;
-        IntPoint p0=map.world2map(lp);
-        const double * angle=m_laserAngles;
-        for (const double* r=readings; r<readings+m_laserBeams; r++, angle++)
-        if (m_generateMap){
-            double d=*r;
-            if (d>m_laserMaxRange)
-                continue;
-            if (d>m_usableRange)
-                d=m_usableRange;
-            Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
-            IntPoint p1=map.world2map(phit);
+        Point<Integer> p0 = map.world2map(lp);
+        int readingIndex = 0;
+        int angleIndex = 0;
+        for (readingIndex=0; readingIndex<m_laserBeams; readingIndex++, angleIndex++) {
+            if (m_generateMap) {
+                double d = readings[readingIndex];
+                if (d > m_laserMaxRange)
+                    continue;
+                if (d > m_usableRange)
+                    d = m_usableRange;
+                Point<Double> phit =  new Point<Double>(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.x);
+                Point<Integer> p1 = map.world2map(phit);
 
-            d+=map.getDelta();
-            //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
-            //IntPoint p2=map.world2map(phit2);
-            IntPoint linePoints[20000] ;
-            GridLineTraversalLine line;
-            line.points=linePoints;
-            //GridLineTraversal::gridLine(p0, p2, &line);
-            GridLineTraversal::gridLine(p0, p1, &line);
-            for (int i=0; i<line.num_points-1; i++){
-                map.cell(line.points[i]).update(false, Point(0,0));
+                d += map.getDelta();
+                //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+                //IntPoint p2=map.world2map(phit2);
+                List<Point<Integer>> linePoints = new ArrayList<Point<Integer>>(20000);
+                GridLineTraversalLine line = new GridLineTraversalLine();
+                line.points = linePoints;
+                //GridLineTraversal::gridLine(p0, p2, &line);
+                GridLineTraversalLine.gridLine(p0, p1, line);
+                for (int i = 0; i < line.points.size() - 1; i++) {
+                    map.cell(line.points.get(i)).update(false, new Point(0, 0));
+                }
+                if (d <= m_usableRange) {
+                    map.cell(p1).update(true, phit);
+                    //	map.cell(p2).update(true,phit);
+                }
+            } else {
+                double r = readings[readingIndex];
+                if (r > m_laserMaxRange || r > m_usableRange) {
+                    continue;
+                }
+                Point<Double> phit = new Point<Double>(lp.x, lp.y);
+                phit.x += r * Math.cos(lp.theta + m_laserAngles[angleIndex]);
+                phit.y += r * Math.sin(lp.theta + m_laserAngles[angleIndex]);
+                map.cell(phit).update(true, phit);
             }
-            if (d<=m_usableRange){
-                map.cell(p1).update(true,phit);
-                //	map.cell(p2).update(true,phit);
-            }
-        } else {
-            if (*r>m_laserMaxRange||*r>m_usableRange) continue;
-            Point phit=lp;
-            phit.x+=*r*cos(lp.theta+*angle);
-            phit.y+=*r*sin(lp.theta+*angle);
-            map.cell(phit).update(true,phit);
         }
     }
 
@@ -171,7 +176,9 @@ public class ScanMatcher {
         double bestScore=-1;
         OrientedPoint<Double> currentPose=init;
         ScoredMove sm= new ScoredMove(currentPose,0,0);
-        int matched = likelihoodAndScore(sm.score, sm.likelihood, map, currentPose, readings);
+        LikeliHoodAndScore ls = likelihoodAndScore(map, currentPose, readings);
+        sm.likelihood = ls.l;
+        sm.score = ls.s;
         double currentScore=sm.score;
         moveList.add(sm);
         double adelta=m_optAngularDelta, ldelta=m_optLinearDelta;
@@ -219,7 +226,9 @@ public class ScanMatcher {
                 }
                 double localScore = 0, localLikelihood = 0;
                 //update the score
-                matched=likelihoodAndScore(localScore, localLikelihood, map, localPose, readings);
+                LikeliHoodAndScore ls =likelihoodAndScore(map, localPose, readings);
+                localLikelihood = ls.s;
+                localLikelihood = ls.l;
                 if (localScore>currentScore){
                     currentScore=localScore;
                     bestLocalPose=localPose;
@@ -339,7 +348,7 @@ public class ScanMatcher {
         return bestScore;
     }
 
-    void setLaserParameters
+    public void setLaserParameters
             (int beams, double []angles, OrientedPoint<Double> lpose){
         m_laserPose=lpose;
         m_laserBeams=beams;
@@ -370,7 +379,10 @@ public class ScanMatcher {
                     ScoredMove sm = new ScoredMove();
                     sm.pose = rp;
 
-                    likelihoodAndScore(sm.score, sm.likelihood, map, rp, readings);
+                    LikeliHoodAndScore ls = likelihoodAndScore(map, rp, readings);
+                    sm.score = ls.s;
+                    sm.likelihood = ls.l;
+
                     moveList.add(sm);
                 }
             }
@@ -619,6 +631,9 @@ public class ScanMatcher {
         OrientedPoint<Double> pose;
         double score;
         double likelihood;
+
+        private ScoredMove() {
+        }
 
         private ScoredMove(OrientedPoint<Double> pose, double score, double likelihood) {
             this.pose = pose;

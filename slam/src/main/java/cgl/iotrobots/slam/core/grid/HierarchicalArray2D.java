@@ -95,7 +95,7 @@ public class HierarchicalArray2D implements Storage {
         this.array2D.m_ysize = ysize;
     }
 
-    void setActiveArea(Set<Point<Integer>> aa, boolean patchCoords) {
+    public void setActiveArea(Set<Point<Integer>> aa, boolean patchCoords) {
         m_activeArea.clear();
         for (Point<Integer> it : aa) {
             Point<Integer> p;
@@ -132,7 +132,7 @@ public class HierarchicalArray2D implements Storage {
         return AccessibilityState.Outside;
     }
 
-    void allocActiveArea(){
+    public void allocActiveArea(){
         for (PointSet::const_iterator it= m_activeArea.begin(); it!=m_activeArea.end(); ++it){
             const autoptr< Array2D<Cell> >& ptr=this->m_cells[it->x][it->y];
             Array2D<Cell>* patch=0;

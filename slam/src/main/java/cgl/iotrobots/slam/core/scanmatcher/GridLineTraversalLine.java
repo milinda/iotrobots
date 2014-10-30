@@ -8,7 +8,7 @@ import java.util.List;
 public class GridLineTraversalLine {
     public List<Point<Integer>> points = new ArrayList<Point<Integer>>();
 
-    void gridLineCore(Point<Integer> start, Point<Integer> end, GridLineTraversalLine line) {
+    public static void gridLineCore(Point<Integer> start, Point<Integer> end, GridLineTraversalLine line) {
         int dx, dy, incr1, incr2, d, x, y, xend, yend, xdirflag, ydirflag;
         int cnt = 0;
 
@@ -103,7 +103,7 @@ public class GridLineTraversalLine {
     }
 
 
-    void gridLine(Point<Integer> start, Point<Integer> end, GridLineTraversalLine line) {
+    public static void gridLine(Point<Integer> start, Point<Integer> end, GridLineTraversalLine line) {
         int i, j;
         int half;
         Point<Integer> v;
