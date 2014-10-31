@@ -60,11 +60,11 @@ public class GMap {
     }
 
     public Cell cell(int x, int y) {
-        return cell(new Point<Double>(x + 0.0, y + 0.0));
+        return cell(new Point<Integer>(x, y));
     }
 
     public Cell cell(double x, double y) {
-        return cell(new Point<Double>(x, y));
+        return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()));
     }
 
     public boolean isInside(int x, int y) {

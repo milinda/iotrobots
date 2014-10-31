@@ -1,7 +1,19 @@
 package cgl.iotrobots.slam.core.grid;
 
 public enum AccessibilityState {
-    Outside,
-    Inside,
-    Allocated
+    Outside(0x0),
+    Inside(0x1),
+    Allocated(0x2);
+
+    int val;
+
+    AccessibilityState(int val) {
+        this.val = val;
+    }
+
+    public int getVal() {
+        return val;
+    }
+
+
 }

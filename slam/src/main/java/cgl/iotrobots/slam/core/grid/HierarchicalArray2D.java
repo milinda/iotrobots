@@ -1,19 +1,20 @@
 package cgl.iotrobots.slam.core.grid;
 
-import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
 
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class HierarchicalArray2D implements Storage {
+public class HierarchicalArray2D {
     Array2D array2D;
     Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
-    int m_patchMagnitude;
+    int m_patchMagnitude = 5;
     int m_patchSize;
 
     public HierarchicalArray2D(int xsize, int ysize, int patchMagnitude) {
+        array2D = new Array2D((xsize>>patchMagnitude), (ysize>>patchMagnitude));
+
         m_patchMagnitude = patchMagnitude;
         m_patchSize = 1 << m_patchMagnitude;
     }
@@ -27,6 +28,7 @@ public class HierarchicalArray2D implements Storage {
     }
 
     public HierarchicalArray2D(HierarchicalArray2D hg) {
+        array2D = new Array2D(hg.array2D.m_xsize>>hg.m_patchMagnitude, hg.array2D.m_ysize>>hg.m_patchMagnitude);
         assign(hg);
     }
 
@@ -37,7 +39,7 @@ public class HierarchicalArray2D implements Storage {
         return m_patchMagnitude;
     }
 
-    public Cell cell(Point<Integer> p) {
+    public Object cell(Point<Integer> p) {
         return cell(p.x, p.y);
     }
 
@@ -45,7 +47,7 @@ public class HierarchicalArray2D implements Storage {
         return isAllocated(p.x,p.y);
     }
 
-    public AccessibilityState cellState(Point<Integer> p) {
+    public int cellState(Point<Integer> p) {
         return cellState(p.x,p.y);
     }
 
@@ -115,50 +117,50 @@ public class HierarchicalArray2D implements Storage {
         return new Point<Integer>(-1, -1);
     }
 
-    Array2D createPatch(Point<Integer> p) {
+    public Array2D createPatch(Point<Integer> p) {
         return new Array2D(1<<m_patchMagnitude, 1<<m_patchMagnitude);
     }
 
 
-    public AccessibilityState  cellState(int x, int y) {
+    public int cellState(int x, int y) {
         if (array2D.isInside(patchIndexes(new Point<Integer>(x, y)))) {
             if (isAllocated(x,y)) {
-                return AccessibilityState.Inside | AccessibilityState.Allocated;
+                return AccessibilityState.Inside.getVal() | AccessibilityState.Allocated.getVal();
             }
             else {
-                return AccessibilityState.Inside;
+                return AccessibilityState.Inside.getVal();
             }
         }
-        return AccessibilityState.Outside;
+        return AccessibilityState.Outside.getVal();
     }
 
     public void allocActiveArea(){
-        for (PointSet::const_iterator it= m_activeArea.begin(); it!=m_activeArea.end(); ++it){
-            const autoptr< Array2D<Cell> >& ptr=this->m_cells[it->x][it->y];
-            Array2D<Cell>* patch=0;
-            if (!ptr){
-                patch=createPatch(*it);
+        for (Point<Integer> it : m_activeArea){
+            Array2D ptr= (Array2D) this.array2D.m_cells[it.x][it.y];
+            Array2D patch = null;
+            if (ptr == null){
+                patch = createPatch(it);
             } else{
-                patch=new Array2D<Cell>(*ptr);
+                patch = new Array2D(ptr);
             }
-            this->m_cells[it->x][it->y]=autoptr< Array2D<Cell> >(patch);
+            this.array2D.m_cells[it.x][it.y] = patch;
         }
     }
 
     public boolean isAllocated(int x, int y) {
         Point<Integer> c=patchIndexes(x,y);
-        Cell val = array2D.m_cells[c.x][c.y];
+        Object val = array2D.m_cells[c.x][c.y];
         return (val != null);
     }
 
-    public Cell cell(int x, int y){
+    public Object cell(int x, int y){
         Point<Integer> c = patchIndexes(x,y);
         assert(array2D.isInside(c.x, c.y));
         if (array2D.m_cells[c.x][c.y] != null){
             Array2D patch= createPatch(new Point<Integer>(x,y));
             array2D.m_cells[c.x][c.y] = patch;
         }
-        autoptr< Array2D<Cell> >& ptr=this->m_cells[c.x][c.y];
-        return (*ptr).cell(IntPoint(x-(c.x<<m_patchMagnitude),y-(c.y<<m_patchMagnitude)));
+        Array2D ptr = (Array2D) this.array2D.m_cells[c.x][c.y];
+        return ptr.cell(new Point<Integer>(x-(c.x << m_patchMagnitude), y-(c.y<<m_patchMagnitude)));
     }
 }
