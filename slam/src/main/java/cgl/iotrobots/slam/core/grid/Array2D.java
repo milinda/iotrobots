@@ -1,7 +1,6 @@
 package cgl.iotrobots.slam.core.grid;
 
-
-import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
+import cgl.iotrobots.slam.core.utils.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,13 +8,13 @@ public class Array2D {
     private Logger LOG = LoggerFactory.getLogger(Array2D.class);
 
     public int m_xsize, m_ysize;
-    public PointAccumulator m_cells[][];
+    public Cell m_cells[][];
 
     public Array2D(int xsize, int ysize){
         m_xsize=xsize;
         m_ysize=ysize;
         if (m_xsize>0 && m_ysize>0){
-            m_cells = new PointAccumulator[m_xsize][m_ysize];
+            m_cells = new Cell[m_xsize][m_ysize];
         } else{
             m_xsize=m_ysize=0;
             m_cells= null;
@@ -28,16 +27,14 @@ public class Array2D {
             m_xsize = g.m_xsize;
             m_ysize = g.m_ysize;
             if (m_xsize > 0 && m_ysize > 0) {
-                m_cells = new PointAccumulator[m_xsize][m_ysize];
+                m_cells = new Cell[m_xsize][m_ysize];
             } else {
                 m_xsize = m_ysize = 0;
                 m_cells = null;
             }
         }
         for (int x = 0; x < m_xsize; x++) {
-            for (int y = 0; y < m_ysize; y++) {
-                m_cells[x][y] = g.m_cells[x][y];
-            }
+            System.arraycopy(g.m_cells[x], 0, m_cells[x], 0, m_ysize);
         }
 
         LOG.debug("m_xsize= " + m_xsize + " m_ysize: " + m_ysize);
@@ -57,15 +54,13 @@ public class Array2D {
     public void resize(int xmin, int ymin, int xmax, int ymax){
         int xsize=xmax-xmin;
         int ysize=ymax-ymin;
-        PointAccumulator [][] newcells = new PointAccumulator[xsize][ysize];
+        Cell [][] newcells = new Cell[xsize][ysize];
         int dx= xmin < 0 ? 0 : xmin;
         int dy= ymin < 0 ? 0 : ymin;
         int Dx = xmax< this.m_xsize? xmax: this.m_xsize;
         int Dy= ymax < this.m_ysize? ymax: this.m_ysize;
         for (int x=dx; x<Dx; x++){
-            for (int y=dy; y<Dy; y++){
-                newcells[x-xmin][y-ymin]=this.m_cells[x][y];
-            }
+            System.arraycopy(this.m_cells[x], dy, newcells[x - xmin], dy - ymin, Dy - dy);
         }
         this.m_cells=newcells;
         this.m_xsize=xsize;
@@ -76,7 +71,11 @@ public class Array2D {
         return x >=0 && y >=0 && x< m_xsize && y<m_ysize;
     }
 
-    public PointAccumulator cell(int x, int y) {
+    public boolean isInside(Point<Integer> p) {
+        return p.x >=0 && p.y >=0 && p.x< m_xsize && p.y<m_ysize;
+    }
+
+    public Cell cell(int x, int y) {
         assert(isInside(x,y));
         return m_cells[x][y];
     }

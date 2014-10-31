@@ -1,24 +1,18 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
-import cgl.iotrobots.slam.core.sensor.OdometryReading;
-import cgl.iotrobots.slam.core.sensor.OdometrySensor;
-import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -81,6 +75,13 @@ public class GridSlamProcessor {
                                int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         m_obsSigmaGain = likelihoodGain;
         m_matcher.setMatchingParameters(urange, range, sigma, kernsize, lopt, aopt, iterations, likelihoodSigma, likelihoodSkip);
+        LOG.info(" -maxUrange " + urange
+                + " -maxUrange " + range
+                + " -sigma     " + sigma
+                + " -kernelSize " + kernsize
+                + " -lstep " + lopt
+                + " -lobsGain " + m_obsSigmaGain
+                + " -astep " + aopt);
     }
 
     public void setMotionModelParameters
@@ -89,12 +90,31 @@ public class GridSlamProcessor {
         m_motionModel.srt = srt;
         m_motionModel.str = str;
         m_motionModel.stt = stt;
+        LOG.info(" -srr " + srr + " -srt " + srt + " -str " + str + " -stt " + stt);
     }
 
     public void setUpdateDistances(double linear, double angular, double resampleThreshold) {
         m_linearThresholdDistance = linear;
         m_angularThresholdDistance = angular;
         m_resampleThreshold = resampleThreshold;
+        LOG.info(" -linearUpdate " + linear
+                + " -angularUpdate " + angular
+                + " -resampleThreshold " + m_resampleThreshold);
+    }
+
+    public void setSensorMap(Map<String, Sensor> smap){
+    /*
+      Construct the angle table for the sensor
+
+      FIXME For now detect the readings of only the front laser, and assume its pose is in the center of the robot
+    */
+        RangeSensor rangeSensor= (RangeSensor) smap.get("ROBOTLASER1");
+        m_beams = rangeSensor.beams().size();
+        double []angles=new double[rangeSensor.beams().size()];
+        for (int i=0; i<m_beams; i++){
+            angles[i]=rangeSensor.beams().get(i).pose.theta;
+        }
+        m_matcher.setLaserParameters(m_beams, angles, rangeSensor.getPose());
     }
 
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, OrientedPoint<Double> initialPose) {
@@ -104,21 +124,26 @@ public class GridSlamProcessor {
         m_ymax = ymax;
         m_delta = delta;
 
+        LOG.info(" -xmin " + m_xmin + " -xmax " + m_xmax + " -ymin " + m_ymin
+                + " -ymax " + m_ymax + " -delta " + m_delta + " -particles " + size);
+
         m_particles.clear();
 
         TNode node = new TNode(initialPose, 0, null, 0);
         GMap lmap = new GMap(new Point<Double>((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
         for (int i = 0; i < size; i++) {
             int lastIndex = m_particles.size() - 1;
-            m_particles.add(new Particle(lmap));
-            m_particles.get(lastIndex).pose = initialPose;
-            m_particles.get(lastIndex).previousPose = initialPose;
-            m_particles.get(lastIndex).setWeight(0);
-            m_particles.get(lastIndex).previousIndex = 0;
+            Particle p = new Particle(lmap);
+
+            p.pose = initialPose;
+            p.previousPose = initialPose;
+            p.setWeight(0);
+            p.previousIndex = 0;
+            m_particles.add(p);
             // this is not needed
             //		m_particles.back().node=new TNode(initialPose, 0, node, 0);
             // we use the root directly
-            m_particles.get(lastIndex).node = node;
+            p.node = node;
         }
 
 
@@ -131,11 +156,11 @@ public class GridSlamProcessor {
     public void processTruePos(OdometryReading o) {
         OdometrySensor os = (OdometrySensor) o.getSensor();
         if (os != null && os.isIdeal() && m_outputStream != null) {
-            // TODO:write something
+            LOG.info("SIMULATOR_POS x:" +  o.getPose().x + " y:" + o.getPose().y + " theta: " + o.getPose().theta);
         }
     }
 
-    public void processScan(RangeReading reading, int adaptParticles) {
+    public boolean processScan(RangeReading reading, int adaptParticles) {
         OrientedPoint<Double> relPose = reading.getPose();
         if (m_count == 0) {
             m_lastPartPose = m_odoPose = relPose;
@@ -145,10 +170,15 @@ public class GridSlamProcessor {
             p.pose = m_motionModel.drawFromMotion(p.pose, relPose, m_odoPose);
         }
 
-        // todo outto to file
+        LOG.info("ODOM " + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta + " " + reading.getTime());
+        LOG.info("ODO_UPDATE " + m_particles.size() + " ");
+        for (Particle p : m_particles) {
+            LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.weight);
+        }
+        LOG.info("ODO_UPDATE Time {}", reading.getTime());
 
         //TODO invoke the callback
-        // onOdometryUpdate();
+        onOdometryUpdate();
 
         OrientedPoint<Double> move = OrientedPoint.minus(relPose, m_odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
@@ -179,81 +209,63 @@ public class GridSlamProcessor {
                 || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
             last_update_time_ = reading.getTime();
 
-            if (m_outputStream != null) {
-                m_outputStream.write(setiosflags(ios::fixed) << setprecision(6);
-                m_outputStream << "FRAME " << m_readingCount;
-                m_outputStream << " " << m_linearDistance;
-                m_outputStream << " " << m_angularDistance << endl;
-            }
+            LOG.info("FRAME " + m_readingCount + " " + m_linearDistance + " " + m_angularDistance);
 
             LOG.info("update frame " + m_readingCount + "update ld=" + m_linearDistance + " ad=" + m_angularDistance);
             LOG.info("Laser Pose= " + reading.getPose().x + " " + reading.getPose().y + " " + reading.getPose().theta);
 
             //this is for converting the reading in a scan-matcher feedable form
             assert (reading.size() == m_beams);
-            double []plainReading = new double[m_beams];
-            for (int i = 0; i<m_beams; i++){
+            double[] plainReading = new double[m_beams];
+            for (int i = 0; i < m_beams; i++) {
                 plainReading[i] = reading.get(i);
             }
             LOG.info("m_count " + m_count);
 
             RangeReading reading_copy =
-                    new RangeReading(reading.size(), & (reading[0]),
-                    static_cast <const RangeSensor * > (reading.getSensor()),
-                    reading.getTime());
+                    new RangeReading(reading.size(), reading.get(0),
+                            (RangeSensor) reading.getSensor(),
+                            reading.getTime());
 
             if (m_count > 0) {
                 scanMatch(plainReading);
-                if (m_outputStream.is_open()) {
-                    m_outputStream << "LASER_READING " << reading.size() << " ";
-                    m_outputStream << setiosflags(ios::fixed) << setprecision(2);
-                    for (RangeReading::const_iterator b = reading.begin(); b != reading.end() ;
-                    b++){
-                        m_outputStream <<*b << " ";
-                    }
-                    OrientedPoint p = reading.getPose();
-                    m_outputStream << setiosflags(ios::fixed) << setprecision(6);
-                    m_outputStream << p.x << " " << p.y << " " << p.theta << " " << reading.getTime() << endl;
-                    m_outputStream << "SM_UPDATE " << m_particles.size() << " ";
-                    for (ParticleVector::const_iterator it = m_particles.begin(); it != m_particles.end() ;
-                    it++){
-                        const OrientedPoint & pose = it -> pose;
-                        m_outputStream << setiosflags(ios::fixed) << setprecision(3) << pose.x << " " << pose.y << " ";
-                        m_outputStream << setiosflags(ios::fixed) << setprecision(6) << pose.theta << " " << it -> weight << " ";
-                    }
-                    m_outputStream << endl;
+
+                LOG.debug("LASER_READING " + reading.size() + " ");
+                for (Double b : reading) {
+                    LOG.debug(b + " ");
+                }
+                OrientedPoint p = reading.getPose();
+
+                LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
+                LOG.debug("SM_UPDATE " + m_particles.size() + " ");
+                for (Particle it : m_particles) {
+                    OrientedPoint pose = it.pose;
+                    LOG.debug(pose.x + " " + pose.y + " ");
+                    LOG.debug(pose.theta + " " + it.weight + " ");
                 }
                 onScanmatchUpdate();
 
                 updateTreeWeights(false);
 
-                LOG.info("neff= " + m_neff);
-                if (m_outputStream.is_open()) {
-                    m_outputStream << setiosflags(ios::fixed) << setprecision(6);
-                    m_outputStream << "NEFF " << m_neff << endl;
-                }
+                LOG.info("neff = " + m_neff);
                 resample(plainReading, adaptParticles, reading_copy);
             } else {
-                m_infoStream << "Registering First Scan" << endl;
-                for (ParticleVector::iterator it = m_particles.begin(); it != m_particles.end() ;
-                it++){
+                LOG.info("Registering First Scan");
+                for (Particle it : m_particles) {
                     m_matcher.invalidateActiveArea();
-                    m_matcher.computeActiveArea(it -> map, it -> pose, plainReading);
-                    m_matcher.registerScan(it -> map, it -> pose, plainReading);
+                    m_matcher.computeActiveArea(it.map, it.pose, plainReading);
+                    m_matcher.registerScan(it.map, it.pose, plainReading);
 
                     // cyr: not needed anymore, particles refer to the root in the beginning!
-                    TNode * node = new TNode(it -> pose, 0., it -> node, 0);
+                    TNode node = new TNode(it.pose, 0., it.node, 0);
                     //node->reading=0;
-                    node -> reading = reading_copy;
-                    it -> node = node;
+                    node.reading = reading_copy;
+                    it.node = node;
 
                 }
             }
-            //		cerr  << "Tree: normalizing, resetting and propagating weights at the end..." ;
             updateTreeWeights(false);
-            //		cerr  << ".done!" <<endl;
 
-            delete[] plainReading;
             m_lastPartPose = m_odoPose; //update the past pose for the next iteration
             m_linearDistance = 0;
             m_angularDistance = 0;
@@ -261,84 +273,157 @@ public class GridSlamProcessor {
             processed = true;
 
             //keep ready for the next step
-            for (ParticleVector::iterator it = m_particles.begin(); it != m_particles.end() ;
-            it++){
-                it -> previousPose = it -> pose;
+            for (Particle it : m_particles) {
+                it.previousPose = it.pose;
             }
 
         }
-        if (m_outputStream.is_open())
-            m_outputStream << flush;
         m_readingCount++;
         return processed;
     }
 
-    private void onScanmatchUpdate() {
+    void updateTreeWeights(boolean weightsAlreadyNormalized) {
+
+        if (!weightsAlreadyNormalized) {
+            normalize();
+        }
+        resetTree();
+        propagateWeights();
+    }
+
+    void normalize() {
+        //normalize the log m_weights
+        double gain = 1. / (m_obsSigmaGain * m_particles.size());
+        double lmax = Double.MAX_VALUE;
+        for (Particle it : m_particles) {
+            lmax = it.weight > lmax ? it.weight : lmax;
+        }
+
+        m_weights.clear();
+        double wcum = 0;
+        m_neff = 0;
+        for (Particle it : m_particles) {
+            double w = Math.exp(gain * (it.weight - lmax));
+            m_weights.add(w);
+            wcum += w;
+        }
+
+        m_neff = 0;
+        for (Double it : m_weights) {
+            it = it / wcum;
+            double w = it;
+            m_neff += w * w;
+        }
+        m_neff = 1. / m_neff;
+    }
+
+    public boolean resample(double[] plainReading, int adaptSize, RangeReading reading) {
+        boolean hasResampled = false;
+        List<TNode> oldGeneration = new ArrayList<TNode>();
+        for (Particle m_particle : m_particles) {
+            oldGeneration.add(m_particle.node);
+        }
+
+        if (m_neff < m_resampleThreshold * m_particles.size()) {
+            LOG.info("*************RESAMPLE***************");
+
+            UniformResampler resampler = new UniformResampler();
+            m_indexes = resampler.resampleIndexes(m_weights, adaptSize);
+
+
+            StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(m_indexes.size());
+            for (Integer it : m_indexes) {
+                m_outputStream.append(it).append(" ");
+            }
+            LOG.debug(m_outputStream.toString());
+
+
+            onResampleUpdate();
+            //BEGIN: BUILDING TREE
+            List<Particle> temp = new ArrayList<Particle>();
+            int j = 0;
+            List<Integer> deletedParticles = new ArrayList<Integer>();        //this is for deleteing the particles which have been resampled away.
+
+            //	 	cerr << "Existing Nodes:" ;
+            for (int i = 0; i < m_indexes.size(); i++) {
+                //			cerr << " " << m_indexes[i];
+                while (j < m_indexes.get(i)) {
+                    deletedParticles.add(j);
+                    j++;
+                }
+                if (j == m_indexes.get(i))
+                    j++;
+                Particle p = m_particles.get(m_indexes.get(i));
+                TNode node = null;
+                TNode oldNode = oldGeneration.get(m_indexes.get(i));
+                //			cerr << i << "->" << m_indexes[i] << "B("<<oldNode->childs <<") ";
+                node = new TNode(p.pose, 0, oldNode, 0);
+                //node->reading=0;
+                node.reading = reading;
+                //			cerr << "A("<<node->parent->childs <<") " <<endl;
+
+                temp.add(p);
+                p.node = node;
+                p.previousIndex = m_indexes.get(i);
+            }
+            while (j < m_indexes.size()) {
+                deletedParticles.add(j);
+                j++;
+            }
+            //		cerr << endl;
+            m_outputStream = new StringBuilder("Deleting Nodes:");
+            for (int i = 0; i < deletedParticles.size(); i++) {
+                m_outputStream.append(" ").append(deletedParticles.get(i));
+                m_particles.get(deletedParticles.get(i)).node = null;
+            }
+            m_outputStream.append(" Done");
+            LOG.debug(m_outputStream.toString());
+
+            //END: BUILDING TREE
+            LOG.debug("Deleting old particles...");
+            m_particles.clear();
+            LOG.debug("Done");
+            LOG.debug("Copying Particles and  Registering  scans...");
+            for (Particle it : m_particles) {
+                it.setWeight(0);
+                m_matcher.invalidateActiveArea();
+                m_matcher.registerScan(it.map, it.pose, plainReading);
+                m_particles.add(it);
+            }
+            hasResampled = true;
+        } else {
+            int index = 0;
+            LOG.debug("Registering Scans:");
+            Iterator<TNode> node_it = oldGeneration.iterator();
+            for (Particle it : m_particles) {
+                //create a new node in the particle tree and add it to the old tree
+                //BEGIN: BUILDING TREE
+                TNode node = null;
+                node = new TNode(it.pose, 0.0, node_it.next(), 0);
+
+                //node->reading=0;
+                node.reading = reading;
+                it.node = node;
+
+                //END: BUILDING TREE
+                m_matcher.invalidateActiveArea();
+                m_matcher.registerScan(it.map, it.pose, plainReading);
+                it.previousIndex = index;
+                index++;
+            }
+        }
+        return hasResampled;
+    }
+
+    private void onResampleUpdate() {
 
     }
 
-    public List<TNode> getTrajectories() {
-        List<TNode> v = new ArrayList<TNode>();
-        Multimap<TNode, TNode> parentCache = ArrayListMultimap.create();
-        BlockingDeque<TNode> border = new LinkedBlockingDeque<TNode>();
+    private void onOdometryUpdate() {
 
-        for (Particle particle : m_particles) {
-            TNode node = particle.node;
-            while (node != null) {
-                node.flag = false;
-                node = node.parent;
-            }
-        }
+    }
 
-        for (Particle particle : m_particles) {
-            TNode newnode = new TNode();
-
-            v.add(newnode);
-            assert (newnode.childs == 0);
-            if (newnode.parent != null) {
-                parentCache.put(newnode.parent, newnode);
-                if (!newnode.parent.flag) {
-                    newnode.parent.flag = true;
-                    border.add(newnode.parent);
-                }
-            }
-        }
-
-        while (!border.isEmpty()) {
-            TNode node = border.poll();
-            if (node != null)
-                continue;
-
-            TNode newnode = new TNode(node);
-            node.flag = false;
-
-            //update the parent of all of the referring childs
-            Collection<TNode> p = parentCache.get(node);
-            double childs = 0;
-            for (TNode second : p){
-                assert (second.parent.equals(node));
-                second.parent = newnode;
-                childs++;
-            }
-            parentCache.remove(node, p.second);
-            assert (childs == newnode.childs);
-            //unmark the node
-            if (node.parent != null) {
-                parentCache.put(node.parent, newnode);
-                if (!node.parent.flag) {
-                    border.add(node.parent);
-                    node.parent.flag = true;
-                }
-            }
-            //insert the parent in the cache
-        }
-        for (TNode node : v) {
-            while (node != null) {
-                node = node.parent;
-            }
-        }
-
-        return v;
+    private void onScanmatchUpdate() {
 
     }
 
@@ -361,7 +446,7 @@ public class GridSlamProcessor {
         aux = reversed;
         boolean first = true;
         double oldWeight = 0;
-        OrientedPoint<Double> oldPose;
+        OrientedPoint<Double> oldPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
         while (aux != null) {
             if (first) {
                 oldPose = aux.pose;
@@ -376,7 +461,7 @@ public class GridSlamProcessor {
 
             double[] plainReading = new double[m_beams];
             for (int i = 0; i < m_beams; i++) {
-                plainReading[i] = ( * (aux.reading))[i];
+                plainReading[i] = aux.reading.get(i);
             }
 
 
@@ -392,13 +477,13 @@ public class GridSlamProcessor {
 
                 //register the scan
                 m_matcher.invalidateActiveArea();
-                m_matcher.computeActiveArea(it -> map, it -> pose, plainReading);
+                m_matcher.computeActiveArea(it.map, it .pose, plainReading);
                 it.weight += dw;
                 it.weightSum += dw;
 
                 // this should not work, since it->weight is not the correct weight!
                 //			it->node=new TNode(it->pose, it->weight, it->node);
-                it.node = new TNode(it.pose, 0.0, it.node);
+                it.node = new TNode(it.pose, 0.0, it.node, 0);
                 //update the weight
             }
 
@@ -467,32 +552,108 @@ public class GridSlamProcessor {
 
     /**Just scan match every single particle.
      If the scan matching fails, the particle gets a default likelihood.*/
-    void scanMatch(double []plainReading){
+    public void scanMatch(double []plainReading){
         // sample a new pose from each scan in the reference
         double sumScore=0;
         for (Particle it : m_particles){
-            OrientedPoint<Double> corrected;
+            OrientedPoint<Double> corrected = new OrientedPoint<Double>(0.0, 0.0, 0.0);
             double score, l, s;
-            score = m_matcher.optimize(corrected, it->map, it->pose, plainReading);
+            score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score>m_minimumScore){
                 it.pose=corrected;
             } else {
-                LOG.info("Scan Matching Failed, using odometry. Likelihood=" + l);
+                LOG.info("Scan Matching Failed, using odometry. Likelihood=");
                 LOG.info("lp:" + m_lastPartPose.x + " "  + m_lastPartPose.y + " " + m_lastPartPose.theta);
                 LOG.info("op:" + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta);
             }
 
-            m_matcher.likelihoodAndScore(s, l, it->map, it->pose, plainReading);
+            ScanMatcher.LikeliHoodAndScore score1 = m_matcher.likelihoodAndScore(it.map, it.pose, plainReading);
+            l = score1.l;
+            s = score1.s;
+
             sumScore+=score;
-            it->weight+=l;
-            it->weightSum+=l;
+            it.weight+=l;
+            it.weightSum+=l;
 
             //set up the selective copy of the active area
             //by detaching the areas that will be updated
             m_matcher.invalidateActiveArea();
-            m_matcher.computeActiveArea(it->map, it->pose, plainReading);
+            m_matcher.computeActiveArea(it.map, it.pose, plainReading);
         }
         LOG.info("Average Scan Matching Score=" + sumScore / m_particles.size());
+    }
+
+    List<TNode> getTrajectories() {
+        List<TNode> v = new ArrayList<TNode>();
+        Multimap<TNode, TNode> parentCache = ArrayListMultimap.create();
+        BlockingDeque<TNode> border = new LinkedBlockingDeque<TNode>();
+
+        for (Particle it : m_particles) {
+            TNode node = it.node;
+            while (node != null) {
+                node.flag = false;
+                node = node.parent;
+            }
+        }
+
+        for (Particle it : m_particles) {
+            TNode newnode = new TNode(it.node);
+
+            v.add(newnode);
+            assert (newnode.childs == 0);
+            if (newnode.parent != null) {
+                parentCache.put(newnode.parent, newnode);
+                if (!newnode.parent.flag) {
+                    newnode.parent.flag = true;
+                    border.add(newnode.parent);
+                }
+            }
+        }
+
+        while (!border.isEmpty()){
+            TNode node=border.poll();
+            if (node == null) {
+                continue;
+            }
+
+            TNode newnode = new TNode(node);
+            node.flag=false;
+
+            //update the parent of all of the referring childs
+            Collection<TNode> p = parentCache.get(node);
+            double childs=0;
+            for (TNode it: p){
+                assert(it.parent==node);
+                it.parent=newnode;
+                //cerr + "PS(" + it->first + ", "+ it->second + ")";
+                childs++;
+            }
+            ////cerr + endl;
+            parentCache.removeAll(node);
+            //cerr + __PRETTY_FUNCTION__ + ": parentCache.size(POSTERASE)=" + parentCache.size() + endl;
+            assert(childs==newnode.childs);
+
+            //unmark the node
+            if ( node.parent != null){
+                parentCache.put(node.parent, newnode);
+                if(! node.parent.flag){
+                    try {
+                        border.putLast(node.parent);
+                    } catch (InterruptedException e) {
+                        LOG.error("Failed to push", e);
+                    }
+                    node.parent.flag=true;
+                }
+            }
+            //insert the parent in the cache
+        }
+        for (TNode node : v) {
+            while (node != null) {
+                //cerr +".";
+                node = node.parent;
+            }
+        }
+        return v;
     }
 }

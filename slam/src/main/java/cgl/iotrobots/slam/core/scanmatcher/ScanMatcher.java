@@ -2,16 +2,13 @@ package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.utils.Covariance3;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import cgl.iotrobots.slam.core.utils.Point;
 import cgl.iotrobots.slam.core.utils.PointPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ScanMatcher {
     private static Logger LOG = LoggerFactory.getLogger(ScanMatcher.class);
@@ -42,7 +39,7 @@ public class ScanMatcher {
     int m_initialBeamsSkip;
 
     boolean m_activeAreaComputed;
-    enum Move{Front, Back, Left, Right, TurnLeft, TurnRight, Done};
+    enum Move{Front, Back, Left, Right, TurnLeft, TurnRight, Done}
     /**
      * laser parameters
      */
@@ -62,12 +59,145 @@ public class ScanMatcher {
         m_likelihoodSkip = likelihoodSkip;
     }
 
-    double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> init, double []readings){
+    public void computeActiveArea(GMap map, OrientedPoint<Double> p, double[] readings){
+        if (m_activeAreaComputed)
+            return;
+        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>();
+        OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
+        lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
+        lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
+        lp.theta+=m_laserPose.theta;
+        Point<Integer> p0 = map.world2map(lp);
+
+        int readingIndex = 0;
+        int angleIndex = 0;
+        for (readingIndex = 0; readingIndex < m_laserBeams; readingIndex++, angleIndex++)
+        if (m_generateMap){
+            double d=readings[readingIndex];
+            if (d>m_laserMaxRange)
+                continue;
+            if (d>m_usableRange)
+                d=m_usableRange;
+
+            Point<Double> phit=  new Point<Double>(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x,d * Math.sin(lp.theta+ m_laserAngles[angleIndex]) + lp.y);
+            Point<Integer> p1 = map.world2map(phit);
+
+            d += map.getDelta();
+            //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+            //IntPoint p2=map.world2map(phit2);
+            List<Point<Integer>> linePoints = new ArrayList<Point<Integer>>();
+            GridLineTraversalLine line = new GridLineTraversalLine();
+            line.points = linePoints;
+            //GridLineTraversal::gridLine(p0, p2, &line);
+            line.gridLine(p0, p1, line);
+            for (int i=0; i<line.points.size()-1; i++){
+                activeArea.add(map.getStorage().patchIndexes(linePoints[i]));
+            }
+            if (d<=m_usableRange){
+                activeArea.add(map.getStorage().patchIndexes(p1));
+                //activeArea.insert(map.storage().patchIndexes(p2));
+            }
+        } else {
+            double r = readings[readingIndex];
+            double angle = m_laserAngles[angleIndex];
+            if (readings[readingIndex] > m_laserMaxRange ||readings[readingIndex]>m_usableRange) {
+                continue;
+            }
+            Point<Double> phit= new Point<Double>(lp.x, lp.y);
+            phit.x+=r*Math.cos(lp.theta+angle);
+            phit.y+=r*Math.sin(lp.theta+angle);
+            Point<Integer> p1=map.world2map(phit);
+            assert(p1.x>=0 && p1.y>=0);
+            Point<Integer> cp=map.getStorage().patchIndexes(p1);
+            assert(cp.x>=0 && cp.y>=0);
+            activeArea.add(cp);
+
+        }
+        //this allocates the unallocated cells in the active area of the map
+        //cout << "activeArea::size() " << activeArea.size() << endl;
+        map.getStorage().setActiveArea(activeArea, true);
+        m_activeAreaComputed=true;
+    }
+
+    public void registerScan(GMap map, OrientedPoint<Double> p, double[] readings){
+        if (!m_activeAreaComputed)
+            computeActiveArea(map, p, readings);
+
+        //this operation replicates the cells that will be changed in the registration operation
+        map.getStorage().allocActiveArea();
+
+        OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
+        lp.x+=Math.cos(p.theta)*m_laserPose.x-Math.sin(p.theta)*m_laserPose.y;
+        lp.y+=Math.sin(p.theta)*m_laserPose.x+Math.cos(p.theta)*m_laserPose.y;
+        lp.theta+=m_laserPose.theta;
+        Point<Integer> p0 = map.world2map(lp);
+        int readingIndex = 0;
+        int angleIndex = 0;
+        for (readingIndex=0; readingIndex<m_laserBeams; readingIndex++, angleIndex++) {
+            if (m_generateMap) {
+                double d = readings[readingIndex];
+                if (d > m_laserMaxRange)
+                    continue;
+                if (d > m_usableRange)
+                    d = m_usableRange;
+                Point<Double> phit =  new Point<Double>(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.x);
+                Point<Integer> p1 = map.world2map(phit);
+
+                d += map.getDelta();
+                //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+                //IntPoint p2=map.world2map(phit2);
+                List<Point<Integer>> linePoints = new ArrayList<Point<Integer>>(20000);
+                GridLineTraversalLine line = new GridLineTraversalLine();
+                line.points = linePoints;
+                //GridLineTraversal::gridLine(p0, p2, &line);
+                GridLineTraversalLine.gridLine(p0, p1, line);
+                for (int i = 0; i < line.points.size() - 1; i++) {
+                    map.cell(line.points.get(i)).update(false, new Point(0, 0));
+                }
+                if (d <= m_usableRange) {
+                    map.cell(p1).update(true, phit);
+                    //	map.cell(p2).update(true,phit);
+                }
+            } else {
+                double r = readings[readingIndex];
+                if (r > m_laserMaxRange || r > m_usableRange) {
+                    continue;
+                }
+                Point<Double> phit = new Point<Double>(lp.x, lp.y);
+                phit.x += r * Math.cos(lp.theta + m_laserAngles[angleIndex]);
+                phit.y += r * Math.sin(lp.theta + m_laserAngles[angleIndex]);
+                map.cell(phit).update(true, phit);
+            }
+        }
+    }
+
+    public double icpOptimize(OrientedPoint<Double> pnew, GMap map, OrientedPoint<Double> init, double[] readings) {
+        double currentScore;
+        double sc = score(map, init, readings);
+        OrientedPoint<Double> start = init;
+        pnew.x = init.x;
+        pnew.y = init.y;
+        pnew.theta = init.theta;
+        int iterations = 0;
+        do {
+            currentScore = sc;
+            sc = icpStep(pnew, map, start, readings);
+            //cerr << "pstart=" << start.x << " " <<start.y << " " << start.theta << endl;
+            //cerr << "pret=" << pnew.x << " " <<pnew.y << " " << pnew.theta << endl;
+            start = pnew;
+            iterations++;
+        } while (sc > currentScore);
+        return currentScore;
+    }
+
+    public double optimize(OrientedPoint<Double> _mean, Covariance3 _cov, GMap map, OrientedPoint<Double> init, double []readings){
         List<ScoredMove> moveList =  new ArrayList<ScoredMove>();
         double bestScore=-1;
         OrientedPoint<Double> currentPose=init;
         ScoredMove sm= new ScoredMove(currentPose,0,0);
-        int matched = likelihoodAndScore(sm.score, sm.likelihood, map, currentPose, readings);
+        LikeliHoodAndScore ls = likelihoodAndScore(map, currentPose, readings);
+        sm.likelihood = ls.l;
+        sm.score = ls.s;
         double currentScore=sm.score;
         moveList.add(sm);
         double adelta=m_optAngularDelta, ldelta=m_optLinearDelta;
@@ -115,7 +245,9 @@ public class ScanMatcher {
                 }
                 double localScore = 0, localLikelihood = 0;
                 //update the score
-                matched=likelihoodAndScore(localScore, localLikelihood, map, localPose, readings);
+                ls =likelihoodAndScore(map, localPose, readings);
+                localLikelihood = ls.s;
+                localLikelihood = ls.l;
                 if (localScore>currentScore){
                     currentScore=localScore;
                     bestLocalPose=localPose;
@@ -173,17 +305,87 @@ public class ScanMatcher {
         return bestScore;
     }
 
-    void setLaserParameters
-            (int beams, double angles[], OrientedPoint<Double> lpose){
-        m_laserPose= lpose;
+    public double optimize(OrientedPoint<Double> pnew, GMap map, OrientedPoint<Double> init, double []readings) {
+        double bestScore=-1;
+        OrientedPoint<Double> currentPose=init;
+        double currentScore=score(map, currentPose, readings);
+        double adelta=m_optAngularDelta, ldelta=m_optLinearDelta;
+        int refinement=0;
+        int c_iterations=0;
+        do{
+            if (bestScore>=currentScore){
+                refinement++;
+                adelta*=.5;
+                ldelta*=.5;
+            }
+            bestScore=currentScore;
+            OrientedPoint<Double> bestLocalPose=currentPose;
+            OrientedPoint<Double> localPose=currentPose;
+
+            Move move=Move.Front;
+            do {
+                localPose=currentPose;
+                switch(move){
+                    case Front:
+                        localPose.x+=ldelta;
+                        move=Move.Back;
+                        break;
+                    case Back:
+                        localPose.x-=ldelta;
+                        move=Move.Left;
+                        break;
+                    case Left:
+                        localPose.y-=ldelta;
+                        move=Move.Right;
+                        break;
+                    case Right:
+                        localPose.y+=ldelta;
+                        move=Move.TurnLeft;
+                        break;
+                    case TurnLeft:
+                        localPose.theta+=adelta;
+                        move=Move.TurnRight;
+                        break;
+                    case TurnRight:
+                        localPose.theta-=adelta;
+                        move=Move.Done;
+                        break;
+                    default:
+                }
+                double localScore=score(map, localPose, readings);
+                if (localScore>currentScore){
+                    currentScore=localScore;
+                    bestLocalPose=localPose;
+                }
+                c_iterations++;
+            } while(move!=Move.Done);
+            currentPose=bestLocalPose;
+        }while (currentScore>bestScore || refinement<m_optRecursiveIterations);
+        pnew.x=currentPose.x;
+        pnew.y=currentPose.y;
+        pnew.theta=currentPose.theta;
+        return bestScore;
+    }
+
+    public void setLaserParameters
+            (int beams, double []angles, OrientedPoint<Double> lpose){
+        m_laserPose=lpose;
         m_laserBeams=beams;
         m_laserAngles=new double[beams];
-        m_laserAngles = angles;
+        System.arraycopy(angles, 0, m_laserAngles, 0, angles.length);
+    }
+
+
+    public void invalidateActiveArea(){
+        m_activeAreaComputed=false;
     }
 
     public LikeliHood likelihood
-            (double _lmax, OrientedPoint<Double> _mean, Covariance3 _cov, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double[] readings) {
-        List<ScoredMove> moveList = new ArrayList<ScoredMove>();
+            (GMap map, OrientedPoint<Double> p, double[] readings) {
+        double _lmax;
+        OrientedPoint<Double> _mean;
+        Covariance3 _cov;
+                List<ScoredMove> moveList = new ArrayList<ScoredMove>();
 
         for (double xx = -m_llsamplerange; xx <= m_llsamplerange; xx += m_llsamplestep) {
             for (double yy = -m_llsamplerange; yy <= m_llsamplerange; yy += m_llsamplestep) {
@@ -196,7 +398,10 @@ public class ScanMatcher {
                     ScoredMove sm = new ScoredMove();
                     sm.pose = rp;
 
-                    likelihoodAndScore(sm.score, sm.likelihood, map, rp, readings);
+                    LikeliHoodAndScore ls = likelihoodAndScore(map, rp, readings);
+                    sm.score = ls.s;
+                    sm.likelihood = ls.l;
+
                     moveList.add(sm);
                 }
             }
@@ -247,9 +452,21 @@ public class ScanMatcher {
         return new LikeliHood(lmax, mean, cov, Math.log(lcum)+lmax);
     }
 
-    public int likelihoodAndScore(double s, double l, GMap<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
-        l = 0;
-        s = 0;
+    public class LikeliHoodAndScore {
+        public double s;
+        public double l;
+        public double c;
+
+        public LikeliHoodAndScore(double s, double l, double c) {
+            this.s = s;
+            this.l = l;
+            this.c = c;
+        }
+    }
+
+    public LikeliHoodAndScore likelihoodAndScore(GMap map, OrientedPoint<Double> p, double []readings) {
+        double l = 0;
+        double s = 0;
         int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
 
@@ -280,8 +497,8 @@ public class ScanMatcher {
             Point<Double> bestMu = new Point<Double>(0.0, 0.0);
             for (int xx=-m_kernelSize; xx<=m_kernelSize; xx++)
                 for (int yy=-m_kernelSize; yy<=m_kernelSize; yy++){
-                    Point<Integer> pr= iphit + IntPoint(xx,yy);
-                    Point<Integer> pf= pr+ipfree;
+                    Point<Integer> pr = new Point<Integer>(iphit.x + xx, iphit.y + yy);
+                    Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
                     PointAccumulator cell = map.cell(pr);
@@ -305,10 +522,10 @@ public class ScanMatcher {
                 l+=(found)?f:noHit;
             }
         }
-        return c;
+        return new LikeliHoodAndScore(s, l, c);
     }
 
-    double icpStep(OrientedPoint<Double> pret, Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double []readings) {
+    double icpStep(OrientedPoint<Double> pret, GMap map, OrientedPoint<Double> p, double []readings) {
         int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp= new OrientedPoint<Double>(p.x, p.y, p.theta);
 
@@ -346,8 +563,9 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    const PointAccumulator & cell = map.cell(pr);
-                    const PointAccumulator & fcell = map.cell(pf);
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
+
                     if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
                         Point<Double> mu = phit - cell.mean();
 
@@ -378,7 +596,7 @@ public class ScanMatcher {
         return score(map, p, readings);
     }
 
-    double score(Map<PointAccumulator, HierarchicalArray2D> map, OrientedPoint<Double> p, double[] readings) {
+    double score(GMap map, OrientedPoint<Double> p, double[] readings) {
         double s = 0;
         int angleIndex = m_initialBeamsSkip;
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
@@ -432,6 +650,9 @@ public class ScanMatcher {
         OrientedPoint<Double> pose;
         double score;
         double likelihood;
+
+        private ScoredMove() {
+        }
 
         private ScoredMove(OrientedPoint<Double> pose, double score, double likelihood) {
             this.pose = pose;

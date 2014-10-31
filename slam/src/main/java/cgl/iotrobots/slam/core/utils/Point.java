@@ -27,6 +27,12 @@ public class Point<T> {
         return new OrientedPoint<Double>(x, y);
     }
 
+    public static double mulD(Point<Double> p1, Point<Double> p2) {
+        double x = p1.x * p2.x;
+        double y = p1.y * p2.y;
+        return x + y;
+    }
+
     public static double mulN(OrientedPoint<Double> p1, OrientedPoint<Double> p2) {
         double x = p1.x * p2.x;
         double y = p1.y * p2.y;

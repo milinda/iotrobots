@@ -1,0 +1,44 @@
+package cgl.iotrobots.slam.core.particlefilter;
+
+import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class UniformResampler {
+    public List<Integer> resampleIndexes(List<Double> particles, int nparticles) {
+        double cweight = 0;
+
+        //compute the cumulative weights
+        int n = 0;
+        for (Double it : particles) {
+            cweight += it;
+            n++;
+        }
+
+        if (nparticles > 0)
+            n = nparticles;
+
+        //compute the interval
+        double interval = cweight / n;
+
+        //compute the initial target weight
+        double target = interval * (new Random().nextDouble());
+        //compute the resampled indexes
+
+        cweight = 0;
+        List<Integer> indexes = new ArrayList<Integer>(n);
+        n = 0;
+        int i = 0;
+        for (Double it : particles) {
+            cweight += it;
+            while (cweight > target) {
+                indexes.add(n++, i);
+                target += interval;
+            }
+            i++;
+        }
+        return indexes;
+    }
+}

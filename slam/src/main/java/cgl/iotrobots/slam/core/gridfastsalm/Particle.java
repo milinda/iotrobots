@@ -5,26 +5,26 @@ import cgl.iotrobots.slam.core.utils.OrientedPoint;
 
 public class Particle {
     /** The map */
-    GMap map;
+    public GMap map;
     /** The pose of the robot */
-    OrientedPoint<Double> pose;
+    public OrientedPoint<Double> pose;
 
     /** The pose of the robot at the previous time frame (used for computing thr odometry displacements) */
-    OrientedPoint previousPose;
+    public OrientedPoint previousPose;
 
     /** The weight of the particle */
-    double weight;
+    public double weight;
 
     /** The cumulative weight of the particle */
-    double weightSum;
+    public double weightSum;
 
-    double gweight;
+    public double gweight;
 
     /** The index of the previous particle in the trajectory tree */
-    int previousIndex;
+    public int previousIndex;
 
     /** Entry to the trajectory tree */
-    TNode node;
+    public TNode node;
 
     public Particle(GMap map) {
         this.map = map;
