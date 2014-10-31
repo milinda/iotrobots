@@ -5,7 +5,7 @@ import cgl.iotrobots.slam.core.utils.Point;
 public class GMap {
     Point<Double> m_center;
     double m_worldSizeX, m_worldSizeY, m_delta;
-    Storage m_storage;
+    HierarchicalArray2D m_storage;
     int m_mapSizeX, m_mapSizeY;
     int m_sizeX2, m_sizeY2;
 
@@ -50,7 +50,7 @@ public class GMap {
     public double getMapResolution() { return m_delta;}
     public double getResolution() { return m_delta;}
 
-    public Storage getStorage() {
+    public HierarchicalArray2D getStorage() {
         return m_storage;
     }
 
@@ -59,24 +59,26 @@ public class GMap {
         return new Size(min.x, min.y, max.x, max.y);
     }
 
-    public Cell cell(int x, int y) {
+    public Object cell(int x, int y) {
         return cell(new Point<Integer>(x, y));
     }
 
-    public Cell cell(double x, double y) {
+    public Object cell(double x, double y) {
         return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()));
     }
 
     public boolean isInside(int x, int y) {
-        return m_storage.cellState(new Point<Integer>(x,y)) == AccessibilityState.Inside;
+        return m_storage.cellState(new Point<Integer>(x,y)) == AccessibilityState.Inside.getVal();
     }
 
     public boolean isInside(Point<Integer> p) {
-        return m_storage.cellState(p) == AccessibilityState.Inside;
+        return m_storage.cellState(p) == AccessibilityState.Inside.getVal();
     }
 
     public boolean isInside(double x, double y)  {
-        return m_storage.cellState(world2map(new Point<Double>(x,y))) == AccessibilityState.Inside;
+        return m_storage.cellState(
+                world2map(new Point<Integer>(new Double(x).intValue(),new Double(y).intValue())))
+                == AccessibilityState.Inside.getVal();
     }
 
 
@@ -102,8 +104,8 @@ public class GMap {
         Point<Integer> imax=world2map(xmax, ymax);
         if (isInside(imin) && isInside(imax))
             return;
-        imin=Math.min(imin, new Point<Integer>(0,0));
-        imax=Math.max(imax, Point<Integer>(m_mapSizeX-1,m_mapSizeY-1));
+        imin= Math.min(imin, new Point<Integer>(0,0));
+        imax= Math.max(imax, new Point<Integer>(m_mapSizeX-1,m_mapSizeY-1));
         int pxmin, pymin, pxmax, pymax;
         pxmin=(int)Math.floor((float) imin.x / (1 << m_storage.getPatchMagnitude()));
         pxmax=(int)Math.ceil((float) imax.x / (1 << m_storage.getPatchMagnitude()));
@@ -118,6 +120,9 @@ public class GMap {
         m_sizeY2-=pymin*(1<<m_storage.getPatchMagnitude());
     }
 
+    public Point<Integer> world2map(double x, double y) {
+        return new Point<Integer>( (int)Math.round((x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((y-m_center.y)/m_delta)+m_sizeY2);
+    }
 
     public Point<Integer> world2map(Point<Integer> p) {
         return new Point<Integer>( (int)Math.round((p.x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((p.y-m_center.y)/m_delta)+m_sizeY2);
@@ -125,10 +130,10 @@ public class GMap {
 
     public Point<Double> map2world(Point<Integer> p) {
         return new Point<Double>( (p.x-m_sizeX2)*m_delta + m_center.x,
-                (p.y-m_sizeY2)*m_delta + m_center.y);
+                (p.y-m_sizeY2)*m_dePoint<Integer> plta + m_center.y);
     }
 
-    public Cell cell(Point<Integer> p) {
+    public Object cell(Point<Integer> p) {
         Point<Integer> ip= world2map(p);
         AccessibilityState s=m_storage.cellState(ip);
         //if (! s&Inside) assert(0);
