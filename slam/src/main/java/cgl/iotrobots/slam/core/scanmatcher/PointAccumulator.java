@@ -1,9 +1,8 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
-import cgl.iotrobots.slam.core.grid.Cell;
 import cgl.iotrobots.slam.core.utils.Point;
 
-public class PointAccumulator implements Cell {
+public class PointAccumulator {
     public static final int SIGHT_INC = 1;
 
     public Point<Double> acc = new Point<Double>(0.0, 0.0);

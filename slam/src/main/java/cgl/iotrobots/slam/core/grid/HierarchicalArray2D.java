@@ -62,7 +62,7 @@ public class HierarchicalArray2D {
     public void assign(HierarchicalArray2D hg) {
         array2D.m_xsize = hg.array2D.m_xsize;
         array2D.m_ysize = hg.array2D.m_ysize;
-        array2D.m_cells = new Cell[array2D.m_xsize][array2D.m_ysize];
+        array2D.m_cells = new Object[array2D.m_xsize][array2D.m_ysize];
 
         for (int x = 0; x < array2D.m_xsize; x++) {
             System.arraycopy(hg.array2D.m_cells[x], 0, array2D.m_cells[x], 0, array2D.m_ysize);
@@ -83,7 +83,7 @@ public class HierarchicalArray2D {
     public void resize(int xmin, int ymin, int xmax, int ymax) {
         int xsize = xmax - xmin;
         int ysize = ymax - ymin;
-        Cell[][] newcells = new Cell[xsize][ysize];
+        Object[][] newcells = new Object[xsize][ysize];
 
         int dx = xmin < 0 ? 0 : xmin;
         int dy = ymin < 0 ? 0 : ymin;

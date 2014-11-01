@@ -14,7 +14,7 @@ public class Array2D {
         m_xsize = xsize;
         m_ysize = ysize;
         if (m_xsize > 0 && m_ysize > 0) {
-            m_cells = new Cell[m_xsize][m_ysize];
+            m_cells = new Object[m_xsize][m_ysize];
         } else {
             m_xsize = m_ysize = 0;
             m_cells = null;
@@ -27,7 +27,7 @@ public class Array2D {
             m_xsize = g.m_xsize;
             m_ysize = g.m_ysize;
             if (m_xsize > 0 && m_ysize > 0) {
-                m_cells = new Cell[m_xsize][m_ysize];
+                m_cells = new Object[m_xsize][m_ysize];
             } else {
                 m_xsize = m_ysize = 0;
                 m_cells = null;
@@ -70,7 +70,7 @@ public class Array2D {
     public void resize(int xmin, int ymin, int xmax, int ymax) {
         int xsize = xmax - xmin;
         int ysize = ymax - ymin;
-        Cell[][] newcells = new Cell[xsize][ysize];
+        Object[][] newcells = new Object[xsize][ysize];
         int dx = xmin < 0 ? 0 : xmin;
         int dy = ymin < 0 ? 0 : ymin;
         int Dx = xmax < this.m_xsize ? xmax : this.m_xsize;

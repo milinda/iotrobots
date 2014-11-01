@@ -89,9 +89,9 @@ public class ScanMatcher {
             GridLineTraversalLine line = new GridLineTraversalLine();
             line.points = linePoints;
             //GridLineTraversal::gridLine(p0, p2, &line);
-            line.gridLine(p0, p1, line);
+            GridLineTraversalLine.gridLine(p0, p1, line);
             for (int i=0; i<line.points.size()-1; i++){
-                activeArea.add(map.getStorage().patchIndexes(linePoints[i]));
+                activeArea.add(map.getStorage().patchIndexes(linePoints.get(i)));
             }
             if (d<=m_usableRange){
                 activeArea.add(map.getStorage().patchIndexes(p1));
@@ -152,10 +152,12 @@ public class ScanMatcher {
                 //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.points.size() - 1; i++) {
-                    map.cell(line.points.get(i)).update(false, new Point(0, 0));
+                    PointAccumulator pa = (PointAccumulator) map.cell(line.points.get(i));
+                    pa.update(false, new Point<Double>(0.0, 0.0));
                 }
                 if (d <= m_usableRange) {
-                    map.cell(p1).update(true, phit);
+                    PointAccumulator pa = (PointAccumulator) map.cell(p1);
+                    pa.update(true, phit);
                     //	map.cell(p2).update(true,phit);
                 }
             } else {
@@ -166,7 +168,8 @@ public class ScanMatcher {
                 Point<Double> phit = new Point<Double>(lp.x, lp.y);
                 phit.x += r * Math.cos(lp.theta + m_laserAngles[angleIndex]);
                 phit.y += r * Math.sin(lp.theta + m_laserAngles[angleIndex]);
-                map.cell(phit).update(true, phit);
+                PointAccumulator pa = map.cell(phit);
+                pa.update(true, phit);
             }
         }
     }
@@ -501,9 +504,9 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = map.cell(pr);
-                    PointAccumulator fcell = map.cell(pf);
-                    if (((double)cell )>m_fullnessThreshold && ((double)fcell )<m_fullnessThreshold){
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
+                    if (((double)cell ) > m_fullnessThreshold && ((double)fcell )<m_fullnessThreshold){
                         Point<Double> mu=phit-cell.mean();
                         if (!found){
                             bestMu=mu;
@@ -627,8 +630,8 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = map.cell(pr);
-                    PointAccumulator fcell = map.cell(pf);
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
                     if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
                         Point<Double> mu = phit - cell.mean();
                         if (!found) {

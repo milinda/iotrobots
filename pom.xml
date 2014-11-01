@@ -12,6 +12,7 @@
         <module>drone</module>
         <module>performance</module>
         <module>slam</module>
+        <module>simulator</module>
     </modules>
 
     <properties>

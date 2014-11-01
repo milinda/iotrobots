@@ -1,5 +1,9 @@
 package cgl.iotrobots.slam.core.utils;
 
+import org.omg.CORBA.OMGVMCID;
+
+import java.security.PublicKey;
+
 public class Point<T> {
     public T x;
     public T y;
@@ -38,4 +42,19 @@ public class Point<T> {
         double y = p1.y * p2.y;
         return x + y;
     }
+
+    public static Point<Integer> max(Point<Integer> p1, Point<Integer> p2){
+        Point<Integer> p = p1;
+        p.x = p.x > p2.x ? p.x : p2.x;
+        p.y = p.y > p2.y ? p.y : p2.y;
+        return p;
+    }
+
+    public static Point<Integer> min(Point<Integer> p1, Point<Integer> p2){
+        Point<Integer> p = p1;
+        p.x = p.x < p2.x ? p.x : p2.x;
+        p.y = p.y < p2.y ? p.y : p2.y;
+        return p;
+    }
+
 }

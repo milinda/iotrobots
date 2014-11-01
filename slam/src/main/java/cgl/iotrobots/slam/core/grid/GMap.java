@@ -104,8 +104,8 @@ public class GMap {
         Point<Integer> imax=world2map(xmax, ymax);
         if (isInside(imin) && isInside(imax))
             return;
-        imin= Math.min(imin, new Point<Integer>(0,0));
-        imax= Math.max(imax, new Point<Integer>(m_mapSizeX-1,m_mapSizeY-1));
+        imin= Point.min(imin, new Point<Integer>(0,0));
+        imax= Point.max(imax, new Point<Integer>(m_mapSizeX-1,m_mapSizeY-1));
         int pxmin, pymin, pxmax, pymax;
         pxmin=(int)Math.floor((float) imin.x / (1 << m_storage.getPatchMagnitude()));
         pxmax=(int)Math.ceil((float) imax.x / (1 << m_storage.getPatchMagnitude()));
@@ -124,48 +124,55 @@ public class GMap {
         return new Point<Integer>( (int)Math.round((x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((y-m_center.y)/m_delta)+m_sizeY2);
     }
 
-    public Point<Integer> world2map(Point<Integer> p) {
-        return new Point<Integer>( (int)Math.round((p.x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((p.y-m_center.y)/m_delta)+m_sizeY2);
+    public Point<Integer> world2map(Point p) {
+        if (p.x instanceof Integer) {
+            return new Point<Integer>((int) Math.round(((Integer)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Integer)p.y - m_center.y) / m_delta) + m_sizeY2);
+
+        } else if (p.x instanceof Double) {
+            return new Point<Integer>((int) Math.round(((Double)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Double)p.y - m_center.y) / m_delta) + m_sizeY2);
+        }
+        return null;
     }
 
     public Point<Double> map2world(Point<Integer> p) {
-        return new Point<Double>( (p.x-m_sizeX2)*m_delta + m_center.x,
-                (p.y-m_sizeY2)*m_dePoint<Integer> plta + m_center.y);
+        return new Point<Double>((p.x-m_sizeX2)*m_delta + m_center.x,
+                (p.y-m_sizeY2)*m_delta + m_center.y);
     }
 
     public Object cell(Point<Integer> p) {
         Point<Integer> ip= world2map(p);
-        AccessibilityState s=m_storage.cellState(ip);
+        int s = m_storage.cellState(ip);
         //if (! s&Inside) assert(0);
-        if (s == AccessibilityState.Allocated)
+        if (s == AccessibilityState.Allocated.getVal())
             return m_storage.cell(ip);
+
         return  null;
     }
 
 
     //FIXME check why the last line of the map is corrupted.
-    public Array2D toDoubleArray() {
-        Array2D darr= new Array2D(getMapSizeX()-1, getMapSizeY()-1);
-        for(int x=0; x<getMapSizeX()-1; x++) {
-            for (int y = 0; y < getMapSizeY() - 1; y++) {
-                Point<Integer> p = new Point<Integer>(x, y);
-                darr.cell(p) = cell(p);
-            }
-        }
-        return darr;
-    }
+//    public Array2D toDoubleArray() {
+//        Array2D darr= new Array2D(getMapSizeX()-1, getMapSizeY()-1);
+//        for(int x=0; x<getMapSizeX()-1; x++) {
+//            for (int y = 0; y < getMapSizeY() - 1; y++) {
+//                Point<Integer> p = new Point<Integer>(x, y);
+//                darr.cell(p) = cell(p);
+//            }
+//        }
+//        return darr;
+//    }
 
-    public GMap toDoubleMap() {
-        //FIXME size the map so that m_center will be setted accordingly
-        Point<Double> pmin = map2world(new Point<Integer>(0,0));
-        Point<Double> pmax= map2world(new Point<Integer>(getMapSizeX()-1,getMapSizeY()-1));
-        Point<Double> center = new Point<Double>((pmax.x + pmin.x) * 0.5, (pmax.y + pmin.y) * 0.5);
-        GMap  plainMap=new GMap(center, (pmax.x-pmin.x), (pmax.x-pmin.y), getDelta());
-        for(int x=0; x<getMapSizeX()-1; x++)
-            for(int y=0; y<getMapSizeY()-1; y++){
-                Point<Integer> p = new Point<Integer>(x,y);
-                plainMap.cell(p) = cell(p);
-            }
-        return plainMap;
-    }
+//    public GMap toDoubleMap() {
+//        //FIXME size the map so that m_center will be setted accordingly
+//        Point<Double> pmin = map2world(new Point<Integer>(0,0));
+//        Point<Double> pmax= map2world(new Point<Integer>(getMapSizeX()-1,getMapSizeY()-1));
+//        Point<Double> center = new Point<Double>((pmax.x + pmin.x) * 0.5, (pmax.y + pmin.y) * 0.5);
+//        GMap  plainMap=new GMap(center, (pmax.x-pmin.x), (pmax.x-pmin.y), getDelta());
+//        for(int x=0; x<getMapSizeX()-1; x++)
+//            for(int y=0; y<getMapSizeY()-1; y++){
+//                Point<Integer> p = new Point<Integer>(x,y);
+//                plainMap.cell(p) = cell(p);
+//            }
+//        return plainMap;
+//    }
 }
