@@ -46,6 +46,102 @@ public class ScanMatcher {
     int m_laserBeams;
     double m_laserAngles[] = new double[LASER_MAXBEAMS];
 
+    public void setlaserMaxRange(double m_laserMaxRange) {
+        this.m_laserMaxRange = m_laserMaxRange;
+    }
+
+    public void setusableRange(double m_usableRange) {
+        this.m_usableRange = m_usableRange;
+    }
+
+    public void setgaussianSigma(double m_gaussianSigma) {
+        this.m_gaussianSigma = m_gaussianSigma;
+    }
+
+    public void setlikelihoodSigma(double m_likelihoodSigma) {
+        this.m_likelihoodSigma = m_likelihoodSigma;
+    }
+
+    public void setkernelSize(int m_kernelSize) {
+        this.m_kernelSize = m_kernelSize;
+    }
+
+    public void setoptAngularDelta(double m_optAngularDelta) {
+        this.m_optAngularDelta = m_optAngularDelta;
+    }
+
+    public void setoptLinearDelta(double m_optLinearDelta) {
+        this.m_optLinearDelta = m_optLinearDelta;
+    }
+
+    public void setoptRecursiveIterations(int m_optRecursiveIterations) {
+        this.m_optRecursiveIterations = m_optRecursiveIterations;
+    }
+
+    public void setlikelihoodSkip(int m_likelihoodSkip) {
+        this.m_likelihoodSkip = m_likelihoodSkip;
+    }
+
+    public void setllsamplerange(double m_llsamplerange) {
+        this.m_llsamplerange = m_llsamplerange;
+    }
+
+    public void setlasamplerange(double m_lasamplerange) {
+        this.m_lasamplerange = m_lasamplerange;
+    }
+
+    public void setllsamplestep(double m_llsamplestep) {
+        this.m_llsamplestep = m_llsamplestep;
+    }
+
+    public void setlasamplestep(double m_lasamplestep) {
+        this.m_lasamplestep = m_lasamplestep;
+    }
+
+    public void setgenerateMap(boolean m_generateMap) {
+        this.m_generateMap = m_generateMap;
+    }
+
+    public void setenlargeStep(boolean m_enlargeStep) {
+        this.m_enlargeStep = m_enlargeStep;
+    }
+
+    public void setlaserPose(OrientedPoint<Double> m_laserPose) {
+        this.m_laserPose = m_laserPose;
+    }
+
+    public void setfullnessThreshold(double m_fullnessThreshold) {
+        this.m_fullnessThreshold = m_fullnessThreshold;
+    }
+
+    public void setangularOdometryReliability(double m_angularOdometryReliability) {
+        this.m_angularOdometryReliability = m_angularOdometryReliability;
+    }
+
+    public void setlinearOdometryReliability(double m_linearOdometryReliability) {
+        this.m_linearOdometryReliability = m_linearOdometryReliability;
+    }
+
+    public void setfreeCellRatio(double m_freeCellRatio) {
+        this.m_freeCellRatio = m_freeCellRatio;
+    }
+
+    public void setinitialBeamsSkip(int m_initialBeamsSkip) {
+        this.m_initialBeamsSkip = m_initialBeamsSkip;
+    }
+
+    public void setactiveAreaComputed(boolean m_activeAreaComputed) {
+        this.m_activeAreaComputed = m_activeAreaComputed;
+    }
+
+    public void setlaserBeams(int m_laserBeams) {
+        this.m_laserBeams = m_laserBeams;
+    }
+
+    public void setlaserAngles(double[] m_laserAngles) {
+        this.m_laserAngles = m_laserAngles;
+    }
+
     public void setMatchingParameters
             (double urange, double range, double sigma, int kernsize, double lopt, double aopt, int iterations, double likelihoodSigma, int likelihoodSkip) {
         m_usableRange = urange;

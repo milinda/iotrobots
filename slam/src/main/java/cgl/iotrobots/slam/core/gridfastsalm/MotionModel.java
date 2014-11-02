@@ -6,6 +6,22 @@ import cgl.iotrobots.slam.core.utils.Stat;
 public class MotionModel {
     double srr, str, srt, stt;
 
+    public void setSrr(double srr) {
+        this.srr = srr;
+    }
+
+    public void setStr(double str) {
+        this.str = str;
+    }
+
+    public void setSrt(double srt) {
+        this.srt = srt;
+    }
+
+    public void setStt(double stt) {
+        this.stt = stt;
+    }
+
     OrientedPoint<Double> drawFromMotion(OrientedPoint<Double> p, double linearMove, double angularMove) {
         OrientedPoint<Double> n = new OrientedPoint<Double>(p);
         double lm = linearMove + Math.abs(linearMove) * Stat.sampleGaussian(srr, 0) + Math.abs(angularMove) * Stat.sampleGaussian(str, 0);

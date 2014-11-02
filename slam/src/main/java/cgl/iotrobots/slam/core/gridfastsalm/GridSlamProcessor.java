@@ -26,8 +26,8 @@ public class GridSlamProcessor {
     List<Integer> m_indexes = new ArrayList<Integer>();
     List<Double> m_weights = new ArrayList<Double>();
 
-    ScanMatcher m_matcher;
-    MotionModel m_motionModel;
+    ScanMatcher m_matcher = new ScanMatcher();
+    MotionModel m_motionModel = new MotionModel();
 
     int m_beams;
     double last_update_time_;
@@ -38,9 +38,9 @@ public class GridSlamProcessor {
     double m_resampleThreshold;
 
     int m_count, m_readingCount;
-    OrientedPoint<Double> m_lastPartPose;
-    OrientedPoint<Double> m_odoPose;
-    OrientedPoint<Double> m_pose;
+    OrientedPoint<Double> m_lastPartPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+    OrientedPoint<Double> m_odoPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+    OrientedPoint<Double> m_pose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
 
     double m_linearDistance, m_angularDistance;
 
@@ -68,7 +68,23 @@ public class GridSlamProcessor {
         m_minimumScore = 0.;
     }
 
-    void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
+    public void setSrr(double srr) {
+        m_motionModel.srr = srr;
+    }
+
+    public void setSrt(double srt) {
+        m_motionModel.srt = srt;
+    }
+
+    public MotionModel getMotionModel() {
+        return m_motionModel;
+    }
+
+    public ScanMatcher getMatcher() {
+        return m_matcher;
+    }
+
+    public void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
                                int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         m_obsSigmaGain = likelihoodGain;
         m_matcher.setMatchingParameters(urange, range, sigma, kernsize, lopt, aopt, iterations, likelihoodSigma, likelihoodSkip);
