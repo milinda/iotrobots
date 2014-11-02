@@ -1,6 +1,8 @@
 package cgl.iotrobots.slam.core.sample;
 
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
+import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.OdometrySensor;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
@@ -226,5 +228,121 @@ public class Sample {
         LOG.info("Initialization complete");
 
         return true;
+    }
+
+    void updateMap(LaserScan scan)
+    {
+        ScanMatcher matcher;
+        double []laser_angles = new double[scan.ranges.size()];
+        double theta = angle_min_;
+        for(int i=0; i<scan.ranges.size(); i++)
+        {
+            if (gsp_laser_angle_increment_ < 0)
+                laser_angles[scan.ranges.size()-i-1]=theta;
+            else
+                laser_angles[i]=theta;
+            theta += gsp_laser_angle_increment_;
+        }
+
+        matcher.setLaserParameters(scan.ranges.size(), laser_angles,
+                gsp_laser_.getPose());
+
+        matcher.setlaserMaxRange(maxRange_);
+        matcher.setusableRange(maxUrange_);
+        matcher.setgenerateMap(true);
+
+        Particle best =
+            gsp_.getParticles().get(gsp_.getBestParticleIndex());
+        std_msgs::Float64 entropy;
+        entropy.data = computePoseEntropy();
+        if(entropy.data > 0.0)
+            entropy_publisher_.publish(entropy);
+
+        if(!got_map_) {
+            map_.map.info.resolution = delta_;
+            map_.map.info.origin.position.x = 0.0;
+            map_.map.info.origin.position.y = 0.0;
+            map_.map.info.origin.position.z = 0.0;
+            map_.map.info.origin.orientation.x = 0.0;
+            map_.map.info.origin.orientation.y = 0.0;
+            map_.map.info.origin.orientation.z = 0.0;
+            map_.map.info.origin.orientation.w = 1.0;
+        }
+
+        GMapping::Point center;
+        center.x=(xmin_ + xmax_) / 2.0;
+        center.y=(ymin_ + ymax_) / 2.0;
+
+        GMapping::ScanMatcherMap smap(center, xmin_, ymin_, xmax_, ymax_,
+            delta_);
+
+        ROS_DEBUG("Trajectory tree:");
+        for(GMapping::GridSlamProcessor::TNode* n = best.node;
+        n;
+        n = n->parent)
+        {
+            ROS_DEBUG("  %.3f %.3f %.3f",
+                    n->pose.x,
+                    n->pose.y,
+                    n->pose.theta);
+            if(!n->reading)
+            {
+                ROS_DEBUG("Reading is NULL");
+                continue;
+            }
+            matcher.invalidateActiveArea();
+            matcher.computeActiveArea(smap, n->pose, &((*n->reading)[0]));
+            matcher.registerScan(smap, n->pose, &((*n->reading)[0]));
+        }
+
+        // the map may have expanded, so resize ros message as well
+        if(map_.map.info.width != (int) smap.getMapSizeX() || map_.map.info.height != (int) smap.getMapSizeY()) {
+
+        // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
+        //       so we must obtain the bounding box in a different way
+        GMapping::Point wmin = smap.map2world(GMapping::IntPoint(0, 0));
+        GMapping::Point wmax = smap.map2world(GMapping::IntPoint(smap.getMapSizeX(), smap.getMapSizeY()));
+        xmin_ = wmin.x; ymin_ = wmin.y;
+        xmax_ = wmax.x; ymax_ = wmax.y;
+
+        ROS_DEBUG("map size is now %dx%d pixels (%f,%f)-(%f, %f)", smap.getMapSizeX(), smap.getMapSizeY(),
+                xmin_, ymin_, xmax_, ymax_);
+
+        map_.map.info.width = smap.getMapSizeX();
+        map_.map.info.height = smap.getMapSizeY();
+        map_.map.info.origin.position.x = xmin_;
+        map_.map.info.origin.position.y = ymin_;
+        map_.map.data.resize(map_.map.info.width * map_.map.info.height);
+
+        ROS_DEBUG("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
+    }
+
+        for(int x=0; x < smap.getMapSizeX(); x++)
+        {
+            for(int y=0; y < smap.getMapSizeY(); y++)
+            {
+                /// @todo Sort out the unknown vs. free vs. obstacle thresholding
+                GMapping::IntPoint p(x, y);
+                double occ=smap.cell(p);
+                assert(occ <= 1.0);
+                if(occ < 0)
+                    map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
+                else if(occ > occ_thresh_)
+                {
+                    //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+                    map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
+                }
+                else
+                    map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 0;
+            }
+        }
+        got_map_ = true;
+
+        //make sure to set the header information on the map
+        map_.map.header.stamp = ros::Time::now();
+        map_.map.header.frame_id = tf_.resolve( map_frame_ );
+
+        sst_.publish(map_.map);
+        sstm_.publish(map_.map.info);
     }
 }

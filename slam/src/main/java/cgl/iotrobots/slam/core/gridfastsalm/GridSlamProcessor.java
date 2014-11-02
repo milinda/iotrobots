@@ -84,6 +84,21 @@ public class GridSlamProcessor {
         return m_matcher;
     }
 
+    public List<Particle> getParticles() {
+        return m_particles;
+    }
+
+    public int getBestParticleIndex() {
+        int bi = 0;
+        double bw = -Double.MAX_VALUE;
+        for (int i = 0; i < m_particles.size(); i++)
+            if (bw < m_particles.get(i).weightSum) {
+                bw = m_particles.get(i).weightSum;
+                bi = i;
+            }
+        return bi;
+    }
+
     public void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
                                int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         m_obsSigmaGain = likelihoodGain;
