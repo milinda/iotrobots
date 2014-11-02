@@ -6,12 +6,37 @@ import org.ros.message.Time;
  * Created by hjh on 10/24/14.
  */
 public class obstacle {
-    public Point2<Double> point1;
-    public Point2<Double> point2;
-    public Time lastSeen;
+    private Vector2 begin;
+    private Vector2 end;
+    private Time lastSeen;
 
-    public obstacle(Point2<Double> p1,Point2<Double> p2){
-        point1=new Point2<Double>(p1.x,p1.y);
-        point2=new Point2<Double>(p2.x,p2.y);
+    public obstacle(Vector2 p1, Vector2 p2) {
+        this.begin = new Vector2(p1.getX(), p1.getY());
+        this.end = new Vector2(p2.getX(), p2.getY());
+    }
+
+    public void setBothPoints(Vector2 p1, Vector2 p2) {
+        this.begin = new Vector2(p1);
+        this.end = new Vector2(p2);
+    }
+
+    public void setBegin(Vector2 v) {
+        this.begin = new Vector2(v);
+    }
+
+    public void setEnd(Vector2 v) {
+        this.end = new Vector2(v);
+    }
+
+    public void setTime(Time t) {
+        lastSeen = new Time(t);
+    }
+
+    public Vector2 getBegin() {
+        return new Vector2(this.begin);
+    }
+
+    public Vector2 getEnd() {
+        return new Vector2(this.end);
     }
 }
