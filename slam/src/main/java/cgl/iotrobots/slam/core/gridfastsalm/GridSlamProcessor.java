@@ -21,15 +21,12 @@ public class GridSlamProcessor {
 
     private static final double m_distanceThresholdCheck = 20;
 
-    private List<TNode> TNodeVector = new ArrayList<TNode>();
-    private BlockingDeque<TNode> TNodeDeque = new LinkedBlockingDeque<TNode>();
     private List<Particle> m_particles = new ArrayList<Particle>();
 
     List<Integer> m_indexes =  new ArrayList<Integer>();
     List<Double> m_weights = new ArrayList<Double>();
 
     ScanMatcher m_matcher;
-
     MotionModel m_motionModel;
 
     int m_beams;

@@ -168,7 +168,7 @@ public class ScanMatcher {
                 Point<Double> phit = new Point<Double>(lp.x, lp.y);
                 phit.x += r * Math.cos(lp.theta + m_laserAngles[angleIndex]);
                 phit.y += r * Math.sin(lp.theta + m_laserAngles[angleIndex]);
-                PointAccumulator pa = map.cell(phit);
+                PointAccumulator pa = (PointAccumulator) map.cell(phit);
                 pa.update(true, phit);
             }
         }
@@ -483,8 +483,12 @@ public class ScanMatcher {
         for (int rIndex = m_initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
             skip=skip>m_likelihoodSkip?0:skip;
-            if (readings[rIndex]>m_usableRange) continue;
-            if (skip != 0) continue;
+            if (readings[rIndex]>m_usableRange) {
+                continue;
+            }
+            if (skip != 0) {
+                continue;
+            }
             Point<Double> phit = new Point<Double>(lp.x, lp.y);
             phit.x+=readings[rIndex]*Math.cos(lp.theta +m_laserAngles[angleIndex]);
             phit.y+=readings[rIndex]*Math.sin(lp.theta +m_laserAngles[angleIndex]);
@@ -506,22 +510,23 @@ public class ScanMatcher {
                     //if (s&Inside && s&Allocated){
                     PointAccumulator cell = (PointAccumulator) map.cell(pr);
                     PointAccumulator fcell = (PointAccumulator) map.cell(pf);
-                    if (((double)cell ) > m_fullnessThreshold && ((double)fcell )<m_fullnessThreshold){
-                        Point<Double> mu=phit-cell.mean();
+                    if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() <m_fullnessThreshold){
+                        Point<Double> mu= Point.minus(phit, cell.mean());
                         if (!found){
                             bestMu=mu;
                             found=true;
-                        }else
-                            bestMu=(mu*mu)<(bestMu*bestMu)?mu:bestMu;
+                        } else {
+                            bestMu = (Point.mulD(mu, mu)) < Point.mulD(bestMu, bestMu) ? mu : bestMu;
+                        }
                     }
                     //}
                 }
             if (found){
-                s+=Math.exp(-1.0 / m_gaussianSigma * bestMu * bestMu);
+                s+=Math.exp(-1.0 / m_gaussianSigma * Point.mulD(bestMu, bestMu));
                 c++;
             }
-            if (skip != 0){
-                double f=(-1./m_likelihoodSigma)*(bestMu*bestMu);
+            if (skip == 0){
+                double f=(-1./m_likelihoodSigma)*(Point.mulD(bestMu, bestMu));
                 l+=(found)?f:noHit;
             }
         }
@@ -569,18 +574,16 @@ public class ScanMatcher {
                     PointAccumulator cell = (PointAccumulator) map.cell(pr);
                     PointAccumulator fcell = (PointAccumulator) map.cell(pf);
 
-                    if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
-                        Point<Double> mu = phit - cell.mean();
-
+                    if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue()  < m_fullnessThreshold) {
+                        Point<Double> mu = Point.minus(phit, cell.mean());
                         if (!found) {
                             bestMu = mu;
                             bestCell = cell.mean();
                             found = true;
-                        } else if ((mu * mu) < (bestMu * bestMu)) {
+                        } else if (Point.mulD(mu , mu) < Point.mulD(bestMu , bestMu)) {
                             bestMu = mu;
                             bestCell = cell.mean();
                         }
-
                     }
                     //}
                 }
@@ -632,18 +635,19 @@ public class ScanMatcher {
                     //if (s&Inside && s&Allocated){
                     PointAccumulator cell = (PointAccumulator) map.cell(pr);
                     PointAccumulator fcell = (PointAccumulator) map.cell(pf);
-                    if (((double) cell) > m_fullnessThreshold && ((double) fcell) < m_fullnessThreshold) {
-                        Point<Double> mu = phit - cell.mean();
+                    if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue()  < m_fullnessThreshold) {
+                        Point<Double> mu = Point.minus(phit, cell.mean());
                         if (!found) {
                             bestMu = mu;
                             found = true;
-                        } else
-                            bestMu = (mu * mu) < (bestMu * bestMu) ? mu : bestMu;
+                        } else {
+                            bestMu = Point.mulD(mu, mu) < Point.mulD(bestMu, bestMu) ? mu : bestMu;
+                        }
                     }
                     //}
                 }
             if (found) {
-                s += Math.exp(-1. / m_gaussianSigma * bestMu * bestMu);
+                s += Math.exp(-1. / m_gaussianSigma * Point.mulD(bestMu, bestMu));
             }
         }
         return s;

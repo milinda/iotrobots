@@ -141,7 +141,7 @@ public class ScanMatcherProcessor {
         if (m_count > 0){
             if(m_computeCovariance){
                 Covariance3 cov = new Covariance3();
-                score=m_matcher.optimize(newPose, cov, m_map, m_pose, plainReading);
+                score = m_matcher.optimize(newPose, cov, m_map, m_pose, plainReading);
                         /*
 			gsl_matrix* m=gsl_matrix_alloc(3,3);
 			gsl_matrix_set(m,0,0,cov.xx); gsl_matrix_set(m,0,1,cov.xy); gsl_matrix_set(m,0,2,cov.xt);

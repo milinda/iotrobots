@@ -139,7 +139,7 @@ public class GMap {
                 (p.y-m_sizeY2)*m_delta + m_center.y);
     }
 
-    public Object cell(Point<Integer> p) {
+    public Object cell(Point p) {
         Point<Integer> ip= world2map(p);
         int s = m_storage.cellState(ip);
         //if (! s&Inside) assert(0);
