@@ -255,7 +255,7 @@ public class Sample {
         }
 
         OrientedPoint odom_pose;
-        if(addScan(*scan, odom_pose))
+        if(addScan(scan, odom_pose))
         {
             LOG.debug("scan processed");
 
