@@ -32,6 +32,7 @@ public class NHORCA {
         return calcVstar(error/T,theta) * Math.sqrt((2.0 * (1.0 - Math.cos(theta))) / (2.0 * (1.0 - Math.cos(theta)) - Math.pow(Math.sin(theta), 2)));
     }
 
+
     //from orca
     //in velocity space
     public static void addMovementConstraintsDiffSimple(double max_track_speed, double heading, Vector<Line> additional_orca_lines) {

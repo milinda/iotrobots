@@ -155,4 +155,8 @@ public class Vector2 {
         double len2 = abs(two);
         return Math.acos(dot_prod / (len1*len2));
     }
+
+    public static double atan(Vector2 v){
+        return Math.atan2(v.getY(),v.getX());
+    }
 }
