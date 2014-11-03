@@ -43,6 +43,11 @@
             <artifactId>sensor_msgs</artifactId>
             <version>1.10.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.ros.rosjava_messages</groupId>
+            <artifactId>costmap_2d</artifactId>
+            <version>1.11.4</version>
+        </dependency>
 
     </dependencies>
 
