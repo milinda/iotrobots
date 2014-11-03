@@ -122,10 +122,15 @@ public class Vector2 {
         }
     }
 
-    public static Vector2 norm(Vector2 p) {
+    public static Vector2 normalize(Vector2 p) {
         double x = p.getX() / abs(p);
         double y = p.getY() / abs(p);
         return new Vector2(x, y);
+    }
+
+    //calculate normal vector of p, clockwise
+    public static Vector2 normal(Vector2 p){
+        return normalize(new Vector2(p.getY(),-p.getX()));
     }
 
     //convert pointcloud point32 datatype to Point2

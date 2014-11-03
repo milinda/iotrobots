@@ -3,7 +3,6 @@ package cgl.iotrobots.collavoid.NHORCA;
 import cgl.iotrobots.collavoid.utils.EPSILON;
 import cgl.iotrobots.collavoid.utils.Line;
 import cgl.iotrobots.collavoid.utils.Vector2;
-import cgl.iotrobots.collavoid.utils.utils;
 
 import java.util.Vector;
 
@@ -69,7 +68,7 @@ public class NHORCA {
             double track_speed = calculateMaxTrackSpeedAngle(T,cur_ang, error, max_vel_x, max_vel_th, v_max_ang);
             second_point.setVector2(Vector2.mul(second_point,track_speed));
 
-            line=new Line(first_point,Vector2.norm(Vector2.minus(second_point,first_point)));
+            line=new Line(first_point,Vector2.normalize(Vector2.minus(second_point, first_point)));
             additional_orca_lines.add(line);
             //    ROS_DEBUG("line point 1 x, y, %f, %f, point 2 = %f,%f",first_point.x(),first_point.y(),second_point.x(),second_point.y());
             first_point.setVector2(second_point);

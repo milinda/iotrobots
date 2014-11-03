@@ -4,6 +4,7 @@ package cgl.iotrobots.collavoid.ROSAgent;
  * Created by hjh on 10/24/14.
  */
 
+import cgl.iotrobots.collavoid.ClearPath.CP;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.msgmanager.msgPublisher;
 import cgl.iotrobots.collavoid.utils.*;
@@ -31,6 +32,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import static cgl.iotrobots.collavoid.ClearPath.CP.createObstacleVO;
 import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSum;
 import static cgl.iotrobots.collavoid.utils.utils.*;
 
@@ -68,12 +70,12 @@ public class Agent {
     public double cur_allowed_error_;
 
     //orca
-    //public double maxSpeedX; //deprecated the same as max_vel_x_
+    public double max_speed_x_; //in nonholomic robot it has only one liner velocity
     public Vector<Line> orcaLines, addOrcaLines;
 
     //VO
     public Vector<VO> voAgents, addVos;
-    public Vector<velocitySample> samples;
+    public Vector<VelocitySample> samples;
 
     public Vector<Agent> agentNeighbors;
 
@@ -551,7 +553,7 @@ public class Agent {
             double min_dist = Math.min(min_dist_neigh, min_dist_obst_);
 
             //incorporate NH constraints
-            ////max_speed_x_ = max_vel_x_;
+            max_speed_x_ = max_vel_x_;//???????????????????????????
 
             if (!holo_robot_) {
                 addNHConstraints(min_dist, pref_velocity);
@@ -561,16 +563,17 @@ public class Agent {
 
             computeObstacles();
 
-            if (orca_) {
-                computeOrcaVelocity(pref_velocity);
-            } else {
-                samples_.clear();
-                if (clearpath_) {
+            // currently only compute the clear path velocity which has the best performance as described in the thesis.
+//            if (orca_) {
+//                computeOrcaVelocity(pref_velocity);
+//            } else {
+                samples.clear();
+//                if (clearpath_) {
                     computeClearpathVelocity(pref_velocity);
-                } else {
-                    computeSampledVelocity(pref_velocity);
-                }
-            }
+//                } else {
+//                    computeSampledVelocity(pref_velocity);
+//                }
+//            }
 
 
             double speed_ang = atan2(new_velocity_.y(), new_velocity_.x());
@@ -730,6 +733,7 @@ public class Agent {
         } else {
             NHORCA.addMovementConstraintsDiff(cur_allowed_error_, time_to_holo_, max_vel_x_, max_vel_th_, position.theta, v_max_ang, addOrcaLines);
         }
+        max_speed_x_ = vMaxAng();
 
     }
 
@@ -761,7 +765,7 @@ public class Agent {
                         if (use_obstacles_) {
                             if (orca) {
                                 createObstacleLine(own_footprint, obst.next().getBegin(), obst.next().getEnd());
-                            } else {
+                            } else {//called from CP
                                 VO obstacle_vo = createObstacleVO(position, footprint_radius_, own_footprint, obst.next().getBegin(), obst.next().getEnd());
                                 voAgents.add(obstacle_vo);
                             }
@@ -804,8 +808,8 @@ public class Agent {
 
             if (dist < 0.0) {
                 Line line=new Line();
-                line.setPoint(Vector2.mul(Vector2.norm(rel_position),(dist - 0.02)));
-                line.setDir(Vector2.norm(Vector2.minus(obst1, obst2)));
+                line.setPoint(Vector2.mul(Vector2.normalize(rel_position),(dist - 0.02)));
+                line.setDir(Vector2.normalize(Vector2.minus(obst1, obst2)));
                 addOrcaLines.add(line);
                 return;
             }
@@ -813,14 +817,14 @@ public class Agent {
             if (Vector2.abs(Vector2.minus(position,obst1)) > 2 * footprint_radius_ &&
                     Vector2.abs(Vector2.minus(position,obst2)) > 2 * footprint_radius_) {
                 Line line=new Line();
-                line.setPoint(Vector2.mul(Vector2.norm(rel_position),dist));
-                line.setDir(Vector2.negative(Vector2.norm(Vector2.minus(obst1, obst2))));
+                line.setPoint(Vector2.mul(Vector2.normalize(rel_position),dist));
+                line.setDir(Vector2.negative(Vector2.normalize(Vector2.minus(obst1, obst2))));
                 addOrcaLines.add(line);
                 return;
 
             }
 
-            rel_position = Vector2.mul(Vector2.norm(rel_position),Vector2.abs(rel_position) - dist / 2.0);
+            rel_position = Vector2.mul(Vector2.normalize(rel_position),Vector2.abs(rel_position) - dist / 2.0);
 
             Vector<Vector2> obst=new Vector<Vector2>();
             obst.add(Vector2.minus(obst1, position_obst));
@@ -848,13 +852,13 @@ public class Agent {
             }
 
             Line line=new Line();
-            line.setPoint(Vector2.mul(Vector2.norm(rel_position), dist / 2.0));
+            line.setPoint(Vector2.mul(Vector2.normalize(rel_position), dist / 2.0));
             if (Vector2.absSqr(Vector2.minus(position_obst,obst1)) > Vector2.absSqr(Vector2.minus(position_obst, obst2))) {
                 // ROS_ERROR("max_ang = %.2f", max_ang);
-                line.setDir(Vector2.rotateVectorByAngle(Vector2.norm(max), 0.1));
+                line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(max), 0.1));
             } else {
                 // ROS_ERROR("min_ang = %.2f", min_ang);
-                line.setDir(Vector2.rotateVectorByAngle(Vector2.norm(min), 0.1));
+                line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(min), 0.1));
 
             }
             addOrcaLines.add(line);
@@ -863,10 +867,10 @@ public class Agent {
     }
 
     void computeObstacleLine(Vector2 obst){
-        Line line;
-        Vector2 relative_position = obst - position_;
+        Line line=new Line();
+        Vector2 relative_position = Vector2.minus(obst,position);
         double dist_to_footprint;
-        double dist = collvoid::abs(position_ - obst);
+        double dist = Vector2.abs(Vector2.minus(position, obst));
         if (!has_polygon_footprint_)
             dist_to_footprint = footprint_radius_;
         else {
@@ -876,30 +880,103 @@ public class Agent {
             }
         }
         dist  = dist - dist_to_footprint - 0.03;
-        //if (dist < (double)max_vel_with_obstacles_){
-        //  dist *= dist;
-        //}
-        //    line.point = normalize(relative_position) * (dist - dist_to_footprint - 0.03);
-        line.point = normalize(relative_position) * (dist);
-        line.dir = Vector2 (-normalize(relative_position).y(),normalize(relative_position).x()) ;
-        additional_orca_lines_.push_back(line);
+
+        line.setPoint(Vector2.normalize(Vector2.mul(relative_position, dist)));
+        line.setDir(new Vector2(-(Vector2.normalize(relative_position)).getY(),(Vector2.normalize(relative_position)).getX())) ;
+        addOrcaLines.add(line);
     }
 
     double getDistToFootprint(Vector2 point){
-        collvoid::Vector2 result, null;
-        for (size_t i = 0; i < footprint_lines_.size(); i++){
-            collvoid::Vector2 first = footprint_lines_[i].first;
-            collvoid::Vector2 second = footprint_lines_[i].second;
+        Vector2 result;
+        for (int i = 0; i < footPrintLines.size(); i++){
+            Vector2 first = footPrintLines.get(i).getFirst();
+            Vector2 second = footPrintLines.get(i).getSecond();
 
-            result = LineSegmentToLineSegmentIntersection(first.x(),first.y(),second.x(),second.y(), 0.0, 0.0, point.x(),point.y());
-            if (result != null) {
+            result = LineSegmentToLineSegmentIntersection(first.getX(),first.getY(),second.getX(),second.getY(),
+                    0.0, 0.0, point.getX(),point.getY());
+            if (result!= null) {
                 //ROS_DEBUG("Result = %f, %f, dist %f", result.x(), result.y(), collvoid::abs(result));
-                return collvoid::abs(result);
+                return Vector2.abs(result);
             }
         }
-        ROS_DEBUG("Obstacle Point within Footprint. I am close to/in collision");
+        //ROS_DEBUG("Obstacle Point within Footprint. I am close to/in collision");
         return -1;
     }
 
+    Vector2 LineSegmentToLineSegmentIntersection(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4){
+        double r, s, d;
+        Vector2 res=null;
+        //Make sure the lines aren't parallel
+        if ((y2 - y1) / (x2 - x1) != (y4 - y3) / (x4 - x3)){
+            d = (((x2 - x1) * (y4 - y3)) - (y2 - y1) * (x4 - x3));
+            if (d != 0){
+                r = (((y1 - y3) * (x4 - x3)) - (x1 - x3) * (y4 - y3)) / d;
+                s = (((y1 - y3) * (x2 - x1)) - (x1 - x3) * (y2 - y1)) / d;
+                if (r >= 0 && r <= 1){
+                    if (s >= 0 && s <= 1){
+                        return new Vector2(x1 + r * (x2 - x1), y1 + r * (y2 - y1));
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+
+
+    void computeClearpathVelocity(Vector2 pref_velocity) {
+        //account for nh error
+
+        neighbors_lock_.lock();
+        try {
+            radius += cur_allowed_error_;
+
+                if (controlled) {
+                    computeAgentVOs();
+                }
+                newVelocity = CP.calculateClearpathVelocity(samples, voAgents, addOrcaLines, pref_velocity, max_speed_x_, useTruancation);
+
+            radius -= cur_allowed_error_;
+        }finally {
+            neighbors_lock_.unlock();
+        }
+        //TODO:ADD PUBLISERS
+//            publishHoloSpeed(position_, new_velocity_, global_frame_, base_frame_, speed_pub_);
+//            publishVOs(position_, vo_agents_, use_truncation_, global_frame_, base_frame_, vo_pub_);
+//            publishPoints(position_, samples_, global_frame_, base_frame_, samples_pub_);
+//            publishOrcaLines(additional_orca_lines_, position_, global_frame_, base_frame_, lines_pub_);
+
+
+    }
+
+    void computeAgentVOs(){
+
+        for (Iterator<Agent> agent = agentNeighbors.iterator(); agent.hasNext(); ) {
+               //BOOST_FOREACH (AgentPtr agent, agent_neighbors_) {
+            VO new_agent_vo;
+            //use footprint or radius to create VO
+            if (convex) {
+                if (agent.next().controlled) {
+                    new_agent_vo = createVO(position, footPrint, velocity, agent.next().position, agent.next().footPrint, agent.next().velocity, voType);
+                } else {
+                    new_agent_vo = createVO(position, footPrint, velocity, agent.next().position, agent.next().footPrint, agent.next().velocity, CP.VOS);
+                                    }
+            } else {
+                if (agent.next().controlled) {
+                    new_agent_vo = createVO(position, radius, velocity, agent.next().position, agent.next().radius, agent.next().velocity, voType);
+                } else {
+                    new_agent_vo = createVO(position, radius, velocity, agent.next().position, agent.next().radius, agent.next().velocity, CP.VOS);
+                }
+
+            }
+            //truncate
+            if (useTruancation) {
+                new_agent_vo = createTruncVO(new_agent_vo, truncTime);
+            }
+            voAgents.add(new_agent_vo);
+
+            //}
+        }
+    }
 
 }
