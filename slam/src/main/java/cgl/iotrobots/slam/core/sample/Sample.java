@@ -71,14 +71,14 @@ public class Sample {
     double tf_delay_;
 
 
-
     public void init() {
         gsp_ = new GridSlamProcessor();
 
         throttle_scans_ = 1;
 
         // gmapping parameters
-        maxUrange_ = 0.0;  maxRange_ = 0.0;
+        maxUrange_ = 0.0;
+        maxRange_ = 0.0;
         minimum_score_ = 0;
         sigma_ = 0.05;
         kernelSize_ = 1;
@@ -111,20 +111,17 @@ public class Sample {
 
     }
 
-    public boolean initMapper()
-    {
+    public boolean initMapper(LaserScan scan) {
 //        laser_frame_ = scan.header.frame_id;
         // Get the laser's pose, relative to base.
-        tf::Stamped<tf::Pose> ident;
-        tf::Stamped<tf::Transform> laser_pose;
+        tf::Stamped < tf::Pose > ident;
+        tf::Stamped < tf::Transform > laser_pose;
         ident.setIdentity();
         ident.frame_id_ = laser_frame_;
         ident.stamp_ = scan.header.stamp;
-        try
-        {
+        try {
             tf_.transformPose(base_frame_, ident, laser_pose);
-        }
-        catch(tf::TransformException e)
+        } catch (tf::TransformException e)
         {
             LOG.warn("Failed to compute laser pose, aborting initialization (%s)",
                     e.what());
@@ -134,14 +131,12 @@ public class Sample {
         // create a point 1m above the laser position and transform it into the laser-frame
         tf::Vector3 v;
         v.setValue(0, 0, 1 + laser_pose.getOrigin().z());
-        tf::Stamped<tf::Vector3> up(v, scan.header.stamp,
+        tf::Stamped < tf::Vector3 > up(v, scan.header.stamp,
                 base_frame_);
-        try
-        {
+        try {
             tf_.transformPoint(laser_frame_, up, up);
             LOG.debug("Z-Axis in sensor frame: %.3f", up.z());
-        }
-        catch(tf::TransformException& e)
+        } catch (tf::TransformException & e)
         {
             LOG.warn("Unable to determine orientation of laser: %s",
                     e.what());
@@ -149,8 +144,7 @@ public class Sample {
         }
 
         // gmapping doesnt take roll or pitch into account. So check for correct sensor alignment.
-        if (fabs(fabs(up.z()) - 1) > 0.001)
-        {
+        if (fabs(fabs(up.z()) - 1) > 0.001) {
             LOG.warn("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f",
                     up.z());
             return false;
@@ -159,13 +153,10 @@ public class Sample {
         gsp_laser_beam_count_ = scan.ranges.size();
 
         int orientationFactor;
-        if (up.z() > 0)
-        {
+        if (up.z() > 0) {
             orientationFactor = 1;
             LOG.warn("Laser is mounted upwards.");
-        }
-        else
-        {
+        } else {
             orientationFactor = -1;
             LOG.warn("Laser is mounted upside down.");
         }
@@ -179,9 +170,9 @@ public class Sample {
 
         // setting maxRange and maxUrange here so we can set a reasonable default
         ros::NodeHandle private_nh_("~");
-        if(!private_nh_.getParam("maxRange", maxRange_))
+        if (!private_nh_.getParam("maxRange", maxRange_))
             maxRange_ = scan.range_max - 0.01;
-        if(!private_nh_.getParam("maxUrange", maxUrange_))
+        if (!private_nh_.getParam("maxUrange", maxUrange_))
             maxUrange_ = maxRange_;
 
         // The laser must be called "FLASER".
@@ -190,11 +181,11 @@ public class Sample {
         // actual increment is negative, we'll swap the order of ranges before
         // feeding each scan to GMapping.
         gsp_laser_ = new RangeSensor("FLASER",
-            gsp_laser_beam_count_,
-            Math.abs(gsp_laser_angle_increment_),
-            gmap_pose,
-            0.0,
-            maxRange_);
+                gsp_laser_beam_count_,
+                Math.abs(gsp_laser_angle_increment_),
+                gmap_pose,
+                0.0,
+                maxRange_);
 
         Map<String, Sensor> smap = new HashMap<String, Sensor>();
         smap.put(gsp_laser_.getName(), gsp_laser_);
@@ -206,8 +197,7 @@ public class Sample {
 
         /// @todo Expose setting an initial pose
         OrientedPoint<Double> initialPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
-        if(!getOdomPose(initialPose, scan.header.stamp))
-        {
+        if (!getOdomPose(initialPose, scan.header.stamp)) {
             LOG.warn("Unable to determine inital pose of laser! Starting point will be set to zero.");
             initialPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
         }
@@ -231,117 +221,106 @@ public class Sample {
         gsp_.getMatcher().setminimumScore(minimum_score_);
 
         // Call the sampling function once to set the seed.
-        GMapping::sampleGaussian(1,time(NULL));
+        GMapping::sampleGaussian (1, time(NULL));
 
         LOG.info("Initialization complete");
 
         return true;
     }
 
-    void laserCallback(LaserScan scan)
-    {
+    void laserCallback(LaserScan scan) {
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
             return;
 
-        static ros::Time last_map_update(0,0);
+        static ros::Time last_map_update (0, 0);
 
         // We can't initialize the mapper until we've got the first scan
-        if(!got_first_scan_)
-        {
-            if(!initMapper(*scan))
-            return;
+        if (!got_first_scan_) {
+            if (!initMapper(scan))
+                return;
             got_first_scan_ = true;
         }
 
-        OrientedPoint odom_pose;
-        if(addScan(scan, odom_pose))
-        {
+        OrientedPoint<Double> odom_pose;
+        if (addScan(scan, odom_pose)) {
             LOG.debug("scan processed");
 
-            GMapping::OrientedPoint mpose = gsp_->getParticles()[gsp_->getBestParticleIndex()].pose;
+            OrientedPoint<Double> mpose = gsp_.getParticles().get(gsp_.getBestParticleIndex()).pose;
             LOG.debug("new best pose: %.3f %.3f %.3f", mpose.x, mpose.y, mpose.theta);
             LOG.debug("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
             LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
 
-            tf::Transform laser_to_map = tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose.theta), tf::Vector3(mpose.x, mpose.y, 0.0)).inverse();
-            tf::Transform odom_to_laser = tf::Transform(tf::createQuaternionFromRPY(0, 0, odom_pose.theta), tf::Vector3(odom_pose.x, odom_pose.y, 0.0));
+            tf::Transform laser_to_map = tf::Transform (tf::createQuaternionFromRPY (0, 0, mpose.theta),tf::Vector3
+            (mpose.x, mpose.y, 0.0)).inverse();
+            tf::Transform odom_to_laser = tf::Transform (tf::createQuaternionFromRPY (0, 0, odom_pose.theta),tf::Vector3
+            (odom_pose.x, odom_pose.y, 0.0));
 
             map_to_odom_mutex_.lock();
             map_to_odom_ = (odom_to_laser * laser_to_map).inverse();
             map_to_odom_mutex_.unlock();
 
-            if(!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
-            {
-                updateMap(*scan);
-                last_map_update = scan->header.stamp;
+            if (!got_map_ || (scan -> header.stamp - last_map_update) > map_update_interval_) {
+                updateMap( * scan);
+                last_map_update = scan -> header.stamp;
                 LOG.debug("Updated the map");
             }
         }
     }
 
-    boolean addScan(LaserScan scan, OrientedPoint gmap_pose) {
+    boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {
         if (getOdomPose(gmap_pose, scan.timestamp) == null)
             return false;
 
-        if(scan.ranges.size() != gsp_laser_beam_count_)
+        if (scan.ranges.size() != gsp_laser_beam_count_)
             return false;
 
         // GMapping wants an array of doubles...
-        double []ranges_double = new double[scan.ranges.size()];
+        Double[] ranges_double = new Double[scan.ranges.size()];
         // If the angle increment is negative, we have to invert the order of the readings.
-        if (gsp_laser_angle_increment_ < 0)
-        {
+        if (gsp_laser_angle_increment_ < 0) {
             LOG.debug("Inverting scan");
             int num_ranges = scan.ranges.size();
-            for(int i=0; i < num_ranges; i++)
-            {
+            for (int i = 0; i < num_ranges; i++) {
                 // Must filter out short readings, because the mapper won't
                 if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = (double) scan.range_max;
+                    ranges_double[i] = scan.range_max;
                 } else {
-                    ranges_double[i] = (double) scan.ranges.get(num_ranges - i - 1);
+                    ranges_double[i] = scan.ranges.get(num_ranges - i - 1);
                 }
             }
-        } else
-        {
-            for(int i=0; i < scan.ranges.size(); i++)
-            {
+        } else {
+            for (int i = 0; i < scan.ranges.size(); i++) {
                 // Must filter out short readings, because the mapper won't
-                if(scan.ranges.get(i) < scan.range_min)
-                    ranges_double[i] = (double)scan.range_max;
-                else
-                    ranges_double[i] = (double)scan.ranges.get(i);
+                if (scan.ranges.get(i) < scan.range_min) {
+                    ranges_double[i] = scan.range_max;
+                } else {
+                    ranges_double[i] = scan.ranges.get(i);
+                }
             }
         }
 
         RangeReading reading = new RangeReading(scan.ranges.size(),
-            ranges_double,
-            gsp_laser_,
-            scan.timestamp / 1000);
+                ranges_double,
+                gsp_laser_,
+                scan.timestamp / 1000);
 
         // ...but it deep copies them in RangeReading constructor, so we don't
         // need to keep our array around.
 
         reading.setPose(gmap_pose);
 
-  /*
-  ROS_DEBUG("scanpose (%.3f): %.3f %.3f %.3f\n",
-            scan.header.stamp.toSec(),
-            gmap_pose.x,
-            gmap_pose.y,
-            gmap_pose.theta);
-            */
-
         return gsp_.processScan(reading, );
     }
+
+    OutMap map_ = new OutMap();
 
     private OrientedPoint<Double> getOdomPose(OrientedPoint<Double> gmap_pose, long timestamp) {
         return gmap_pose;
     }
 
     void updateMap(LaserScan scan) {
-        ScanMatcher matcher;
+        ScanMatcher matcher = new ScanMatcher();
         double[] laser_angles = new double[scan.ranges.size()];
         double theta = angle_min_;
         for (int i = 0; i < scan.ranges.size(); i++) {
@@ -363,14 +342,14 @@ public class Sample {
                 gsp_.getParticles().get(gsp_.getBestParticleIndex());
 
         if (!got_map_) {
-            map_.map.info.resolution = delta_;
-            map_.map.info.origin.position.x = 0.0;
-            map_.map.info.origin.position.y = 0.0;
-            map_.map.info.origin.position.z = 0.0;
-            map_.map.info.origin.orientation.x = 0.0;
-            map_.map.info.origin.orientation.y = 0.0;
-            map_.map.info.origin.orientation.z = 0.0;
-            map_.map.info.origin.orientation.w = 1.0;
+            map_.resolution = delta_;
+            map_.origin.x = 0.0;
+            map_.origin.y = 0.0;
+            map_.origin.z = 0.0;
+            map_.origin.orientation.x = 0.0;
+            map_.origin.orientation.y = 0.0;
+            map_.origin.orientation.z = 0.0;
+            map_.origin.orientation.w = 1.0;
         }
 
         Point<Double> center = new Point<Double>((xmin_ + xmax_) / 2.0, (ymin_ + ymax_) / 2.0);
@@ -384,12 +363,12 @@ public class Sample {
                 continue;
             }
             matcher.invalidateActiveArea();
-            matcher.computeActiveArea(smap, n.pose, n.reading.get(0));
-            matcher.registerScan(smap, n.pose, n.reading.get(0));
+            matcher.computeActiveArea(smap, n.pose, n.reading.toArray(new Double[n.reading.size()]));
+            matcher.registerScan(smap, n.pose, n.reading.toArray(new Double[n.reading.size()]));
         }
 
         // the map may have expanded, so resize ros message as well
-        if (map_.map.info.width != (int) smap.getMapSizeX() || map_.map.info.height != (int) smap.getMapSizeY()) {
+        if (map_.width != smap.getMapSizeX() || map_.height != smap.getMapSizeY()) {
 
             // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
             //       so we must obtain the bounding box in a different way
@@ -403,13 +382,13 @@ public class Sample {
             LOG.debug("map size is now {} x {} pixels ({},{})-({}, {})", smap.getMapSizeX(), smap.getMapSizeY(),
                     xmin_, ymin_, xmax_, ymax_);
 
-            map_.map.info.width = smap.getMapSizeX();
-            map_.map.info.height = smap.getMapSizeY();
-            map_.map.info.origin.position.x = xmin_;
-            map_.map.info.origin.position.y = ymin_;
-            map_.map.data.resize(map_.map.info.width * map_.map.info.height);
+            map_.width = smap.getMapSizeX();
+            map_.height = smap.getMapSizeY();
+            map_.origin.x = xmin_;
+            map_.origin.y = ymin_;
+            map_.resize(map_.width * map_.height);
 
-            LOG.debug("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
+            LOG.debug("map origin: (%f, %f)", map_.origin.x, map_.origin.y);
         }
 
         for (int x = 0; x < smap.getMapSizeX(); x++) {
@@ -419,21 +398,18 @@ public class Sample {
                 double occ = smap.cell(p);
                 assert (occ <= 1.0);
                 if (occ < 0)
-                    map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
+                    map_.data[MAP_IDX(map_.width, x, y)] = -1;
                 else if (occ > occ_thresh_) {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
-                    map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
+                    map_.data[MAP_IDX(map_.width, x, y)] = 100;
                 } else
-                    map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 0;
+                    map_.data[MAP_IDX(map_.width, x, y)] = 0;
             }
         }
         got_map_ = true;
+    }
 
-        //make sure to set the header information on the map
-        map_.map.header.stamp = ros::Time::now();
-        map_.map.header.frame_id = tf_.resolve(map_frame_);
-
-        sst_.publish(map_.map);
-        sstm_.publish(map_.map.info);
+    static int MAP_IDX(int sx, int i, int j) {
+        return ((sx) * (j) + (i));
     }
 }

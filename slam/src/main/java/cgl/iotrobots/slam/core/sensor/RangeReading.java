@@ -15,7 +15,7 @@ public class RangeReading extends SensorReading {
         super(m_sensor, m_time);
     }
 
-    public RangeReading(int n_beams, double []d, RangeSensor rs, double time) {
+    public RangeReading(int n_beams, Double []d, RangeSensor rs, double time) {
         super(rs, time);
         clear();
         for (int i = 0; i < n_beams; i++) {

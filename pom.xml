@@ -13,6 +13,7 @@
         <module>performance</module>
         <module>slam</module>
         <module>simulator</module>
+        <module>collavoid</module>
     </modules>
 
     <properties>
