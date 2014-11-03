@@ -1,12 +1,16 @@
 package cgl.iotrobots.slam.core.sample;
 
+import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.OdometrySensor;
+import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
+import cgl.iotrobots.slam.core.utils.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +30,10 @@ public class Sample {
 
     int laser_count_;
     int throttle_scans_;
+
+    boolean got_first_scan_;
+
+    boolean got_map_;
 
     // Parameters used by GMapping
     double maxRange_;
@@ -131,11 +139,11 @@ public class Sample {
         try
         {
             tf_.transformPoint(laser_frame_, up, up);
-            ROS_DEBUG("Z-Axis in sensor frame: %.3f", up.z());
+            LOG.debug("Z-Axis in sensor frame: %.3f", up.z());
         }
         catch(tf::TransformException& e)
         {
-            ROS_WARN("Unable to determine orientation of laser: %s",
+            LOG.warn("Unable to determine orientation of laser: %s",
                     e.what());
             return false;
         }
@@ -143,7 +151,7 @@ public class Sample {
         // gmapping doesnt take roll or pitch into account. So check for correct sensor alignment.
         if (fabs(fabs(up.z()) - 1) > 0.001)
         {
-            ROS_WARN("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f",
+            LOG.warn("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f",
                     up.z());
             return false;
         }
@@ -154,12 +162,12 @@ public class Sample {
         if (up.z() > 0)
         {
             orientationFactor = 1;
-            ROS_INFO("Laser is mounted upwards.");
+            LOG.warn("Laser is mounted upwards.");
         }
         else
         {
             orientationFactor = -1;
-            ROS_INFO("Laser is mounted upside down.");
+            LOG.warn("Laser is mounted upside down.");
         }
 
         angle_min_ = orientationFactor * scan.angle_min;
@@ -230,17 +238,117 @@ public class Sample {
         return true;
     }
 
-    void updateMap(LaserScan scan)
+    void laserCallback(LaserScan scan)
     {
-        ScanMatcher matcher;
-        double []laser_angles = new double[scan.ranges.size()];
-        double theta = angle_min_;
-        for(int i=0; i<scan.ranges.size(); i++)
+        laser_count_++;
+        if ((laser_count_ % throttle_scans_) != 0)
+            return;
+
+        static ros::Time last_map_update(0,0);
+
+        // We can't initialize the mapper until we've got the first scan
+        if(!got_first_scan_)
         {
+            if(!initMapper(*scan))
+            return;
+            got_first_scan_ = true;
+        }
+
+        OrientedPoint odom_pose;
+        if(addScan(*scan, odom_pose))
+        {
+            LOG.debug("scan processed");
+
+            GMapping::OrientedPoint mpose = gsp_->getParticles()[gsp_->getBestParticleIndex()].pose;
+            LOG.debug("new best pose: %.3f %.3f %.3f", mpose.x, mpose.y, mpose.theta);
+            LOG.debug("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
+            LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
+
+            tf::Transform laser_to_map = tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose.theta), tf::Vector3(mpose.x, mpose.y, 0.0)).inverse();
+            tf::Transform odom_to_laser = tf::Transform(tf::createQuaternionFromRPY(0, 0, odom_pose.theta), tf::Vector3(odom_pose.x, odom_pose.y, 0.0));
+
+            map_to_odom_mutex_.lock();
+            map_to_odom_ = (odom_to_laser * laser_to_map).inverse();
+            map_to_odom_mutex_.unlock();
+
+            if(!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
+            {
+                updateMap(*scan);
+                last_map_update = scan->header.stamp;
+                LOG.debug("Updated the map");
+            }
+        }
+    }
+
+    boolean addScan(LaserScan scan, OrientedPoint gmap_pose) {
+        if (getOdomPose(gmap_pose, scan.timestamp) == null)
+            return false;
+
+        if(scan.ranges.size() != gsp_laser_beam_count_)
+            return false;
+
+        // GMapping wants an array of doubles...
+        double []ranges_double = new double[scan.ranges.size()];
+        // If the angle increment is negative, we have to invert the order of the readings.
+        if (gsp_laser_angle_increment_ < 0)
+        {
+            LOG.debug("Inverting scan");
+            int num_ranges = scan.ranges.size();
+            for(int i=0; i < num_ranges; i++)
+            {
+                // Must filter out short readings, because the mapper won't
+                if (scan.ranges.get(i) < scan.range_min) {
+                    ranges_double[i] = (double) scan.range_max;
+                } else {
+                    ranges_double[i] = (double) scan.ranges.get(num_ranges - i - 1);
+                }
+            }
+        } else
+        {
+            for(int i=0; i < scan.ranges.size(); i++)
+            {
+                // Must filter out short readings, because the mapper won't
+                if(scan.ranges.get(i) < scan.range_min)
+                    ranges_double[i] = (double)scan.range_max;
+                else
+                    ranges_double[i] = (double)scan.ranges.get(i);
+            }
+        }
+
+        RangeReading reading = new RangeReading(scan.ranges.size(),
+            ranges_double,
+            gsp_laser_,
+            scan.timestamp / 1000);
+
+        // ...but it deep copies them in RangeReading constructor, so we don't
+        // need to keep our array around.
+
+        reading.setPose(gmap_pose);
+
+  /*
+  ROS_DEBUG("scanpose (%.3f): %.3f %.3f %.3f\n",
+            scan.header.stamp.toSec(),
+            gmap_pose.x,
+            gmap_pose.y,
+            gmap_pose.theta);
+            */
+
+        return gsp_.processScan(reading, );
+    }
+
+    private OrientedPoint<Double> getOdomPose(OrientedPoint<Double> gmap_pose, long timestamp) {
+        return gmap_pose;
+    }
+
+    void updateMap(LaserScan scan) {
+        ScanMatcher matcher;
+        double[] laser_angles = new double[scan.ranges.size()];
+        double theta = angle_min_;
+        for (int i = 0; i < scan.ranges.size(); i++) {
             if (gsp_laser_angle_increment_ < 0)
-                laser_angles[scan.ranges.size()-i-1]=theta;
+                laser_angles[scan.ranges.size() - i - 1] = theta;
             else
-                laser_angles[i]=theta;
+                laser_angles[i] = theta;
             theta += gsp_laser_angle_increment_;
         }
 
@@ -252,13 +360,9 @@ public class Sample {
         matcher.setgenerateMap(true);
 
         Particle best =
-            gsp_.getParticles().get(gsp_.getBestParticleIndex());
-        std_msgs::Float64 entropy;
-        entropy.data = computePoseEntropy();
-        if(entropy.data > 0.0)
-            entropy_publisher_.publish(entropy);
+                gsp_.getParticles().get(gsp_.getBestParticleIndex());
 
-        if(!got_map_) {
+        if (!got_map_) {
             map_.map.info.resolution = delta_;
             map_.map.info.origin.position.x = 0.0;
             map_.map.info.origin.position.y = 0.0;
@@ -269,70 +373,57 @@ public class Sample {
             map_.map.info.origin.orientation.w = 1.0;
         }
 
-        GMapping::Point center;
-        center.x=(xmin_ + xmax_) / 2.0;
-        center.y=(ymin_ + ymax_) / 2.0;
+        Point<Double> center = new Point<Double>((xmin_ + xmax_) / 2.0, (ymin_ + ymax_) / 2.0);
+        GMap smap = new GMap(center, xmin_, ymin_, xmax_, ymax_, delta_);
 
-        GMapping::ScanMatcherMap smap(center, xmin_, ymin_, xmax_, ymax_,
-            delta_);
-
-        ROS_DEBUG("Trajectory tree:");
-        for(GMapping::GridSlamProcessor::TNode* n = best.node;
-        n;
-        n = n->parent)
-        {
-            ROS_DEBUG("  %.3f %.3f %.3f",
-                    n->pose.x,
-                    n->pose.y,
-                    n->pose.theta);
-            if(!n->reading)
-            {
-                ROS_DEBUG("Reading is NULL");
+        LOG.debug("Trajectory tree:");
+        for (TNode n = best.node; n != null; n = n.parent) {
+            LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
+            if (n.reading == null) {
+                LOG.debug("Reading is NULL");
                 continue;
             }
             matcher.invalidateActiveArea();
-            matcher.computeActiveArea(smap, n->pose, &((*n->reading)[0]));
-            matcher.registerScan(smap, n->pose, &((*n->reading)[0]));
+            matcher.computeActiveArea(smap, n.pose, n.reading.get(0));
+            matcher.registerScan(smap, n.pose, n.reading.get(0));
         }
 
         // the map may have expanded, so resize ros message as well
-        if(map_.map.info.width != (int) smap.getMapSizeX() || map_.map.info.height != (int) smap.getMapSizeY()) {
+        if (map_.map.info.width != (int) smap.getMapSizeX() || map_.map.info.height != (int) smap.getMapSizeY()) {
 
-        // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
-        //       so we must obtain the bounding box in a different way
-        GMapping::Point wmin = smap.map2world(GMapping::IntPoint(0, 0));
-        GMapping::Point wmax = smap.map2world(GMapping::IntPoint(smap.getMapSizeX(), smap.getMapSizeY()));
-        xmin_ = wmin.x; ymin_ = wmin.y;
-        xmax_ = wmax.x; ymax_ = wmax.y;
+            // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
+            //       so we must obtain the bounding box in a different way
+            Point<Double> wmin = smap.map2world(new Point<Integer>(0, 0));
+            Point<Double> wmax = smap.map2world(new Point<Integer>(smap.getMapSizeX(), smap.getMapSizeY()));
+            xmin_ = wmin.x;
+            ymin_ = wmin.y;
+            xmax_ = wmax.x;
+            ymax_ = wmax.y;
 
-        ROS_DEBUG("map size is now %dx%d pixels (%f,%f)-(%f, %f)", smap.getMapSizeX(), smap.getMapSizeY(),
-                xmin_, ymin_, xmax_, ymax_);
+            LOG.debug("map size is now {} x {} pixels ({},{})-({}, {})", smap.getMapSizeX(), smap.getMapSizeY(),
+                    xmin_, ymin_, xmax_, ymax_);
 
-        map_.map.info.width = smap.getMapSizeX();
-        map_.map.info.height = smap.getMapSizeY();
-        map_.map.info.origin.position.x = xmin_;
-        map_.map.info.origin.position.y = ymin_;
-        map_.map.data.resize(map_.map.info.width * map_.map.info.height);
+            map_.map.info.width = smap.getMapSizeX();
+            map_.map.info.height = smap.getMapSizeY();
+            map_.map.info.origin.position.x = xmin_;
+            map_.map.info.origin.position.y = ymin_;
+            map_.map.data.resize(map_.map.info.width * map_.map.info.height);
 
-        ROS_DEBUG("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
-    }
+            LOG.debug("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
+        }
 
-        for(int x=0; x < smap.getMapSizeX(); x++)
-        {
-            for(int y=0; y < smap.getMapSizeY(); y++)
-            {
+        for (int x = 0; x < smap.getMapSizeX(); x++) {
+            for (int y = 0; y < smap.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
-                GMapping::IntPoint p(x, y);
-                double occ=smap.cell(p);
-                assert(occ <= 1.0);
-                if(occ < 0)
+                Point<Integer> p = new Point<Integer>(x, y);
+                double occ = smap.cell(p);
+                assert (occ <= 1.0);
+                if (occ < 0)
                     map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
-                else if(occ > occ_thresh_)
-                {
+                else if (occ > occ_thresh_) {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
                     map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
-                }
-                else
+                } else
                     map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 0;
             }
         }
@@ -340,7 +431,7 @@ public class Sample {
 
         //make sure to set the header information on the map
         map_.map.header.stamp = ros::Time::now();
-        map_.map.header.frame_id = tf_.resolve( map_frame_ );
+        map_.map.header.frame_id = tf_.resolve(map_frame_);
 
         sst_.publish(map_.map);
         sstm_.publish(map_.map.info);

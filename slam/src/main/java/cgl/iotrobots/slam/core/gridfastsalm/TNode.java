@@ -5,30 +5,30 @@ import cgl.iotrobots.slam.core.utils.OrientedPoint;
 
 public class TNode {
     /**The pose of the robot*/
-    OrientedPoint<Double> pose;
+    public OrientedPoint<Double> pose;
 
     /**The weight of the particle*/
-    double weight;
+    public double weight;
 
     /**The sum of all the particle weights in the previous part of the trajectory*/
-    double accWeight;
+    public double accWeight;
 
-    double gweight;
+    public double gweight;
 
     /**The parent*/
-    TNode parent;
+    public TNode parent;
 
     /**The range reading to which this node is associated*/
-    RangeReading reading;
+    public RangeReading reading;
 
     /**The number of childs*/
-    int childs;
+    public int childs;
 
     /**counter in visiting the node (internally used)*/
-    int visitCounter;
+    public int visitCounter;
 
     /**visit flag (internally used)*/
-    boolean flag;
+    public boolean flag;
 
     public TNode(OrientedPoint<Double> p, double w, TNode n, int c) {
         pose = p;

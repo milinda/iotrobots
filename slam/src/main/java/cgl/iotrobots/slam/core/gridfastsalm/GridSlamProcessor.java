@@ -251,7 +251,7 @@ public class GridSlamProcessor {
             LOG.info("m_count " + m_count);
 
             RangeReading reading_copy =
-                    new RangeReading(reading.size(), reading.get(0),
+                    new RangeReading(reading.size(), reading.toArray(),
                             (RangeSensor) reading.getSensor(),
                             reading.getTime());
 

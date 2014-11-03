@@ -4,5 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LaserScan {
+    public long timestamp;
+
+    public double range_max;
+
+    public double range_min;
+
     public List<Double> ranges = new ArrayList<Double>();
 }
