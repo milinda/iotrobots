@@ -16,6 +16,7 @@ import cgl.iotrobots.slam.core.utils.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,6 +78,30 @@ public class Sample {
     String laser_frame_;
     String map_frame_;
     String odom_frame_;
+
+    public static void main(String[] args) {
+        Sample sample = new Sample();
+        sample.init();
+
+        LaserScan scan = new LaserScan();
+        scan.angle_increment = Math.PI / 10;
+        scan.angle_max = Math.PI ;
+        scan.angle_min = 0;
+        scan.ranges = new ArrayList<Double>();
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.ranges.add(10.0);
+        scan.range_max = 100.0;
+        scan.range_min = 0;
+
+        sample.initMapper(scan);
+        sample.laserCallback(scan);
+    }
 
     public void init() {
         gsp_ = new GridSlamProcessor();
@@ -185,7 +210,7 @@ public class Sample {
         return true;
     }
 
-    void laserCallback(LaserScan scan) {
+    public void laserCallback(LaserScan scan) {
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
             return;
@@ -216,7 +241,7 @@ public class Sample {
         }
     }
 
-    boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {
+    public boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {
         if (getOdomPose(gmap_pose, scan.timestamp) == null)
             return false;
 
@@ -267,7 +292,7 @@ public class Sample {
         return gmap_pose;
     }
 
-    void updateMap(LaserScan scan) {
+    public void updateMap(LaserScan scan) {
         ScanMatcher matcher = new ScanMatcher();
         double[] laser_angles = new double[scan.ranges.size()];
         double theta = angle_min_;
