@@ -99,6 +99,14 @@ public class GridSlamProcessor {
         return bi;
     }
 
+    public void setMinimumScore(double m_minimumScore) {
+        this.m_minimumScore = m_minimumScore;
+    }
+
+    public void setUpdatePeriod_(double period_) {
+        this.period_ = period_;
+    }
+
     public void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
                                int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         m_obsSigmaGain = likelihoodGain;

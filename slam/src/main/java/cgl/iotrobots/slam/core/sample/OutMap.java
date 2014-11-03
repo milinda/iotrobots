@@ -11,10 +11,15 @@ public class OutMap {
     int data[];
 
     public class Position {
-        double x, y;
+        double x, y, z, w;
     }
 
-    Position origin;
+    Position origin = new Position();
+
+    Position originOrientation = new Position();
+
+    public OutMap() {
+    }
 
     public OutMap(int width, int height) {
         this.width = width;

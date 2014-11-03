@@ -10,5 +10,11 @@ public class LaserScan {
 
     public double range_min;
 
+    public double angle_min;
+
+    public double angle_max;
+
+    public double angle_increment;
+
     public List<Double> ranges = new ArrayList<Double>();
 }
