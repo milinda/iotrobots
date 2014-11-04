@@ -164,7 +164,7 @@ public class Sample {
         // assumption that GMapping requires a positive angle increment.  If the
         // actual increment is negative, we'll swap the order of ranges before
         // feeding each scan to GMapping.
-        gsp_laser_ = new RangeSensor("FLASER",
+        gsp_laser_ = new RangeSensor("ROBOTLASER1",
                 gsp_laser_beam_count_,
                 Math.abs(gsp_laser_angle_increment_),
                 gmap_pose,
