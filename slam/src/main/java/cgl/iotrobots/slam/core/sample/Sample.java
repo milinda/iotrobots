@@ -83,18 +83,33 @@ public class Sample {
         Sample sample = new Sample();
         sample.init();
 
-        LaserScan scan = new LaserScan();
-        scan.angle_increment = Math.PI / 10;
-        scan.angle_max = Math.PI ;
-        scan.angle_min = 0;
-        scan.ranges = new ArrayList<Double>();
-        scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.range_min = 0;
+        LaserScan scanI = new LaserScan();
+        scanI.angle_increment = Math.PI / 10;
+        scanI.angle_max = Math.PI ;
+        scanI.angle_min = 0;
+        scanI.ranges = new ArrayList<Double>();
+        scanI.ranges.add(10.0);
+        scanI.ranges.add(10.0);
+        scanI.ranges.add(10.0);
+        scanI.range_min = 0;
 
-        sample.initMapper(scan);
-        sample.laserCallback(scan);
+        sample.initMapper(scanI);
+
+        for (int i = 0; i < 1000; i++) {
+            LaserScan scan = new LaserScan();
+
+            scan.angle_increment = Math.PI / 10;
+            scan.angle_max = Math.PI ;
+            scan.angle_min = 0;
+            scan.ranges = new ArrayList<Double>();
+            scan.ranges.add(10.0);
+            scan.ranges.add(10.0);
+            scan.ranges.add(10.0);
+            scan.range_min = 0;
+            sample.laserCallback(scan);
+        }
+
+        printMap(sample.map_);
     }
 
     public void init() {
@@ -378,7 +393,6 @@ public class Sample {
                     map_.data[MAP_IDX(map_.width, x, y)] = 0;
             }
         }
-        printMap(smap, map_);
         got_map_ = true;
     }
 
@@ -386,9 +400,9 @@ public class Sample {
         return ((sx) * (j) + (i));
     }
 
-    static void printMap(GMap smap, OutMap map) {
-        for (int x = 0; x < smap.getMapSizeX(); x++) {
-            for (int y = 0; y < smap.getMapSizeY(); y++) {
+    static void printMap(OutMap map) {
+        for (int x = 0; x < map.width; x++) {
+            for (int y = 0; y < map.height; y++) {
                 int occ  = map.data[MAP_IDX(map.width, x, y)];
                 if (occ == -1)
                     System.out.print("o");
