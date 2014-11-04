@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.core.grid;
 
+import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ public class Array2D {
         m_ysize = ysize;
         if (m_xsize > 0 && m_ysize > 0) {
             m_cells = new Object[m_xsize][m_ysize];
+
         } else {
             m_xsize = m_ysize = 0;
             m_cells = null;
