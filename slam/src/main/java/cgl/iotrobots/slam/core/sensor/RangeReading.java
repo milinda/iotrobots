@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RangeReading extends SensorReading {
-    List<Double> readings;
-
     OrientedPoint<Double> m_pose;
 
     public RangeReading(RangeSensor m_sensor, double m_time) {

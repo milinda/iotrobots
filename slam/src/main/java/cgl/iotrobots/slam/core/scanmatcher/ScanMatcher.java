@@ -1,10 +1,7 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.utils.Covariance3;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
-import cgl.iotrobots.slam.core.utils.Point;
-import cgl.iotrobots.slam.core.utils.PointPair;
+import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +157,7 @@ public class ScanMatcher {
     public void computeActiveArea(GMap map, OrientedPoint<Double> p, double[] readings) {
         if (m_activeAreaComputed)
             return;
-        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>();
+        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>(new PointComparator());
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * m_laserPose.x - Math.sin(p.theta) * m_laserPose.y;
         lp.y += Math.sin(p.theta) * m_laserPose.x + Math.cos(p.theta) * m_laserPose.y;

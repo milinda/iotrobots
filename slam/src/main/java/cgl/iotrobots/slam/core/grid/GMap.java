@@ -146,7 +146,7 @@ public class GMap {
         Point<Integer> ip= world2map(p);
         int s = m_storage.cellState(ip);
         //if (! s&Inside) assert(0);
-        if (s == AccessibilityState.Allocated.getVal())
+        if ((s & AccessibilityState.Allocated.getVal()) > 0)
             return m_storage.cell(ip);
 
         return  null;

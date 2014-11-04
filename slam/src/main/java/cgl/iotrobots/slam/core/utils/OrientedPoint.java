@@ -1,10 +1,6 @@
 package cgl.iotrobots.slam.core.utils;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
-
 public class OrientedPoint<T> extends Point<T> {
-    public T x;
-    public T y;
     public T theta;
 
     public OrientedPoint(T x, T y) {
