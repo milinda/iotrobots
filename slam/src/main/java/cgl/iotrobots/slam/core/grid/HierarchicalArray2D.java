@@ -2,6 +2,7 @@ package cgl.iotrobots.slam.core.grid;
 
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.PointComparator;
 
 import java.util.Comparator;
 import java.util.Set;
@@ -20,11 +21,11 @@ public class HierarchicalArray2D {
             for (int j = 0; j < array2D.m_ysize; j++) {
                 Array2D a2d = new Array2D(array2D.m_xsize, array2D.m_ysize);
 
-                for (int k = 0; k < array2D.m_xsize; k++) {
-                    for (int l = 0; l < array2D.m_ysize; l++) {
-                        a2d.m_cells[k][l] = new PointAccumulator();
-                    }
-                }
+//                for (int k = 0; k < array2D.m_xsize; k++) {
+//                    for (int l = 0; l < array2D.m_ysize; l++) {
+//                        a2d.m_cells[k][l] = new PointAccumulator();
+//                    }
+//                }
                 array2D.m_cells[i][j] = a2d;
             }
         }
@@ -33,13 +34,13 @@ public class HierarchicalArray2D {
         m_patchSize = 1 << m_patchMagnitude;
     }
 
-    public class PointComparator implements Comparator<Point<Integer>> {
-        @Override
-        public int compare(Point<Integer> a, Point<Integer> b) {
-            boolean equal = a.x < b.x || (a.x.equals(b.x) && a.y < b.y);
-            return equal ? 1 : 0;
-        }
-    }
+//    public class PointComparator implements Comparator<Point<Integer>> {
+//        @Override
+//        public int compare(Point<Integer> a, Point<Integer> b) {
+//            boolean equal = a.x < b.x || (a.x.equals(b.x) && a.y < b.y);
+//            return equal ? 1 : 0;
+//        }
+//    }
 
     public HierarchicalArray2D(HierarchicalArray2D hg) {
         array2D = new Array2D(hg.array2D.m_xsize>>hg.m_patchMagnitude, hg.array2D.m_ysize>>hg.m_patchMagnitude);
@@ -154,8 +155,18 @@ public class HierarchicalArray2D {
             Array2D patch = null;
             if (ptr == null){
                 patch = createPatch(it);
+                for (int k = 0; k < patch.m_xsize; k++) {
+                    for (int l = 0; l < patch.m_ysize; l++) {
+                        patch.m_cells[k][l] = new PointAccumulator();
+                    }
+                }
             } else{
                 patch = new Array2D(ptr);
+                for (int k = 0; k < patch.m_xsize; k++) {
+                    for (int l = 0; l < patch.m_ysize; l++) {
+                        patch.m_cells[k][l] = new PointAccumulator();
+                    }
+                }
             }
             this.array2D.m_cells[it.x][it.y] = patch;
         }

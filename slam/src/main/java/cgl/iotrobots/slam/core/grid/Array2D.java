@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.core.grid;
 
-import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
