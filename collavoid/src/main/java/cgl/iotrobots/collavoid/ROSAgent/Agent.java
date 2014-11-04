@@ -38,24 +38,24 @@ import java.util.logging.Logger;
 public class Agent {
     //config for simulation and some rules
     double leftPref;
-    boolean useTruancation;
-    double truncTime;
-    double timeStep, simPeriod;
+    public boolean useTruancation;
+    public double truncTime;
+    public double timeStep, simPeriod;
 
     //whether it is a controlled robot
-    boolean controlled;
+    public boolean controlled;
 
     //setting for different CollAvoid strategies
     //orca or vo, need to figure out its usage
-    boolean orca;
+    public boolean orca;
     //footprint approximation, use circle approx or mink sum
-    boolean convex;
+    public boolean convex;
 
     //vo setting
     //clearPath or sampling based collAvoid strategy
     boolean clearPath;
     //0:HRVO,1:RVO,2:VO
-    int voType;
+    public int voType;
 
     //robot information
     public Position position; //contains the heading information
@@ -198,10 +198,6 @@ public class Agent {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-
-        //System.out.println(host);
-        //System.out.println(IP);
-
 
         //if (standalone_) {
         //    ConnectedNode selfNode;
@@ -500,7 +496,7 @@ public class Agent {
         return false;
     }
 
-    void setFootprint(PolygonStamped footprint) {
+    public void setFootprint(PolygonStamped footprint) {
         if (footprint.getPolygon().getPoints().size() < 2) {
             logger.severe("The footprint specified has less than two nodes");
             return;
