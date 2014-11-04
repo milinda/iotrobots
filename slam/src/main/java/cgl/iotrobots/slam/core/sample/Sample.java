@@ -91,12 +91,6 @@ public class Sample {
         scan.ranges.add(10.0);
         scan.ranges.add(10.0);
         scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.ranges.add(10.0);
-        scan.range_max = 100.0;
         scan.range_min = 0;
 
         sample.initMapper(scan);
@@ -384,10 +378,28 @@ public class Sample {
                     map_.data[MAP_IDX(map_.width, x, y)] = 0;
             }
         }
+        printMap(smap, map_);
         got_map_ = true;
     }
 
     static int MAP_IDX(int sx, int i, int j) {
         return ((sx) * (j) + (i));
+    }
+
+    static void printMap(GMap smap, OutMap map) {
+        for (int x = 0; x < smap.getMapSizeX(); x++) {
+            for (int y = 0; y < smap.getMapSizeY(); y++) {
+                int occ  = map.data[MAP_IDX(map.width, x, y)];
+                if (occ == -1)
+                    System.out.print("o");
+                else if (occ == 100) {
+                    //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+                    System.out.print("x");
+                } else
+                    System.out.print("v");
+
+            }
+            System.out.print("\n");
+        }
     }
 }

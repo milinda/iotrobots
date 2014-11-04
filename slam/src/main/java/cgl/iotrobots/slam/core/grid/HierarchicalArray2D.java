@@ -17,18 +17,18 @@ public class HierarchicalArray2D {
     public HierarchicalArray2D(int xsize, int ysize, int patchMagnitude) {
         array2D = new Array2D((xsize>>patchMagnitude), (ysize>>patchMagnitude));
 
-        for (int i = 0; i < array2D.m_xsize; i++) {
-            for (int j = 0; j < array2D.m_ysize; j++) {
-                Array2D a2d = new Array2D(array2D.m_xsize, array2D.m_ysize);
+//        for (int i = 0; i < array2D.m_xsize; i++) {
+//            for (int j = 0; j < array2D.m_ysize; j++) {
+//                Array2D a2d = new Array2D(array2D.m_xsize, array2D.m_ysize);
 
 //                for (int k = 0; k < array2D.m_xsize; k++) {
 //                    for (int l = 0; l < array2D.m_ysize; l++) {
 //                        a2d.m_cells[k][l] = new PointAccumulator();
 //                    }
 //                }
-                array2D.m_cells[i][j] = a2d;
-            }
-        }
+//                array2D.m_cells[i][j] = a2d;
+//            }
+//        }
 
         m_patchMagnitude = patchMagnitude;
         m_patchSize = 1 << m_patchMagnitude;

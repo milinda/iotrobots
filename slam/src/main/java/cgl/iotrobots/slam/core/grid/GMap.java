@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.core.grid;
 
+import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
 
 public class GMap {
@@ -143,13 +144,20 @@ public class GMap {
     }
 
     public Object cell(Point p) {
-        Point<Integer> ip= world2map(p);
-        int s = m_storage.cellState(ip);
-        //if (! s&Inside) assert(0);
-        if ((s & AccessibilityState.Allocated.getVal()) > 0)
-            return m_storage.cell(ip);
-
-        return  null;
+        if (p.x instanceof Integer) {
+            Point<Integer> ip = world2map(p);
+            int s = m_storage.cellState(ip);
+            if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                return m_storage.cell(ip);
+            return new PointAccumulator();
+        } else {
+            Point<Integer> ip = world2map(p);
+            int s = m_storage.cellState(ip);
+            //if (! s&Inside) assert(0);
+            if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                return m_storage.cell(ip);
+            return new PointAccumulator();
+        }
     }
 
 

@@ -171,7 +171,7 @@ public class GridSlamProcessor {
             int lastIndex = m_particles.size() - 1;
             Particle p = new Particle(lmap);
 
-            p.pose = initialPose;
+            p.pose = new OrientedPoint<Double>(initialPose);
             p.previousPose = initialPose;
             p.setWeight(0);
             p.previousIndex = 0;
