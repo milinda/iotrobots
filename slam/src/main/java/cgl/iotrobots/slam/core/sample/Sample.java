@@ -92,20 +92,23 @@ public class Sample {
         scanI.ranges.add(10.0);
         scanI.ranges.add(10.0);
         scanI.range_min = 0;
-
+        scanI.range_max = 100;
         sample.initMapper(scanI);
 
         for (int i = 0; i < 1000; i++) {
             LaserScan scan = new LaserScan();
 
-            scan.angle_increment = Math.PI / 10;
+            scan.angle_increment = Math.PI / 100;
             scan.angle_max = Math.PI ;
             scan.angle_min = 0;
             scan.ranges = new ArrayList<Double>();
-            scan.ranges.add(10.0);
-            scan.ranges.add(10.0);
-            scan.ranges.add(10.0);
+            for (int j = 0; j < 1000; j ++) {
+                scan.ranges.add(10.0);
+            }
+            // scan.ranges.add(10.0);
+            // scan.ranges.add(10.0);
             scan.range_min = 0;
+            scan.range_max = 100;
             sample.laserCallback(scan);
         }
 
@@ -404,13 +407,14 @@ public class Sample {
         for (int x = 0; x < map.width; x++) {
             for (int y = 0; y < map.height; y++) {
                 int occ  = map.data[MAP_IDX(map.width, x, y)];
-                if (occ == -1)
-                    System.out.print("o");
-                else if (occ == 100) {
+                if (occ == -1) {
+//                    System.out.print("o");
+                } else if (occ == 100) {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
-                    System.out.print("x");
-                } else
+//                    System.out.print("x");
+                } else {
                     System.out.print("v");
+                }
 
             }
             System.out.print("\n");

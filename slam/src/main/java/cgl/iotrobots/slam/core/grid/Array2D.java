@@ -14,7 +14,7 @@ public class Array2D {
 
     public Array2D(int xsize, int ysize) {
         count++;
-        System.out.println(count);
+//        System.out.println(count);
         m_xsize = xsize;
         m_ysize = ysize;
         if (m_xsize > 0 && m_ysize > 0) {
