@@ -1,23 +1,30 @@
 package cgl.iotrobots.collavoid.LocalPlanner;
 
 import cgl.iotrobots.collavoid.ROSAgent.Agent;
+import cgl.iotrobots.collavoid.utils.Vector2;
+import costmap_2d.VoxelGrid;
 import geometry_msgs.*;
+import nav_msgs.GridCells;
+import nav_msgs.Odometry;
 import nav_msgs.Path;
 import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.MessageDefinitionProvider;
 import org.ros.message.MessageFactory;
+import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.pubsub.TransformListener;
-import costmap_2d.VoxelGrid;
 
+import java.lang.String;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
+
 
 /**
  * Created by hjh on 11/3/14.
@@ -65,7 +72,7 @@ public class LocalPlanner{
     double  time_horizon_obst_;
     double eps_;
 
-    Agent me_;
+    Agent me;
 
     double time_to_holo_, min_error_holo_, max_error_holo_;
 
@@ -80,8 +87,7 @@ public class LocalPlanner{
 
 
     /*---------------methods begin-----------------*/
-
-    //must pass connectednode
+    //must pass connectednode,tf will be initialized from the caller, see rosjava_tf TfViz
     public LocalPlanner(final ConnectedNode node, TransformListener tf, VoxelGrid costmap_ros){
         costmap_ros_=null;
         tf_=null;
@@ -91,6 +97,7 @@ public class LocalPlanner{
         initialize(tf, costmap_ros);
     }
 
+    //implement the interface of nav_core::BaseLocalPlanner Class in original ROS
     private void initialize(TransformListener tf, VoxelGrid costmap_ros){
         if (!initialized_){
             tf_ = tf;
@@ -134,7 +141,7 @@ public class LocalPlanner{
 
 
             /*----------init ros agent and set parameters---------*/
-            Agent me=new Agent();
+            me=new Agent();
 
             //acceleration limits load from params_turtle.yaml and private_nh
             //namespace maybe /CollvoidLocalPlanneri
@@ -220,12 +227,12 @@ public class LocalPlanner{
             me.publishMePeriod = 1.0/params.getDouble("publish_me_frequency",10.0);
 
             //set Footprint
-            List<Point> footprint_points;
+            List<Point> footprint_points=new ArrayList<Point>();
             //TODO:footprint_points = costmap_ros_->getRobotFootprint();
 
             PolygonStamped footprint=messageFactory.newFromType(PolygonStamped._TYPE);
             Point32 p=messageFactory.newFromType(Point32._TYPE);
-            List<Point32> points;
+            List<Point32> points=new ArrayList<Point32>();
             for (int i = 0; i<footprint_points.size(); i++) {
                 p.setX((float)footprint_points.get(i).getX());
                 p.setY((float) footprint_points.get(i).getY());
@@ -237,7 +244,7 @@ public class LocalPlanner{
 
             points.clear();
             if (footprint.getPolygon().getPoints().size()>2)
-                me_.setFootprint(footprint);
+                me.setFootprint(footprint);
             else {
                 double angle = 0;
                 double step = 2 * Math.PI / 72;
@@ -247,16 +254,15 @@ public class LocalPlanner{
                     pt.setY((float) (radius_ * Math.sin(angle)));
                     pt.setZ(0.0f);
                     points.add(pt);
-                    footprint.polygon.points.push_back(pt);
                     angle += step;
                 }
                 polygon.setPoints(points);
                 footprint.setPolygon(polygon);
-                me_.setFootprint(footprint);
+                me.setFootprint(footprint);
             }
 
-            me_.initAsMe(this.node, tf_);
-            me_.id_=new String(my_id);
+            me.initAsMe(this.node, tf_);
+            me.id_=new String(my_id);
 
 
 
@@ -266,14 +272,13 @@ public class LocalPlanner{
             String move_base_name = this.node.getName().toString();
             //ROS_ERROR("%s name of node", thisname.c_str());
 
-            Subscriber<std_msgs.String> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", std_msgs.String._TYPE);
-            obstacles_sub_.addMessageListener(new MessageListener<std_msgs.String>() {
+            Subscriber<GridCells> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", GridCells._TYPE);
+            obstacles_sub_.addMessageListener(new MessageListener<GridCells>() {
                 @Override
-                public void onNewMessage(std_msgs.String message) {
-                    log.info("I heard: \"" + message.getData() + "\"");
+                public void onNewMessage(GridCells msg) {
+                    obstaclesCallback(msg);
                 }
             });
-            obstacles_sub_ = nh.subscribe(move_base_name + "/local_costmap/obstacles",1,&CollvoidLocalPlanner::obstaclesCallback,this);
 
             setup_= false;
             //not implemented yet
@@ -286,7 +291,294 @@ public class LocalPlanner{
         else {
             node.getLog().info("This planner has already been initialized, you can't call it twice, doing nothing");
         }
-        //end if init
-    } // end init
+
+    }
+    /*Agent me init done*/
+
+    void obstaclesCallback(final GridCells msg){
+        int num_obst = msg.getCells().size();
+        me.obstacle_lock_.lock();
+        try{
+            me.obstacle_points_.clear();
+
+            for (int i = 0; i < num_obst; i++) {
+                PointStamped in=messageFactory.newFromType(PointStamped._TYPE);
+                PointStamped result=messageFactory.newFromType(PointStamped._TYPE);
+                in.setHeader(msg.getHeader());
+                in.setPoint(msg.getCells().get(i));
+                //ROS_DEBUG("obstacle at %f %f",msg->cells[i].x,msg->cells[i].y);
+                //TODO:Need Transform
+/*                try {
+                    tf_->waitForTransform(global_frame_, robot_base_frame_, msg->header.stamp, ros::Duration(0.2));
+
+                    tf_->transformPoint(global_frame_, in, result);
+                }
+                catch (tf::TransformException ex){
+                    ROS_ERROR("%s",ex.what());
+                    return;
+                };*/
+
+                me.obstacle_points_.add(new Vector2(result.getPoint().getX(),result.getPoint().getY()));
+            }
+        }finally {
+            me.obstacle_lock_.unlock();
+        }
+
+    }
+
+    //the interface isGoalReached
+    public boolean isGoalReached(){
+        if(!initialized_){
+            this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
+            return false;
+        }
+
+        //copy over the odometry information
+        Odometry base_odom=messageFactory.newFromType(Odometry._TYPE);
+            me.me_lock_.lock();
+            try{
+                base_odom = me.base_odom_;
+            }finally {
+                me.me_lock_.unlock();
+            }
+
+        //need implementation map, transform and check goal reached or not
+/*        Stamped<Pose> global_pose;
+        costmap_ros_->getRobotPose(global_pose);
+
+        costmap_2d::Costmap2D costmap_; ///< @brief The costmap the controller will u
+        costmap_ros_->getCostmapCopy(costmap_);
+
+
+        return base_local_planner::isGoalReached(*tf_,
+                global_plan_,
+                costmap_,
+                global_frame_,
+                global_pose,
+                base_odom,
+                rot_stopped_velocity_,
+                trans_stopped_velocity_,
+                xy_goal_tolerance_, yaw_goal_tolerance_);*/
+        return false;
+    }
+
+
+    //implement interface for computeVelocityCommands
+    boolean computeVelocityCommands(Twist cmd_vel){
+        if(!initialized_){
+            this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
+            return false;
+        }
+
+        //TODO: Transform
+/*        PoseStamped global_pose;
+        Header hdr=messageFactory.newFromType(Header._TYPE);
+        hdr.setStamp(this.node.getCurrentTime());
+        hdr.setFrameId(robot_base_frame_);
+        global_pose.setHeader(hdr);
+        Pose pose=messageFactory.newFromType(Pose._TYPE);
+        Point p=messageFactory.newFromType(Point._TYPE);
+        Quaternion q=messageFactory.newFromType(Quaternion._TYPE);
+        p.setX(0.0);p.setY(0.0);p.setZ(0.0);
+        pose.setPosition(p);
+        q.setX(0.0);q.setY(0.0);q.setZ(0.0);q.setW(1);
+        pose.setOrientation(q);
+        global_pose.setPose(pose);
+        tf_.getTree().lookupTransformBetween();*/
+
+
+
+        // Set current velocities from odometry
+        Twist global_vel=messageFactory.newFromType(Twist._TYPE);
+        Vector3 linear=messageFactory.newFromType(Vector3._TYPE);
+        Vector3 angular=messageFactory.newFromType(Vector3._TYPE);
+
+
+        me.me_lock_.lock();
+        try{
+            linear.setX(me.base_odom_.getTwist().getTwist().getLinear().getX());
+            linear.setY(me.base_odom_.getTwist().getTwist().getLinear().getY());
+            angular.setZ(me.base_odom_.getTwist().getTwist().getAngular().getY());
+            global_vel.setLinear(linear);
+            global_vel.setAngular(angular);
+        }finally {
+            me.me_lock_.unlock();
+        }
+
+        //TODO: Transform
+        //WARNNING not transformed
+/*        tf::Stamped<tf::Pose> robot_vel;
+        robot_vel.setData(tf::Transform(tf::createQuaternionFromYaw(global_vel.angular.z), tf::Vector3(global_vel.linear.x, global_vel.linear.y, 0)));
+        robot_vel.frame_id_ = robot_base_frame_;
+        robot_vel.stamp_ = ros::Time();*/
+        PoseStamped robot_vel=messageFactory.newFromType(PoseStamped._TYPE);
+
+/*        //WARNNING not transformed
+        tf::Stamped<tf::Pose> goal_point;
+        tf::poseStampedMsgToTF(global_plan_.back(), goal_point);*/
+        PoseStamped goal_point=messageFactory.newFromType(PoseStamped._TYPE);
+
+        //we assume the global goal is the last point in the global plan
+        //WARNNING not transformed
+        goal_point=global_plan_.get(global_plan_.size()-1);
+        double goal_x = goal_point.getPose().getPosition().getX();
+        double goal_y = goal_point.getPose().getPosition().getY();
+        double yaw = LPutils.getYaw(goal_point.getPose().getOrientation());
+        double goal_th = yaw;
+
+        //TODO:get position in global frame of the robot
+        //WARNNING not transformed
+        /*        tf::Stamped<tf::Pose> global_pose;
+        //let's get the pose of the robot in the frame of the plan
+        global_pose.setIdentity();
+        global_pose.frame_id_ = robot_base_frame_;
+        global_pose.stamp_ = ros::Time();
+        tf_->transformPose(global_frame_, global_pose, global_pose);*/
+        PoseStamped global_pose=messageFactory.newFromType(PoseStamped._TYPE);
+
+        //check to see if we've reached the goal position
+        if (xy_tolerance_latch_ || (LPutils.getGoalPositionDistance(global_pose.getPose(), goal_x, goal_y) <= xy_goal_tolerance_)) {
+
+            //if(base_local_planner::goalPositionReached(global_pose, goal_x, goal_y, xy_goal_tolerance_) || xy_tolerance_latch_){
+
+            //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
+            //just rotate in place
+            if(latch_xy_goal_tolerance_)
+                xy_tolerance_latch_ = true;
+
+            //check to see if the goal orientation has been reached
+            double angle = LPutils.getGoalOrientationAngleDifference(global_pose.getPose(), goal_th);
+            //check to see if the goal orientation has been reached
+            if (Math.abs(angle) <= yaw_goal_tolerance_) {
+
+                //set the velocity command to zero
+                linear.setX(0.0);
+                linear.setY(0.0);
+                linear.setZ(0.0);
+                cmd_vel.setLinear(linear);
+                angular.setZ(0.0);
+                cmd_vel.setAngular(angular);
+                rotating_to_goal_ = false;
+                xy_tolerance_latch_ = false;
+            }
+            else {
+                //copy over the odometry information
+                Odometry base_odom=messageFactory.newFromType(Odometry._TYPE);
+                me.me_lock_.lock();
+                try{
+                    base_odom=me.getBaseOdom();
+                }finally {
+                    me.me_lock_.unlock();
+                }
+
+                //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
+                if(!rotating_to_goal_ && !LPutils.stopped(base_odom, rot_stopped_velocity_, trans_stopped_velocity_)){
+                    //ROS_DEBUG("Not stopped yet. base_odom: x=%6.4f,y=%6.4f,z=%6.4f", base_odom.twist.twist.linear.x,base_odom.twist.twist.linear.y,base_odom.twist.twist.angular.z);
+                    if(!stopWithAccLimits(global_pose, robot_vel, cmd_vel))
+                        return false;
+                }
+                //if we're stopped... then we want to rotate to goal
+                else{
+                    //set this so that we know its OK to be moving
+                    rotating_to_goal_ = true;
+                    if(!rotateToGoal(global_pose, robot_vel, goal_th, cmd_vel))
+                        return false;
+                }
+            }
+
+            //publish an empty plan because we've reached our goal position
+            transformed_plan_.clear();
+            base_local_planner::publishPlan(transformed_plan_, g_plan_pub_);
+            base_local_planner::publishPlan(transformed_plan_, l_plan_pub_);
+            //we don't actually want to run the controller when we're just rotating to goal
+            return true;
+        }
+
+        tf::Stamped<tf::Pose> target_pose;
+        target_pose.setIdentity();
+        target_pose.frame_id_ = robot_base_frame_;
+
+        if (!skip_next_){
+            if(!transformGlobalPlan(*tf_, global_plan_, *costmap_ros_, global_frame_, transformed_plan_)){
+                ROS_WARN("Could not transform the global plan to the frame of the controller");
+                return false;
+            }
+            geometry_msgs::PoseStamped target_pose_msg;
+            findBestWaypoint(target_pose_msg, global_pose);
+        }
+        tf::poseStampedMsgToTF(transformed_plan_[current_waypoint_], target_pose);
+
+
+        geometry_msgs::Twist res;
+
+        res.linear.x = target_pose.getOrigin().x() - global_pose.getOrigin().x();
+        res.linear.y = target_pose.getOrigin().y() - global_pose.getOrigin().y();
+        res.angular.z = angles::shortest_angular_distance(tf::getYaw(global_pose.getRotation()),atan2(res.linear.y, res.linear.x));
+
+
+        collvoid::Vector2 goal_dir = collvoid::Vector2(res.linear.x,res.linear.y);
+        // collvoid::Vector2 goal_dir = collvoid::Vector2(goal_x,goal_y);
+        if (collvoid::abs(goal_dir) > max_vel_x_) {
+            goal_dir = max_vel_x_ * collvoid::normalize(goal_dir);
+        }
+        else if (collvoid::abs(goal_dir) < min_vel_x_) {
+            goal_dir = min_vel_x_ * 1.2* collvoid::normalize(goal_dir);
+        }
+
+
+        collvoid::Vector2 pref_vel = collvoid::Vector2(goal_dir.x(),goal_dir.y());
+
+        //TODO collvoid added
+
+        me_->computeNewVelocity(pref_vel, cmd_vel);
+
+
+        if(std::abs(cmd_vel.angular.z)<min_vel_th_)
+        cmd_vel.angular.z = 0.0;
+        if(std::abs(cmd_vel.linear.x)<min_vel_x_)
+        cmd_vel.linear.x = 0.0;
+        if(std::abs(cmd_vel.linear.y)<min_vel_y_)
+        cmd_vel.linear.y = 0.0;
+
+        bool valid_cmd = true; //collision_planner_.checkTrajectory(cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z,true);
+
+        if (!valid_cmd){
+            cmd_vel.angular.z = 0.0;
+            cmd_vel.linear.x = 0.0;
+            cmd_vel.linear.y = 0.0;
+        }
+
+        if (cmd_vel.linear.x == 0.0 && cmd_vel.angular.z == 0.0 && cmd_vel.linear.y == 0.0) {
+
+            ROS_DEBUG("Did not find a good vel, calculated best holonomic velocity was: %f, %f, cur wp %d of %d trying next waypoint", me_->velocity_.x(),me_->velocity_.y(), current_waypoint_, (int)transformed_plan_.size());
+            if (current_waypoint_ < transformed_plan_.size()-1){
+                current_waypoint_++;
+                skip_next_= true;
+            }
+            else {
+                transformed_plan_.clear();
+                base_local_planner::publishPlan(transformed_plan_, g_plan_pub_);
+                base_local_planner::publishPlan(transformed_plan_, l_plan_pub_);
+
+                return false;
+            }
+        }
+        else {
+            skip_next_ = false;
+        }
+
+
+        std::vector<geometry_msgs::PoseStamped> local_plan;
+        geometry_msgs::PoseStamped pos;
+        //pos.header.frame_id = robot_base_frame_;
+
+        tf::poseStampedTFToMsg(global_pose,pos);
+        local_plan.push_back(pos);
+        local_plan.push_back(transformed_plan_[current_waypoint_]);
+        base_local_planner::publishPlan(transformed_plan_, g_plan_pub_);
+        base_local_planner::publishPlan(local_plan, l_plan_pub_);
+        //me_->publishOrcaLines();
+        return true;
+    }
 
 }

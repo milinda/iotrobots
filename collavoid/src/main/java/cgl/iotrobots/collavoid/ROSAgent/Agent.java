@@ -137,7 +137,7 @@ public class Agent {
     public Vector<LinePair> footPrintLines;
 
     public Time last_seen_;
-    Odometry base_odom_;
+    public Odometry base_odom_;
 
     //LOC uncertatiny
     public double eps_;
@@ -147,7 +147,8 @@ public class Agent {
     public Vector<Vector2> minkowski_footprint_;
     public Vector<poseWeighted> pose_array_weighted_;
 
-    private final Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
+    //lock
+    public final Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
 
     //me stuff
     TransformListener tf_;
@@ -959,5 +960,21 @@ public class Agent {
             voAgents.add(new_agent_vo);
         }
     }
+
+
+
+
+
+    /*++++++++++++++++++++++++Get and set stuff++++++++++++++++++++++++++*/
+    public Odometry getBaseOdom(){
+        Odometry odom=messageFactory.newFromType(Odometry._TYPE);
+        odom.setTwist(this.base_odom_.getTwist());
+        odom.setHeader(this.base_odom_.getHeader());
+        odom.setPose(this.base_odom_.getPose());
+        odom.setChildFrameId(this.base_odom_.getChildFrameId());
+        return odom;
+    }
+
+    /*+++++++++++++++++++++++++Get and set stuff end+++++++++++++++++++++++++*/
 
 }
