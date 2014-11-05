@@ -1,8 +1,6 @@
 package cgl.iotrobots.collavoid.utils;
 
-/**
- * Created by hjh on 10/25/14.
- */
+
 public class LinePair {
     private Vector2 first;
     private Vector2 second;

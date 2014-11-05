@@ -11,9 +11,6 @@ import java.util.logging.Logger;
 import static cgl.iotrobots.collavoid.utils.utils.leftOf;
 import static cgl.iotrobots.collavoid.utils.utils.rightOf;
 
-/**
- * Created by hjh on 11/1/14.
- */
 public class CP {
 
     public static final int RAYRAY= 0;

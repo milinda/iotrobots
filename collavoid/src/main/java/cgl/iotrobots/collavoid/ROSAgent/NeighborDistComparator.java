@@ -2,9 +2,6 @@ package cgl.iotrobots.collavoid.ROSAgent;
 
 import cgl.iotrobots.collavoid.utils.Vector2;
 
-/**
- * Created by hjh on 10/30/14.
- */
 public class NeighborDistComparator {
     public Agent agt;
 

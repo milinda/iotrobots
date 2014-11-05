@@ -2,9 +2,8 @@ package cgl.iotrobots.collavoid.utils;
 
 import geometry_msgs.Point32;
 
-/**
- * Created by hjh on 10/31/14.
- */
+
+
 public class Vector2 {
     private double x;
     private double y;

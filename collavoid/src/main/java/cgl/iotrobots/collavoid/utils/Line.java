@@ -1,9 +1,7 @@
 package cgl.iotrobots.collavoid.utils;
 
 
-/**
- * Created by hjh on 10/24/14.
- */
+
 public class Line {
     private Vector2 point;
     private Vector2 dir;

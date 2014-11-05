@@ -1,9 +1,6 @@
 package cgl.iotrobots.collavoid.utils;
 
 
-/**
- * Created by hjh on 10/24/14.
- */
 public class VelocitySample {
     private Vector2 velocity;
     private double distToPrefVel;

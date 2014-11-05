@@ -1,8 +1,6 @@
 package cgl.iotrobots.collavoid.utils;
 
-/**
- * Created by hjh on 10/31/14.
- */
+
 public class ConvexHullPoint {
 
     private Vector2 point;

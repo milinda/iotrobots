@@ -15,9 +15,6 @@ import org.ros.node.ConnectedNode;
 
 import java.util.List;
 
-/**
- * Created by hjh on 11/5/14.
- */
 public class GlobalPlanner {
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();

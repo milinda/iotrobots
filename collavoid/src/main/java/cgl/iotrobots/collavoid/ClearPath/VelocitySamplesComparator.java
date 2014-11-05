@@ -4,9 +4,7 @@ import cgl.iotrobots.collavoid.utils.VelocitySample;
 
 import java.util.Comparator;
 
-/**
- * Created by hjh on 11/3/14.
- */
+
 public class VelocitySamplesComparator implements Comparator<VelocitySample> {
 
     public int compare(VelocitySample vs1,VelocitySample vs2){

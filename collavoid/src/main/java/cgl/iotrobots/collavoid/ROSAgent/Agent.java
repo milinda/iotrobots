@@ -1,9 +1,5 @@
 package cgl.iotrobots.collavoid.ROSAgent;
 
-/**
- * Created by hjh on 10/24/14.
- */
-
 import cgl.iotrobots.collavoid.ClearPath.CP;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.msgmanager.msgPublisher;

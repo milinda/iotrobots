@@ -30,10 +30,6 @@ import java.util.List;
 import static cgl.iotrobots.collavoid.utils.utils.sign;
 
 
-/**
- * Created by hjh on 11/3/14.
- */
-
 public class LocalPlanner{
     //currently no dynamic reconfigurer
 

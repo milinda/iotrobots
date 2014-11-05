@@ -8,9 +8,6 @@ import java.util.Vector;
 
 import static cgl.iotrobots.collavoid.utils.utils.sign;
 
-/**
- * Created by hjh on 10/31/14.
- */
 
 //some of the implementations of formulation 13 in the NHORCA paper, add orcalines coursed by NH constraints
 

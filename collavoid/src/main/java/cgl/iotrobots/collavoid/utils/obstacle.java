@@ -2,9 +2,7 @@ package cgl.iotrobots.collavoid.utils;
 
 import org.ros.message.Time;
 
-/**
- * Created by hjh on 10/24/14.
- */
+
 public class obstacle {
     private Vector2 begin;
     private Vector2 end;
