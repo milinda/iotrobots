@@ -4,9 +4,7 @@ import cgl.iotrobots.collavoid.utils.ConvexHullPoint;
 
 import java.util.Comparator;
 
-/**
- * Created by hjh on 11/1/14.
- */
+
 public class VectorsLexigraphicComparator implements Comparator<ConvexHullPoint> {
 
     public int compare(ConvexHullPoint c1, ConvexHullPoint c2) {

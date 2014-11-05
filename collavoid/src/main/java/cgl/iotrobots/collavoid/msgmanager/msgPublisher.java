@@ -1,8 +1,6 @@
 package cgl.iotrobots.collavoid.msgmanager;
 
-/**
-* Created by hjh on 10/29/14.
-*/
+
 import cgl.iotrobots.collavoid.ROSAgent.Agent;
 import cgl.iotrobots.collavoid.utils.obstacle;
 import org.ros.node.topic.Publisher;

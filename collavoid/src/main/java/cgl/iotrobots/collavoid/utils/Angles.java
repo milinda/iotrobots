@@ -1,8 +1,5 @@
 package cgl.iotrobots.collavoid.utils;
 
-/**
- * Created by hjh on 10/31/14.
- */
 public class Angles {
 
     public static double normalize_angle_positive(double angle) {

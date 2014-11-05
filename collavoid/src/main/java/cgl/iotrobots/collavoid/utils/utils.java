@@ -59,8 +59,4 @@ public class utils {
         return x < 0.0 ? -1.0 : 1.0;
     }
 
-    public static double sqr(double a) {
-        return a * a;
-    }
-
 }

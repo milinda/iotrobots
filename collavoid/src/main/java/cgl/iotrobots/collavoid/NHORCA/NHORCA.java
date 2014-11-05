@@ -3,15 +3,11 @@ package cgl.iotrobots.collavoid.NHORCA;
 import cgl.iotrobots.collavoid.utils.EPSILON;
 import cgl.iotrobots.collavoid.utils.Line;
 import cgl.iotrobots.collavoid.utils.Vector2;
-import cgl.iotrobots.collavoid.utils.utils;
 
 import java.util.Vector;
 
 import static cgl.iotrobots.collavoid.utils.utils.sign;
 
-/**
- * Created by hjh on 10/31/14.
- */
 
 //some of the implementations of formulation 13 in the NHORCA paper, add orcalines coursed by NH constraints
 
@@ -32,6 +28,7 @@ public class NHORCA {
     public static double calcVstarError(double T,double theta, double error) {
         return calcVstar(error/T,theta) * Math.sqrt((2.0 * (1.0 - Math.cos(theta))) / (2.0 * (1.0 - Math.cos(theta)) - Math.pow(Math.sin(theta), 2)));
     }
+
 
     //from orca
     //in velocity space
@@ -69,7 +66,7 @@ public class NHORCA {
             double track_speed = calculateMaxTrackSpeedAngle(T,cur_ang, error, max_vel_x, max_vel_th, v_max_ang);
             second_point.setVector2(Vector2.mul(second_point,track_speed));
 
-            line=new Line(first_point,Vector2.norm(Vector2.minus(second_point,first_point)));
+            line=new Line(first_point,Vector2.normalize(Vector2.minus(second_point, first_point)));
             additional_orca_lines.add(line);
             //    ROS_DEBUG("line point 1 x, y, %f, %f, point 2 = %f,%f",first_point.x(),first_point.y(),second_point.x(),second_point.y());
             first_point.setVector2(second_point);

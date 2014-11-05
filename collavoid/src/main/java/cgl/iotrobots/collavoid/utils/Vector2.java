@@ -2,9 +2,8 @@ package cgl.iotrobots.collavoid.utils;
 
 import geometry_msgs.Point32;
 
-/**
- * Created by hjh on 10/31/14.
- */
+
+
 public class Vector2 {
     private double x;
     private double y;
@@ -122,10 +121,15 @@ public class Vector2 {
         }
     }
 
-    public static Vector2 norm(Vector2 p) {
+    public static Vector2 normalize(Vector2 p) {
         double x = p.getX() / abs(p);
         double y = p.getY() / abs(p);
         return new Vector2(x, y);
+    }
+
+    //calculate normal vector of p, clockwise
+    public static Vector2 normal(Vector2 p){
+        return normalize(new Vector2(p.getY(),-p.getX()));
     }
 
     //convert pointcloud point32 datatype to Point2
@@ -149,5 +153,9 @@ public class Vector2 {
         double len1 = abs(one);
         double len2 = abs(two);
         return Math.acos(dot_prod / (len1*len2));
+    }
+
+    public static double atan(Vector2 v){
+        return Math.atan2(v.getY(),v.getX());
     }
 }

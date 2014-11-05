@@ -2,9 +2,6 @@ package cgl.iotrobots.collavoid.ROSAgent;
 
 import cgl.iotrobots.collavoid.utils.Vector2;
 
-/**
- * Created by hjh on 10/30/14.
- */
 public class NeighborDistComparator {
     public Agent agt;
 
@@ -27,7 +24,7 @@ public class NeighborDistComparator {
             }
 
             public int compare(Agent a1, Agent a2) {
-                Vector2 pos = agt.position.getVector2(), nb1 = a1.position.getVector2(), nb2 = a2.position.getVector2();
+                Vector2 pos = agt.position.getPos(), nb1 = a1.position.getPos(), nb2 = a2.position.getPos();
                 Vector2 relativePos1 = Vector2.minus(pos, nb1);
                 Vector2 relativePos2 = Vector2.minus(pos, nb2);
                 double dist1 = Vector2.abs(relativePos1), dist2 = Vector2.abs(relativePos2);
