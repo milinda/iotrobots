@@ -24,7 +24,7 @@ Deploy on Storm
  
  Here is an example
  
-./bin/storm jar ~/projects/iotrobots/drone/processor/target/drone-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.storm.DroneProcessorTopology -url amqp://10.39.1.16:5672 -name drone_processor -ds_mode 2 -s "iot1"
+./bin/storm jar ~/projects/iotrobots/drone/processor/target/drone-processor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.storm.DroneProcessorTopology -name drone_processor -ds_mode 2
 
 Deploy the sensor
 =================
@@ -32,6 +32,6 @@ Deploy the sensor
 1. Build the sensor module and copy the jar with dependencies to repository/sensors directory of IOTCloud
 2. Go to IOTCloud master and Run the command
 
-./bin/iotcloud jar repository/sensors/drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.STSensor -url amqp://10.39.1.16:5672
+./bin/iotcloud jar repository/sensors/drone-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.st.STSensor -url amqp://10.39.1.105:5672 -s iot-1
 
 -url argument gives the URL of the local RabbitMQ server, where the Drone sends video messages
