@@ -489,6 +489,19 @@ public class ScanMatcher {
                         break;
                     default:
                 }
+
+                double odo_gain=1;
+                if (m_angularOdometryReliability>0.){
+                    double dth=init.theta-localPose.theta; 	dth=Math.atan2(Math.sin(dth), Math.cos(dth)); 	dth*=dth;
+                    odo_gain*=Math.exp(-m_angularOdometryReliability*dth);
+                }
+                if (m_linearOdometryReliability>0.){
+                    double dx=init.x-localPose.x;
+                    double dy=init.y-localPose.y;
+                    double drho=dx*dx+dy*dy;
+                    odo_gain*=Math.exp(-m_linearOdometryReliability*drho);
+                }
+
                 double localScore = score(map, localPose, readings);
                 if (localScore > currentScore) {
                     currentScore = localScore;
