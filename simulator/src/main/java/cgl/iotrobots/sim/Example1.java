@@ -1,15 +1,21 @@
 package cgl.iotrobots.sim;
 
+import cgl.iotrobots.slam.core.sample.LaserScan;
+import cgl.iotrobots.slam.core.sample.Sample;
+import cgl.iotrobots.slam.core.utils.OrientedPoint;
 import simbad.gui.Simbad;
 import simbad.sim.*;
+
+import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
 
 public class Example1 {
 
     /** Describe the robot */
     static public class Robot extends Agent {
-
+        Sample sample = new Sample();
         RangeSensorBelt sonars;
         CameraSensor camera;
 
@@ -18,17 +24,43 @@ public class Example1 {
             // Add camera
             camera = RobotFactory.addCameraSensor(this);
             // Add sonars
-            sonars = RobotFactory.addSonarBeltSensor(this);
+//            sonars = RobotFactory.addSonarBeltSensor(this, 16);
+
+            double agentHeight = this.getHeight();
+            double agentRadius = this.getRadius();
+            sonars = new RangeSensorBelt((float) agentRadius,
+                    0f, 10.0f, 16, RangeSensorBelt.TYPE_SONAR,0);
+            sonars.setUpdatePerSecond(3);
+            //sonarBelt.setName("sonars");
+            Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
+            this.addSensorDevice(sonars, pos, 0);
+
         }
 
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
+            sample.init();
+            LaserScan scanI = new LaserScan();
+            scanI.angle_increment = Math.PI / 10;
+            scanI.angle_max = Math.PI ;
+            scanI.angle_min = 0;
+            scanI.ranges = new ArrayList<Double>();
+            scanI.ranges.add(10.0);
+            scanI.ranges.add(10.0);
+            scanI.ranges.add(10.0);
+            scanI.range_min = 0;
+            scanI.range_max = 100;
+            sample.initMapper(scanI);
         }
 
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
-
+            Point3d point3D = new Point3d(0.0, 0.0, 0.0);
+            getCoords(point3D);
+            // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
+            LaserScan laserScan = getLaserScan();
+            sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, point3D.y, point3D.z));
             // progress at 0.5 m/s
             setTranslationalVelocity(0.5);
             // frequently change orientation
@@ -39,9 +71,45 @@ public class Example1 {
             if (getCounter() % 100 == 0)
                 System.out
                         .println("Sonar num 0  = " + sonars.getMeasurement(0));
+                sample.printMap(sample.map_);
 
         }
+
+        LaserScan getLaserScan() {
+            int n = sonars.getNumSensors();
+
+            LaserScan laserScan = new LaserScan();
+            laserScan.angle_max = Math.PI * 2;
+            laserScan.angle_min = 0;
+            laserScan.range_max = 100;
+            laserScan.range_min = 0;
+
+//            for (double angle = 0; angle < 2 * Math.PI / 2; angle += 2 * Math.PI / n) {
+//                int hits = sonars.getQuadrantHits(angle, angle + 2 * Math.PI / n);
+//                double val = 0;
+//                if (hits > 0) {
+//                    val = sonars.getQuadrantMeasurement(angle, angle + 2 * Math.PI / n);
+//                    System.out.println("Laser value: " + val);
+//                } else {
+//                    System.out.println("No object in range");
+//                }
+//                laserScan.ranges.add(val);
+//            }
+            for (int i = 0; i < n; i++) {
+                if (sonars.hasHit(i)) {
+                    // System.out.println(sonars.getMeasurement(i));
+                    laserScan.ranges.add(sonars.getMeasurement(i));
+                } else {
+                    laserScan.ranges.add(0.0);
+                }
+            }
+            laserScan.timestamp = System.currentTimeMillis();
+
+            return laserScan;
+        }
     }
+
+
 
     /** Describe the environement */
     static public class MyEnv extends EnvironmentDescription {

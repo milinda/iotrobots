@@ -109,7 +109,7 @@ public class Sample {
             // scan.ranges.add(10.0);
             scan.range_min = 0;
             scan.range_max = 100;
-            sample.laserCallback(scan);
+            sample.laserCallback(scan, null);
         }
 
         printMap(sample.map_);
@@ -222,7 +222,7 @@ public class Sample {
         return true;
     }
 
-    public void laserCallback(LaserScan scan) {
+    public void laserCallback(LaserScan scan, OrientedPoint<Double> pose) {
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
             return;
@@ -236,7 +236,11 @@ public class Sample {
             got_first_scan_ = true;
         }
 
+
         OrientedPoint<Double> odom_pose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        if (pose != null) {
+            odom_pose = pose;
+        }
         if (addScan(scan, odom_pose)) {
             LOG.debug("scan processed");
 
@@ -298,7 +302,7 @@ public class Sample {
         return gsp_.processScan(reading, 0);
     }
 
-    OutMap map_ = new OutMap();
+    public OutMap map_ = new OutMap();
 
     private OrientedPoint<Double> getOdomPose(OrientedPoint<Double> gmap_pose, long timestamp) {
         return gmap_pose;
@@ -403,7 +407,7 @@ public class Sample {
         return ((sx) * (j) + (i));
     }
 
-    static void printMap(OutMap map) {
+    public static void printMap(OutMap map) {
         for (int x = 0; x < map.width; x++) {
             for (int y = 0; y < map.height; y++) {
                 int occ  = map.data[MAP_IDX(map.width, x, y)];
@@ -413,11 +417,11 @@ public class Sample {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
 //                    System.out.print("x");
                 } else {
-                    System.out.print("v");
+                    System.out.println("v");
                 }
 
             }
-            System.out.print("\n");
+            //System.out.print("\n");
         }
     }
 }

@@ -79,6 +79,10 @@ public class GMap {
         return m_storage.cellState(p) == AccessibilityState.Inside.getVal();
     }
 
+    public boolean isInsideD(Point<Double> p) {
+        return isInside(p.x, p.y);
+    }
+
     public boolean isInside(double x, double y)  {
         return m_storage.cellState(
                 world2map(new Point<Integer>(new Double(x).intValue(),new Double(y).intValue())))

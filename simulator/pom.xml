@@ -40,7 +40,11 @@
             <version>1.3.1</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>iotrobots</groupId>
+            <artifactId>slam</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 </project>

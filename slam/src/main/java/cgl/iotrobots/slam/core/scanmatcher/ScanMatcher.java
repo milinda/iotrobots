@@ -27,7 +27,7 @@ public class ScanMatcher {
     double m_llsamplestep;
     double m_lasamplestep;
     boolean m_generateMap;
-    boolean m_enlargeStep;
+    double m_enlargeStep;
     OrientedPoint<Double> m_laserPose;
     double m_fullnessThreshold;
     double m_angularOdometryReliability;
@@ -101,7 +101,7 @@ public class ScanMatcher {
         this.m_generateMap = m_generateMap;
     }
 
-    public void setenlargeStep(boolean m_enlargeStep) {
+    public void setenlargeStep(double m_enlargeStep) {
         this.m_enlargeStep = m_enlargeStep;
     }
 
@@ -164,12 +164,50 @@ public class ScanMatcher {
         lp.theta += m_laserPose.theta;
         Point<Integer> p0 = map.world2map(lp);
 
-        int readingIndex = 0;
-        int angleIndex = 0;
-        for (readingIndex = 0; readingIndex < m_laserBeams; readingIndex++, angleIndex++)
+        Point<Double> min = map.map2world(new Point<Integer>(0, 0));
+        Point<Double> max = map.map2world(new Point<Integer>(map.getMapSizeX() - 1, map.getMapSizeY() - 1));
+
+        if (lp.x < min.x) min.x = lp.x;
+        if (lp.y < min.y) min.y = lp.y;
+        if (lp.x > max.x) max.x = lp.x;
+        if (lp.y > max.y) max.y = lp.y;
+
+        int readingIndex;
+        int angleIndex = m_initialBeamsSkip;
+        for (readingIndex = m_initialBeamsSkip; readingIndex < m_laserBeams; readingIndex++, angleIndex++) {
+            double r = readings[readingIndex];
+            double angle = m_laserAngles[angleIndex];
+
+            if (r>m_laserMaxRange||r==0.0 || r > Double.MAX_VALUE) continue;
+            double d= r > m_usableRange ? m_usableRange : r;
+            Point<Double> phit= new Point<Double>(lp.x, lp.y);
+            phit.x+=d*Math.cos(lp.theta+angle);
+            phit.y+=d*Math.sin(lp.theta+angle);
+            if (phit.x<min.x) min.x=phit.x;
+            if (phit.y<min.y) min.y=phit.y;
+            if (phit.x>max.x) max.x=phit.x;
+            if (phit.y>max.y) max.y=phit.y;
+        }
+
+        if ( !map.isInsideD(min)	|| !map.isInsideD(max)){
+            Point<Double> lmin = map.map2world(new Point<Integer>(0,0));
+            Point<Double> lmax = map.map2world(new Point<Integer>(map.getMapSizeX()-1, map.getMapSizeY()-1));
+            //cerr << "CURRENT MAP " << lmin.x << " " << lmin.y << " " << lmax.x << " " << lmax.y << endl;
+            //cerr << "BOUNDARY OVERRIDE " << min.x << " " << min.y << " " << max.x << " " << max.y << endl;
+            min.x = (min.x >= lmin.x) ? lmin.x : min.x - m_enlargeStep;
+            max.x = (max.x <= lmax.x) ? lmax.x : max.x + m_enlargeStep;
+            min.y = (min.y >= lmin.y) ? lmin.y : min.y - m_enlargeStep;
+            max.y = (max.y <= lmax.y) ? lmax.y : max.y + m_enlargeStep;
+            map.resize(min.x, min.y, max.x, max.y);
+            //cerr << "RESIZE " << min.x << " " << min.y << " " << max.x << " " << max.y << endl;
+        }
+
+        readingIndex = m_initialBeamsSkip;
+        angleIndex = m_initialBeamsSkip;
+        for (readingIndex = m_initialBeamsSkip; readingIndex < m_laserBeams; readingIndex++, angleIndex++)
             if (m_generateMap) {
                 double d = readings[readingIndex];
-                if (d > m_laserMaxRange)
+                if (d > m_laserMaxRange || d == 0.0 || d > Double.MAX_VALUE)
                     continue;
                 if (d > m_usableRange)
                     d = m_usableRange;
@@ -226,9 +264,9 @@ public class ScanMatcher {
         lp.y += Math.sin(p.theta) * m_laserPose.x + Math.cos(p.theta) * m_laserPose.y;
         lp.theta += m_laserPose.theta;
         Point<Integer> p0 = map.world2map(lp);
-        int readingIndex = 0;
-        int angleIndex = 0;
-        for (readingIndex = 0; readingIndex < m_laserBeams; readingIndex++, angleIndex++) {
+        int readingIndex;
+        int angleIndex = m_initialBeamsSkip;
+        for (readingIndex = m_initialBeamsSkip; readingIndex < m_laserBeams; readingIndex++, angleIndex++) {
             if (m_generateMap) {
                 double d = readings[readingIndex];
                 if (d > m_laserMaxRange)
@@ -257,13 +295,14 @@ public class ScanMatcher {
                 }
             } else {
                 double r = readings[readingIndex];
-                if (r > m_laserMaxRange || r > m_usableRange) {
+                if (r > m_laserMaxRange || r > m_usableRange || r == 0) {
                     continue;
                 }
                 Point<Double> phit = new Point<Double>(lp.x, lp.y);
                 phit.x += r * Math.cos(lp.theta + m_laserAngles[angleIndex]);
                 phit.y += r * Math.sin(lp.theta + m_laserAngles[angleIndex]);
-                PointAccumulator pa = (PointAccumulator) map.cell(phit);
+                Point p1 = map.world2map(phit);
+                PointAccumulator pa = (PointAccumulator) map.cell(p1);
                 pa.update(true, phit);
             }
         }
