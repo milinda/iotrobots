@@ -12,7 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
-    static MapUI mapUI = new MapUI();
+    static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
         Sample sample = new Sample();
@@ -131,6 +131,7 @@ public class Example1 {
             add(b1);
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
+            add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
 
         }
     }
@@ -140,7 +141,7 @@ public class Example1 {
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
-        frame.add(mapUI);
+        mapUI = new MapUI();
     }
 
 }
