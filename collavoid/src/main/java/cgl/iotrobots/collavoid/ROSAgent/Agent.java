@@ -1,6 +1,7 @@
 package cgl.iotrobots.collavoid.ROSAgent;
 
 import cgl.iotrobots.collavoid.ClearPath.CP;
+import cgl.iotrobots.collavoid.LocalPlanner.LPutils;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.msgmanager.msgPublisher;
 import cgl.iotrobots.collavoid.utils.*;
@@ -14,6 +15,8 @@ import nav_msgs.Odometry;
 import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.*;
+import org.ros.namespace.GraphName;
+import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
@@ -31,7 +34,7 @@ import java.util.logging.Logger;
 
 
 
-public class Agent {
+public class Agent extends AbstractNodeMain {
     //config for simulation and some rules
     double leftPref;
     public boolean useTruancation;
@@ -163,6 +166,16 @@ public class Agent {
     public ConnectedNode node;
     public ParameterTree params;
 
+    @Override
+    public GraphName getDefaultNodeName() {
+        return null;
+    }
+
+    @Override
+    public void onStart(ConnectedNode connectedNode) {
+        super.onStart(connectedNode);
+    }
+
     //-----------------------method begin-------------------------------//
     public Agent() {
         this.me_lock_ = new ReentrantLock();
@@ -184,7 +197,7 @@ public class Agent {
         base_frame_ = params.getString("base_frame", "/base_link");
         global_frame_ = params.getString("global_frame", "/map");
         standalone_ = params.getBoolean("standalone", false);
-
+/*
         String IP = null;
         String hostname = null;
 
@@ -209,7 +222,7 @@ public class Agent {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        initCommon(node, true);
+        initCommon(node, true);*/
         // } else {
         //     id_ = private_nh.getNamespace();
         //    if (strcmp(id_.c_str(), "/") == 0) {
@@ -622,7 +635,7 @@ public class Agent {
         Vector2 pt = new Vector2(0.0, 0.0);
 
 
-        yaw = getYaw(agt.base_odom_.getPose().getPose().getOrientation());
+        yaw = LPutils.getYaw(agt.base_odom_.getPose().getPose().getOrientation());
         th_dif = time_dif * agt.base_odom_.getTwist().getTwist().getAngular().getZ();
         if (agt.holo_robot_) {
             x_dif = time_dif * agt.base_odom_.getTwist().getTwist().getLinear().getX();
@@ -654,12 +667,6 @@ public class Agent {
             pt.setY(agt.base_odom_.getPose().getPose().getPosition().getX() * Math.sin(dif_ang / 2.0));
             agt.velocity = Vector2.rotateVectorByAngle(pt, (yaw + th_dif));
         }
-    }
-
-    double getYaw(Quaternion quaternion) {
-        //TODO: get yaw from quaternion
-        return 0;
-
     }
 
     Vector<Vector2> rotateFootprint(final Vector<Vector2> footprint, double angle) {
