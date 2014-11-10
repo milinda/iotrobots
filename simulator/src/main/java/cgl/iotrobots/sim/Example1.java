@@ -29,7 +29,7 @@ public class Example1 {
             double agentHeight = this.getHeight();
             double agentRadius = this.getRadius();
             sonars = new RangeSensorBelt((float) agentRadius,
-                    0f, 10.0f, 16, RangeSensorBelt.TYPE_SONAR,0);
+                    0f, 100.0f, 512, RangeSensorBelt.TYPE_SONAR,0);
             sonars.setUpdatePerSecond(3);
             //sonarBelt.setName("sonars");
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
@@ -66,6 +66,8 @@ public class Example1 {
             // frequently change orientation
             if ((getCounter() % 100) == 0)
                 setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
+
+            mapUI.setMap(sample.map_);
 
             // print front sonar every 100 frames
             if (getCounter() % 100 == 0)
@@ -131,7 +133,7 @@ public class Example1 {
             add(b1);
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
-            add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
+            //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
 
         }
     }

@@ -417,7 +417,7 @@ public class Sample {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
 //                    System.out.print("x");
                 } else {
-                    System.out.println("v");
+                    //System.out.println("v");
                 }
 
             }

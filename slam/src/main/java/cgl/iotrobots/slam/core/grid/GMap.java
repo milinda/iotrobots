@@ -158,7 +158,7 @@ public class GMap {
                     assert false;
                 return m_storage.cell(p);
             }
-            return null;
+            return new PointAccumulator();
         } else {
             Point<Integer> ip = world2map(p);
             int s = m_storage.cellState(ip);
@@ -171,7 +171,7 @@ public class GMap {
                     assert false;
                 return m_storage.cell(p);
             }
-            return null;
+            return new PointAccumulator();
         }
     }
 
