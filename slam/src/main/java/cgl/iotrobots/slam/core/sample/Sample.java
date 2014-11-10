@@ -391,13 +391,14 @@ public class Sample {
                 PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
                 double occ = pointAccumulator.doubleValue();
                 assert (occ <= 1.0);
-                if (occ < 0)
+                if (occ < 0) {
                     map_.data[MAP_IDX(map_.width, x, y)] = -1;
-                else if (occ > occ_thresh_) {
+                } else if (occ > occ_thresh_) {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
                     map_.data[MAP_IDX(map_.width, x, y)] = 100;
-                } else
+                } else {
                     map_.data[MAP_IDX(map_.width, x, y)] = 0;
+                }
             }
         }
         got_map_ = true;

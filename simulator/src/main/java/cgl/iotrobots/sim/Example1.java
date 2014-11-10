@@ -42,13 +42,13 @@ public class Example1 {
             // nothing particular in this case
             sample.init();
             LaserScan scanI = new LaserScan();
-            scanI.angle_increment = Math.PI / 10;
-            scanI.angle_max = Math.PI ;
+            scanI.angle_increment = 2 * Math.PI / 512;
+            scanI.angle_max = 2*Math.PI ;
             scanI.angle_min = 0;
             scanI.ranges = new ArrayList<Double>();
-            scanI.ranges.add(10.0);
-            scanI.ranges.add(10.0);
-            scanI.ranges.add(10.0);
+            for (int i = 0; i < 512; i++) {
+                scanI.ranges.add(10.0);
+            }
             scanI.range_min = 0;
             scanI.range_max = 100;
             sample.initMapper(scanI);
@@ -62,7 +62,7 @@ public class Example1 {
             LaserScan laserScan = getLaserScan();
             sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, point3D.y, point3D.z));
             // progress at 0.5 m/s
-            setTranslationalVelocity(0.5);
+            setTranslationalVelocity(1);
             // frequently change orientation
             if ((getCounter() % 100) == 0)
                 setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
