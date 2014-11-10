@@ -9,6 +9,9 @@ public class PointAccumulator {
 
     public int n, visits;
 
+    public PointAccumulator() {
+    }
+
     public void update(boolean value, Point<Double> p) {
         if (value) {
             acc.x += p.x;

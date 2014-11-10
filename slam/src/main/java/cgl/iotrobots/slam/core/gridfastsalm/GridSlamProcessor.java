@@ -599,7 +599,7 @@ public class GridSlamProcessor {
             score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score > m_minimumScore) {
-                it.pose = corrected;
+                it.pose = new OrientedPoint<Double>(corrected);
             } else {
                 LOG.info("Scan Matching Failed, using odometry. Likelihood=");
                 LOG.info("lp:" + m_lastPartPose.x + " " + m_lastPartPose.y + " " + m_lastPartPose.theta);

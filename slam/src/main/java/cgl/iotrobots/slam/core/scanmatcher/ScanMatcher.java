@@ -252,7 +252,7 @@ public class ScanMatcher {
         m_activeAreaComputed = true;
     }
 
-    public void registerScan(GMap map, OrientedPoint<Double> p, double[] readings) {
+    public double registerScan(GMap map, OrientedPoint<Double> p, double[] readings) {
         if (!m_activeAreaComputed)
             computeActiveArea(map, p, readings);
 
@@ -266,6 +266,7 @@ public class ScanMatcher {
         Point<Integer> p0 = map.world2map(lp);
         int readingIndex;
         int angleIndex = m_initialBeamsSkip;
+        double esum = 0;
         for (readingIndex = m_initialBeamsSkip; readingIndex < m_laserBeams; readingIndex++, angleIndex++) {
             if (m_generateMap) {
                 double d = readings[readingIndex];
@@ -286,7 +287,10 @@ public class ScanMatcher {
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.points.size() - 1; i++) {
                     PointAccumulator pa = (PointAccumulator) map.cell(line.points.get(i));
+                    double e = -pa.entropy();
                     pa.update(false, new Point<Double>(0.0, 0.0));
+                    e += pa.entropy();
+                    esum += e;
                 }
                 if (d <= m_usableRange) {
                     PointAccumulator pa = (PointAccumulator) map.cell(p1);
@@ -306,6 +310,7 @@ public class ScanMatcher {
                 pa.update(true, phit);
             }
         }
+        return esum;
     }
 
     public double icpOptimize(OrientedPoint<Double> pnew, GMap map, OrientedPoint<Double> init, double[] readings) {
@@ -444,7 +449,7 @@ public class ScanMatcher {
 
     public double optimize(OrientedPoint<Double> pnew, GMap map, OrientedPoint<Double> init, double[] readings) {
         double bestScore = -1;
-        OrientedPoint<Double> currentPose = init;
+        OrientedPoint<Double> currentPose = new OrientedPoint<Double>(init.x, init.y, init.theta);
         double currentScore = score(map, currentPose, readings);
         double adelta = m_optAngularDelta, ldelta = m_optLinearDelta;
         int refinement = 0;
@@ -456,12 +461,12 @@ public class ScanMatcher {
                 ldelta *= .5;
             }
             bestScore = currentScore;
-            OrientedPoint<Double> bestLocalPose = currentPose;
-            OrientedPoint<Double> localPose = currentPose;
+            OrientedPoint<Double> bestLocalPose = new OrientedPoint<Double>(currentPose.x, currentPose.y, currentPose.theta);
+            OrientedPoint<Double> localPose;
 
             Move move = Move.Front;
             do {
-                localPose = currentPose;
+                localPose = new OrientedPoint<Double>(currentPose.x, currentPose.y, currentPose.theta);
                 switch (move) {
                     case Front:
                         localPose.x += ldelta;
@@ -493,23 +498,23 @@ public class ScanMatcher {
                 double odo_gain=1;
                 if (m_angularOdometryReliability>0.){
                     double dth=init.theta-localPose.theta; 	dth=Math.atan2(Math.sin(dth), Math.cos(dth)); 	dth*=dth;
-                    odo_gain*=Math.exp(-m_angularOdometryReliability*dth);
+                    odo_gain*=Math.exp(-m_angularOdometryReliability * dth);
                 }
                 if (m_linearOdometryReliability>0.){
                     double dx=init.x-localPose.x;
                     double dy=init.y-localPose.y;
                     double drho=dx*dx+dy*dy;
-                    odo_gain*=Math.exp(-m_linearOdometryReliability*drho);
+                    odo_gain *= Math.exp(-m_linearOdometryReliability * drho);
                 }
 
-                double localScore = score(map, localPose, readings);
+                double localScore = odo_gain * score(map, localPose, readings);
                 if (localScore > currentScore) {
                     currentScore = localScore;
-                    bestLocalPose = localPose;
+                    bestLocalPose = new OrientedPoint<Double>(localPose.x, localPose.y, localPose.theta);
                 }
                 c_iterations++;
             } while (move != Move.Done);
-            currentPose = bestLocalPose;
+            currentPose = new OrientedPoint<Double>(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
         } while (currentScore > bestScore || refinement < m_optRecursiveIterations);
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
