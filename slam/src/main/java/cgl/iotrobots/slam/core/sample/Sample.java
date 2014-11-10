@@ -403,7 +403,7 @@ public class Sample {
         got_map_ = true;
     }
 
-    static int MAP_IDX(int sx, int i, int j) {
+    public static int MAP_IDX(int sx, int i, int j) {
         return ((sx) * (j) + (i));
     }
 

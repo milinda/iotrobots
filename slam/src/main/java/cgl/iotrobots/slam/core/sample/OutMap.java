@@ -3,12 +3,12 @@ package cgl.iotrobots.slam.core.sample;
 import java.security.PublicKey;
 
 public class OutMap {
-    int width;
-    int height;
+    public int width;
+    public int height;
 
-    double resolution;
+    public double resolution;
 
-    int data[];
+    public int data[];
 
     public class Position {
         double x, y, z, w;
