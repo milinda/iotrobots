@@ -286,14 +286,14 @@ public class ScanMatcher {
                 //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.points.size() - 1; i++) {
-                    PointAccumulator pa = (PointAccumulator) map.cell(line.points.get(i));
+                    PointAccumulator pa = (PointAccumulator) map.cell(line.points.get(i), false);
                     double e = -pa.entropy();
                     pa.update(false, new Point<Double>(0.0, 0.0));
                     e += pa.entropy();
                     esum += e;
                 }
                 if (d <= m_usableRange) {
-                    PointAccumulator pa = (PointAccumulator) map.cell(p1);
+                    PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
                     pa.update(true, phit);
                     //	map.cell(p2).update(true,phit);
                 }
@@ -306,7 +306,7 @@ public class ScanMatcher {
                 phit.x += r * Math.cos(lp.theta + m_laserAngles[angleIndex]);
                 phit.y += r * Math.sin(lp.theta + m_laserAngles[angleIndex]);
                 Point p1 = map.world2map(phit);
-                PointAccumulator pa = (PointAccumulator) map.cell(p1);
+                PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
                 pa.update(true, phit);
             }
         }
@@ -660,8 +660,8 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
-                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
                     if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() < m_fullnessThreshold) {
                         Point<Double> mu = Point.minus(phit, cell.mean());
                         if (!found) {
@@ -723,8 +723,8 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
-                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
 
                     if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() < m_fullnessThreshold) {
                         Point<Double> mu = Point.minus(phit, cell.mean());
@@ -785,8 +785,8 @@ public class ScanMatcher {
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = (PointAccumulator) map.cell(pr);
-                    PointAccumulator fcell = (PointAccumulator) map.cell(pf);
+                    PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
                     if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() < m_fullnessThreshold) {
                         Point<Double> mu = Point.minus(phit, cell.mean());
                         if (!found) {

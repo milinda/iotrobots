@@ -150,7 +150,7 @@ public class HierarchicalArray2D {
     }
 
     public void allocActiveArea(){
-        for (Point<Integer> it : m_activeArea){
+        for (Point<Integer> it : m_activeArea) {
             Array2D ptr= (Array2D) this.array2D.m_cells[it.x][it.y];
             Array2D patch = null;
             if (ptr == null){
@@ -161,10 +161,10 @@ public class HierarchicalArray2D {
                     }
                 }
             } else{
-                patch = new Array2D(ptr);
+                patch = new Array2D(ptr.m_xsize, ptr.m_ysize);
                 for (int k = 0; k < patch.m_xsize; k++) {
                     for (int l = 0; l < patch.m_ysize; l++) {
-                        patch.m_cells[k][l] = new PointAccumulator();
+                        patch.m_cells[k][l] = new PointAccumulator((PointAccumulator) ptr.m_cells[k][l]);
                     }
                 }
             }
@@ -183,6 +183,11 @@ public class HierarchicalArray2D {
         assert(array2D.isInside(c.x, c.y));
         if (array2D.m_cells[c.x][c.y] == null){
             Array2D patch= createPatch(new Point<Integer>(x,y));
+            for (int k = 0; k < patch.m_xsize; k++) {
+                for (int l = 0; l < patch.m_ysize; l++) {
+                    patch.m_cells[k][l] = new PointAccumulator();
+                }
+            }
             array2D.m_cells[c.x][c.y] = patch;
         }
         Array2D ptr = (Array2D) this.array2D.m_cells[c.x][c.y];

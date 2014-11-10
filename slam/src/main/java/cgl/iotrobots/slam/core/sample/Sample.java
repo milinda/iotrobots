@@ -388,7 +388,7 @@ public class Sample {
             for (int y = 0; y < smap.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
                 Point<Integer> p = new Point<Integer>(x, y);
-                PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p);
+                PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
                 double occ = pointAccumulator.doubleValue();
                 assert (occ <= 1.0);
                 if (occ < 0)

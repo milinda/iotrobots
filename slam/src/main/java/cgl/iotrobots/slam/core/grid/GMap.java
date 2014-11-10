@@ -63,12 +63,12 @@ public class GMap {
         return new Size(min.x, min.y, max.x, max.y);
     }
 
-    public Object cell(int x, int y) {
-        return cell(new Point<Integer>(x, y));
+    public Object cell(int x, int y, boolean c) {
+        return cell(new Point<Integer>(x, y), c);
     }
 
-    public Object cell(double x, double y) {
-        return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()));
+    public Object cell(double x, double y, boolean c) {
+        return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()), c);
     }
 
     public boolean isInside(int x, int y) {
@@ -147,20 +147,31 @@ public class GMap {
                 (p.y-m_sizeY2)*m_delta + m_center.y);
     }
 
-    public Object cell(Point p) {
+    public Object cell(Point p, boolean c) {
         if (p.x instanceof Integer) {
-            Point<Integer> ip = world2map(p);
-            int s = m_storage.cellState(ip);
-            if ((s & AccessibilityState.Allocated.getVal()) > 0)
-                return m_storage.cell(ip);
-            return new PointAccumulator();
+            int s = m_storage.cellState(p);
+            if (c) {
+                if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                    return m_storage.cell(p);
+            } else {
+                if ((s & AccessibilityState.Inside.getVal()) == 0)
+                    assert false;
+                return m_storage.cell(p);
+            }
+            return null;
         } else {
             Point<Integer> ip = world2map(p);
             int s = m_storage.cellState(ip);
             //if (! s&Inside) assert(0);
-            if ((s & AccessibilityState.Allocated.getVal()) > 0)
-                return m_storage.cell(ip);
-            return new PointAccumulator();
+            if (c) {
+                if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                    return m_storage.cell(p);
+            } else {
+                if ((s & AccessibilityState.Inside.getVal()) == 0)
+                    assert false;
+                return m_storage.cell(p);
+            }
+            return null;
         }
     }
 
