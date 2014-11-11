@@ -50,7 +50,8 @@ public class Example1 {
                 scanI.ranges.add(10.0);
             }
             scanI.range_min = 0;
-            scanI.range_max = 100;
+            scanI.range_max = 10;
+
             sample.initMapper(scanI);
         }
 
@@ -83,8 +84,9 @@ public class Example1 {
             LaserScan laserScan = new LaserScan();
             laserScan.angle_max = Math.PI * 2;
             laserScan.angle_min = 0;
-            laserScan.range_max = 100;
+            laserScan.range_max = 10;
             laserScan.range_min = 0;
+            laserScan.angle_increment = 2 * Math.PI / 512;
 
 //            for (double angle = 0; angle < 2 * Math.PI / 2; angle += 2 * Math.PI / n) {
 //                int hits = sonars.getQuadrantHits(angle, angle + 2 * Math.PI / n);
@@ -131,6 +133,18 @@ public class Example1 {
             Box b1 = new Box(new Vector3d(-3, 0, -3), new Vector3f(1, 1, 1),
                     this);
             add(b1);
+
+            Box b2 = new Box(new Vector3d(3, 0, 3), new Vector3f(1, 1, 1),
+                    this);
+            add(b2);
+
+            Box b3 = new Box(new Vector3d(6, 0, 6), new Vector3f(1, 1, 1),
+                    this);
+            add(b3);
+
+            Box b4 = new Box(new Vector3d(-6, 0, -6), new Vector3f(1, 1, 1),
+                    this);
+            add(b4);
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));

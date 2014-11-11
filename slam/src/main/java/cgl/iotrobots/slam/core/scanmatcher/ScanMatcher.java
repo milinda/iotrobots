@@ -157,7 +157,8 @@ public class ScanMatcher {
     public void computeActiveArea(GMap map, OrientedPoint<Double> p, double[] readings) {
         if (m_activeAreaComputed)
             return;
-        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>(new PointComparator());
+//        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>(new PointComparator());
+        Set<Point<Integer>> activeArea = new HashSet<Point<Integer>>();
         OrientedPoint<Double> lp = new OrientedPoint<Double>(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * m_laserPose.x - Math.sin(p.theta) * m_laserPose.y;
         lp.y += Math.sin(p.theta) * m_laserPose.x + Math.cos(p.theta) * m_laserPose.y;
@@ -171,7 +172,7 @@ public class ScanMatcher {
         if (lp.y < min.y) min.y = lp.y;
         if (lp.x > max.x) max.x = lp.x;
         if (lp.y > max.y) max.y = lp.y;
-
+//        System.out.println("Computing active area");
         int readingIndex;
         int angleIndex = m_initialBeamsSkip;
         for (readingIndex = m_initialBeamsSkip; readingIndex < m_laserBeams; readingIndex++, angleIndex++) {
@@ -224,10 +225,14 @@ public class ScanMatcher {
                 //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.points.size() - 1; i++) {
-                    activeArea.add(map.getStorage().patchIndexes(linePoints.get(i)));
+                    Point<Integer> patch = map.getStorage().patchIndexes(linePoints.get(i));
+                    activeArea.add(patch);
+//                    System.out.println(patch.x + ", " + patch.y);
                 }
                 if (d <= m_usableRange) {
-                    activeArea.add(map.getStorage().patchIndexes(p1));
+                    Point<Integer> patch = map.getStorage().patchIndexes(p1);
+//                    System.out.println(patch.x + ", " + patch.y);
+                    activeArea.add(patch);
                     //activeArea.insert(map.storage().patchIndexes(p2));
                 }
             } else {
@@ -244,6 +249,7 @@ public class ScanMatcher {
                 Point<Integer> cp = map.getStorage().patchIndexes(p1);
                 assert (cp.x >= 0 && cp.y >= 0);
                 activeArea.add(cp);
+//                System.out.println(cp.x + ", " + cp.y);
 
             }
         //this allocates the unallocated cells in the active area of the map

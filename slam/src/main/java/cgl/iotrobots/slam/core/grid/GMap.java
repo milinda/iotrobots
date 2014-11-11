@@ -9,10 +9,10 @@ public class GMap {
     HierarchicalArray2D m_storage;
     int m_mapSizeX, m_mapSizeY;
     int m_sizeX2, m_sizeY2;
-
+    public static final int DEFAULT_PATCH = 4;
 
     public GMap(int mapSizeX, int mapSizeY, double delta) {
-        m_storage = new HierarchicalArray2D(mapSizeX, mapSizeY, 5);
+        m_storage = new HierarchicalArray2D(mapSizeX, mapSizeY, DEFAULT_PATCH);
         m_worldSizeX=mapSizeX * delta;
         m_worldSizeY=mapSizeY * delta;
         m_delta=delta;
@@ -22,7 +22,7 @@ public class GMap {
     }
 
     public GMap(Point<Double> center, double worldSizeX, double worldSizeY, double delta) {
-        m_storage = new HierarchicalArray2D(new Double(Math.ceil(worldSizeX/delta)).intValue(), new Double(Math.ceil(worldSizeY/delta)).intValue(), 5);
+        m_storage = new HierarchicalArray2D(new Double(Math.ceil(worldSizeX/delta)).intValue(), new Double(Math.ceil(worldSizeY/delta)).intValue(), DEFAULT_PATCH);
         m_center = center;
         m_worldSizeX = worldSizeX;
         m_worldSizeY = worldSizeY;
@@ -34,7 +34,7 @@ public class GMap {
     }
 
     public GMap(Point<Double> center, double xmin, double ymin, double xmax, double ymax, double delta) {
-        m_storage = new HierarchicalArray2D(new Double(Math.ceil((xmax-xmin)/delta)).intValue(),new Double(Math.ceil((ymax-ymin)/delta)).intValue(), 5);
+        m_storage = new HierarchicalArray2D(new Double(Math.ceil((xmax-xmin)/delta)).intValue(),new Double(Math.ceil((ymax-ymin)/delta)).intValue(), DEFAULT_PATCH);
         m_center = center;
         m_worldSizeX = xmax - xmin;
         m_worldSizeY = ymax - ymin;

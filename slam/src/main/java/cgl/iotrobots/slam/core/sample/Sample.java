@@ -138,7 +138,7 @@ public class Sample {
         stt_ = 0.2;
         linearUpdate_ = 1.0;
         angularUpdate_ = 0.5;
-        temporalUpdate_ = -1.0;
+        temporalUpdate_ = 1;
         resampleThreshold_ = 0.5;
         particles_ = 30;
         xmin_ = -100.0;
@@ -223,6 +223,7 @@ public class Sample {
     }
 
     public void laserCallback(LaserScan scan, OrientedPoint<Double> pose) {
+        long t0 =  System.currentTimeMillis();
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
             return;
@@ -253,8 +254,11 @@ public class Sample {
                 updateMap(scan);
                 last_map_update = scan.timestamp;
                 LOG.debug("Updated the map");
+            } else {
+                updateMap(scan);
             }
         }
+        System.out.println("Time: " + (System.currentTimeMillis() - t0) / 1000);
     }
 
     public boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {

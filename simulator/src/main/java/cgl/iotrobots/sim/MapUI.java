@@ -9,8 +9,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 public class MapUI extends JFrame {
-    int w = 600;
-    int h = 600;
+    int w = 200;
+    int h = 200;
 
 
 
@@ -48,6 +48,7 @@ public class MapUI extends JFrame {
             BufferedImage image = new BufferedImage(map.width, map.height, BufferedImage.TYPE_INT_ARGB);
 
             for (int x = 0; x < map.width; x++) {
+                int count = 0;
                 for (int y = 0; y < map.height; y++) {
                     int occ = map.data[Sample.MAP_IDX(map.width, x, y)];
                     if (occ == -1) {
@@ -55,15 +56,15 @@ public class MapUI extends JFrame {
                         //System.out.println("0");
                     } else if (occ == 100) {
                         //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
-                        System.out.println("x");
-                        image.setRGB(x, y, Color.YELLOW.getRGB());
-                    } else {
+                        count++;
                         image.setRGB(x, y, Color.WHITE.getRGB());
+                    } else {
+                        image.setRGB(x, y, Color.YELLOW.getRGB());
                        // System.out.println("y");
                     }
 
                 }
-//                System.out.print("\n");
+//                System.out.println("One scan completed: " + count);
             }
 
             BufferedImage r = scale(image, BufferedImage.TYPE_INT_ARGB, w, h, map.width, map.height);

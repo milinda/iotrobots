@@ -5,13 +5,15 @@ import cgl.iotrobots.slam.core.utils.Point;
 import cgl.iotrobots.slam.core.utils.PointComparator;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
 public class HierarchicalArray2D {
     Array2D array2D;
-    Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
-    int m_patchMagnitude = 5;
+//    Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
+    Set<Point<Integer>> m_activeArea = new HashSet<Point<Integer>>();
+    int m_patchMagnitude = 0;
     int m_patchSize;
 
     public HierarchicalArray2D(int xsize, int ysize, int patchMagnitude) {
@@ -123,6 +125,7 @@ public class HierarchicalArray2D {
             }
             m_activeArea.add(p);
         }
+        System.out.println("Active area contain: " + m_activeArea.size());
     }
 
     public Point<Integer> patchIndexes(int x, int y) {
