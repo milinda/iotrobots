@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
+import cgl.iotrobots.slam.core.grid.AccessibilityState;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
@@ -258,6 +259,8 @@ public class ScanMatcher {
         m_activeAreaComputed = true;
     }
 
+    private static int count = 0;
+
     public double registerScan(GMap map, OrientedPoint<Double> p, double[] readings) {
         if (!m_activeAreaComputed)
             computeActiveArea(map, p, readings);
@@ -302,7 +305,12 @@ public class ScanMatcher {
                     PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
                     pa.update(true, phit);
                     //	map.cell(p2).update(true,phit);
+//                    count++;
+//                    System.out.println(count + " " + pa.doubleValue());
                 }
+
+
+
             } else {
                 double r = readings[readingIndex];
                 if (r > m_laserMaxRange || r > m_usableRange || r == 0) {
@@ -782,28 +790,30 @@ public class ScanMatcher {
             pfree.y += (readings[rIndex] - map.getDelta() * freeDelta) * Math.sin(lp.theta + m_laserAngles[angleIndex]);
             pfree.x = pfree.x - phit.x;
             pfree.y = pfree.y - phit.y;
+
             Point<Integer> ipfree = map.world2map(pfree);
             boolean found = false;
             Point<Double> bestMu = new Point<Double>(0., 0.);
-            for (int xx = -m_kernelSize; xx <= m_kernelSize; xx++)
+            for (int xx = -m_kernelSize; xx <= m_kernelSize; xx++) {
                 for (int yy = -m_kernelSize; yy <= m_kernelSize; yy++) {
                     Point<Integer> pr = new Point<Integer>(iphit.x + xx, iphit.y + yy);
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
-                    //AccessibilityState s=map.storage().cellState(pr);
-                    //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
-                    PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
-                    if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() < m_fullnessThreshold) {
-                        Point<Double> mu = Point.minus(phit, cell.mean());
-                        if (!found) {
-                            bestMu = mu;
-                            found = true;
-                        } else {
-                            bestMu = Point.mulD(mu, mu) < Point.mulD(bestMu, bestMu) ? mu : bestMu;
+                    int ss = map.getStorage().cellState(pr);
+                    if ((ss) > 0){
+                        PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
+                        PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
+                        if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() < m_fullnessThreshold) {
+                            Point<Double> mu = Point.minus(phit, cell.mean());
+                            if (!found) {
+                                bestMu = mu;
+                                found = true;
+                            } else {
+                                bestMu = Point.mulD(mu, mu) < Point.mulD(bestMu, bestMu) ? mu : bestMu;
+                            }
                         }
                     }
-                    //}
                 }
+            }
             if (found) {
                 s += Math.exp(-1. / m_gaussianSigma * Point.mulD(bestMu, bestMu));
             }

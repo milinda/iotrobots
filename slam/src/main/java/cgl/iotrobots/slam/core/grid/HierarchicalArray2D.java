@@ -125,7 +125,7 @@ public class HierarchicalArray2D {
             }
             m_activeArea.add(p);
         }
-        System.out.println("Active area contain: " + m_activeArea.size());
+        // System.out.println("Active area contain: " + m_activeArea.size());
     }
 
     public Point<Integer> patchIndexes(int x, int y) {
@@ -164,7 +164,7 @@ public class HierarchicalArray2D {
                     }
                 }
             } else{
-                patch = new Array2D(ptr.m_xsize, ptr.m_ysize);
+                patch = createPatch(it);
                 for (int k = 0; k < patch.m_xsize; k++) {
                     for (int l = 0; l < patch.m_ysize; l++) {
                         patch.m_cells[k][l] = new PointAccumulator((PointAccumulator) ptr.m_cells[k][l]);

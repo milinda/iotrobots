@@ -9,7 +9,7 @@ public class GMap {
     HierarchicalArray2D m_storage;
     int m_mapSizeX, m_mapSizeY;
     int m_sizeX2, m_sizeY2;
-    public static final int DEFAULT_PATCH = 4;
+    public static final int DEFAULT_PATCH = 5;
 
     public GMap(int mapSizeX, int mapSizeY, double delta) {
         m_storage = new HierarchicalArray2D(mapSizeX, mapSizeY, DEFAULT_PATCH);
@@ -158,6 +158,7 @@ public class GMap {
                     assert false;
                 return m_storage.cell(p);
             }
+            //System.out.println("Creating unknown Int: c: " + c + " s: " + s);
             return new PointAccumulator();
         } else {
             Point<Integer> ip = world2map(p);
@@ -171,7 +172,9 @@ public class GMap {
                     assert false;
                 return m_storage.cell(p);
             }
+            //System.out.println("Creating unknown Double: c: " + c + " s: " + s);
             return new PointAccumulator();
+//            return new PointAccumulator();
         }
     }
 

@@ -387,7 +387,7 @@ public class Sample {
 
             LOG.debug("map origin: (%f, %f)", map_.origin.x, map_.origin.y);
         }
-
+        int count = 0;
         for (int x = 0; x < smap.getMapSizeX(); x++) {
             for (int y = 0; y < smap.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
@@ -395,16 +395,19 @@ public class Sample {
                 PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
                 double occ = pointAccumulator.doubleValue();
                 assert (occ <= 1.0);
+                //System.out.println("threshold: "  + occ_thresh_  + " occ: "  + occ);
                 if (occ < 0) {
                     map_.data[MAP_IDX(map_.width, x, y)] = -1;
                 } else if (occ > occ_thresh_) {
                     //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
                     map_.data[MAP_IDX(map_.width, x, y)] = 100;
+                    count++;
                 } else {
                     map_.data[MAP_IDX(map_.width, x, y)] = 0;
                 }
             }
         }
+        System.out.println("count " + count);
         got_map_ = true;
     }
 
