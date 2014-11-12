@@ -6,6 +6,7 @@ import cgl.iotrobots.collavoid.utils.Vector2;
 import costmap_2d.VoxelGrid;
 import geometry_msgs.*;
 import nav_msgs.GridCells;
+import nav_msgs.OccupancyGrid;
 import nav_msgs.Odometry;
 import nav_msgs.Path;
 import org.apache.commons.logging.Log;
@@ -148,10 +149,10 @@ public class LocalPlanner extends AbstractNodeMain{
             String move_base_name = this.node.getName().toString();
             //ROS_ERROR("%s name of node", thisname.c_str());
 
-            Subscriber<GridCells> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", GridCells._TYPE);
-            obstacles_sub_.addMessageListener(new MessageListener<GridCells>() {
+            Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", OccupancyGrid._TYPE);
+            obstacles_sub_.addMessageListener(new MessageListener<OccupancyGrid>() {
                 @Override
-                public void onNewMessage(GridCells msg) {
+                public void onNewMessage(OccupancyGrid msg) {
                     obstaclesCallback(msg);
                 }
             });
@@ -182,34 +183,60 @@ public class LocalPlanner extends AbstractNodeMain{
         runner.execute(me,configuration);
     }
 
-    void obstaclesCallback(final GridCells msg){
-        int num_obst = msg.getCells().size();
+    void obstaclesCallback(final OccupancyGrid msg){
+        Vector2 origin=new Vector2(msg.getInfo().getOrigin().getPosition().getX(),msg.getInfo().getOrigin().getPosition().getY());
+        int mapWith=msg.getInfo().getWidth();
+        double resolution=msg.getInfo().getResolution();
+        int occupancyThreshold=50;
+        List<Vector2> points=new ArrayList<Vector2>();
+        for (int i = 0; i <msg.getData().array().length ; i++) {
+            if(msg.getData().getByte(i)>occupancyThreshold) {
+                int row = i % mapWith;
+                int col = i / mapWith;
+                double x=row*resolution;
+                double y=col*resolution;
+                //need transform????
+                points.add(Vector2.plus(origin,new Vector2(x, y)));
+            }
+        }
         me.obstacle_lock_.lock();
         try{
             me.obstacle_points_.clear();
-
-            for (int i = 0; i < num_obst; i++) {
-                PointStamped in=messageFactory.newFromType(PointStamped._TYPE);
-                PointStamped result=messageFactory.newFromType(PointStamped._TYPE);
-                in.setHeader(msg.getHeader());
-                in.setPoint(msg.getCells().get(i));
-                //ROS_DEBUG("obstacle at %f %f",msg->cells[i].x,msg->cells[i].y);
-                //TODO:Need Transform
-/*                try {
-                    tf_->waitForTransform(global_frame_, robot_base_frame_, msg->header.stamp, ros::Duration(0.2));
-
-                    tf_->transformPoint(global_frame_, in, result);
-                }
-                catch (tf::TransformException ex){
-                    ROS_ERROR("%s",ex.what());
-                    return;
-                };*/
-
-                me.obstacle_points_.add(new Vector2(result.getPoint().getX(),result.getPoint().getY()));
+            for (int i = 0; i <points.size() ; i++) {
+                me.obstacle_points_.add(points.get(i));
             }
         }finally {
             me.obstacle_lock_.unlock();
         }
+
+//
+//        int num_obst = msg.getCells().size();
+//        me.obstacle_lock_.lock();
+//        try{
+//            me.obstacle_points_.clear();
+//
+//            for (int i = 0; i < num_obst; i++) {
+//                PointStamped in=messageFactory.newFromType(PointStamped._TYPE);
+//                PointStamped result=messageFactory.newFromType(PointStamped._TYPE);
+//                in.setHeader(msg.getHeader());
+//                in.setPoint(msg.getCells().get(i));
+//                //ROS_DEBUG("obstacle at %f %f",msg->cells[i].x,msg->cells[i].y);
+//                //TODO:Need Transform
+///*                try {
+//                    tf_->waitForTransform(global_frame_, robot_base_frame_, msg->header.stamp, ros::Duration(0.2));
+//
+//                    tf_->transformPoint(global_frame_, in, result);
+//                }
+//                catch (tf::TransformException ex){
+//                    ROS_ERROR("%s",ex.what());
+//                    return;
+//                };*/
+//
+//                me.obstacle_points_.add(new Vector2(result.getPoint().getX(),result.getPoint().getY()));
+//            }
+//        }finally {
+//            me.obstacle_lock_.unlock();
+//        }
 
     }
 

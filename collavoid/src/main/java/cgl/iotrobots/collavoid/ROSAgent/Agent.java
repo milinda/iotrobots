@@ -115,7 +115,7 @@ public class Agent extends AbstractNodeMain {
     //obstacles
     public boolean delete_observations_;
     public boolean use_obstacles_;
-    public Vector<Vector2> obstacle_points_;
+    public List<Vector2> obstacle_points_;
     public double time_horizon_obst_;
 
     //Agent description
