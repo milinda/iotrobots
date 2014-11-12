@@ -1,9 +1,5 @@
 package cgl.iotrobots.slam.core.utils;
 
-import org.omg.CORBA.OMGVMCID;
-
-import java.security.PublicKey;
-
 public class Point<T> {
     public T x;
     public T y;
