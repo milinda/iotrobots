@@ -12,6 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
+    public static final int SENSORS = 512;
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
@@ -29,7 +30,7 @@ public class Example1 {
             double agentHeight = this.getHeight();
             double agentRadius = this.getRadius();
             sonars = new RangeSensorBelt((float) agentRadius,
-                    0f, 100.0f, 512, RangeSensorBelt.TYPE_SONAR,0);
+                    0f, 100.0f, SENSORS, RangeSensorBelt.TYPE_SONAR,0);
             sonars.setUpdatePerSecond(3);
             //sonarBelt.setName("sonars");
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
@@ -42,15 +43,15 @@ public class Example1 {
             // nothing particular in this case
             sample.init();
             LaserScan scanI = new LaserScan();
-            scanI.angle_increment = 2 * Math.PI / 512;
+            scanI.angle_increment = 2 * Math.PI / SENSORS;
             scanI.angle_max = 2*Math.PI ;
             scanI.angle_min = 0;
             scanI.ranges = new ArrayList<Double>();
-            for (int i = 0; i < 512; i++) {
+            for (int i = 0; i < SENSORS; i++) {
                 scanI.ranges.add(10.0);
             }
             scanI.range_min = 0;
-            scanI.range_max = 10;
+            scanI.range_max = 100;
 
             sample.initMapper(scanI);
         }
@@ -59,14 +60,15 @@ public class Example1 {
         public void performBehavior() {
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
-            // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
+
+            System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
             LaserScan laserScan = getLaserScan();
-            sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, point3D.y, point3D.z));
+            sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, point3D.z, 0.0));
             // progress at 0.5 m/s
             setTranslationalVelocity(1);
             // frequently change orientation
-            if ((getCounter() % 100) == 0)
-                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
+//            if ((getCounter() % 100) == 0)
+//                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
 
             mapUI.setMap(sample.map_);
 
@@ -84,9 +86,9 @@ public class Example1 {
             LaserScan laserScan = new LaserScan();
             laserScan.angle_max = Math.PI * 2;
             laserScan.angle_min = 0;
-            laserScan.range_max = 10;
+            laserScan.range_max = 100;
             laserScan.range_min = 0;
-            laserScan.angle_increment = 2 * Math.PI / 512;
+            laserScan.angle_increment = 2 * Math.PI / SENSORS;
 
 //            for (double angle = 0; angle < 2 * Math.PI / 2; angle += 2 * Math.PI / n) {
 //                int hits = sonars.getQuadrantHits(angle, angle + 2 * Math.PI / n);

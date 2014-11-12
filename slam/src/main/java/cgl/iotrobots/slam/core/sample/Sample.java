@@ -124,7 +124,7 @@ public class Sample {
         maxUrange_ = 0.0;
         maxRange_ = 0.0;
         minimum_score_ = 0;
-        sigma_ = 0.05;
+        sigma_ = 0.005;
         kernelSize_ = 1;
         lstep_ = 0.05;
         astep_ = 0.05;
