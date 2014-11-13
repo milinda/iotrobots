@@ -1,4 +1,4 @@
-package cgl.iotrobots.collavoid.ClearPath;
+package cgl.iotrobots.collavoid.Comparators;
 
 import cgl.iotrobots.collavoid.utils.VelocitySample;
 

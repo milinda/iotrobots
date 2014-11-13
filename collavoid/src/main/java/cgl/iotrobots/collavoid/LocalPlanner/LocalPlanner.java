@@ -133,8 +133,9 @@ public class LocalPlanner extends AbstractNodeMain{
             ignore_goal_yaw_ = params.getBoolean("~/ignore_goal_jaw", false);
 
             /*----------spawn agent node---------*/
-            spawnAgent(hostname,tf_);
-            node.getLog().info("************************Spawning the agent.......");
+            String agentId=new String("agent_"+hostname);
+            this.me=new Agent(agentId,tf_);
+            spawnAgent(this.me);
             while(!me.initialized_){
                 try {
                     Thread.sleep(500);
@@ -144,12 +145,13 @@ public class LocalPlanner extends AbstractNodeMain{
             }
             radius_=me.footprint_radius_;
 
-            Publisher<Path> g_plan_pub_=this.node.newPublisher("global_plan", Path._TYPE);
+            Publisher<Path> g_plan_pub_=this.node.newPublisher("g_plan_pub_", Path._TYPE);
             Publisher<Path> l_plan_pub_=this.node.newPublisher("l_plan_pub_", Path._TYPE);
             String move_base_name = this.node.getName().toString();
             //ROS_ERROR("%s name of node", thisname.c_str());
 
-            Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", OccupancyGrid._TYPE);
+            //Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", OccupancyGrid._TYPE);
+            Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber("/move_base/local_costmap/costmap", OccupancyGrid._TYPE);
             obstacles_sub_.addMessageListener(new MessageListener<OccupancyGrid>() {
                 @Override
                 public void onNewMessage(OccupancyGrid msg) {
@@ -172,24 +174,22 @@ public class LocalPlanner extends AbstractNodeMain{
 
     }
     /*Spawn agent*/
-    void spawnAgent(String id,TransformListener tf){
+    void spawnAgent(Agent agent){
         NodeConfiguration configuration = NodeConfiguration.newPublic(node.getUri().getHost(),
                 node.getMasterUri());
-
         final NodeMainExecutor runner= DefaultNodeMainExecutor.newDefault();
-        String agentId=new String("agent_"+id);
-        this.me=new Agent(agentId,tf);
-        configuration.setNodeName(agentId);
-        runner.execute(me,configuration);
+        configuration.setNodeName(agent.id_);
+        runner.execute(agent,configuration);
     }
 
+    /*Add obstacles*/
     void obstaclesCallback(final OccupancyGrid msg){
         Vector2 origin=new Vector2(msg.getInfo().getOrigin().getPosition().getX(),msg.getInfo().getOrigin().getPosition().getY());
         int mapWith=msg.getInfo().getWidth();
         double resolution=msg.getInfo().getResolution();
         int occupancyThreshold=50;
         List<Vector2> points=new ArrayList<Vector2>();
-        for (int i = 0; i <msg.getData().array().length ; i++) {
+        for (int i = 0; i <msg.getData().readableBytes() ; i++) {
             if(msg.getData().getByte(i)>occupancyThreshold) {
                 int row = i % mapWith;
                 int col = i / mapWith;

@@ -1,6 +1,9 @@
 package cgl.iotrobots.collavoid.ROSAgent;
 
 import cgl.iotrobots.collavoid.ClearPath.CP;
+import cgl.iotrobots.collavoid.Comparators.ConvexHullPointsPositionComparator;
+import cgl.iotrobots.collavoid.Comparators.NeighborDistComparator;
+import cgl.iotrobots.collavoid.Comparators.VectorsLexigraphicComparator;
 import cgl.iotrobots.collavoid.LocalPlanner.LPutils;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.msgmanager.msgPublisher;
@@ -25,8 +28,6 @@ import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.LaserScan;
 import sensor_msgs.PointCloud;
 
-import java.net.UnknownHostException;
-import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -62,20 +63,20 @@ public class Agent extends AbstractNodeMain {
     public Vector2 newVelocity;
     public double radius;
     //public List<Point<Double>> footPrint;
-    public Vector<Vector2> footPrint;
+    public List<Vector2> footPrint;
 
     //allowed error for non-holonomic robot
     public double cur_allowed_error_;
 
     //orca
     public double max_speed_x_; //in nonholomic robot it has only one liner velocity
-    public Vector<Line> orcaLines, addOrcaLines;
+    public List<Line> orcaLines, addOrcaLines;
 
     //VO
-    public Vector<VO> voAgents, addVos;
-    public Vector<VelocitySample> samples;
+    public List<VO> voAgents, addVos;
+    public List<VelocitySample> samples;
 
-    public Vector<Agent> agentNeighbors;
+    public List<Agent> agentNeighbors;
 
 
     //ROSAgent
@@ -106,7 +107,7 @@ public class Agent extends AbstractNodeMain {
     ///////////////LaserProjection projector_;  //translate laserscan to pointcloud
 
     //Obstacles
-    public Vector<obstacle> obstacles_from_laser_;
+    public List<obstacle> obstacles_from_laser_;
     public Subscriber laserScanSub, laserNotifier;
 
 
@@ -144,7 +145,7 @@ public class Agent extends AbstractNodeMain {
 
     //COLLVOID
     public List<Vector2> minkowski_footprint_;
-    public Vector<poseWeighted> pose_array_weighted_;
+    public List<PoseWeighted> pose_array_weighted_;
 
     //lock
     public final Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
@@ -159,7 +160,7 @@ public class Agent extends AbstractNodeMain {
 
     //utils
     private static Logger logger = Logger.getLogger("Agent");
-    public static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
+    private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
     public static MessageFactory messageFactory = new DefaultMessageFactory(messageDefinitionProvider);
 
     //to define messages
@@ -193,6 +194,9 @@ public class Agent extends AbstractNodeMain {
         this.footprint_msg_=messageFactory.newFromType(PolygonStamped._TYPE);
         this.minkowski_footprint_=new ArrayList<Vector2>();
         this.footPrintLines=new ArrayList<LinePair>();
+        this.obstacle_points_=new ArrayList<Vector2>();
+        this.pose_array_weighted_=new ArrayList<PoseWeighted>();
+        this.agentNeighbors=new ArrayList<Agent>();
 
         this.tf_=tf;
         this.id_=new String(id);
@@ -334,7 +338,7 @@ public class Agent extends AbstractNodeMain {
         polygon.setPoints(points);
         footprint.setPolygon(polygon);
         setFootprint(footprint);*/
-
+        initPubSub(this.node);
         initialized_ = true;
         logger.info("************************"+node.getName()+" is initialized.");
     }
@@ -343,15 +347,15 @@ public class Agent extends AbstractNodeMain {
     public void initAsMe(final ConnectedNode newnode, TransformListener tf) {
         //Params (get from server or set via local_planner)
         tf_ = tf;
-        initCommon(newnode, false);
+        //initCommon(newnode, false);
         initialized_ = true;
     }
 
-    public void initCommon(final ConnectedNode newnode, boolean runalone) {
-        if (!runalone) {
+    public void initPubSub(final ConnectedNode newnode) {
+        if (this.standalone_) {
             this.node = newnode;
             this.params = node.getParameterTree();
-            use_obstacles_ = params.getBoolean("move_base/use_obstacles");
+            use_obstacles_ = params.getBoolean("move_base/use_obstacles",true);
             controlled = params.getBoolean("move_base/controlled", true);
         }
 
@@ -372,11 +376,20 @@ public class Agent extends AbstractNodeMain {
         polygon_pub_ = node.newPublisher("convex_hull", PolygonStamped._TYPE);
 
         //Subscribers
-//        amcl_posearray_sub_ = nh.subscribe("particlecloud_weighted", 1, &ROSAgent::amclPoseArrayWeightedCallback,this);
+//        //amcl_posearray_sub_ = nh.subscribe("particlecloud_weighted", 1, &ROSAgent::amclPoseArrayWeightedCallback,this);
 //        //position_share_sub_ = nh.subscribe("/position_share_in",10, &ROSAgent::positionShareCallback, this);
 //        //odom_sub_ = nh.subscribe("odom",1, &ROSAgent::odomCallback, this);
 
-        //need amcl tools
+        /*TODO: Need particle cloud and the weights of the particles to calculate localization uncertainty,
+          TODO: but currently just particle cloud.*/
+        amcl_posearray_sub_ = node.newSubscriber("/particlecloud",PoseArray._TYPE);
+        amcl_posearray_sub_.addMessageListener(new MessageListener<PoseArray>() {
+            @Override
+            public void onNewMessage(PoseArray msg) {
+                amclPoseArrayWeightedCallback(msg);
+            }
+        });
+
         position_share_sub_ = node.newSubscriber("/position_share_in", pose_twist_covariance_msgs._TYPE);
         position_share_sub_.addMessageListener(new MessageListener<pose_twist_covariance_msgs>() {
             @Override
@@ -385,6 +398,14 @@ public class Agent extends AbstractNodeMain {
             }
         }, 10);
 
+        //to calculate position
+        odom_sub_=node.newSubscriber("odom",Odometry._TYPE);
+        odom_sub_.addMessageListener(new MessageListener<Odometry>() {
+            @Override
+            public void onNewMessage(Odometry msg) {
+                odomCallback(msg);
+            }
+        });
 
 //        //laser_scan_sub_.subscribe (nh, "base_scan", 1);
 //        //laser_notifier.reset(new tf::MessageFilter<sensor_msgs::LaserScan>(laser_scan_sub_, *tf_, global_frame_, 10));
@@ -400,9 +421,217 @@ public class Agent extends AbstractNodeMain {
 //        laser_notifier->registerCallback(boost::bind(&ROSAgent::baseScanCallback, this, _1));
 //        laser_notifier->setTolerance(ros::Duration(0.1));
 
-
         logger.info("New Agent as me initialized");
 
+    }
+
+    void amclPoseArrayWeightedCallback(final PoseArray msg){
+         this.convex_lock_.lock();
+        try {
+            pose_array_weighted_.clear();
+            PoseStamped in=messageFactory.newFromType(PoseStamped._TYPE);
+            in.setHeader(msg.getHeader());
+            for (int i = 0; i <  msg.getPoses().size(); i++) {
+                in.setPose(msg.getPoses().get(i));
+                  //TODO: must transform!!!! All footprint are in base frame.
+/*                try {
+                    tf_ -> waitForTransform(global_frame_, base_frame_, in.header.stamp, ros::Duration (0.2));
+                    tf_ -> transformPose(base_frame_, in, result);*/
+                //TODO: need weight
+                    PoseWeighted result=new PoseWeighted(0.0,in);
+                    pose_array_weighted_.add(result);
+ /*               } catch (tf::TransformException ex){
+                    ROS_ERROR("%s", ex.what());
+                    ROS_ERROR("point transform failed");
+                }      */
+            }
+
+            if (!convex) {
+                //just add the localization uncertainty to the radius
+                computeNewLocUncertainty();
+            } else {
+                //use convex shape
+                computeNewMinkowskiFootprint();
+            }
+        }finally {
+            this.convex_lock_.unlock();
+        }
+
+    }
+
+    void computeNewLocUncertainty(){
+        List<ConvexHullPoint> points=new ArrayList<ConvexHullPoint>();
+        for (int i = 0; i <  pose_array_weighted_.size(); i++) {
+            ConvexHullPoint p=new ConvexHullPoint();
+            double x=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
+            double y=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
+            p.setPoint(new Vector2(x,y));
+            p.setWeight(pose_array_weighted_.get(i).getW());
+            p.setIndex(i);
+            p.setOrig_index(i);
+            points.add(p);
+        }
+        Collections.sort(points,new ConvexHullPointsPositionComparator());
+        double sum = 0.0;
+        int j = 0;
+        while (sum <= 1.0 - eps_ && j <  points.size()) {
+            //TODO:need weight or the loop will not stop
+            sum += points.get(j).getWeight();
+            j++;
+        }
+        //maximum two times of the footpint radius
+        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j-1).getPoint()));
+        //ROS_ERROR("Loc Uncertainty = %f", cur_loc_unc_radius_);
+        radius = footprint_radius_ + cur_loc_unc_radius_;
+    }
+
+    void computeNewMinkowskiFootprint(){
+        boolean done = false;
+        List<ConvexHullPoint> convex_hull=new ArrayList<ConvexHullPoint>();
+        List<ConvexHullPoint> points=new ArrayList<ConvexHullPoint>();
+        points.clear();
+
+        for (int i = 0; i <  pose_array_weighted_.size(); i++) {
+            ConvexHullPoint p=new ConvexHullPoint();
+            double x=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
+            double y=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
+            p.setPoint(new Vector2(x,y));
+            p.setWeight(pose_array_weighted_.get(i).getW());
+            p.setIndex(i);
+            p.setOrig_index(i);
+            points.add(p);
+        }
+        Collections.sort(points,new VectorsLexigraphicComparator());
+        for (int i = 0; i <  points.size(); i++) {
+            points.get(i).setIndex(i);
+        }
+
+        double total_sum = 0;
+
+        int[] skip_list;
+        while (!done && points.size() >= 3) {
+            double sum = 0;
+            convex_hull.clear();
+            convex_hull = convexHull(points, true);
+
+            skip_list=new int[convex_hull.size()];
+            for (int j = 0; j<  convex_hull.size()-1; j++){
+                skip_list[j]=convex_hull.get(j).getIndex();
+                sum += convex_hull.get(j).getWeight();
+            }
+            total_sum +=sum;
+
+            //ROS_WARN("SUM = %f (%f), num Particles = %d, eps = %f", sum, total_sum, (int) points.size(), eps_);
+
+            if (total_sum >= eps_){
+                done = true;
+                break;
+            }
+
+            Arrays.sort(skip_list);
+            for (int i = skip_list.length -1; i >= 0; i--) {
+                points.remove(skip_list[i]);
+            }
+
+            for (int i = 0; i <  points.size(); i++) {
+                points.get(i).setIndex(i);
+            }
+        }
+
+        List<Vector2> localization_footprint=new ArrayList<Vector2>();
+        List<Vector2> own_footprint=new ArrayList<Vector2>();
+        for (int i = 0; i < convex_hull.size(); i++) {
+            localization_footprint.add(convex_hull.get(i).getPoint());
+        }
+
+        for (int i = 0; i <footprint_msg_.getPolygon().getPoints().size() ; i++) {
+            Point32 p=footprint_msg_.getPolygon().getPoints().get(i);
+            own_footprint.add(new Vector2(p.getX(), p.getY()));
+            //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
+                    }
+        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+        //publish footprint
+        PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
+        polygon_pub_.publish(msg_pub);
+
+    }
+
+    // Returns a list of points on the convex hull in counter-clockwise order.
+    // Note: the last point in the returned list is the same as the first one.
+    //Wikipedia Monotone chain...
+    List<ConvexHullPoint > convexHull(List<ConvexHullPoint > P, boolean sorted)
+    {
+        int n = P.size(), k = 0;
+        List<ConvexHullPoint > result=new ArrayList();
+        for (int i = 0; i <2*n ; i++) {
+            ConvexHullPoint p=new ConvexHullPoint();
+            p.setIndex(-1);
+            result.add(p);
+        }
+        // Sort points lexicographically
+        if (!sorted)
+            Collections.sort(P, new VectorsLexigraphicComparator());
+
+        //    ROS_WARN("points length %d", (int)P.size());
+
+        // Build lower hull,计算几何中的凸集问题
+        for (int i = 0; i < n; i++) {
+
+            while (k >= 2 && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
+                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
+            result.set(k++,P.get(i));
+        }
+
+        // Build upper hull
+        for (int i = n-2, t = k+1; i > 0; i--) {
+            while (k >= t && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
+                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
+            result.set(k++, P.get(i));
+        }
+
+        //resize list
+        int i=0;
+        while(i<result.size()){
+            if(result.get(i).getIndex()<0){
+                result.remove(i);
+                continue;
+            }
+            i++;
+        }
+        return result;
+    }
+
+    List<Vector2> minkowskiSum(final List<Vector2> polygon1, final List<Vector2> polygon2){
+        List<Vector2> result=new ArrayList<Vector2>();
+        List<ConvexHullPoint> convex_hull=new ArrayList<ConvexHullPoint>();
+
+        for (int i = 0; i < polygon1.size(); i++) {
+            for (int j = 0; j <  polygon2.size(); j++) {
+                ConvexHullPoint p=new ConvexHullPoint();
+                p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
+                convex_hull.add(p);
+            }
+        }
+
+        convex_hull = convexHull(convex_hull,false);
+        for (int i = 0; i<convex_hull.size(); i++) {
+            result.add(convex_hull.get(i).getPoint());
+        }
+        return result;
+    }
+
+    PolygonStamped createFootprintMsgFromVector2(final List<Vector2> footprint) {
+        PolygonStamped result=messageFactory.newFromType(PolygonStamped._TYPE);
+        result.getHeader().setFrameId(base_frame_);
+        result.getHeader().setStamp(node.getCurrentTime());
+
+        for (int i = 0; i <footprint.size() ; i++) {
+            Point32 p=messageFactory.newFromType(Point32._TYPE);
+            p.setX((float)footprint.get(i).getX());
+            p.setY((float)footprint.get(i).getY());
+            result.getPolygon().getPoints().add(p);
+        }
+        return result;
     }
 
 
@@ -468,6 +697,67 @@ public class Agent extends AbstractNodeMain {
 //        }
 
     }
+
+    void odomCallback(final Odometry msg){
+        //we assume that the odometry is published in the frame of the base??
+        me_lock_.lock();
+        try {
+            base_odom_.getTwist().getTwist().getLinear().setX(msg.getTwist().getTwist().getLinear().getX());
+            base_odom_.getTwist().getTwist().getLinear().setY(msg.getTwist().getTwist().getLinear().getY());
+            base_odom_.getTwist().getTwist().getAngular().setZ(msg.getTwist().getTwist().getAngular().getZ());
+
+            last_seen_ = msg.getHeader().getStamp();
+            //tf::Stamped < tf::Pose > global_pose;  use PoseStamped instead
+            PoseStamped global_pose=messageFactory.newFromType(PolygonStamped._TYPE);
+            //let's get the pose of the robot in the frame of the plan
+            /*global_pose.setIdentity();
+            global_pose.frame_id_ = base_frame_;
+            global_pose.stamp_ = msg -> header.stamp;*/
+
+            //TODO:Transform!!!!!!!!!!!!
+/*            try {
+                tf_ -> waitForTransform(global_frame_, base_frame_, global_pose.stamp_, ros::Duration (0.2));
+                tf_ -> transformPose(global_frame_, global_pose, global_pose);
+            } catch (tf::TransformException ex){
+                ROS_ERROR("%s", ex.what());
+                ROS_ERROR("point odom transform failed");
+                return;
+            }          */
+
+/*            PoseStamped pose_msg;
+            tf::poseStampedTFToMsg (global_pose, pose_msg);*/
+            //base_odom_.pose.pose = pose_msg.pose;
+            base_odom_.getPose().setPose(global_pose.getPose());
+
+            if ((node.getCurrentTime().toSeconds() - lastTimeMePublished.toSeconds()) > publishMePeriod){
+                lastTimeMePublished = node.getCurrentTime();
+                publishMePoseTwist();
+            }
+        }finally {
+            me_lock_.unlock();
+        }
+    }
+    void publishMePoseTwist() {
+
+        pose_twist_covariance_msgs me_msg=messageFactory.newFromType(pose_twist_covariance_msgs._TYPE);
+        me_msg.getHeader().setStamp(node.getCurrentTime());
+        me_msg.getHeader().setFrameId(base_frame_);
+
+        me_msg.getPose().setPose(base_odom_.getPose().getPose());
+        me_msg.getTwist().setTwist(base_odom_.getTwist().getTwist());
+
+        me_msg.setControlled(controlled);
+        me_msg.getHolonomicVelocity().setX(holo_velocity_.getX());
+        me_msg.getHolonomicVelocity().setY(holo_velocity_.getY());
+
+        me_msg.setHoloRobot(holo_robot_);
+        me_msg.setRadius((float)(footprint_radius_ + cur_loc_unc_radius_));
+        me_msg.setRobotId(id_);
+
+        me_msg.setFootprint(createFootprintMsgFromVector2(minkowski_footprint_));
+        position_share_pub_.publish(me_msg);
+    }
+
 
     public void baseScanCallback(final LaserScan msg, Duration dur) {
         PointCloud cloud = messageFactory.newFromType(PointCloud._TYPE);
@@ -550,7 +840,6 @@ public class Agent extends AbstractNodeMain {
                             break;
                         }
 
-
                     } else {
                         first_ang = ang;
                     }
@@ -566,7 +855,6 @@ public class Agent extends AbstractNodeMain {
             obstacle_lock_.unlock();
         }
         msgPublisher.publishObstacleLines(obstacles_from_laser_, global_frame_, base_frame_, obstacles_pub_);
-
     }
 
     boolean pointInNeighbor(Vector2 point) {
