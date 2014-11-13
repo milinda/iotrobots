@@ -1,5 +1,7 @@
 package cgl.iotrobots.collavoid.ClearPath;
 
+import cgl.iotrobots.collavoid.Comparators.VectorsLexigraphicComparator;
+import cgl.iotrobots.collavoid.Comparators.VelocitySamplesComparator;
 import cgl.iotrobots.collavoid.utils.*;
 
 import java.util.ArrayList;

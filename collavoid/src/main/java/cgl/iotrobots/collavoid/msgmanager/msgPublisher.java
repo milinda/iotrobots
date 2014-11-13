@@ -5,14 +5,14 @@ import cgl.iotrobots.collavoid.ROSAgent.Agent;
 import cgl.iotrobots.collavoid.utils.obstacle;
 import org.ros.node.topic.Publisher;
 
-import java.util.Vector;
+import java.util.List;
 
 public class msgPublisher {
 
 
 
 
-    public static void publishObstacleLines(final Vector<obstacle> obstacles_lines, String base_frame, String name_space, Publisher line_pub){
+    public static void publishObstacleLines(final List<obstacle> obstacles_lines, String base_frame, String name_space, Publisher line_pub){
 
 
     }
@@ -23,7 +23,7 @@ public class msgPublisher {
     }
 
 
-    public static void publishNeighborPositions(Vector<Agent> neighbors, String base_frame, String name_space, Publisher neighbors_pub){
+    public static void publishNeighborPositions(List<Agent> neighbors, String base_frame, String name_space, Publisher neighbors_pub){
 
     }
 

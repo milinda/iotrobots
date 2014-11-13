@@ -1,5 +1,6 @@
-package cgl.iotrobots.collavoid.ROSAgent;
+package cgl.iotrobots.collavoid.Comparators;
 
+import cgl.iotrobots.collavoid.ROSAgent.Agent;
 import cgl.iotrobots.collavoid.utils.Vector2;
 
 public class NeighborDistComparator {

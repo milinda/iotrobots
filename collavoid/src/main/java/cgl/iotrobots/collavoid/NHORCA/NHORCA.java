@@ -4,6 +4,7 @@ import cgl.iotrobots.collavoid.utils.EPSILON;
 import cgl.iotrobots.collavoid.utils.Line;
 import cgl.iotrobots.collavoid.utils.Vector2;
 
+import java.util.List;
 import java.util.Vector;
 
 import static cgl.iotrobots.collavoid.utils.utils.sign;
@@ -32,7 +33,7 @@ public class NHORCA {
 
     //from orca
     //in velocity space
-    public static void addMovementConstraintsDiffSimple(double max_track_speed, double heading, Vector<Line> additional_orca_lines) {
+    public static void addMovementConstraintsDiffSimple(double max_track_speed, double heading, List<Line> additional_orca_lines) {
         Line maxVel1;
         Line maxVel2;
 
@@ -49,7 +50,7 @@ public class NHORCA {
     }
 
     //from orca
-    public static void addMovementConstraintsDiff(double error, double T,  double max_vel_x, double max_vel_th, double heading, double v_max_ang, Vector<Line> additional_orca_lines){
+    public static void addMovementConstraintsDiff(double error, double T,  double max_vel_x, double max_vel_th, double heading, double v_max_ang, List<Line> additional_orca_lines){
         double min_theta = Math.PI / 2.0;
         double max_track_speed = calculateMaxTrackSpeedAngle(T,min_theta, error, max_vel_x, max_vel_th, v_max_ang);
 
@@ -73,7 +74,7 @@ public class NHORCA {
         }
     }
 
-    public static void addAccelerationConstraintsXY(double max_vel_x, double acc_lim_x, double max_vel_y, double acc_lim_y, Vector2 cur_vel, double heading, double sim_period, boolean holo_robot, Vector<Line> additional_orca_lines){
+    public static void addAccelerationConstraintsXY(double max_vel_x, double acc_lim_x, double max_vel_y, double acc_lim_y, Vector2 cur_vel, double heading, double sim_period, boolean holo_robot, List<Line> additional_orca_lines){
         double max_lim_x, max_lim_y, min_lim_x, min_lim_y;
         Line line_x_back, line_x_front, line_y_left, line_y_right;
 
