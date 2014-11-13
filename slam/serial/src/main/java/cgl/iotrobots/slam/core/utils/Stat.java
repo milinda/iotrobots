@@ -1,7 +1,5 @@
 package cgl.iotrobots.slam.core.utils;
 
-import cgl.iotrobots.slam.core.sensor.RangeReading;
-
 import java.util.Random;
 
 public class Stat {

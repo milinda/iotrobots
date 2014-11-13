@@ -42,7 +42,7 @@
 
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>slam</artifactId>
+            <artifactId>iotrobots-slam</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 

@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
-import cgl.iotrobots.slam.core.grid.AccessibilityState;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;

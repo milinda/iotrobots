@@ -16,7 +16,7 @@
         <dependency>
             <groupId>org.ros.rosjava_bootstrap</groupId>
             <artifactId>message_generation</artifactId>
-            <version>0.1.22</version>
+            <version>0.1.16</version>
         </dependency>
         <dependency>
             <groupId>org.ros.rosjava_messages</groupId>
@@ -54,7 +54,25 @@
             <version>1.11.4</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>com.springsource.org.apache.commons.logging</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>3.6.3.Final</version>
+        </dependency>
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>ros</id>
+            <name>ros</name>
+            <url>https://github.com/stonier/rosjava_mvn_repo/raw/master</url>
+        </repository>
+    </repositories>
 
 </project>

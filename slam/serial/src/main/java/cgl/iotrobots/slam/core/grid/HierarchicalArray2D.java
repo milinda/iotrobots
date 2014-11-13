@@ -2,12 +2,9 @@ package cgl.iotrobots.slam.core.grid;
 
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
-import cgl.iotrobots.slam.core.utils.PointComparator;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class HierarchicalArray2D {
     Array2D array2D;

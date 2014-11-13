@@ -1,7 +1,5 @@
 package cgl.iotrobots.slam.core.particlefilter;
 
-import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

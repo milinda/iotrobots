@@ -40,4 +40,27 @@ public class LinePair {
     public Vector2 getSecond(){
         return new Vector2(this.second);
     }
+
+
+    public static Vector2 Intersection(LinePair l1,LinePair l2){
+        double r, s, d;
+        double x1=l1.getFirst().getX(),x2=l1.getSecond().getX(),x3=l2.getFirst().getX(),x4=l2.getSecond().getX();
+        double y1=l1.getFirst().getY(),y2=l1.getSecond().getY(),y3=l2.getFirst().getY(),y4=l2.getSecond().getY();
+        Vector2 res=null;
+        //Make sure the lines aren't parallel
+        if ((y2 - y1) / (x2 - x1) != (y4 - y3) / (x4 - x3)){
+            d = (((x2 - x1) * (y4 - y3)) - (y2 - y1) * (x4 - x3));
+            if (d != 0){
+                r = (((y1 - y3) * (x4 - x3)) - (x1 - x3) * (y4 - y3)) / d;
+                s = (((y1 - y3) * (x2 - x1)) - (x1 - x3) * (y2 - y1)) / d;
+                if (r >= 0 && r <= 1){
+                    if (s >= 0 && s <= 1){
+                        return new Vector2(x1 + r * (x2 - x1), y1 + r * (y2 - y1));
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
 }
