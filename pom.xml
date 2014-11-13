@@ -13,6 +13,7 @@
         <module>performance</module>
         <module>slam</module>
         <module>simulator</module>
+        <module>collavoid</module>
     </modules>
 
     <properties>
@@ -29,7 +30,7 @@
         <log4j.slf4j.version>2.0-rc1</log4j.slf4j.version>
         <commons.cli.version>1.2</commons.cli.version>
         <commons.lang.version>2.3</commons.lang.version>
-        <rabitmq.verion>3.2.4</rabitmq.verion>
+        <rabitmq.verion>3.3.5</rabitmq.verion>
         <iot.cloud.version>1.0-SNAPSHOT</iot.cloud.version>
         <storm.bcs.version>1.0-SNAPSHOT</storm.bcs.version>
         <snappy.version>1.1.1.3</snappy.version>

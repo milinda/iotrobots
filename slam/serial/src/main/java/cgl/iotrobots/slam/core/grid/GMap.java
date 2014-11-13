@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.core.grid;
 
+import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
 
 public class GMap {
@@ -8,9 +9,10 @@ public class GMap {
     HierarchicalArray2D m_storage;
     int m_mapSizeX, m_mapSizeY;
     int m_sizeX2, m_sizeY2;
-
+    public static final int DEFAULT_PATCH = 5;
 
     public GMap(int mapSizeX, int mapSizeY, double delta) {
+        m_storage = new HierarchicalArray2D(mapSizeX, mapSizeY, DEFAULT_PATCH);
         m_worldSizeX=mapSizeX * delta;
         m_worldSizeY=mapSizeY * delta;
         m_delta=delta;
@@ -20,6 +22,7 @@ public class GMap {
     }
 
     public GMap(Point<Double> center, double worldSizeX, double worldSizeY, double delta) {
+        m_storage = new HierarchicalArray2D(new Double(Math.ceil(worldSizeX/delta)).intValue(), new Double(Math.ceil(worldSizeY/delta)).intValue(), DEFAULT_PATCH);
         m_center = center;
         m_worldSizeX = worldSizeX;
         m_worldSizeY = worldSizeY;
@@ -31,6 +34,7 @@ public class GMap {
     }
 
     public GMap(Point<Double> center, double xmin, double ymin, double xmax, double ymax, double delta) {
+        m_storage = new HierarchicalArray2D(new Double(Math.ceil((xmax-xmin)/delta)).intValue(),new Double(Math.ceil((ymax-ymin)/delta)).intValue(), DEFAULT_PATCH);
         m_center = center;
         m_worldSizeX = xmax - xmin;
         m_worldSizeY = ymax - ymin;
@@ -59,12 +63,12 @@ public class GMap {
         return new Size(min.x, min.y, max.x, max.y);
     }
 
-    public Object cell(int x, int y) {
-        return cell(new Point<Integer>(x, y));
+    public Object cell(int x, int y, boolean c) {
+        return cell(new Point<Integer>(x, y), c);
     }
 
-    public Object cell(double x, double y) {
-        return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()));
+    public Object cell(double x, double y, boolean c) {
+        return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()), c);
     }
 
     public boolean isInside(int x, int y) {
@@ -73,6 +77,10 @@ public class GMap {
 
     public boolean isInside(Point<Integer> p) {
         return m_storage.cellState(p) == AccessibilityState.Inside.getVal();
+    }
+
+    public boolean isInsideD(Point<Double> p) {
+        return isInside(p.x, p.y);
     }
 
     public boolean isInside(double x, double y)  {
@@ -139,14 +147,35 @@ public class GMap {
                 (p.y-m_sizeY2)*m_delta + m_center.y);
     }
 
-    public Object cell(Point p) {
-        Point<Integer> ip= world2map(p);
-        int s = m_storage.cellState(ip);
-        //if (! s&Inside) assert(0);
-        if (s == AccessibilityState.Allocated.getVal())
-            return m_storage.cell(ip);
-
-        return  null;
+    public Object cell(Point p, boolean c) {
+        if (p.x instanceof Integer) {
+            int s = m_storage.cellState(p);
+            if (c) {
+                if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                    return m_storage.cell(p);
+            } else {
+                if ((s & AccessibilityState.Inside.getVal()) == 0)
+                    assert false;
+                return m_storage.cell(p);
+            }
+            //System.out.println("Creating unknown Int: c: " + c + " s: " + s);
+            return new PointAccumulator();
+        } else {
+            Point<Integer> ip = world2map(p);
+            int s = m_storage.cellState(ip);
+            //if (! s&Inside) assert(0);
+            if (c) {
+                if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                    return m_storage.cell(p);
+            } else {
+                if ((s & AccessibilityState.Inside.getVal()) == 0)
+                    assert false;
+                return m_storage.cell(p);
+            }
+            //System.out.println("Creating unknown Double: c: " + c + " s: " + s);
+            return new PointAccumulator();
+//            return new PointAccumulator();
+        }
     }
 
 

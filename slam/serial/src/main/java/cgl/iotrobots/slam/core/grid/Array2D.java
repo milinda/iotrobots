@@ -10,11 +10,16 @@ public class Array2D {
     public int m_xsize, m_ysize;
     public Object m_cells[][];
 
+    public static int count = 0;
+
     public Array2D(int xsize, int ysize) {
+        count++;
+//        System.out.println(count);
         m_xsize = xsize;
         m_ysize = ysize;
         if (m_xsize > 0 && m_ysize > 0) {
             m_cells = new Object[m_xsize][m_ysize];
+
         } else {
             m_xsize = m_ysize = 0;
             m_cells = null;

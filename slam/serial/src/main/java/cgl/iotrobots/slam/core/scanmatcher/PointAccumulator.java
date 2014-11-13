@@ -9,6 +9,15 @@ public class PointAccumulator {
 
     public int n, visits;
 
+    public PointAccumulator(PointAccumulator pointAccumulator) {
+        this.n = pointAccumulator.n;
+        this.visits = pointAccumulator.visits;
+        this.acc = new Point<Double>(pointAccumulator.acc);
+    }
+
+    public PointAccumulator() {
+    }
+
     public void update(boolean value, Point<Double> p) {
         if (value) {
             acc.x += p.x;
@@ -40,8 +49,12 @@ public class PointAccumulator {
     }
 
     public double doubleValue() {
+//        if (visits > 0) {
+//            System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAA");
+//        }
         return visits > 0 ? (double)n*SIGHT_INC/(double)visits:-1;
     }
 
 
 }
+

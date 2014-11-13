@@ -99,6 +99,14 @@ public class GridSlamProcessor {
         return bi;
     }
 
+    public void setMinimumScore(double m_minimumScore) {
+        this.m_minimumScore = m_minimumScore;
+    }
+
+    public void setUpdatePeriod_(double period_) {
+        this.period_ = period_;
+    }
+
     public void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
                                int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         m_obsSigmaGain = likelihoodGain;
@@ -163,7 +171,7 @@ public class GridSlamProcessor {
             int lastIndex = m_particles.size() - 1;
             Particle p = new Particle(lmap);
 
-            p.pose = initialPose;
+            p.pose = new OrientedPoint<Double>(initialPose);
             p.previousPose = initialPose;
             p.setWeight(0);
             p.previousIndex = 0;
@@ -251,7 +259,7 @@ public class GridSlamProcessor {
             LOG.info("m_count " + m_count);
 
             RangeReading reading_copy =
-                    new RangeReading(reading.size(), reading.get(0),
+                    new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
                             (RangeSensor) reading.getSensor(),
                             reading.getTime());
 
@@ -591,7 +599,7 @@ public class GridSlamProcessor {
             score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score > m_minimumScore) {
-                it.pose = corrected;
+                it.pose = new OrientedPoint<Double>(corrected);
             } else {
                 LOG.info("Scan Matching Failed, using odometry. Likelihood=");
                 LOG.info("lp:" + m_lastPartPose.x + " " + m_lastPartPose.y + " " + m_lastPartPose.theta);

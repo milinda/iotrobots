@@ -5,14 +5,16 @@ from threading  import Thread
 import time
 import Queue
 import sys
+import logging
+logging.basicConfig()
 
 def send_frames():
-    # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
+    #parameters = pika.URLParameters('amqp://149.165.159.3:5672')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
-    channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
+    # channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     # try:
     send_count = 0
     for x in range(0, 1596):

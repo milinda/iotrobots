@@ -1,10 +1,6 @@
 package cgl.iotrobots.slam.core.utils;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
-
 public class OrientedPoint<T> extends Point<T> {
-    public T x;
-    public T y;
     public T theta;
 
     public OrientedPoint(T x, T y) {
@@ -54,5 +50,25 @@ public class OrientedPoint<T> extends Point<T> {
         double x = p1.x * p2;
         double y = p1.y * p2;
         return new OrientedPoint<Double>(x, y, p1.theta * p2);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        OrientedPoint that = (OrientedPoint) o;
+
+        if (theta != null ? !theta.equals(that.theta) : that.theta != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (theta != null ? theta.hashCode() : 0);
+        return result;
     }
 }
