@@ -124,27 +124,27 @@ public class Sample {
         maxUrange_ = 0.0;
         maxRange_ = 0.0;
         minimum_score_ = 0;
-        sigma_ = 0.005;
+        sigma_ = 0.05;
         kernelSize_ = 1;
         lstep_ = 0.05;
         astep_ = 0.05;
         iterations_ = 5;
-        lsigma_ = 0.075;
+        lsigma_ = 0.0005;
         ogain_ = 3.0;
         lskip_ = 0;
-        srr_ = 0.1;
-        srt_ = 0.2;
+        srr_ = 0.0;
+        srt_ = 0.0;
         str_ = 0.1;
         stt_ = 0.2;
         linearUpdate_ = 1.0;
         angularUpdate_ = 0.5;
-        temporalUpdate_ = 1;
+        temporalUpdate_ = 3.0;
         resampleThreshold_ = 0.5;
-        particles_ = 30;
-        xmin_ = -100.0;
-        ymin_ = -100.0;
-        xmax_ = 100.0;
-        ymax_ = 100.0;
+        particles_ = 400;
+        xmin_ = -20.0;
+        ymin_ = -20.0;
+        xmax_ = 20.0;
+        ymax_ = 20.0;
         delta_ = 0.05;
         occ_thresh_ = 0.25;
         llsamplerange_ = 0.01;
@@ -223,6 +223,7 @@ public class Sample {
     }
 
     public void laserCallback(LaserScan scan, OrientedPoint<Double> pose) {
+        System.out.println("Start");
         long t0 =  System.currentTimeMillis();
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
@@ -258,7 +259,7 @@ public class Sample {
                 updateMap(scan);
             }
         }
-        System.out.println("Time: " + (System.currentTimeMillis() - t0) / 1000);
+        System.out.println("Time: " + (System.currentTimeMillis() - t0) );
     }
 
     public boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {

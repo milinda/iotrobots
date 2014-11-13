@@ -78,7 +78,7 @@ public class MapUI extends JFrame {
                     }
                 }
             }
-            System.out.println("One scan completed: " + count);
+            // System.out.println("One scan completed: " + count);
 
 
 //            BufferedImage r = scale(image, BufferedImage.TYPE_INT_ARGB, w, h, map.width, map.height);

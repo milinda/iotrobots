@@ -39,6 +39,10 @@ public class MotionModel {
         OrientedPoint<Double> noisypoint = new OrientedPoint<Double>(delta);
         noisypoint.x += Stat.sampleGaussian(srr * Math.abs(delta.x) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.y), 0);
         noisypoint.y += Stat.sampleGaussian(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), 0);
+
+//        noisypoint.x += Stat.sampleGaussian(srr * Math.abs(delta.x) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.y), 0);
+//        noisypoint.y += Stat.sampleGaussian(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), 0);
+
         noisypoint.theta += Stat.sampleGaussian(stt * Math.abs(delta.theta) + srt * Math.sqrt(delta.x * delta.x + delta.y * delta.y), 0);
         noisypoint.theta = noisypoint.theta % (2 * Math.PI);
         if (noisypoint.theta > Math.PI)

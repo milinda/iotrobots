@@ -48,7 +48,7 @@ public class Example1 {
             scanI.angle_min = 0;
             scanI.ranges = new ArrayList<Double>();
             for (int i = 0; i < SENSORS; i++) {
-                scanI.ranges.add(10.0);
+                scanI.ranges.add(100.0);
             }
             scanI.range_min = 0;
             scanI.range_max = 100;
@@ -61,7 +61,7 @@ public class Example1 {
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
-            System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
+            // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
             LaserScan laserScan = getLaserScan();
             sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, point3D.z, 0.0));
             // progress at 0.5 m/s
@@ -73,11 +73,9 @@ public class Example1 {
             mapUI.setMap(sample.map_);
 
             // print front sonar every 100 frames
-            if (getCounter() % 100 == 0)
-                System.out
-                        .println("Sonar num 0  = " + sonars.getMeasurement(0));
-                sample.printMap(sample.map_);
-
+//            if (getCounter() % 100 == 0)
+//                System.out
+//                        .println("Sonar num 0  = " + sonars.getMeasurement(0));
         }
 
         LaserScan getLaserScan() {

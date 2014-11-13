@@ -227,13 +227,17 @@ public class ScanMatcher {
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.points.size() - 1; i++) {
                     Point<Integer> patch = map.getStorage().patchIndexes(linePoints.get(i));
-                    activeArea.add(patch);
+                    if (map.isInside(patch)) {
+                        activeArea.add(patch);
+                    }
 //                    System.out.println(patch.x + ", " + patch.y);
                 }
                 if (d <= m_usableRange) {
                     Point<Integer> patch = map.getStorage().patchIndexes(p1);
 //                    System.out.println(patch.x + ", " + patch.y);
-                    activeArea.add(patch);
+                    if (map.isInside(patch)) {
+                        activeArea.add(patch);
+                    }
                     //activeArea.insert(map.storage().patchIndexes(p2));
                 }
             } else {
@@ -249,7 +253,9 @@ public class ScanMatcher {
                 assert (p1.x >= 0 && p1.y >= 0);
                 Point<Integer> cp = map.getStorage().patchIndexes(p1);
                 assert (cp.x >= 0 && cp.y >= 0);
-                activeArea.add(cp);
+                if (map.isInside(cp)) {
+                    activeArea.add(cp);
+                }
 //                System.out.println(cp.x + ", " + cp.y);
 
             }
