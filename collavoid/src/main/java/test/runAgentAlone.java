@@ -18,9 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/**
- * Created by hjh on 11/9/14.
- */
+
 public class runAgentAlone {
 
     public static TransformListener tf;
@@ -34,19 +32,13 @@ public class runAgentAlone {
 
         try {
             InetAddress ia = InetAddress.getLocalHost();
-            hostname = ia.getHostName();//获取计算机主机名
-            IP = ia.getHostAddress();//获取计算机IP
+            hostname = ia.getHostName();
+            IP = ia.getHostAddress();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
         hostname=StringFilter(hostname);//replace all non-alphabet and non-number character into _
-
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
 
         NodeConfiguration configuration = NodeConfiguration.newPublic(IP.toString(),
                 URI.create("http://localhost:11311"));
@@ -70,9 +62,7 @@ public class runAgentAlone {
     }
 
     public   static   String StringFilter(String   str)   throws PatternSyntaxException {
-        // 只允许字母和数字
-        // String   regEx  =  "[^a-zA-Z0-9]";
-        // 清除掉所有特殊字符
+        //clear special characters
         String regEx="[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？-]";
         Pattern p   =   Pattern.compile(regEx);
         Matcher m   =   p.matcher(str);

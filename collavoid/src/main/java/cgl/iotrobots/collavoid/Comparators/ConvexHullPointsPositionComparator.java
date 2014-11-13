@@ -5,9 +5,7 @@ import cgl.iotrobots.collavoid.utils.Vector2;
 
 import java.util.Comparator;
 
-/**
- * Created by hjh on 11/12/14.
- */
+
 public class ConvexHullPointsPositionComparator implements Comparator<ConvexHullPoint>{
     public int compare(ConvexHullPoint chp1,ConvexHullPoint chp2){
         if(Vector2.absSqr(chp1.getPoint())<=Vector2.absSqr(chp2.getPoint()))

@@ -5,9 +5,6 @@ import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
 
-/**
- * Created by hjh on 11/10/14.
- */
 public class setParameters extends AbstractNodeMain {
     @Override
     public void onStart(ConnectedNode connectedNode) {
