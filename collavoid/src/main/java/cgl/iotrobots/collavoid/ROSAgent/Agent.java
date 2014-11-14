@@ -394,6 +394,7 @@ public class Agent extends AbstractNodeMain {
 
         //need visualization tools
         position_share_pub_ = node.newPublisher("/position_share_out", pose_twist_covariance_msgs._TYPE);
+        //convex hull foot print taking localization uncertainty into account
         polygon_pub_ = node.newPublisher("convex_hull", PolygonStamped._TYPE);
 
         //Subscribers
@@ -882,7 +883,7 @@ public class Agent extends AbstractNodeMain {
                 double vstar;
 
                 if (Math.abs(dif_ang) > EPSILON.EPSILON)
-                vstar = calcVstar(vel, dif_ang);
+                vstar = calcVstar(vel, dif_ang);//get nonholomonic velocity
                 else
                 vstar = max_vel_x_;
 
