@@ -132,15 +132,15 @@ public class Sample {
         lsigma_ = 0.0005;
         ogain_ = 3.0;
         lskip_ = 0;
-        srr_ = 0.0;
-        srt_ = 0.0;
+        srr_ = 0.1;
+        srt_ = 0.2;
         str_ = 0.1;
         stt_ = 0.2;
         linearUpdate_ = 1.0;
         angularUpdate_ = 0.5;
         temporalUpdate_ = 3.0;
         resampleThreshold_ = 0.5;
-        particles_ = 400;
+        particles_ = 200;
         xmin_ = -20.0;
         ymin_ = -20.0;
         xmax_ = 20.0;
@@ -223,7 +223,6 @@ public class Sample {
     }
 
     public void laserCallback(LaserScan scan, OrientedPoint<Double> pose) {
-        System.out.println("Start");
         long t0 =  System.currentTimeMillis();
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
@@ -244,6 +243,7 @@ public class Sample {
             odom_pose = pose;
         }
         if (addScan(scan, odom_pose)) {
+            System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
             OrientedPoint<Double> mpose = gsp_.getParticles().get(gsp_.getBestParticleIndex()).pose;
@@ -251,6 +251,7 @@ public class Sample {
             LOG.debug("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
             LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
 
+            long t1 = System.currentTimeMillis();
             if (!got_map_ || (scan.timestamp - last_map_update) > map_update_interval_) {
                 updateMap(scan);
                 last_map_update = scan.timestamp;
@@ -258,8 +259,9 @@ public class Sample {
             } else {
                 updateMap(scan);
             }
+            System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
-        System.out.println("Time: " + (System.currentTimeMillis() - t0) );
+        System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0) );
     }
 
     public boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {
@@ -351,6 +353,7 @@ public class Sample {
 
         LOG.debug("Trajectory tree:");
         for (TNode n = best.node; n != null; n = n.parent) {
+//            System.out.print("Tree: " + n.pose.x + "," + n.pose.y + "," + n.pose.theta);
             LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
             if (n.reading == null) {
                 LOG.debug("Reading is NULL");
@@ -364,6 +367,7 @@ public class Sample {
             matcher.computeActiveArea(smap, n.pose, readingArray);
             matcher.registerScan(smap, n.pose, readingArray);
         }
+//        System.out.println();
 
         // the map may have expanded, so resize ros message as well
         if (map_.width != smap.getMapSizeX() || map_.height != smap.getMapSizeY()) {

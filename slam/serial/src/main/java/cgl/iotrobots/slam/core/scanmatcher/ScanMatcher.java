@@ -179,20 +179,20 @@ public class ScanMatcher {
             double r = readings[readingIndex];
             double angle = m_laserAngles[angleIndex];
 
-            if (r>m_laserMaxRange||r==0.0 || r > Double.MAX_VALUE) continue;
-            double d= r > m_usableRange ? m_usableRange : r;
-            Point<Double> phit= new Point<Double>(lp.x, lp.y);
-            phit.x+=d*Math.cos(lp.theta+angle);
-            phit.y+=d*Math.sin(lp.theta+angle);
-            if (phit.x<min.x) min.x=phit.x;
-            if (phit.y<min.y) min.y=phit.y;
-            if (phit.x>max.x) max.x=phit.x;
-            if (phit.y>max.y) max.y=phit.y;
+            if (r > m_laserMaxRange || r == 0.0 || r > Double.MAX_VALUE) continue;
+            double d = r > m_usableRange ? m_usableRange : r;
+            Point<Double> phit = new Point<Double>(lp.x, lp.y);
+            phit.x += d * Math.cos(lp.theta + angle);
+            phit.y += d * Math.sin(lp.theta + angle);
+            if (phit.x < min.x) min.x = phit.x;
+            if (phit.y < min.y) min.y = phit.y;
+            if (phit.x > max.x) max.x = phit.x;
+            if (phit.y > max.y) max.y = phit.y;
         }
 
-        if ( !map.isInsideD(min)	|| !map.isInsideD(max)){
-            Point<Double> lmin = map.map2world(new Point<Integer>(0,0));
-            Point<Double> lmax = map.map2world(new Point<Integer>(map.getMapSizeX()-1, map.getMapSizeY()-1));
+        if (!map.isInsideD(min) || !map.isInsideD(max)) {
+            Point<Double> lmin = map.map2world(new Point<Integer>(0, 0));
+            Point<Double> lmax = map.map2world(new Point<Integer>(map.getMapSizeX() - 1, map.getMapSizeY() - 1));
             //cerr << "CURRENT MAP " << lmin.x << " " << lmin.y << " " << lmax.x << " " << lmax.y << endl;
             //cerr << "BOUNDARY OVERRIDE " << min.x << " " << min.y << " " << max.x << " " << max.y << endl;
             min.x = (min.x >= lmin.x) ? lmin.x : min.x - m_enlargeStep;
@@ -313,7 +313,6 @@ public class ScanMatcher {
 //                    count++;
 //                    System.out.println(count + " " + pa.doubleValue());
                 }
-
 
 
             } else {
@@ -514,15 +513,17 @@ public class ScanMatcher {
                     default:
                 }
 
-                double odo_gain=1;
-                if (m_angularOdometryReliability>0.){
-                    double dth=init.theta-localPose.theta; 	dth=Math.atan2(Math.sin(dth), Math.cos(dth)); 	dth*=dth;
-                    odo_gain*=Math.exp(-m_angularOdometryReliability * dth);
+                double odo_gain = 1;
+                if (m_angularOdometryReliability > 0.) {
+                    double dth = init.theta - localPose.theta;
+                    dth = Math.atan2(Math.sin(dth), Math.cos(dth));
+                    dth *= dth;
+                    odo_gain *= Math.exp(-m_angularOdometryReliability * dth);
                 }
-                if (m_linearOdometryReliability>0.){
-                    double dx=init.x-localPose.x;
-                    double dy=init.y-localPose.y;
-                    double drho=dx*dx+dy*dy;
+                if (m_linearOdometryReliability > 0.) {
+                    double dx = init.x - localPose.x;
+                    double dy = init.y - localPose.y;
+                    double drho = dx * dx + dy * dy;
                     odo_gain *= Math.exp(-m_linearOdometryReliability * drho);
                 }
 
@@ -804,7 +805,7 @@ public class ScanMatcher {
                     Point<Integer> pr = new Point<Integer>(iphit.x + xx, iphit.y + yy);
                     Point<Integer> pf = new Point<Integer>(pr.x + ipfree.x, pr.y + ipfree.y);
                     int ss = map.getStorage().cellState(pr);
-                    if ((ss) > 0){
+                    if ((ss) > 0) {
                         PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
                         PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
                         if (cell.doubleValue() > m_fullnessThreshold && fcell.doubleValue() < m_fullnessThreshold) {

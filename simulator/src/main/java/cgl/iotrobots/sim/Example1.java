@@ -52,6 +52,7 @@ public class Example1 {
             }
             scanI.range_min = 0;
             scanI.range_max = 100;
+            scanI.timestamp = System.currentTimeMillis();
 
             sample.initMapper(scanI);
         }
