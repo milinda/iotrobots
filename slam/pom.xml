@@ -12,5 +12,6 @@
     <artifactId>iotrobots-slam-parent</artifactId>
     <modules>
         <module>serial</module>
+        <module>streaming</module>
     </modules>
 </project>

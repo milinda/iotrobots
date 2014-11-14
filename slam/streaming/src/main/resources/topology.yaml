@@ -1,0 +1,18 @@
+zk.servers: ["localhost:2181"]
+zk.root: "/iot/sensors"
+spouts:
+    data_receive:
+        broker: "rabbitmq"
+        sensor: "data_sensor"
+        channel: "data_sender"
+        fields: ["body", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
+bolts:
+    data_send:
+        broker: "rabbitmq"
+        sensor: "data_sensor"
+        channel: "data_receiver"
+        fields: ["body", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
