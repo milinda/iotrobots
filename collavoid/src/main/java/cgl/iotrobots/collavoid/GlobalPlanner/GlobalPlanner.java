@@ -26,13 +26,14 @@ public class GlobalPlanner {
     void initialize(String name, VoxelGrid costmap_ros){
     }
 
-    boolean makePlan(ConnectedNode node,final PoseStamped start,final PoseStamped goal, List<PoseStamped> plan){
+    //public boolean makePlan(ConnectedNode node,final PoseStamped start,final PoseStamped goal, List<PoseStamped> plan){
+    public boolean makePlan(final PoseStamped start,final PoseStamped goal, List<PoseStamped> plan){
         //start and goal are supposed not to change
-        node.getLog().debug(String.format("Got a start: %1$.2f, %2$.2f, and a goal: %3$.2f, %4$.2f",
+      /*  node.getLog().debug(String.format("Got a start: %1$.2f, %2$.2f, and a goal: %3$.2f, %4$.2f",
                 start.getPose().getPosition().getX(),
                 start.getPose().getPosition().getY(),
                 goal.getPose().getPosition().getX(),
-                goal.getPose().getPosition().getY()));
+                goal.getPose().getPosition().getY()));*/
 
         plan.clear();
         plan.add(start);
@@ -44,7 +45,7 @@ public class GlobalPlanner {
         dir_y /= length;
         x = start.getPose().getPosition().getX() + 0.1 * dir_x;
         y = start.getPose().getPosition().getY() + 0.1 * dir_y;
-        node.getLog().debug(String.format("dir: %1$.2f, %2$.2f, cur: %3$.2f, %4$.2f", dir_x, dir_y, x, y));
+//        node.getLog().debug(String.format("dir: %1$.2f, %2$.2f, cur: %3$.2f, %4$.2f", dir_x, dir_y, x, y));
 
         while (Math.abs(x - goal.getPose().getPosition().getX()) > 0.2 || Math.abs(y - goal.getPose().getPosition().getY()) > 0.2) {
             PoseStamped point=messageFactory.newFromType(PoseStamped._TYPE);

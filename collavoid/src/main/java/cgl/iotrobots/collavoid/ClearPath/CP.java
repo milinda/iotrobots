@@ -32,7 +32,8 @@ public class CP {
         if (!isWithinAdditionalConstraints(additional_constraints, pref_vel)) {
             for(Iterator<Line> line=additional_constraints.iterator();line.hasNext();){
                 VelocitySample pref_vel_sample=new VelocitySample();
-                pref_vel_sample.setVelocity(intersectTwoLines(line.next().getPoint(), line.next().getDir(), pref_vel, new Vector2(line.next().getDir().getY(), -line.next().getDir().getY())));
+                // nearest point on vo line to pref vel
+                pref_vel_sample.setVelocity(intersectTwoLines(line.next().getPoint(), line.next().getDir(), pref_vel, new Vector2(line.next().getDir().getY(), -line.next().getDir().getX())));
                 pref_vel_sample.setDistToPrefVel(Vector2.absSqr(Vector2.minus(pref_vel, pref_vel_sample.getVelocity())));
                 samples.add(pref_vel_sample);
             }
@@ -48,6 +49,7 @@ public class CP {
         null_vel_sample.setDistToPrefVel(Vector2.absSqr(pref_vel));
         samples.add(null_vel_sample);
 
+        //intersection point of vo lines
         for(Iterator<Line> line=additional_constraints.iterator();line.hasNext();){
             for(Iterator<Line> line2=additional_constraints.iterator();line2.hasNext();){
                    addRayVelocitySamples(samples, pref_vel, line.next().getPoint(), line.next().getDir(),line2.next().getPoint(), line2.next().getDir(), max_speed, LINELINE);
@@ -79,7 +81,7 @@ public class CP {
             }
         }
 
-
+        //calculate all the possible intersection of vo lines and vo cone or truncation
         for (int i= 0 ; i<  truncated_vos.size(); i++){
             for (int j = 0; j< additional_constraints.size(); j++){
                 if(!use_truncation) {
@@ -131,7 +133,7 @@ public class CP {
 
 
         //    ROS_ERROR("projection list length  = %d", samples.size());
-
+        //sort according to the distance to vel pref
         Collections.sort(samples,new VelocitySamplesComparator());
 
         Vector2 new_vel=new Vector2();
@@ -161,6 +163,7 @@ public class CP {
             if (valid && outside){
                 return samples.get(i).getVelocity();
             }
+            //unless find one that satisfy both, otherwise return the one satisfy all truncated vos
             if (valid && !outside && !foundOutside) {
                 optimal = truncated_vos.size();
                 new_vel = samples.get(i).getVelocity();
@@ -170,7 +173,7 @@ public class CP {
         }
         //    ROS_INFO("selected j %d, of size %d", optimal, (int) truncated_vos.size());
 
-
+        //make sure to satisfy truncated vos
         return new_vel;
     }
 
@@ -211,7 +214,7 @@ public class CP {
             return;
         }
         if (det != 0){
-            r = (((y1 - y3) * (x4 - x3)) - (x1 - x3) * (y4 - y3)) / det;
+            r = (((y1 - y3) * (x4 - x3)) - (x1 - x3) * (y4 - y3)) / det;//distance to point1????
             s = (((y1 - y3) * (x2 - x1)) - (x1 - x3) * (y2 - y1)) / det;
 
             if ( (TYPE == LINELINE) || (TYPE == RAYLINE && r>=0 )  || (TYPE == SEGMENTLINE && r>= 0 && r <= 1) || (TYPE == RAYRAY && r>= 0 && s >= 0) ||
@@ -255,31 +258,45 @@ public class CP {
     // Returns a list of points on the convex hull in counter-clockwise order.
     // Note: the last point in the returned list is the same as the first one.
     //Wikipedia Monotone chain...
-    private static List<ConvexHullPoint > convexHull(List<ConvexHullPoint > P, boolean sorted)
+    public static List<ConvexHullPoint > convexHull(List<ConvexHullPoint > P, boolean sorted)
     {
         int n = P.size(), k = 0;
-        List<ConvexHullPoint> result=new ArrayList<ConvexHullPoint>(2*n);
-
+        List<ConvexHullPoint > result=new ArrayList();
+        for (int i = 0; i <2*n ; i++) {
+            ConvexHullPoint p=new ConvexHullPoint();
+            p.setIndex(-1);
+            result.add(p);
+        }
         // Sort points lexicographically
         if (!sorted)
-        Collections.sort(P,new VectorsLexigraphicComparator());
-
+            Collections.sort(P, new VectorsLexigraphicComparator());
 
         //    ROS_WARN("points length %d", (int)P.size());
 
-        // Build lower hull
+        // Build lower hull,计算几何中的凸集问题
         for (int i = 0; i < n; i++) {
-            while (k >= 2 && cross(result.get(k-2), result.get(k-1), P.get(i)) <= 0) k--;
-            result.add(k++,P.get(i));
+
+            while (k >= 2 && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
+                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
+            result.set(k++,P.get(i));
         }
 
         // Build upper hull
         for (int i = n-2, t = k+1; i >= 0; i--) {
-            while (k >= t && cross(result.get(k-2), result.get(k-1), P.get(i)) <= 0) k--;
-            result.add(k++,P.get(i));
+            while (k >= t && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
+                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
+            result.set(k++, P.get(i));
         }
-        //result.resize(k);
 
+        //resize list
+        int i=0;
+        while(i<result.size()){
+            if(result.get(i).getIndex()<0){
+                result.remove(i);
+                continue;
+            }
+            i++;
+        }
         return result;
     }
 
@@ -363,6 +380,7 @@ public class CP {
 
     }
 
+    // intersection point of two lines
     static Vector2 intersectTwoLines(Vector2 point1, Vector2 dir1, Vector2 point2, Vector2 dir2) {
         double x1, x2, x3,x4, y1, y2,y3,y4;
         x1 = point1.getX();

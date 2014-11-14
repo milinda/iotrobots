@@ -83,7 +83,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
     String global_frame_; ///< @brief The frame in which the controller will run
     String robot_base_frame_; ///< @brief Used as the base frame id of the robot
-    List<PoseStamped> global_plan_, transformed_plan_;
+    public List<PoseStamped> global_plan_, transformed_plan_;
     Publisher g_plan_pub_, l_plan_pub_;
     Subscriber obstacles_sub_;
     String hostname;
@@ -104,6 +104,9 @@ public class LocalPlanner extends AbstractNodeMain{
         costmap_ros_ = costmap_ros;
         current_waypoint_ = 0;
         skip_next_ = false;
+
+        global_plan_=new ArrayList<PoseStamped>();
+        transformed_plan_=new ArrayList<PoseStamped>();
     }
 
     @Override
@@ -299,7 +302,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
 
     //implement interface for computeVelocityCommands
-    boolean computeVelocityCommands(Twist cmd_vel){
+    public boolean computeVelocityCommands(Twist cmd_vel){
         if(!initialized_){
             this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
             return false;
@@ -366,7 +369,7 @@ public class LocalPlanner extends AbstractNodeMain{
         global_pose.frame_id_ = robot_base_frame_;
         global_pose.stamp_ = ros::Time();
         tf_->transformPose(global_frame_, global_pose, global_pose);*/
-        PoseStamped global_pose=messageFactory.newFromType(PoseStamped._TYPE);
+        PoseStamped global_pose=messageFactory.newFromType(PoseStamped._TYPE);//???????
 
         //check to see if we've reached the goal position
         if (xy_tolerance_latch_ || (LPutils.getGoalPositionDistance(global_pose.getPose(), goal_x, goal_y) <= xy_goal_tolerance_)) {
@@ -375,7 +378,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
             //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
             //just rotate in place
-            if(latch_xy_goal_tolerance_)
+            if(latch_xy_goal_tolerance_)//test rotate in place??
                 xy_tolerance_latch_ = true;
 
             //check to see if the goal orientation has been reached
@@ -437,7 +440,7 @@ public class LocalPlanner extends AbstractNodeMain{
                 this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
                 return false;
             }
-            PoseStamped target_pose_msg=messageFactory.newFromType(PoseStamped._TYPE);
+            PoseStamped target_pose_msg=messageFactory.newFromType(PoseStamped._TYPE);// what's this parameter for?
             findBestWaypoint(target_pose_msg, global_pose);
         }
         //TODO
@@ -463,10 +466,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
         Vector2 pref_vel = new Vector2(goal_dir.getX(),goal_dir.getY());
 
-        //TODO collvoid added
-
-        me.computeNewVelocity(pref_vel, cmd_vel);
-
+        me.computeNewVelocity(pref_vel, cmd_vel);//may need synchronize
 
         if(Math.abs(cmd_vel.getAngular().getZ())<me.min_vel_th_)
             angular.setZ(0.0);
@@ -500,6 +500,7 @@ public class LocalPlanner extends AbstractNodeMain{
                 skip_next_= true;
             }
             else {
+                //reached goal
                 transformed_plan_.clear();
                 LPutils.publishPlan(transformed_plan_, g_plan_pub_);
                 LPutils.publishPlan(transformed_plan_, l_plan_pub_);
@@ -517,13 +518,13 @@ public class LocalPlanner extends AbstractNodeMain{
 
         //TODO
         //tf::poseStampedTFToMsg(global_pose,pos);
-        pos.setPose(global_pose.getPose());
+        pos.setPose(global_pose.getPose());//global pose is in base frame???
         pos.setHeader(global_pose.getHeader());
         local_plan.add(pos);
         local_plan.add(transformed_plan_.get(current_waypoint_));
         LPutils.publishPlan(transformed_plan_, g_plan_pub_);
         LPutils.publishPlan(local_plan, l_plan_pub_);
-        //me_->publishOrcaLines();
+
         return true;
     }
 
@@ -584,10 +585,10 @@ public class LocalPlanner extends AbstractNodeMain{
         v_th_samp = sign(v_th_samp) * Math.min(Math.max(Math.abs(v_th_samp), min_acc_vel), max_acc_vel);
 
         //we also want to make sure to send a velocity that allows us to stop when we reach the goal given our acceleration limits
-        double max_speed_to_stop = Math.sqrt(2 * me.acc_lim_th_ * Math.abs(ang_diff));
+        double max_speed_to_stop = Math.sqrt(2 * me.acc_lim_th_ * Math.abs(ang_diff));//how to get this???
 
         v_th_samp = sign(v_th_samp) * Math.min(max_speed_to_stop, Math.abs(v_th_samp));
-        if (Math.abs(v_th_samp) <= 0.0 * me.min_vel_th_inplace_)
+        if (Math.abs(v_th_samp) <= 0.0 * me.min_vel_th_inplace_)//???????????
             v_th_samp  = 0.0;
         else if (Math.abs(v_th_samp) < me.min_vel_th_inplace_)
             v_th_samp = sign(v_th_samp) * Math.max(me.min_vel_th_inplace_,Math.abs(v_th_samp));
@@ -609,7 +610,7 @@ public class LocalPlanner extends AbstractNodeMain{
     boolean transformGlobalPlan(final TransformListener tf,final List<PoseStamped> global_plan,final VoxelGrid costmap,final String global_frame,
             List<PoseStamped> transformed_plan){
 
-        final PoseStamped plan_pose = messageFactory.newFromType(PolygonStamped._TYPE);
+        final PoseStamped plan_pose = messageFactory.newFromType(PoseStamped._TYPE);
 
         plan_pose.setPose(global_plan.get(0).getPose());
         plan_pose.setHeader(global_plan.get(0).getHeader());
@@ -715,6 +716,7 @@ public class LocalPlanner extends AbstractNodeMain{
             if (dist < me.radius || dist < min_dist) {
                 min_dist = dist;
                 target_pose.setHeader(transformed_plan_.get(i).getHeader());
+                target_pose.setPose(transformed_plan_.get(i).getPose());
                 current_waypoint_ = i;
 
             }

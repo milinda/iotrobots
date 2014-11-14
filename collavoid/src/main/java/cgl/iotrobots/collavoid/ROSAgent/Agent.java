@@ -9,6 +9,8 @@ import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.msgmanager.msgPublisher;
 import cgl.iotrobots.collavoid.utils.*;
 
+import static cgl.iotrobots.collavoid.ClearPath.CP.convexHull;
+import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSum;
 import static cgl.iotrobots.collavoid.NHORCA.NHORCA.calcVstar;
 import static cgl.iotrobots.collavoid.utils.utils.*;
 
@@ -176,6 +178,21 @@ public class Agent extends AbstractNodeMain {
     public void onStart(ConnectedNode connectedNode) {
         this.node=connectedNode;
         this.params = node.getParameterTree();
+
+        //waiting for time
+        while (true) {
+            try {
+                node.getCurrentTime();
+                break; // no exception, so let's stop waiting
+            } catch (NullPointerException e) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e1) {
+                }
+            }
+        }
+
+        lastTimeMePublished = new Time();
         agentInit();
     }
 
@@ -191,7 +208,11 @@ public class Agent extends AbstractNodeMain {
         this.cur_loc_unc_radius_ = 0;
         this.min_dist_obst_ = Double.MAX_VALUE;
 
+        this.holo_velocity_=new Vector2();
+
         this.footprint_msg_=messageFactory.newFromType(PolygonStamped._TYPE);
+        this.base_odom_=messageFactory.newFromType(Odometry._TYPE);
+
         this.minkowski_footprint_=new ArrayList<Vector2>();
         this.footPrintLines=new ArrayList<LinePair>();
         this.obstacle_points_=new ArrayList<Vector2>();
@@ -421,12 +442,12 @@ public class Agent extends AbstractNodeMain {
 //        laser_notifier->registerCallback(boost::bind(&ROSAgent::baseScanCallback, this, _1));
 //        laser_notifier->setTolerance(ros::Duration(0.1));
 
-        logger.info("New Agent as me initialized");
+        logger.info("************************Pub and sub initialized");
 
     }
 
     void amclPoseArrayWeightedCallback(final PoseArray msg){
-         this.convex_lock_.lock();
+        this.convex_lock_.lock();
         try {
             pose_array_weighted_.clear();
             PoseStamped in=messageFactory.newFromType(PoseStamped._TYPE);
@@ -556,69 +577,6 @@ public class Agent extends AbstractNodeMain {
 
     }
 
-    // Returns a list of points on the convex hull in counter-clockwise order.
-    // Note: the last point in the returned list is the same as the first one.
-    //Wikipedia Monotone chain...
-    List<ConvexHullPoint > convexHull(List<ConvexHullPoint > P, boolean sorted)
-    {
-        int n = P.size(), k = 0;
-        List<ConvexHullPoint > result=new ArrayList();
-        for (int i = 0; i <2*n ; i++) {
-            ConvexHullPoint p=new ConvexHullPoint();
-            p.setIndex(-1);
-            result.add(p);
-        }
-        // Sort points lexicographically
-        if (!sorted)
-            Collections.sort(P, new VectorsLexigraphicComparator());
-
-        //    ROS_WARN("points length %d", (int)P.size());
-
-        // Build lower hull,计算几何中的凸集问题
-        for (int i = 0; i < n; i++) {
-
-            while (k >= 2 && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
-                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
-            result.set(k++,P.get(i));
-        }
-
-        // Build upper hull
-        for (int i = n-2, t = k+1; i > 0; i--) {
-            while (k >= t && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
-                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
-            result.set(k++, P.get(i));
-        }
-
-        //resize list
-        int i=0;
-        while(i<result.size()){
-            if(result.get(i).getIndex()<0){
-                result.remove(i);
-                continue;
-            }
-            i++;
-        }
-        return result;
-    }
-
-    List<Vector2> minkowskiSum(final List<Vector2> polygon1, final List<Vector2> polygon2){
-        List<Vector2> result=new ArrayList<Vector2>();
-        List<ConvexHullPoint> convex_hull=new ArrayList<ConvexHullPoint>();
-
-        for (int i = 0; i < polygon1.size(); i++) {
-            for (int j = 0; j <  polygon2.size(); j++) {
-                ConvexHullPoint p=new ConvexHullPoint();
-                p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
-                convex_hull.add(p);
-            }
-        }
-
-        convex_hull = convexHull(convex_hull,false);
-        for (int i = 0; i<convex_hull.size(); i++) {
-            result.add(convex_hull.get(i).getPoint());
-        }
-        return result;
-    }
 
     PolygonStamped createFootprintMsgFromVector2(final List<Vector2> footprint) {
         PolygonStamped result=messageFactory.newFromType(PolygonStamped._TYPE);
@@ -708,7 +666,7 @@ public class Agent extends AbstractNodeMain {
 
             last_seen_ = msg.getHeader().getStamp();
             //tf::Stamped < tf::Pose > global_pose;  use PoseStamped instead
-            PoseStamped global_pose=messageFactory.newFromType(PolygonStamped._TYPE);
+            PoseStamped global_pose=messageFactory.newFromType(PoseStamped._TYPE);
             //let's get the pose of the robot in the frame of the plan
             /*global_pose.setIdentity();
             global_pose.frame_id_ = base_frame_;
@@ -873,7 +831,7 @@ public class Agent extends AbstractNodeMain {
         me_lock_.lock();
         try {
             //Forward project agents,update me status like position and so on
-            setAgentParams(this);
+            upDateAgentState(this);
             updateAllNeighbors();
 
             newVelocity = new Vector2(0.0, 0.0);
@@ -945,7 +903,7 @@ public class Agent extends AbstractNodeMain {
                 }
                 //ROS_ERROR("vstar = %.3f", vstar);
             } else {
-                Vector2 rotated_vel = Vector2.rotateVectorByAngle(newVelocity, -position.getHeading());
+                Vector2 rotated_vel = Vector2.rotateVectorByAngle(newVelocity, -position.getHeading());//???????????????????????
 
                 linear.setX(rotated_vel.getX());
                 linear.setY(rotated_vel.getY());
@@ -961,12 +919,12 @@ public class Agent extends AbstractNodeMain {
     }
 
     //update status of the agent according to its velocity
-    void setAgentParams(Agent agt) {
+    void upDateAgentState(Agent agt) {
         double time_dif = agt.node.getCurrentTime().toSeconds() - agt.last_seen_.toSeconds();
         double yaw, x_dif, y_dif, th_dif, x, y, theta;
         Vector2 pt = new Vector2(0.0, 0.0);
 
-
+        //update position
         yaw = LPutils.getYaw(agt.base_odom_.getPose().getPose().getOrientation());
         th_dif = time_dif * agt.base_odom_.getTwist().getTwist().getAngular().getZ();
         if (agt.holo_robot_) {
@@ -983,9 +941,9 @@ public class Agent extends AbstractNodeMain {
 
 
         agt.timeStep = time_dif;
+        agt.footPrint = rotateFootprint(agt.minkowski_footprint_, agt.position.getHeading());//???????????????????????????????????may be th_dif
 
-        agt.footPrint = rotateFootprint(agt.minkowski_footprint_, agt.position.getHeading());
-
+        //update velocity
         if (agt.holo_robot_) {
             x = agt.base_odom_.getPose().getPose().getPosition().getX() + x_dif;
             y = agt.base_odom_.getPose().getPose().getPosition().getY() + y_dif;
@@ -1014,7 +972,7 @@ public class Agent extends AbstractNodeMain {
         neighbors_lock_.lock();
         try {
             for (int i = 0; i < agentNeighbors.size(); i++) {
-                setAgentParams(agentNeighbors.get(i));
+                upDateAgentState(agentNeighbors.get(i));
             }
             NeighborDistComparator comp = new NeighborDistComparator(this);
             agentNeighbors.sort(comp.getComparator());
@@ -1080,7 +1038,7 @@ public class Agent extends AbstractNodeMain {
             int i = 0;
             Vector<Integer> delete_list = new Vector<Integer>();
             for (Iterator<obstacle> obst = obstacles_from_laser_.iterator(); obst.hasNext(); ) {
-                if (!obst.next().getBegin().eq(obst.next().getEnd())) {
+                if (!obst.next().getBegin().eq(obst.next().getEnd())) {//need to implement eq
                     double dist = distSqPointLineSegment(obst.next().getBegin(), obst.next().getEnd(), position.getPos());
                     if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
                         if (use_obstacles_) {
@@ -1150,7 +1108,7 @@ public class Agent extends AbstractNodeMain {
             Vector<Vector2> obst=new Vector<Vector2>();
             obst.add(Vector2.minus(obst1, position_obst));
             obst.add(Vector2.minus(obst2,position_obst));
-            List<Vector2> mink_sum = CP.minkowskiSum(own_footprint, obst);
+            List<Vector2> mink_sum = minkowskiSum(own_footprint, obst);
 
             Vector2 min=new Vector2();
             Vector2 max=new Vector2();
@@ -1267,7 +1225,7 @@ public class Agent extends AbstractNodeMain {
                     new_agent_vo = CP.createVO(position.getPos(), radius, velocity, agent.next().position.getPos(), agent.next().radius, agent.next().velocity, CP.VOS);
                 }
             }
-            //truncate
+            //truncate not collide in certain amount of time
             if (useTruancation) {
                 new_agent_vo = CP.createTruncVO(new_agent_vo, truncTime);
             }
