@@ -165,7 +165,7 @@ public class GridSlamProcessor {
 
         m_particles.clear();
 
-        TNode node = new TNode(initialPose, 0, null, 0);
+
 
         for (int i = 0; i < size; i++) {
             int lastIndex = m_particles.size() - 1;
@@ -180,6 +180,7 @@ public class GridSlamProcessor {
             // this is not needed
             //		m_particles.back().node=new TNode(initialPose, 0, node, 0);
             // we use the root directly
+            TNode node = new TNode(initialPose, 0, null, 0);
             p.node = node;
         }
 

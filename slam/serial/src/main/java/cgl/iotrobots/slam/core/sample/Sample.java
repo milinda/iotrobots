@@ -140,7 +140,7 @@ public class Sample {
         angularUpdate_ = 0.5;
         temporalUpdate_ = 3.0;
         resampleThreshold_ = 0.5;
-        particles_ = 200;
+        particles_ = 30;
         xmin_ = -20.0;
         ymin_ = -20.0;
         xmax_ = 20.0;

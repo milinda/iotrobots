@@ -12,7 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
-    public static final int SENSORS = 360;
+    public static final int SENSORS = 720;
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
@@ -100,7 +100,7 @@ public class Example1 {
 //                }
 //                laserScan.ranges.add(val);
 //            }
-            int angle = 90;
+            int angle = 180;
             for (int i = angle; i < n + angle; i++) {
                 if (sonars.hasHit(i % n)) {
                     // System.out.println(sonars.getMeasurement(i));
@@ -134,11 +134,11 @@ public class Example1 {
             add(w4);
             Box b1 = new Box(new Vector3d(-3, 0, -3), new Vector3f(1, 1, 1),
                     this);
-            add(b1);
+//            add(b1);
 
             Box b2 = new Box(new Vector3d(3, 0, 3), new Vector3f(1, 1, 1),
                     this);
-            add(b2);
+//            add(b2);
 
             Box b3 = new Box(new Vector3d(6, 0, 6), new Vector3f(1, 1, 1),
                     this);
