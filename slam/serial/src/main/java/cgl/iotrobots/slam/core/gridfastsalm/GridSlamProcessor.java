@@ -166,9 +166,10 @@ public class GridSlamProcessor {
         m_particles.clear();
 
         TNode node = new TNode(initialPose, 0, null, 0);
-        GMap lmap = new GMap(new Point<Double>((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+
         for (int i = 0; i < size; i++) {
             int lastIndex = m_particles.size() - 1;
+            GMap lmap = new GMap(new Point<Double>((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
             Particle p = new Particle(lmap);
 
             p.pose = new OrientedPoint<Double>(initialPose);
@@ -420,7 +421,7 @@ public class GridSlamProcessor {
             m_particles.clear();
             LOG.debug("Done");
             LOG.debug("Copying Particles and  Registering  scans...");
-            for (Particle it : m_particles) {
+            for (Particle it : temp) {
                 it.setWeight(0);
                 m_matcher.invalidateActiveArea();
                 m_matcher.registerScan(it.map, it.pose, plainReading);

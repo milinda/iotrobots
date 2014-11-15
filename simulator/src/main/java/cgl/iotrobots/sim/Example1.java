@@ -12,7 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
-    public static final int SENSORS = 512;
+    public static final int SENSORS = 360;
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
@@ -64,7 +64,7 @@ public class Example1 {
 
             // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
             LaserScan laserScan = getLaserScan();
-            sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, point3D.z, 0.0));
+            sample.laserCallback(laserScan, new OrientedPoint<Double>(-point3D.x, point3D.z, 0.0));
             // progress at 0.5 m/s
             setTranslationalVelocity(1);
             // frequently change orientation
@@ -100,10 +100,11 @@ public class Example1 {
 //                }
 //                laserScan.ranges.add(val);
 //            }
-            for (int i = 0; i < n; i++) {
-                if (sonars.hasHit(i)) {
+            int angle = 90;
+            for (int i = angle; i < n + angle; i++) {
+                if (sonars.hasHit(i % n)) {
                     // System.out.println(sonars.getMeasurement(i));
-                    laserScan.ranges.add(sonars.getMeasurement(i));
+                    laserScan.ranges.add(sonars.getMeasurement(i % n));
                 } else {
                     laserScan.ranges.add(0.0);
                 }
@@ -141,11 +142,11 @@ public class Example1 {
 
             Box b3 = new Box(new Vector3d(6, 0, 6), new Vector3f(1, 1, 1),
                     this);
-            add(b3);
+//            add(b3);
 
             Box b4 = new Box(new Vector3d(-6, 0, -6), new Vector3f(1, 1, 1),
                     this);
-            add(b4);
+//            add(b4);
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));

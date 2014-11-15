@@ -94,7 +94,7 @@ public class MapUI extends JFrame {
     }
 
     public static void colorArea(BufferedImage image, int x, int y, int w, int h) {
-        int size = 4;
+        int size = 1;
 //        System.out.println("x, y" + x + ", " + y);
         for (int i = -size; i < size; i++) {
             for (int j = -size; j < size; j++) {
