@@ -136,7 +136,7 @@ public class Sample {
         srt_ = 0.2;
         str_ = 0.1;
         stt_ = 0.2;
-        linearUpdate_ = 1.0;
+        linearUpdate_ = .5;
         angularUpdate_ = 0.5;
         temporalUpdate_ = 3.0;
         resampleThreshold_ = 0.5;

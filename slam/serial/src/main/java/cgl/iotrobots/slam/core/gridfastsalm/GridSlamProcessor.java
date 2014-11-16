@@ -1,6 +1,7 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
@@ -391,7 +392,8 @@ public class GridSlamProcessor {
                 }
                 if (j == m_indexes.get(i))
                     j++;
-                Particle p = m_particles.get(m_indexes.get(i));
+                Particle p = new Particle(m_particles.get(m_indexes.get(i)));
+
                 TNode node = null;
                 TNode oldNode = oldGeneration.get(m_indexes.get(i));
                 //			cerr << i << "->" << m_indexes[i] << "B("<<oldNode->childs <<") ";

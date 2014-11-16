@@ -4,11 +4,11 @@ import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.Point;
 
 public class GMap {
-    Point<Double> m_center;
+    public Point<Double> m_center;
     double m_worldSizeX, m_worldSizeY, m_delta;
-    HierarchicalArray2D m_storage;
-    int m_mapSizeX, m_mapSizeY;
-    int m_sizeX2, m_sizeY2;
+    public HierarchicalArray2D m_storage;
+    public int m_mapSizeX, m_mapSizeY;
+    public int m_sizeX2, m_sizeY2;
     public static final int DEFAULT_PATCH = 5;
 
     public GMap(int mapSizeX, int mapSizeY, double delta) {

@@ -66,7 +66,7 @@ public class Example1 {
             LaserScan laserScan = getLaserScan();
             sample.laserCallback(laserScan, new OrientedPoint<Double>(-point3D.x, point3D.z, 0.0));
             // progress at 0.5 m/s
-            setTranslationalVelocity(1);
+            setTranslationalVelocity(.4);
             // frequently change orientation
 //            if ((getCounter() % 100) == 0)
 //                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));

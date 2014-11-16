@@ -20,22 +20,22 @@ public class ScanMatcher {
     int m_kernelSize;
     double m_optAngularDelta;
     double m_optLinearDelta;
-    int m_optRecursiveIterations;
+    int m_optRecursiveIterations = 3;
     int m_likelihoodSkip;
     double m_llsamplerange;
     double m_lasamplerange;
     double m_llsamplestep;
     double m_lasamplestep;
     boolean m_generateMap;
-    double m_enlargeStep;
+    double m_enlargeStep = 10;
     OrientedPoint<Double> m_laserPose;
-    double m_fullnessThreshold;
-    double m_angularOdometryReliability;
-    double m_linearOdometryReliability;
-    double m_freeCellRatio;
-    int m_initialBeamsSkip;
+    double m_fullnessThreshold = .1;
+    double m_angularOdometryReliability = 0;
+    double m_linearOdometryReliability = 0;
+    double m_freeCellRatio = Math.sqrt(2.0);
+    int m_initialBeamsSkip = 0;
 
-    boolean m_activeAreaComputed;
+    boolean m_activeAreaComputed = false;
 
     enum Move {Front, Back, Left, Right, TurnLeft, TurnRight, Done}
 
@@ -44,6 +44,8 @@ public class ScanMatcher {
      */
     int m_laserBeams;
     double m_laserAngles[] = new double[LASER_MAXBEAMS];
+
+    List<Point<Integer>> m_linePoints = new ArrayList<Point<Integer>>();
 
     public void setlaserMaxRange(double m_laserMaxRange) {
         this.m_laserMaxRange = m_laserMaxRange;
