@@ -13,6 +13,9 @@ import java.util.ArrayList;
 
 public class Example1 {
     public static final int SENSORS = 720;
+
+    public static final double ANGLE = 2 * Math.PI;
+
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
@@ -43,8 +46,8 @@ public class Example1 {
             // nothing particular in this case
             sample.init();
             LaserScan scanI = new LaserScan();
-            scanI.angle_increment = 2 * Math.PI / SENSORS;
-            scanI.angle_max = 2*Math.PI ;
+            scanI.angle_increment = -ANGLE / SENSORS;
+            scanI.angle_max = ANGLE ;
             scanI.angle_min = 0;
             scanI.ranges = new ArrayList<Double>();
             for (int i = 0; i < SENSORS; i++) {
@@ -64,9 +67,9 @@ public class Example1 {
 
             // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
             LaserScan laserScan = getLaserScan();
-            sample.laserCallback(laserScan, new OrientedPoint<Double>(-point3D.x, point3D.z, 0.0));
+            sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, 0.0, 0.0));
             // progress at 0.5 m/s
-            setTranslationalVelocity(.4);
+            setTranslationalVelocity(1);
             // frequently change orientation
 //            if ((getCounter() % 100) == 0)
 //                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
@@ -83,11 +86,11 @@ public class Example1 {
             int n = sonars.getNumSensors();
 
             LaserScan laserScan = new LaserScan();
-            laserScan.angle_max = Math.PI * 2;
+            laserScan.angle_max = ANGLE;
             laserScan.angle_min = 0;
             laserScan.range_max = 100;
             laserScan.range_min = 0;
-            laserScan.angle_increment = 2 * Math.PI / SENSORS;
+            laserScan.angle_increment = -ANGLE/ SENSORS;
 
 //            for (double angle = 0; angle < 2 * Math.PI / 2; angle += 2 * Math.PI / n) {
 //                int hits = sonars.getQuadrantHits(angle, angle + 2 * Math.PI / n);
@@ -100,7 +103,7 @@ public class Example1 {
 //                }
 //                laserScan.ranges.add(val);
 //            }
-            int angle = 180;
+            int angle = 0;
             for (int i = angle; i < n + angle; i++) {
                 if (sonars.hasHit(i % n)) {
                     // System.out.println(sonars.getMeasurement(i));
@@ -134,19 +137,19 @@ public class Example1 {
             add(w4);
             Box b1 = new Box(new Vector3d(-3, 0, -3), new Vector3f(1, 1, 1),
                     this);
-//            add(b1);
+            add(b1);
 
             Box b2 = new Box(new Vector3d(3, 0, 3), new Vector3f(1, 1, 1),
                     this);
-//            add(b2);
+            add(b2);
 
             Box b3 = new Box(new Vector3d(6, 0, 6), new Vector3f(1, 1, 1),
                     this);
-//            add(b3);
+            add(b3);
 
             Box b4 = new Box(new Vector3d(-6, 0, -6), new Vector3f(1, 1, 1),
                     this);
-//            add(b4);
+            add(b4);
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));

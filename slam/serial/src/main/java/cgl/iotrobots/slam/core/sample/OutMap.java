@@ -1,6 +1,10 @@
 package cgl.iotrobots.slam.core.sample;
 
+import cgl.iotrobots.slam.core.utils.Point;
+
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OutMap {
     public int width;
@@ -9,6 +13,8 @@ public class OutMap {
     public double resolution;
 
     public int data[];
+
+    public List<Point<Integer>> currentPos = new ArrayList<Point<Integer>>();
 
     public class Position {
         double x, y, z, w;

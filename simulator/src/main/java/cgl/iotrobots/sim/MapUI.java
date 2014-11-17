@@ -59,6 +59,12 @@ public class MapUI extends JFrame {
             }
             int count = 0;
 
+            for (cgl.iotrobots.slam.core.utils.Point<Integer> p : map.currentPos) {
+                colorArea(image, p.x, p.y, map.width, map.height, 6);
+            }
+
+            // map.currentPos.clear();
+
             for (int x = 0; x < map.width; x++) {
                 for (int y = 0; y < map.height; y++) {
                     int occ = map.data[Sample.MAP_IDX(map.width, x, y)];
@@ -90,6 +96,23 @@ public class MapUI extends JFrame {
 
             g.drawImage(image, 0, 0, null);
             repaint();
+        }
+    }
+
+    public static void colorArea(BufferedImage image, int x, int y, int w, int h, int size) {
+//        System.out.println("x, y" + x + ", " + y);
+        for (int i = -size; i < size; i++) {
+            for (int j = -size; j < size; j++) {
+                if (x + i < w && x + i > 0 && y + j < h && y + j > 0) {
+                    Random rand = new Random();
+                    float r = rand.nextFloat();
+                    float gg = rand.nextFloat();
+                    float b = rand.nextFloat();
+                    Color randomColor = new Color(r, gg, b);
+                    image.setRGB(x + i, y + j, Color.WHITE.getRGB());
+//                    image.setRGB(x + i, y + j, randomColor.getRGB());
+                }
+            }
         }
     }
 

@@ -11,7 +11,7 @@ public class ScanMatcher {
     private static Logger LOG = LoggerFactory.getLogger(ScanMatcher.class);
 
     public static final int LASER_MAXBEAMS = 2048;
-    public static final double nullLikelihood = -1.;
+    public static final double nullLikelihood = -.5;
 
     double m_laserMaxRange;
     double m_usableRange;
@@ -29,7 +29,7 @@ public class ScanMatcher {
     boolean m_generateMap;
     double m_enlargeStep = 10;
     OrientedPoint<Double> m_laserPose;
-    double m_fullnessThreshold = .1;
+    double m_fullnessThreshold = 0;
     double m_angularOdometryReliability = 0;
     double m_linearOdometryReliability = 0;
     double m_freeCellRatio = Math.sqrt(2.0);
@@ -700,7 +700,7 @@ public class ScanMatcher {
                 c++;
             }
             if (skip == 0) {
-                double f = (-1. / m_likelihoodSigma) * (Point.mulD(bestMu, bestMu));
+                double f = Math.exp(-1. / m_likelihoodSigma * (Point.mulD(bestMu, bestMu)));
                 l += (found) ? f : noHit;
             }
         }

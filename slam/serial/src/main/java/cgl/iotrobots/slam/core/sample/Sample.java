@@ -126,10 +126,10 @@ public class Sample {
         minimum_score_ = 0;
         sigma_ = 0.05;
         kernelSize_ = 1;
-        lstep_ = 0.05;
-        astep_ = 0.05;
+        lstep_ = 0.005;
+        astep_ = 0.005;
         iterations_ = 5;
-        lsigma_ = 0.0005;
+        lsigma_ = .05;
         ogain_ = 3.0;
         lskip_ = 0;
         srr_ = 0.1;
@@ -351,6 +351,8 @@ public class Sample {
         Point<Double> center = new Point<Double>((xmin_ + xmax_) / 2.0, (ymin_ + ymax_) / 2.0);
         GMap smap = new GMap(center, xmin_, ymin_, xmax_, ymax_, delta_);
 
+        map_.currentPos.clear();
+
         LOG.debug("Trajectory tree:");
         for (TNode n = best.node; n != null; n = n.parent) {
 //            System.out.print("Tree: " + n.pose.x + "," + n.pose.y + "," + n.pose.theta);
@@ -359,6 +361,11 @@ public class Sample {
                 LOG.debug("Reading is NULL");
                 continue;
             }
+
+            Point<Integer> p = best.map.world2map(n.pose);
+            System.out.format("(%d, %d, %f) ", p.x, p.y, n.pose.theta);
+            map_.currentPos.add(p);
+
             matcher.invalidateActiveArea();
             double []readingArray = new double[n.reading.size()];
             for (int i = 0 ;i < n.reading.size(); i++) {
@@ -367,7 +374,7 @@ public class Sample {
             matcher.computeActiveArea(smap, n.pose, readingArray);
             matcher.registerScan(smap, n.pose, readingArray);
         }
-//        System.out.println();
+        System.out.println();
 
         // the map may have expanded, so resize ros message as well
         if (map_.width != smap.getMapSizeX() || map_.height != smap.getMapSizeY()) {

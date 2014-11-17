@@ -12,6 +12,7 @@ import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
@@ -365,7 +366,7 @@ public class GridSlamProcessor {
 
         if (m_neff < m_resampleThreshold * m_particles.size()) {
             LOG.info("*************RESAMPLE***************");
-
+            System.out.println("Resample");
             UniformResampler resampler = new UniformResampler();
             m_indexes = resampler.resampleIndexes(m_weights, adaptSize);
 
@@ -599,7 +600,7 @@ public class GridSlamProcessor {
         double sumScore = 0;
         for (Particle it : m_particles) {
             OrientedPoint<Double> corrected = new OrientedPoint<Double>(0.0, 0.0, 0.0);
-            double score, l, s;
+            double score = 0, l, s;
             score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score > m_minimumScore) {
