@@ -58,9 +58,14 @@ public class MapUI extends JFrame {
                 }
             }
             int count = 0;
-
-            for (cgl.iotrobots.slam.core.utils.Point<Integer> p : map.currentPos) {
-                colorArea(image, p.x, p.y, map.width, map.height, 6);
+            try {
+                synchronized (map.currentPos) {
+                    for (cgl.iotrobots.slam.core.utils.Point<Integer> p : map.currentPos) {
+                        colorArea(image, p.x, p.y, map.width, map.height, 6);
+                    }
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
 
             // map.currentPos.clear();

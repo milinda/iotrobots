@@ -136,11 +136,11 @@ public class Sample {
         srt_ = 0.2;
         str_ = 0.1;
         stt_ = 0.2;
-        linearUpdate_ = .5;
-        angularUpdate_ = 0.5;
+        linearUpdate_ = .005;
+        angularUpdate_ = 0.005;
         temporalUpdate_ = 3.0;
         resampleThreshold_ = 0.5;
-        particles_ = 30;
+        particles_ = 5;
         xmin_ = -20.0;
         ymin_ = -20.0;
         xmax_ = 20.0;
@@ -354,25 +354,27 @@ public class Sample {
         map_.currentPos.clear();
 
         LOG.debug("Trajectory tree:");
-        for (TNode n = best.node; n != null; n = n.parent) {
+        synchronized (map_.currentPos) {
+            for (TNode n = best.node; n != null; n = n.parent) {
 //            System.out.print("Tree: " + n.pose.x + "," + n.pose.y + "," + n.pose.theta);
-            LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
-            if (n.reading == null) {
-                LOG.debug("Reading is NULL");
-                continue;
-            }
+                LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
+                if (n.reading == null) {
+                    LOG.debug("Reading is NULL");
+                    continue;
+                }
 
-            Point<Integer> p = best.map.world2map(n.pose);
-            System.out.format("(%d, %d, %f) ", p.x, p.y, n.pose.theta);
-            map_.currentPos.add(p);
+                Point<Integer> p = best.map.world2map(n.pose);
+                // System.out.format("(%d, %d, %f) ", p.x, p.y, n.pose.theta);
+                map_.currentPos.add(p);
 
-            matcher.invalidateActiveArea();
-            double []readingArray = new double[n.reading.size()];
-            for (int i = 0 ;i < n.reading.size(); i++) {
-                readingArray[i] = n.reading.get(i);
+                matcher.invalidateActiveArea();
+                double[] readingArray = new double[n.reading.size()];
+                for (int i = 0; i < n.reading.size(); i++) {
+                    readingArray[i] = n.reading.get(i);
+                }
+                matcher.computeActiveArea(smap, n.pose, readingArray);
+                matcher.registerScan(smap, n.pose, readingArray);
             }
-            matcher.computeActiveArea(smap, n.pose, readingArray);
-            matcher.registerScan(smap, n.pose, readingArray);
         }
         System.out.println();
 

@@ -60,6 +60,8 @@ public class Example1 {
             sample.initMapper(scanI);
         }
 
+        boolean forward = false;
+
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
@@ -69,7 +71,19 @@ public class Example1 {
             LaserScan laserScan = getLaserScan();
             sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, 0.0, 0.0));
             // progress at 0.5 m/s
-            setTranslationalVelocity(1);
+            if (getCounter() % 100 == 0) {
+                if (forward) {
+                    forward = false;
+                } else {
+                    forward = true;
+                }
+            }
+
+            if (forward) {
+                setTranslationalVelocity(1);
+            } else {
+                setTranslationalVelocity(-1);
+            }
             // frequently change orientation
 //            if ((getCounter() % 100) == 0)
 //                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));

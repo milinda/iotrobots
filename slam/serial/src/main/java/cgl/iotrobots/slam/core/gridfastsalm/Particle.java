@@ -30,6 +30,7 @@ public class Particle {
     public TNode node;
 
     public Particle(Particle p) {
+        map = p.map;
         map.m_storage = new HierarchicalArray2D(p.map.m_storage);
         pose = new OrientedPoint<Double>(p.pose);
         previousPose = new OrientedPoint<Double>(p.previousPose);

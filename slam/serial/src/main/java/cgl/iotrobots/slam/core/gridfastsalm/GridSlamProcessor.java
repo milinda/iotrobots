@@ -3,6 +3,7 @@ package cgl.iotrobots.slam.core.gridfastsalm;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
+import cgl.iotrobots.slam.core.scanmatcher.LikeliHood;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.OrientedPoint;
@@ -208,6 +209,7 @@ public class GridSlamProcessor {
 
         for (Particle p : m_particles) {
             p.pose = m_motionModel.drawFromMotion(p.pose, relPose, m_odoPose);
+            p.pose = relPose;
         }
 
         LOG.info("ODOM " + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta + " " + reading.getTime());
@@ -334,7 +336,7 @@ public class GridSlamProcessor {
     void normalize() {
         //normalize the log m_weights
         double gain = 1. / (m_obsSigmaGain * m_particles.size());
-        double lmax = Double.MAX_VALUE;
+        double lmax = -Double.MAX_VALUE;
         for (Particle it : m_particles) {
             lmax = it.weight > lmax ? it.weight : lmax;
         }
@@ -614,6 +616,8 @@ public class GridSlamProcessor {
             ScanMatcher.LikeliHoodAndScore score1 = m_matcher.likelihoodAndScore(it.map, it.pose, plainReading);
             l = score1.l;
             s = score1.s;
+//            LikeliHood likeliHood = m_matcher.likelihood(it.map, it.pose, plainReading);
+//            l = likeliHood.likeliHood;
 
             sumScore += score;
             it.weight += l;

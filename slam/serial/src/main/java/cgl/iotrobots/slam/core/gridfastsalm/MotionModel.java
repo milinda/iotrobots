@@ -33,6 +33,10 @@ public class MotionModel {
         return n;
     }
 
+    OrientedPoint<Double> drawFromMotionN(OrientedPoint<Double> p, OrientedPoint<Double> pnew, OrientedPoint<Double> pold) {
+        return pnew;
+    }
+
     OrientedPoint<Double> drawFromMotion(OrientedPoint<Double> p, OrientedPoint<Double> pnew, OrientedPoint<Double> pold) {
         double sxy = 0.3 * srr;
         OrientedPoint<Double> delta = absoluteDifference(pnew, pold);

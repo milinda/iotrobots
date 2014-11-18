@@ -29,7 +29,7 @@ public class ScanMatcher {
     boolean m_generateMap;
     double m_enlargeStep = 10;
     OrientedPoint<Double> m_laserPose;
-    double m_fullnessThreshold = 0;
+    double m_fullnessThreshold = 0.1;
     double m_angularOdometryReliability = 0;
     double m_linearOdometryReliability = 0;
     double m_freeCellRatio = Math.sqrt(2.0);
@@ -626,7 +626,7 @@ public class ScanMatcher {
         cov.yt /= lcum;
         cov.tt /= lcum;
 
-        return new LikeliHood(lmax, mean, cov, Math.log(lcum) + lmax);
+        return new LikeliHood(lmax, mean, cov, Math.log(lcum));
     }
 
     public class LikeliHoodAndScore {
@@ -700,7 +700,7 @@ public class ScanMatcher {
                 c++;
             }
             if (skip == 0) {
-                double f = Math.exp(-1. / m_likelihoodSigma * (Point.mulD(bestMu, bestMu)));
+                double f = (-1./m_likelihoodSigma) * (Point.mulD(bestMu, bestMu));
                 l += (found) ? f : noHit;
             }
         }
