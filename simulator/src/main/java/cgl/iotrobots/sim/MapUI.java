@@ -61,7 +61,7 @@ public class MapUI extends JFrame {
             try {
                 synchronized (map.currentPos) {
                     for (cgl.iotrobots.slam.core.utils.Point<Integer> p : map.currentPos) {
-                        colorArea(image, p.x, p.y, map.width, map.height, 6);
+                        colorArea(image, p.x, p.y, map.width, map.height, 1);
                     }
                 }
             } catch (Throwable e) {
