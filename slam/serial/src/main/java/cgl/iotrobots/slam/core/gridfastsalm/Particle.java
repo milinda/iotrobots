@@ -41,7 +41,7 @@ public class Particle {
 
     public Particle(GMap map) {
         this.map = map;
-        pose = new DoubleOrientedPoint(0.0, 0.0);
+        pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         weight = 0;
         weightSum = 0;
         gweight = 0;

@@ -152,23 +152,25 @@ public class GMap {
     }
 
     public Object cell(IntPoint p, boolean c) {
-//        int s = m_storage.cellState(p);
-//        if (c) {
-//            if ((s & AccessibilityState.Allocated.getVal()) > 0)
-//                return m_storage.cell(p);
-//        } else {
-//            if ((s & AccessibilityState.Inside.getVal()) == 0)
-//                assert false;
-//            return m_storage.cell(p);
-//        }
-
-        PointAccumulator pa = (PointAccumulator) m_storage.cell(p);
-        if (pa != null) {
-            return pa;
+        int s = m_storage.cellState(p);
+        if (c) {
+            if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                return m_storage.cell(p);
         } else {
-            //System.out.println("Creating unknown Int: c: " + c + " s: " + s);
-            return new PointAccumulator();
+            if ((s & AccessibilityState.Inside.getVal()) == 0)
+                assert false;
+            return m_storage.cell(p);
         }
+
+        return new PointAccumulator();
+//
+//        PointAccumulator pa = (PointAccumulator) m_storage.cell(p);
+//        if (pa != null) {
+//            return pa;
+//        } else {
+//            //System.out.println("Creating unknown Int: c: " + c + " s: " + s);
+//            return new PointAccumulator();
+//        }
     }
 
     public Object cell(DoublePoint p, boolean c) {

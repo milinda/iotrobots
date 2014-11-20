@@ -140,7 +140,7 @@ public class Sample {
         linearUpdate_ = .0005;
         angularUpdate_ = 0.0005;
         temporalUpdate_ = 0.0;
-        resampleThreshold_ = 0.5;
+        resampleThreshold_ = 2;
         particles_ = 30;
         xmin_ = -20.0;
         ymin_ = -20.0;
@@ -305,7 +305,6 @@ public class Sample {
                 ranges_double,
                 gsp_laser_,
                 scan.timestamp);
-
         // ...but it deep copies them in RangeReading constructor, so we don't
         // need to keep our array around.
 
@@ -363,6 +362,7 @@ public class Sample {
             for (TNode n = best.node; n != null; n = n.parent) {
 //            System.out.print("Tree: " + n.pose.x + "," + n.pose.y + "," + n.pose.theta);
                 LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
+                //System.out.format("best pose: %f %f %f\n", n.pose.x, n.pose.y, n.pose.theta);
                 if (n.reading == null) {
                     LOG.debug("Reading is NULL");
                     continue;

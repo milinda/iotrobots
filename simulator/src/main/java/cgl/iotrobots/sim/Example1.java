@@ -12,7 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
-    public static final int SENSORS = 720;
+    public static final int SENSORS = 360;
 
     public static final double ANGLE = 2 * Math.PI;
 
@@ -34,7 +34,8 @@ public class Example1 {
             double agentRadius = this.getRadius();
             sonars = new RangeSensorBelt((float) agentRadius,
                     0f, 100.0f, SENSORS, RangeSensorBelt.TYPE_SONAR,0);
-            sonars.setUpdatePerSecond(3);
+            sonars.setUpdatePerSecond(1000);
+
             //sonarBelt.setName("sonars");
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
@@ -67,7 +68,7 @@ public class Example1 {
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
-            // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
+            System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
             sample.laserCallback(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
             // progress at 0.5 m/s
@@ -121,11 +122,15 @@ public class Example1 {
             for (int i = angle; i < n + angle; i++) {
                 if (sonars.hasHit(i % n)) {
                     // System.out.println(sonars.getMeasurement(i));
+                    System.out.format("%f,", sonars.getMeasurement(i % n));
                     laserScan.ranges.add(sonars.getMeasurement(i % n));
                 } else {
                     laserScan.ranges.add(0.0);
+                    System.out.format("%f,", 0.0);
                 }
             }
+            System.out.format("\n");
+
             laserScan.timestamp = System.currentTimeMillis();
 
             return laserScan;
@@ -167,6 +172,7 @@ public class Example1 {
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
+
 
         }
     }
