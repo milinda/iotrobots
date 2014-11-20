@@ -85,7 +85,7 @@ public class LocalPlanner extends AbstractNodeMain{
     String robot_base_frame_; ///< @brief Used as the base frame id of the robot
     public List<PoseStamped> global_plan_, transformed_plan_;
     Publisher g_plan_pub_, l_plan_pub_;
-    Subscriber obstacles_sub_;
+    Subscriber obstacles_sub_; //not used
     String hostname;
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
@@ -96,6 +96,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
 
     /*---------------methods begin-----------------*/
+
     //must pass connectednode,tf will be initialized from the caller, see rosjava_tf TfViz
     public LocalPlanner(String hostname,TransformListener tf, VoxelGrid costmap_ros){
         this.hostname=new String(hostname);
@@ -126,6 +127,7 @@ public class LocalPlanner extends AbstractNodeMain{
     private void initialize(){
         if (!initialized_){
             logger=Logger.getLogger(node.getName().toString());
+
             rot_stopped_velocity_ = params.getDouble("~/rot_stopped_velocity",0.01);
             trans_stopped_velocity_ = params.getDouble("~/trans_stopped_velocity_",0.01);
 
@@ -148,19 +150,22 @@ public class LocalPlanner extends AbstractNodeMain{
             }
             radius_=me.footprint_radius_;
 
+            /*------------------ Publishers----------------- */
             Publisher<Path> g_plan_pub_=this.node.newPublisher("g_plan_pub_", Path._TYPE);
             Publisher<Path> l_plan_pub_=this.node.newPublisher("l_plan_pub_", Path._TYPE);
-            String move_base_name = this.node.getName().toString();
             //ROS_ERROR("%s name of node", thisname.c_str());
 
+            /*------------------Subscribers------------*/
+            //String move_base_name = this.node.getName().toString();
             //Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber(move_base_name + "/local_costmap/obstacles", OccupancyGrid._TYPE);
-            Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber("/move_base/local_costmap/costmap", OccupancyGrid._TYPE);
-            obstacles_sub_.addMessageListener(new MessageListener<OccupancyGrid>() {
-                @Override
-                public void onNewMessage(OccupancyGrid msg) {
-                    obstaclesCallback(msg);
-                }
-            });
+            //it is not used
+//            Subscriber<OccupancyGrid> obstacles_sub_ = this.node.newSubscriber("/move_base/local_costmap/costmap", OccupancyGrid._TYPE);
+//            obstacles_sub_.addMessageListener(new MessageListener<OccupancyGrid>() {
+//                @Override
+//                public void onNewMessage(OccupancyGrid msg) {
+//                    obstaclesCallback(msg);
+//                }
+//            });
 
             //setup_= false;??????????????
             //not implemented yet
@@ -198,7 +203,7 @@ public class LocalPlanner extends AbstractNodeMain{
                 int col = i / mapWith;
                 double x=row*resolution;
                 double y=col*resolution;
-                //need transform????
+                //TODO:need transform to base frame!!!!
                 points.add(Vector2.plus(origin,new Vector2(x, y)));
             }
         }

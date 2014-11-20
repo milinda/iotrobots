@@ -306,7 +306,8 @@ public class Agent extends AbstractNodeMain {
         this.publishPositionsPeriod = 1.0/params.getDouble("~/publish_positions_frequency",10.0);
         this.publishMePeriod = 1.0/params.getDouble("~/publish_me_frequency",10.0);
 
-        //set Footprint
+        //set Footprint, get footprint from the costmap while costmap subscibe to
+        //footprint topic
         List<Point> footprint_points=new ArrayList<Point>();
         //TODO:footprint_points = costmap_ros_->getRobotFootprint();
 
@@ -318,9 +319,7 @@ public class Agent extends AbstractNodeMain {
             p.setY((float) footprint_points.get(i).getY());
             points.add(p);
         }
-        Polygon polygon=messageFactory.newFromType(Polygon._TYPE);
-        polygon.setPoints(points);
-        footprint.setPolygon(polygon);
+        footprint.getPolygon().setPoints(points);
 
         points.clear();
         if (footprint.getPolygon().getPoints().size()>2)
@@ -336,8 +335,7 @@ public class Agent extends AbstractNodeMain {
                 points.add(pt);
                 angle += step;
             }
-            polygon.setPoints(points);
-            footprint.setPolygon(polygon);
+            footprint.getPolygon().setPoints(points);
             setFootprint(footprint);
         }
 /*
@@ -402,6 +400,15 @@ public class Agent extends AbstractNodeMain {
 //        //position_share_sub_ = nh.subscribe("/position_share_in",10, &ROSAgent::positionShareCallback, this);
 //        //odom_sub_ = nh.subscribe("odom",1, &ROSAgent::odomCallback, this);
 
+
+        position_share_sub_ = node.newSubscriber("/position_share_in", pose_twist_covariance_msgs._TYPE);
+        position_share_sub_.addMessageListener(new MessageListener<pose_twist_covariance_msgs>() {
+            @Override
+            public void onNewMessage(pose_twist_covariance_msgs msg) {
+                positionShareCallback(msg);
+            }
+        }, 10);
+
         /*TODO: Need particle cloud and the weights of the particles to calculate localization uncertainty,
           TODO: but currently just particle cloud.*/
         amcl_posearray_sub_ = node.newSubscriber("/particlecloud",PoseArray._TYPE);
@@ -412,13 +419,6 @@ public class Agent extends AbstractNodeMain {
             }
         });
 
-        position_share_sub_ = node.newSubscriber("/position_share_in", pose_twist_covariance_msgs._TYPE);
-        position_share_sub_.addMessageListener(new MessageListener<pose_twist_covariance_msgs>() {
-            @Override
-            public void onNewMessage(pose_twist_covariance_msgs msg) {
-                positionShareCallback(msg);
-            }
-        }, 10);
 
         //to calculate position
         odom_sub_=node.newSubscriber("odom",Odometry._TYPE);
@@ -749,9 +749,7 @@ public class Agent extends AbstractNodeMain {
                     start = Vector2.Point32ToVector2(points.get(i));
                 }
                 if (i == points.size()) {
-                    if (!pointInNeighbor(start)) {
-                        //obstacles_from_laser_.push_back(std::make_pair(start,start));
-                    }
+                    //it is a agent
                     return;
                 }
 
