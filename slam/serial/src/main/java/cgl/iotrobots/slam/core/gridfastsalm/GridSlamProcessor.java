@@ -1,19 +1,17 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
-import cgl.iotrobots.slam.core.scanmatcher.LikeliHood;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
-import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
@@ -41,9 +39,9 @@ public class GridSlamProcessor {
     double m_resampleThreshold;
 
     int m_count, m_readingCount;
-    OrientedPoint<Double> m_lastPartPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
-    OrientedPoint<Double> m_odoPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
-    OrientedPoint<Double> m_pose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+    DoubleOrientedPoint m_lastPartPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+    DoubleOrientedPoint m_odoPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+    DoubleOrientedPoint m_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
 
     double m_linearDistance, m_angularDistance;
 
@@ -65,7 +63,7 @@ public class GridSlamProcessor {
     PrintWriter m_outputStream;
 
     public GridSlamProcessor() {
-        period_ = 5.0;
+        period_ = 0.0;
         m_obsSigmaGain = 1;
         m_resampleThreshold = 0.5;
         m_minimumScore = 0.;
@@ -156,7 +154,7 @@ public class GridSlamProcessor {
         m_matcher.setLaserParameters(m_beams, angles, rangeSensor.getPose());
     }
 
-    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, OrientedPoint<Double> initialPose) {
+    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
         m_xmin = xmin;
         m_ymin = ymin;
         m_xmax = xmax;
@@ -168,14 +166,12 @@ public class GridSlamProcessor {
 
         m_particles.clear();
 
-
-
         for (int i = 0; i < size; i++) {
             int lastIndex = m_particles.size() - 1;
-            GMap lmap = new GMap(new Point<Double>((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
             Particle p = new Particle(lmap);
 
-            p.pose = new OrientedPoint<Double>(initialPose);
+            p.pose = new DoubleOrientedPoint(initialPose);
             p.previousPose = initialPose;
             p.setWeight(0);
             p.previousIndex = 0;
@@ -202,7 +198,7 @@ public class GridSlamProcessor {
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
-        OrientedPoint<Double> relPose = reading.getPose();
+        DoubleOrientedPoint relPose = reading.getPose();
         if (m_count == 0) {
             m_lastPartPose = m_odoPose = relPose;
         }
@@ -222,9 +218,9 @@ public class GridSlamProcessor {
         //TODO invoke the callback
         onOdometryUpdate();
 
-        OrientedPoint<Double> move = OrientedPoint.minus(relPose, m_odoPose);
+        DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, m_odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
-        m_linearDistance += Math.sqrt(OrientedPoint.mulN(move, move));
+        m_linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
         m_angularDistance += Math.abs(move.theta);
 
         // if the robot jumps throw a warning
@@ -276,12 +272,12 @@ public class GridSlamProcessor {
                 for (Double b : reading) {
                     LOG.debug(b + " ");
                 }
-                OrientedPoint p = reading.getPose();
+                DoubleOrientedPoint p = reading.getPose();
 
                 LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
                 LOG.debug("SM_UPDATE " + m_particles.size() + " ");
                 for (Particle it : m_particles) {
-                    OrientedPoint pose = it.pose;
+                    DoubleOrientedPoint pose = it.pose;
                     LOG.debug(pose.x + " " + pose.y + " ");
                     LOG.debug(pose.theta + " " + it.weight + " ");
                 }
@@ -489,7 +485,7 @@ public class GridSlamProcessor {
         aux = reversed;
         boolean first = true;
         double oldWeight = 0;
-        OrientedPoint<Double> oldPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        DoubleOrientedPoint oldPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         while (aux != null) {
             if (first) {
                 oldPose = aux.pose;
@@ -497,7 +493,7 @@ public class GridSlamProcessor {
                 oldWeight = aux.weight;
             }
 
-            OrientedPoint<Double> dp = OrientedPoint.minus(aux.pose, oldPose);
+            DoubleOrientedPoint dp = DoubleOrientedPoint.minus(aux.pose, oldPose);
             double dw = aux.weight - oldWeight;
             oldPose = aux.pose;
 
@@ -601,12 +597,12 @@ public class GridSlamProcessor {
         // sample a new pose from each scan in the reference
         double sumScore = 0;
         for (Particle it : m_particles) {
-            OrientedPoint<Double> corrected = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+            DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
             double score = 0, l, s;
             score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score > m_minimumScore) {
-                it.pose = new OrientedPoint<Double>(corrected);
+                it.pose = new DoubleOrientedPoint(corrected);
             } else {
                 LOG.info("Scan Matching Failed, using odometry. Likelihood=");
                 LOG.info("lp:" + m_lastPartPose.x + " " + m_lastPartPose.y + " " + m_lastPartPose.theta);

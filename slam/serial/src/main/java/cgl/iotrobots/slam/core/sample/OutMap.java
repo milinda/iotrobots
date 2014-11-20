@@ -1,8 +1,7 @@
 package cgl.iotrobots.slam.core.sample;
 
-import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +14,7 @@ public class OutMap {
 
     public int data[];
 
-    public List<Point<Integer>> currentPos = Collections.synchronizedList(new ArrayList<Point<Integer>>());
+    public List<IntPoint> currentPos = Collections.synchronizedList(new ArrayList<IntPoint>());
 
     public class Position {
         double x, y, z, w;

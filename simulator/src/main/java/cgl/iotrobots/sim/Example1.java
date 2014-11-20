@@ -2,7 +2,7 @@ package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.sample.LaserScan;
 import cgl.iotrobots.slam.core.sample.Sample;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -69,7 +69,7 @@ public class Example1 {
 
             // System.out.println(point3D.x + " " + point3D.y + " " + point3D.z);
             LaserScan laserScan = getLaserScan();
-            sample.laserCallback(laserScan, new OrientedPoint<Double>(point3D.x, 0.0, 0.0));
+            sample.laserCallback(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
             // progress at 0.5 m/s
             if (getCounter() % 100 == 0) {
                 if (forward) {

@@ -1,10 +1,12 @@
 package cgl.iotrobots.slam.core.grid;
 
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
-import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 
 public class GMap {
-    public Point<Double> m_center;
+    public DoublePoint m_center;
     double m_worldSizeX, m_worldSizeY, m_delta;
     public HierarchicalArray2D m_storage;
     public int m_mapSizeX, m_mapSizeY;
@@ -16,12 +18,12 @@ public class GMap {
         m_worldSizeX=mapSizeX * delta;
         m_worldSizeY=mapSizeY * delta;
         m_delta=delta;
-        m_center= new Point<Double>(0.5*m_worldSizeX, 0.5*m_worldSizeY);
+        m_center= new DoublePoint(0.5*m_worldSizeX, 0.5*m_worldSizeY);
         m_sizeX2=m_mapSizeX>>1;
         m_sizeY2=m_mapSizeY>>1;
     }
 
-    public GMap(Point<Double> center, double worldSizeX, double worldSizeY, double delta) {
+    public GMap(DoublePoint center, double worldSizeX, double worldSizeY, double delta) {
         m_storage = new HierarchicalArray2D(new Double(Math.ceil(worldSizeX/delta)).intValue(), new Double(Math.ceil(worldSizeY/delta)).intValue(), DEFAULT_PATCH);
         m_center = center;
         m_worldSizeX = worldSizeX;
@@ -33,7 +35,7 @@ public class GMap {
         m_sizeY2 = m_mapSizeY >> 1;
     }
 
-    public GMap(Point<Double> center, double xmin, double ymin, double xmax, double ymax, double delta) {
+    public GMap(DoublePoint center, double xmin, double ymin, double xmax, double ymax, double delta) {
         m_storage = new HierarchicalArray2D(new Double(Math.ceil((xmax-xmin)/delta)).intValue(),new Double(Math.ceil((ymax-ymin)/delta)).intValue(), DEFAULT_PATCH);
         m_center = center;
         m_worldSizeX = xmax - xmin;
@@ -45,7 +47,7 @@ public class GMap {
         m_sizeY2 = (int) Math.round((m_center.y - ymin) / m_delta);
     }
 
-    public Point<Double> getCenter() {return m_center;}
+    public DoublePoint getCenter() {return m_center;}
     public double getWorldSizeX() {return m_worldSizeX;}
     public double getWorldSizeY() {return m_worldSizeY;}
     public int getMapSizeX() {return m_mapSizeX;}
@@ -59,40 +61,40 @@ public class GMap {
     }
 
     public Size getSize(double xmin, double ymin, double xmax, double ymax) {
-        Point<Double> min=map2world(new Point<Integer>(0,0)), max=map2world(new Point<Integer>(m_mapSizeX-1, m_mapSizeY-1));
+        DoublePoint min=map2world(new IntPoint(0,0)), max=map2world(new IntPoint(m_mapSizeX-1, m_mapSizeY-1));
         return new Size(min.x, min.y, max.x, max.y);
     }
 
     public Object cell(int x, int y, boolean c) {
-        return cell(new Point<Integer>(x, y), c);
+        return cell(new IntPoint(x, y), c);
     }
 
     public Object cell(double x, double y, boolean c) {
-        return cell(new Point<Integer>(new Double(x).intValue(), new Double(y).intValue()), c);
+        return cell(new IntPoint(new Double(x).intValue(), new Double(y).intValue()), c);
     }
 
     public boolean isInside(int x, int y) {
-        return m_storage.cellState(new Point<Integer>(x,y)) == AccessibilityState.Inside.getVal();
+        return m_storage.cellState(new IntPoint(x,y)) == AccessibilityState.Inside.getVal();
     }
 
-    public boolean isInside(Point<Integer> p) {
+    public boolean isInside(IntPoint p) {
         return m_storage.cellState(p) == AccessibilityState.Inside.getVal();
     }
 
-    public boolean isInsideD(Point<Double> p) {
+    public boolean isInsideD(DoublePoint p) {
         return isInside(p.x, p.y);
     }
 
     public boolean isInside(double x, double y)  {
         return m_storage.cellState(
-                world2map(new Point<Integer>(new Double(x).intValue(),new Double(y).intValue())))
+                world2map(new IntPoint(new Double(x).intValue(),new Double(y).intValue())))
                 == AccessibilityState.Inside.getVal();
     }
 
 
     public void resize(double xmin, double ymin, double xmax, double ymax){
-        Point<Integer> imin = world2map(xmin, ymin);
-        Point<Integer> imax=world2map(xmax, ymax);
+        IntPoint imin = world2map(xmin, ymin);
+        IntPoint imax=world2map(xmax, ymax);
         int pxmin, pymin, pxmax, pymax;
         pxmin=(int)Math.floor((double) imin.x / (1 << m_storage.getPatchMagnitude()));
         pxmax=(int)Math.ceil((double) imax.x / (1 << m_storage.getPatchMagnitude()));
@@ -108,12 +110,12 @@ public class GMap {
     }
 
     public void grow(double xmin, double ymin, double xmax, double ymax){
-        Point<Integer> imin=world2map(xmin, ymin);
-        Point<Integer> imax=world2map(xmax, ymax);
+        IntPoint imin=world2map(xmin, ymin);
+        IntPoint imax=world2map(xmax, ymax);
         if (isInside(imin) && isInside(imax))
             return;
-        imin= Point.min(imin, new Point<Integer>(0,0));
-        imax= Point.max(imax, new Point<Integer>(m_mapSizeX-1,m_mapSizeY-1));
+        imin= IntPoint.min(imin, new IntPoint(0, 0));
+        imax= IntPoint.max(imax, new IntPoint(m_mapSizeX - 1, m_mapSizeY - 1));
         int pxmin, pymin, pxmax, pymax;
         pxmin=(int)Math.floor((double) imin.x / (1 << m_storage.getPatchMagnitude()));
         pxmax=(int)Math.ceil((double) imax.x / (1 << m_storage.getPatchMagnitude()));
@@ -128,54 +130,61 @@ public class GMap {
         m_sizeY2-=pymin*(1<<m_storage.getPatchMagnitude());
     }
 
-    public Point<Integer> world2map(double x, double y) {
-        return new Point<Integer>( (int)Math.round((x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((y-m_center.y)/m_delta)+m_sizeY2);
+    public IntPoint world2map(double x, double y) {
+        return new IntPoint((int)Math.round((x-m_center.x)/m_delta)+m_sizeX2, (int)Math.round((y-m_center.y)/m_delta)+m_sizeY2);
     }
 
-    public Point<Integer> world2map(Point p) {
-        if (p.x instanceof Integer) {
-            return new Point<Integer>((int) Math.round(((Integer)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Integer)p.y - m_center.y) / m_delta) + m_sizeY2);
-
-        } else if (p.x instanceof Double) {
-            return new Point<Integer>((int) Math.round(((Double)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Double)p.y - m_center.y) / m_delta) + m_sizeY2);
-        }
-        return null;
+    public IntPoint world2map(IntPoint p) {
+        return new IntPoint((int) Math.round(((Integer)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Integer)p.y - m_center.y) / m_delta) + m_sizeY2);
     }
 
-    public Point<Double> map2world(Point<Integer> p) {
-        return new Point<Double>((p.x-m_sizeX2)*m_delta + m_center.x,
+    public IntPoint world2map(DoublePoint p) {
+        return new IntPoint((int) Math.round(((Double)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Double)p.y - m_center.y) / m_delta) + m_sizeY2);
+    }
+
+    public IntPoint world2map(DoubleOrientedPoint p) {
+        return new IntPoint((int) Math.round(((Double)p.x - m_center.x) / m_delta) + m_sizeX2, (int) Math.round(((Double)p.y - m_center.y) / m_delta) + m_sizeY2);
+    }
+
+    public DoublePoint map2world(IntPoint p) {
+        return new DoublePoint((p.x-m_sizeX2)*m_delta + m_center.x,
                 (p.y-m_sizeY2)*m_delta + m_center.y);
     }
 
-    public Object cell(Point p, boolean c) {
-        if (p.x instanceof Integer) {
-            int s = m_storage.cellState(p);
-            if (c) {
-                if ((s & AccessibilityState.Allocated.getVal()) > 0)
-                    return m_storage.cell(p);
-            } else {
-                if ((s & AccessibilityState.Inside.getVal()) == 0)
-                    assert false;
-                return m_storage.cell(p);
-            }
+    public Object cell(IntPoint p, boolean c) {
+//        int s = m_storage.cellState(p);
+//        if (c) {
+//            if ((s & AccessibilityState.Allocated.getVal()) > 0)
+//                return m_storage.cell(p);
+//        } else {
+//            if ((s & AccessibilityState.Inside.getVal()) == 0)
+//                assert false;
+//            return m_storage.cell(p);
+//        }
+
+        PointAccumulator pa = (PointAccumulator) m_storage.cell(p);
+        if (pa != null) {
+            return pa;
+        } else {
             //System.out.println("Creating unknown Int: c: " + c + " s: " + s);
             return new PointAccumulator();
-        } else {
-            Point<Integer> ip = world2map(p);
-            int s = m_storage.cellState(ip);
-            //if (! s&Inside) assert(0);
-            if (c) {
-                if ((s & AccessibilityState.Allocated.getVal()) > 0)
-                    return m_storage.cell(p);
-            } else {
-                if ((s & AccessibilityState.Inside.getVal()) == 0)
-                    assert false;
-                return m_storage.cell(p);
-            }
-            //System.out.println("Creating unknown Double: c: " + c + " s: " + s);
-            return new PointAccumulator();
-//            return new PointAccumulator();
         }
+    }
+
+    public Object cell(DoublePoint p, boolean c) {
+        IntPoint ip = world2map(p);
+        int s = m_storage.cellState(ip);
+        //if (! s&Inside) assert(0);
+        if (c) {
+            if ((s & AccessibilityState.Allocated.getVal()) > 0)
+                return m_storage.cell(ip);
+        } else {
+            if ((s & AccessibilityState.Inside.getVal()) == 0)
+                assert false;
+            return m_storage.cell(ip);
+        }
+        //System.out.println("Creating unknown Double: c: " + c + " s: " + s);
+        return new PointAccumulator();
     }
 
 

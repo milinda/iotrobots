@@ -4,10 +4,7 @@ import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
-import cgl.iotrobots.slam.core.utils.Covariance3;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
-import cgl.iotrobots.slam.core.utils.Point;
-import cgl.iotrobots.slam.core.utils.Stat;
+import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +22,15 @@ public class ScanMatcherProcessor {
     double m_maxMove;
     //state
     GMap m_map;
-    OrientedPoint<Double> m_pose;
-    OrientedPoint<Double> m_odoPose;
+    DoubleOrientedPoint m_pose;
+    DoubleOrientedPoint m_odoPose;
     int  m_count;
 
     boolean useICP;
 
     public ScanMatcherProcessor(GMap m) {
         m_map = new GMap(m.getCenter(), m.getWorldSizeX(), m.getWorldSizeY(), m.getResolution());
-        m_pose = new OrientedPoint<Double>(0.0,0.0,0.0);
+        m_pose = new DoubleOrientedPoint(0.0,0.0,0.0);
         m_regScore=300;
         m_critScore=.5*m_regScore;
         m_maxMove=1;
@@ -45,8 +42,8 @@ public class ScanMatcherProcessor {
 
     public ScanMatcherProcessor
             (double xmin, double ymin, double xmax, double ymax, double delta, double patchdelta) {
-        m_map = new GMap(new Point<Double>((xmax+xmin)*.5, (ymax+ymin)*.5), xmax-xmin, ymax-ymin, patchdelta);
-        m_pose = new OrientedPoint<Double>(0.0,0.0,0.0);
+        m_map = new GMap(new DoublePoint((xmax+xmin)*.5, (ymax+ymin)*.5), xmax-xmin, ymax-ymin, patchdelta);
+        m_pose = new DoubleOrientedPoint(0.0,0.0,0.0);
         m_regScore=300;
         m_critScore=.5*m_regScore;
         m_maxMove=1;
@@ -72,13 +69,13 @@ public class ScanMatcherProcessor {
 
     public void init(){
         m_first=true;
-        m_pose= new OrientedPoint<Double>(0.0,0.0,0.0);
+        m_pose= new DoubleOrientedPoint(0.0,0.0,0.0);
         m_count=0;
     }
 
     void processScan(RangeReading reading){
         /**retireve the position from the reading, and compute the odometry*/
-        OrientedPoint<Double> relPose = reading.getPose();
+        DoubleOrientedPoint relPose = reading.getPose();
         if (m_count == 0) {
             m_odoPose = relPose;
         }
@@ -86,11 +83,11 @@ public class ScanMatcherProcessor {
         //compute the move in the scan m_matcher
         //reference frame
 
-        OrientedPoint<Double> move = OrientedPoint.minus(relPose,m_odoPose);
+        DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, m_odoPose);
         double dth=m_odoPose.theta-m_pose.theta;
         // cout << "rel-move x="<< move.x <<  " y=" << move.y << " theta=" << move.theta << endl;
 
-        double lin_move= OrientedPoint.mulD(move, move);
+        double lin_move= DoubleOrientedPoint.mulD(move, move);
         if (lin_move>m_maxMove){
             LOG.error("Too big jump in the log file: {} relPose= {} {} ignoring",  lin_move, relPose.x, relPose.y);
             return;
@@ -100,7 +97,7 @@ public class ScanMatcherProcessor {
         }
 
         double s=Math.sin(dth), c=Math.cos(dth);
-        OrientedPoint<Double> dPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        DoubleOrientedPoint dPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         dPose.x=c*move.x-s*move.y;
         dPose.y=s*move.x+c*move.y;
         dPose.theta=move.theta;
@@ -108,7 +105,7 @@ public class ScanMatcherProcessor {
 
         LOG.debug("abs-move x=" + dPose.x +  " y=" + dPose.y + " theta=" + dPose.theta);
 
-        m_pose = OrientedPoint.plus(m_pose, dPose);
+        m_pose = DoubleOrientedPoint.plus(m_pose, dPose);
         m_pose.theta=Math.atan2(Math.sin(m_pose.theta), Math.cos(m_pose.theta));
 
         LOG.debug(m_pose.x + " y=" + m_pose.y + " theta=" + m_pose.theta);
@@ -137,7 +134,7 @@ public class ScanMatcherProcessor {
 
         //the final stuff: scan match the pose
         double score=0;
-        OrientedPoint<Double> newPose=m_pose;
+        DoubleOrientedPoint newPose=m_pose;
         if (m_count > 0){
             if(m_computeCovariance){
                 Covariance3 cov = new Covariance3();

@@ -1,7 +1,8 @@
 package cgl.iotrobots.slam.core.grid;
 
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
-import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -9,7 +10,7 @@ import java.util.Set;
 public class HierarchicalArray2D {
     Array2D array2D;
 //    Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
-    Set<Point<Integer>> m_activeArea = new HashSet<Point<Integer>>();
+    Set<IntPoint> m_activeArea = new HashSet<IntPoint>();
     int m_patchMagnitude = 0;
     int m_patchSize;
 
@@ -49,27 +50,28 @@ public class HierarchicalArray2D {
     public int getPatchSize() {
         return m_patchMagnitude;
     }
+
     public int getPatchMagnitude() {
         return m_patchMagnitude;
     }
 
-    public Object cell(Point<Integer> p) {
+    public Object cell(IntPoint p) {
         return cell(p.x, p.y);
     }
 
-    public boolean isAllocated(Point<Integer> p)  {
+    public boolean isAllocated(IntPoint p)  {
         return isAllocated(p.x,p.y);
     }
 
-    public int cellState(Point<Integer> p) {
+    public int cellState(IntPoint p) {
         return cellState(p.x,p.y);
     }
 
-    public Point<Integer> patchIndexes(Point<Integer> p) {
+    public IntPoint patchIndexes(IntPoint p) {
         return patchIndexes(p.x,p.y);
     }
 
-    Set<Point<Integer>> getActiveArea() {
+    Set<IntPoint> getActiveArea() {
         return m_activeArea;
     }
 
@@ -111,10 +113,10 @@ public class HierarchicalArray2D {
         this.array2D.m_ysize = ysize;
     }
 
-    public void setActiveArea(Set<Point<Integer>> aa, boolean patchCoords) {
+    public void setActiveArea(Set<IntPoint> aa, boolean patchCoords) {
         m_activeArea.clear();
-        for (Point<Integer> it : aa) {
-            Point<Integer> p;
+        for (IntPoint it : aa) {
+            IntPoint p;
             if (patchCoords) {
                 p = it;
             } else {
@@ -125,20 +127,20 @@ public class HierarchicalArray2D {
         // System.out.println("Active area contain: " + m_activeArea.size());
     }
 
-    public Point<Integer> patchIndexes(int x, int y) {
+    public IntPoint patchIndexes(int x, int y) {
         if (x >= 0 && y >= 0) {
-            return new Point<Integer>(x >> m_patchMagnitude, y >> m_patchMagnitude);
+            return new IntPoint(x >> m_patchMagnitude, y >> m_patchMagnitude);
         }
-        return new Point<Integer>(-1, -1);
+        return new IntPoint(-1, -1);
     }
 
-    public Array2D createPatch(Point<Integer> p) {
+    public Array2D createPatch(IntPoint p) {
         return new Array2D(1<<m_patchMagnitude, 1<<m_patchMagnitude);
     }
 
 
     public int cellState(int x, int y) {
-        if (array2D.isInside(patchIndexes(new Point<Integer>(x, y)))) {
+        if (array2D.isInside(patchIndexes(new IntPoint(x, y)))) {
             if (isAllocated(x,y)) {
                 return AccessibilityState.Inside.getVal() | AccessibilityState.Allocated.getVal();
             }
@@ -150,7 +152,7 @@ public class HierarchicalArray2D {
     }
 
     public void allocActiveArea(){
-        for (Point<Integer> it : m_activeArea) {
+        for (IntPoint it : m_activeArea) {
             Array2D ptr= (Array2D) this.array2D.m_cells[it.x][it.y];
             Array2D patch = null;
             if (ptr == null){
@@ -173,16 +175,16 @@ public class HierarchicalArray2D {
     }
 
     public boolean isAllocated(int x, int y) {
-        Point<Integer> c=patchIndexes(x,y);
+        IntPoint c=patchIndexes(x,y);
         Object val = array2D.m_cells[c.x][c.y];
         return (val != null);
     }
 
     public Object cell(int x, int y){
-        Point<Integer> c = patchIndexes(x,y);
+        IntPoint c = patchIndexes(x,y);
         assert(array2D.isInside(c.x, c.y));
         if (array2D.m_cells[c.x][c.y] == null){
-            Array2D patch= createPatch(new Point<Integer>(x,y));
+            Array2D patch= createPatch(new IntPoint(x,y));
             for (int k = 0; k < patch.m_xsize; k++) {
                 for (int l = 0; l < patch.m_ysize; l++) {
                     patch.m_cells[k][l] = new PointAccumulator();
@@ -191,6 +193,6 @@ public class HierarchicalArray2D {
             array2D.m_cells[c.x][c.y] = patch;
         }
         Array2D ptr = (Array2D) this.array2D.m_cells[c.x][c.y];
-        return ptr.cell(new Point<Integer>(x-(c.x << m_patchMagnitude), y-(c.y<<m_patchMagnitude)));
+        return ptr.cell(new IntPoint(x-(c.x << m_patchMagnitude), y-(c.y<<m_patchMagnitude)));
     }
 }

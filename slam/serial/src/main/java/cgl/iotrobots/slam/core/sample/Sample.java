@@ -10,8 +10,9 @@ import cgl.iotrobots.slam.core.sensor.OdometrySensor;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
-import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.iotrobots.slam.core.utils.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,9 +137,9 @@ public class Sample {
         srt_ = 0.2;
         str_ = 0.1;
         stt_ = 0.2;
-        linearUpdate_ = .005;
-        angularUpdate_ = 0.005;
-        temporalUpdate_ = 3.0;
+        linearUpdate_ = .0005;
+        angularUpdate_ = 0.0005;
+        temporalUpdate_ = 0.0;
         resampleThreshold_ = 0.5;
         particles_ = 30;
         xmin_ = -20.0;
@@ -165,7 +166,7 @@ public class Sample {
         gsp_laser_angle_increment_ = orientationFactor * scan.angle_increment;
         LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angle_min_, angle_max_, gsp_laser_angle_increment_);
 
-        OrientedPoint<Double> gmap_pose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        DoubleOrientedPoint gmap_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
 
         // setting maxRange and maxUrange here so we can set a reasonable default
         maxRange_ = scan.range_max - 0.01;
@@ -190,10 +191,10 @@ public class Sample {
         gsp_odom_ = new OdometrySensor(odom_frame_, false);
 
         /// @todo Expose setting an initial pose
-        OrientedPoint<Double> initialPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        DoubleOrientedPoint initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         if (getOdomPose(initialPose, scan.timestamp) != null) {
             LOG.warn("Unable to determine inital pose of laser! Starting point will be set to zero.");
-            initialPose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+            initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         }
 
         gsp_.setMatchingParameters(maxUrange_, maxRange_, sigma_,
@@ -222,7 +223,7 @@ public class Sample {
         return true;
     }
 
-    public void laserCallback(LaserScan scan, OrientedPoint<Double> pose) {
+    public void laserCallback(LaserScan scan, DoubleOrientedPoint pose) {
         long t0 =  System.currentTimeMillis();
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
@@ -238,7 +239,7 @@ public class Sample {
         }
 
 
-        OrientedPoint<Double> odom_pose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        DoubleOrientedPoint odom_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         if (pose != null) {
             odom_pose = pose;
         }
@@ -246,7 +247,7 @@ public class Sample {
             System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
-            OrientedPoint<Double> mpose = gsp_.getParticles().get(gsp_.getBestParticleIndex()).pose;
+            DoubleOrientedPoint mpose = gsp_.getParticles().get(gsp_.getBestParticleIndex()).pose;
             LOG.debug("new best pose: %.3f %.3f %.3f", mpose.x, mpose.y, mpose.theta);
             LOG.debug("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
             LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
@@ -264,12 +265,16 @@ public class Sample {
         System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0) );
     }
 
-    public boolean addScan(LaserScan scan, OrientedPoint<Double> gmap_pose) {
-        if (getOdomPose(gmap_pose, scan.timestamp) == null)
+    public boolean addScan(LaserScan scan, DoubleOrientedPoint gmap_pose) {
+        if (getOdomPose(gmap_pose, scan.timestamp) == null) {
+            System.out.println("False 1");
             return false;
+        }
 
-        if (scan.ranges.size() != gsp_laser_beam_count_)
+        if (scan.ranges.size() != gsp_laser_beam_count_) {
+            System.out.println("False 2");
             return false;
+        }
 
         // GMapping wants an array of doubles...
         Double[] ranges_double = new Double[scan.ranges.size()];
@@ -299,7 +304,7 @@ public class Sample {
         RangeReading reading = new RangeReading(scan.ranges.size(),
                 ranges_double,
                 gsp_laser_,
-                scan.timestamp / 1000);
+                scan.timestamp);
 
         // ...but it deep copies them in RangeReading constructor, so we don't
         // need to keep our array around.
@@ -311,7 +316,7 @@ public class Sample {
 
     public OutMap map_ = new OutMap();
 
-    private OrientedPoint<Double> getOdomPose(OrientedPoint<Double> gmap_pose, long timestamp) {
+    private DoubleOrientedPoint getOdomPose(DoubleOrientedPoint gmap_pose, long timestamp) {
         return gmap_pose;
     }
 
@@ -348,7 +353,7 @@ public class Sample {
             map_.originOrientation.w = 1.0;
         }
 
-        Point<Double> center = new Point<Double>((xmin_ + xmax_) / 2.0, (ymin_ + ymax_) / 2.0);
+        DoublePoint center = new DoublePoint((xmin_ + xmax_) / 2.0, (ymin_ + ymax_) / 2.0);
         GMap smap = new GMap(center, xmin_, ymin_, xmax_, ymax_, delta_);
 
         map_.currentPos.clear();
@@ -363,7 +368,7 @@ public class Sample {
                     continue;
                 }
 
-                Point<Integer> p = best.map.world2map(n.pose);
+                IntPoint p = best.map.world2map(n.pose);
                 // System.out.format("(%d, %d, %f) ", p.x, p.y, n.pose.theta);
                 map_.currentPos.add(p);
 
@@ -383,9 +388,9 @@ public class Sample {
 
             // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
             //       so we must obtain the bounding box in a different way
-            Point<Double> wmin = smap.map2world(new Point<Integer>(0, 0));
-            Point<Double> wmax = smap.map2world(new Point<Integer>(smap.getMapSizeX(), smap.getMapSizeY()));
-            xmin_ = wmin.x;
+            DoublePoint wmin = smap.map2world(new IntPoint(0, 0));
+            DoublePoint wmax = smap.map2world(new IntPoint(smap.getMapSizeX(), smap.getMapSizeY()));
+
             ymin_ = wmin.y;
             xmax_ = wmax.x;
             ymax_ = wmax.y;
@@ -405,7 +410,7 @@ public class Sample {
         for (int x = 0; x < smap.getMapSizeX(); x++) {
             for (int y = 0; y < smap.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
-                Point<Integer> p = new Point<Integer>(x, y);
+                IntPoint p = new IntPoint(x, y);
                 PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
                 double occ = pointAccumulator.doubleValue();
                 assert (occ <= 1.0);

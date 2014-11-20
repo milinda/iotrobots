@@ -2,18 +2,16 @@ package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
-
-import java.util.Date;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
 public class Particle {
     /** The map */
     public GMap map;
     /** The pose of the robot */
-    public OrientedPoint<Double> pose;
+    public DoubleOrientedPoint pose;
 
     /** The pose of the robot at the previous time frame (used for computing thr odometry displacements) */
-    public OrientedPoint<Double> previousPose;
+    public DoubleOrientedPoint previousPose;
 
     /** The weight of the particle */
     public double weight;
@@ -32,8 +30,8 @@ public class Particle {
     public Particle(Particle p) {
         map = p.map;
         map.m_storage = new HierarchicalArray2D(p.map.m_storage);
-        pose = new OrientedPoint<Double>(p.pose);
-        previousPose = new OrientedPoint<Double>(p.previousPose);
+        pose = new DoubleOrientedPoint(p.pose);
+        previousPose = new DoubleOrientedPoint(p.previousPose);
         weight = p.weight;
         weightSum = p.weightSum;
         gweight = p.gweight;
@@ -43,7 +41,7 @@ public class Particle {
 
     public Particle(GMap map) {
         this.map = map;
-        pose = new OrientedPoint<Double>(0.0, 0.0);
+        pose = new DoubleOrientedPoint(0.0, 0.0);
         weight = 0;
         weightSum = 0;
         gweight = 0;

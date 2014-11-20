@@ -1,14 +1,14 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
-import cgl.iotrobots.slam.core.utils.Point;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GridLineTraversalLine {
-    public List<Point<Integer>> points = new ArrayList<Point<Integer>>();
+    public List<IntPoint> points = new ArrayList<IntPoint>();
 
-    public static void gridLineCore(Point<Integer> start, Point<Integer> end, GridLineTraversalLine line) {
+    public static void gridLineCore(IntPoint start, IntPoint end, GridLineTraversalLine line) {
         int dx, dy, incr1, incr2, d, x, y, xend, yend, xdirflag, ydirflag;
         int cnt = 0;
 
@@ -30,7 +30,7 @@ public class GridLineTraversalLine {
                 ydirflag = 1;
                 xend = end.x;
             }
-            line.points.add(cnt, new Point<Integer>(x, y));
+            line.points.add(cnt, new IntPoint(x, y));
             cnt++;
             if (((end.y - start.y) * ydirflag) > 0) {
                 while (x < xend) {
@@ -41,7 +41,7 @@ public class GridLineTraversalLine {
                         y++;
                         d += incr2;
                     }
-                    line.points.add(cnt, new Point<Integer>(x, y));
+                    line.points.add(cnt, new IntPoint(x, y));
                     cnt++;
                 }
             } else {
@@ -53,7 +53,7 @@ public class GridLineTraversalLine {
                         y--;
                         d += incr2;
                     }
-                    line.points.add(cnt, new Point<Integer>(x, y));
+                    line.points.add(cnt, new IntPoint(x, y));
                     cnt++;
                 }
             }
@@ -72,7 +72,7 @@ public class GridLineTraversalLine {
                 yend = end.y;
                 xdirflag = 1;
             }
-            line.points.add(cnt, new Point<Integer>(x, y));
+            line.points.add(cnt, new IntPoint(x, y));
             cnt++;
             if (((end.x - start.x) * xdirflag) > 0) {
                 while (y < yend) {
@@ -83,7 +83,7 @@ public class GridLineTraversalLine {
                         x++;
                         d += incr2;
                     }
-                    line.points.add(cnt, new Point<Integer>(x, y));
+                    line.points.add(cnt, new IntPoint(x, y));
                     cnt++;
                 }
             } else {
@@ -95,7 +95,7 @@ public class GridLineTraversalLine {
                         x--;
                         d += incr2;
                     }
-                    line.points.add(cnt, new Point<Integer>(x, y));
+                    line.points.add(cnt, new IntPoint(x, y));
                     cnt++;
                 }
             }
@@ -103,13 +103,13 @@ public class GridLineTraversalLine {
     }
 
 
-    public static void gridLine(Point<Integer> start, Point<Integer> end, GridLineTraversalLine line) {
+    public static void gridLine(IntPoint start, IntPoint end, GridLineTraversalLine line) {
         int i, j;
         int half;
-        Point<Integer> v;
+        IntPoint v;
         gridLineCore(start, end, line);
-        if (!start.x.equals(line.points.get(0).x) ||
-                !start.y.equals(line.points.get(0).y)) {
+        if (start.x != line.points.get(0).x ||
+                start.y != line.points.get(0).y) {
             half = line.points.size() / 2;
             for (i = 0, j = line.points.size() - 1; i < half; i++, j--) {
                 v = line.points.get(i);

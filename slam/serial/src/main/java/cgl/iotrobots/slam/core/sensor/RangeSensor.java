@@ -1,16 +1,16 @@
 package cgl.iotrobots.slam.core.sensor;
 
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RangeSensor extends Sensor {
-    OrientedPoint<Double> m_pose;
+    DoubleOrientedPoint m_pose;
     List<Beam> m_beams = new ArrayList<Beam>();
     boolean newFormat;
 
-    public RangeSensor(String name, int beams_num, double res, OrientedPoint<Double> position, double span, double maxrange) {
+    public RangeSensor(String name, int beams_num, double res, DoubleOrientedPoint position, double span, double maxrange) {
         super(name);
         this.m_pose = position;
         double angle = -.5 * res * beams_num;
@@ -36,7 +36,7 @@ public class RangeSensor extends Sensor {
     }
 
     public class Beam {
-        public OrientedPoint<Double> pose = new OrientedPoint<Double>(0.0, 0.0, 0.0);
+        public DoubleOrientedPoint pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         public double span;
         public double maxRange;
         public double s, c;
@@ -46,7 +46,7 @@ public class RangeSensor extends Sensor {
         return m_beams;
     }
 
-    public OrientedPoint<Double> getPose() {
+    public DoubleOrientedPoint getPose() {
         return m_pose;
     }
 }

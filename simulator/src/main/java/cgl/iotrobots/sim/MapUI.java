@@ -2,6 +2,7 @@ package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.sample.OutMap;
 import cgl.iotrobots.slam.core.sample.Sample;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import javax.swing.*;
 import java.awt.*;
@@ -60,7 +61,7 @@ public class MapUI extends JFrame {
             int count = 0;
             try {
                 synchronized (map.currentPos) {
-                    for (cgl.iotrobots.slam.core.utils.Point<Integer> p : map.currentPos) {
+                    for (IntPoint p : map.currentPos) {
                         colorArea(image, p.x, p.y, map.width, map.height, 1);
                     }
                 }
