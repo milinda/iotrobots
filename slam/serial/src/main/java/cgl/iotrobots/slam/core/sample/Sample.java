@@ -137,11 +137,11 @@ public class Sample {
         srt_ = 0.2;
         str_ = 0.1;
         stt_ = 0.2;
-        linearUpdate_ = .0005;
-        angularUpdate_ = 0.0005;
+        linearUpdate_ = .05;
+        angularUpdate_ = 0.05;
         temporalUpdate_ = 0.0;
         resampleThreshold_ = 2;
-        particles_ = 30;
+        particles_ = 10;
         xmin_ = -20.0;
         ymin_ = -20.0;
         xmax_ = 20.0;
@@ -321,22 +321,24 @@ public class Sample {
 
     public void updateMap(LaserScan scan) {
         ScanMatcher matcher = new ScanMatcher();
-        double[] laser_angles = new double[scan.ranges.size()];
-        double theta = angle_min_;
-        for (int i = 0; i < scan.ranges.size(); i++) {
-            if (gsp_laser_angle_increment_ < 0)
-                laser_angles[scan.ranges.size() - i - 1] = theta;
-            else
-                laser_angles[i] = theta;
-            theta += gsp_laser_angle_increment_;
-        }
-
-        matcher.setLaserParameters(scan.ranges.size(), laser_angles,
-                gsp_laser_.getPose());
-
-        matcher.setlaserMaxRange(maxRange_);
-        matcher.setusableRange(maxUrange_);
+        matcher = gsp_.getMatcher();
         matcher.setgenerateMap(true);
+//        double[] laser_angles = new double[scan.ranges.size()];
+//        double theta = angle_min_;
+//        for (int i = 0; i < scan.ranges.size(); i++) {
+//            if (gsp_laser_angle_increment_ < 0)
+//                laser_angles[scan.ranges.size() - i - 1] = theta;
+//            else
+//                laser_angles[i] = theta;
+//            theta += gsp_laser_angle_increment_;
+//        }
+//
+//        matcher.setLaserParameters(scan.ranges.size(), laser_angles,
+//                gsp_laser_.getPose());
+//
+//        matcher.setlaserMaxRange(maxRange_);
+//        matcher.setusableRange(maxUrange_);
+//        matcher.setgenerateMap(true);
 
         Particle best =
                 gsp_.getParticles().get(gsp_.getBestParticleIndex());
@@ -374,9 +376,13 @@ public class Sample {
 
                 matcher.invalidateActiveArea();
                 double[] readingArray = new double[n.reading.size()];
+                System.out.format("best pose: %f %f %f\n", n.pose.x, n.pose.y, n.pose.theta);
                 for (int i = 0; i < n.reading.size(); i++) {
                     readingArray[i] = n.reading.get(i);
+                    System.out.format("%f,", readingArray[i]);
                 }
+                System.out.format("\n");
+
                 matcher.computeActiveArea(smap, n.pose, readingArray);
                 matcher.registerScan(smap, n.pose, readingArray);
             }
@@ -428,6 +434,7 @@ public class Sample {
         }
         System.out.println("count " + count);
         got_map_ = true;
+        matcher.setgenerateMap(false);
     }
 
     public static int MAP_IDX(int sx, int i, int j) {

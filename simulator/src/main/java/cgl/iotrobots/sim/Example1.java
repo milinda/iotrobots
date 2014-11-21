@@ -12,7 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
-    public static final int SENSORS = 360;
+    public static final int SENSORS = 4;
 
     public static final double ANGLE = 2 * Math.PI;
 
@@ -65,6 +65,8 @@ public class Example1 {
 
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
+            System.out.println("\n\nNew scan");
+
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
@@ -81,9 +83,9 @@ public class Example1 {
             }
 
             if (forward) {
-                setTranslationalVelocity(1);
+                setTranslationalVelocity(5);
             } else {
-                setTranslationalVelocity(-1);
+                setTranslationalVelocity(-5);
             }
             // frequently change orientation
 //            if ((getCounter() % 100) == 0)

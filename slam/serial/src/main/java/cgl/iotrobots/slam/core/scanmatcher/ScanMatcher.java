@@ -45,7 +45,7 @@ public class ScanMatcher {
     int m_laserBeams;
     double m_laserAngles[] = new double[LASER_MAXBEAMS];
 
-    List<IntPoint> m_linePoints = new ArrayList<IntPoint>();
+//    List<IntPoint> m_linePoints = new ArrayList<IntPoint>();
 
     public void setlaserMaxRange(double m_laserMaxRange) {
         this.m_laserMaxRange = m_laserMaxRange;
@@ -216,20 +216,21 @@ public class ScanMatcher {
                     d = m_usableRange;
 
                 DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.y);
+                p0 = map.world2map(lp);
                 IntPoint p1 = map.world2map(phit);
 
                 d += map.getDelta();
                 //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
                 //IntPoint p2=map.world2map(phit2);
-                List<IntPoint> linePoints = new ArrayList<IntPoint>();
+                // List<IntPoint> linePoints = new ArrayList<IntPoint>();
                 GridLineTraversalLine line = new GridLineTraversalLine();
-                line.points = linePoints;
+                line.points = m_linePoints;
                 //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
-                for (int i = 0; i < line.points.size() - 1; i++) {
-                    IntPoint patch = map.getStorage().patchIndexes(linePoints.get(i));
+                for (int i = 0; i < line.numPoints - 1; i++) {
+                    IntPoint patch = map.getStorage().patchIndexes(m_linePoints[i]);
                     //if (map.isInside(patch)) {
-                        activeArea.add(patch);
+                    activeArea.add(patch);
                     //}
 //                    System.out.println(patch.x + ", " + patch.y);
                 }
@@ -268,6 +269,9 @@ public class ScanMatcher {
 
     private static int count = 0;
 
+
+    private IntPoint m_linePoints [] = new IntPoint[20000];
+
     public double registerScan(GMap map, DoubleOrientedPoint p, double[] readings) {
         if (!m_activeAreaComputed)
             computeActiveArea(map, p, readings);
@@ -296,13 +300,13 @@ public class ScanMatcher {
                 d += map.getDelta();
                 //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
                 //IntPoint p2=map.world2map(phit2);
-                List<IntPoint> linePoints = new ArrayList<IntPoint>(20000);
+//                List<IntPoint> linePoints = new ArrayList<IntPoint>(20000);
                 GridLineTraversalLine line = new GridLineTraversalLine();
-                line.points = linePoints;
+                line.points = m_linePoints;
                 //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
-                for (int i = 0; i < line.points.size() - 1; i++) {
-                    PointAccumulator pa = (PointAccumulator) map.cell(line.points.get(i), false);
+                for (int i = 0; i < line.numPoints - 1; i++) {
+                    PointAccumulator pa = (PointAccumulator) map.cell(line.points[i], false);
                     double e = -pa.entropy();
                     pa.update(false, new DoublePoint(0.0, 0.0));
                     e += pa.entropy();

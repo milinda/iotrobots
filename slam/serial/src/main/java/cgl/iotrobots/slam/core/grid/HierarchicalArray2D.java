@@ -11,7 +11,7 @@ public class HierarchicalArray2D {
     Array2D array2D;
 //    Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
     Set<IntPoint> m_activeArea = new HashSet<IntPoint>();
-    int m_patchMagnitude = 5;
+    int m_patchMagnitude = 0;
     int m_patchSize;
 
     public HierarchicalArray2D(int xsize, int ysize, int patchMagnitude) {
