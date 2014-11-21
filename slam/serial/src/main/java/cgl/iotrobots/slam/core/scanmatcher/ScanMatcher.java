@@ -195,14 +195,11 @@ public class ScanMatcher {
         if (!map.isInsideD(min) || !map.isInsideD(max)) {
             DoublePoint lmin = map.map2world(new IntPoint(0, 0));
             DoublePoint lmax = map.map2world(new IntPoint(map.getMapSizeX() - 1, map.getMapSizeY() - 1));
-            //cerr << "CURRENT MAP " << lmin.x << " " << lmin.y << " " << lmax.x << " " << lmax.y << endl;
-            //cerr << "BOUNDARY OVERRIDE " << min.x << " " << min.y << " " << max.x << " " << max.y << endl;
             min.x = (min.x >= lmin.x) ? lmin.x : min.x - m_enlargeStep;
             max.x = (max.x <= lmax.x) ? lmax.x : max.x + m_enlargeStep;
             min.y = (min.y >= lmin.y) ? lmin.y : min.y - m_enlargeStep;
             max.y = (max.y <= lmax.y) ? lmax.y : max.y + m_enlargeStep;
             map.resize(min.x, min.y, max.x, max.y);
-            //cerr << "RESIZE " << min.x << " " << min.y << " " << max.x << " " << max.y << endl;
         }
 
         readingIndex = m_initialBeamsSkip;
@@ -312,9 +309,13 @@ public class ScanMatcher {
                     e += pa.entropy();
                     esum += e;
                 }
-                if (d <= m_usableRange) {
+                if (d < m_usableRange) {
+
                     PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
+                    double e = -pa.entropy();
                     pa.update(true, phit);
+                    e += pa.entropy();
+                    esum += e;
                     //	map.cell(p2).update(true,phit);
 //                    count++;
 //                    System.out.println(count + " " + pa.doubleValue());

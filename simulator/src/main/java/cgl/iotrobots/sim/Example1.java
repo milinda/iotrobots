@@ -124,14 +124,14 @@ public class Example1 {
             for (int i = angle; i < n + angle; i++) {
                 if (sonars.hasHit(i % n)) {
                     // System.out.println(sonars.getMeasurement(i));
-                    System.out.format("%f,", sonars.getMeasurement(i % n));
+                    //System.out.format("%f,", sonars.getMeasurement(i % n));
                     laserScan.ranges.add(sonars.getMeasurement(i % n));
                 } else {
                     laserScan.ranges.add(0.0);
-                    System.out.format("%f,", 0.0);
+                    //System.out.format("%f,", 0.0);
                 }
             }
-            System.out.format("\n");
+//            System.out.format("\n");
 
             laserScan.timestamp = System.currentTimeMillis();
 

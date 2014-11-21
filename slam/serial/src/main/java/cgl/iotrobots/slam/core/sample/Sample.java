@@ -275,7 +275,27 @@ public class Sample {
             System.out.println("False 2");
             return false;
         }
+        Double[] ranges_double = getDoubles(scan);
 
+
+        RangeReading reading = new RangeReading(scan.ranges.size(),
+                ranges_double,
+                gsp_laser_,
+                scan.timestamp);
+        // ...but it deep copies them in RangeReading constructor, so we don't
+        // need to keep our array around.
+
+        reading.setPose(gmap_pose);
+
+        for (int i = 0; i < ranges_double.length; i++) {
+            System.out.format("%f, ", ranges_double[i]);
+        }
+        System.out.format("\n");
+
+        return gsp_.processScan(reading, 0);
+    }
+
+    private Double[] getDoubles(LaserScan scan) {
         // GMapping wants an array of doubles...
         Double[] ranges_double = new Double[scan.ranges.size()];
         // If the angle increment is negative, we have to invert the order of the readings.
@@ -300,17 +320,7 @@ public class Sample {
                 }
             }
         }
-
-        RangeReading reading = new RangeReading(scan.ranges.size(),
-                ranges_double,
-                gsp_laser_,
-                scan.timestamp);
-        // ...but it deep copies them in RangeReading constructor, so we don't
-        // need to keep our array around.
-
-        reading.setPose(gmap_pose);
-
-        return gsp_.processScan(reading, 0);
+        return ranges_double;
     }
 
     public OutMap map_ = new OutMap();
@@ -321,24 +331,24 @@ public class Sample {
 
     public void updateMap(LaserScan scan) {
         ScanMatcher matcher = new ScanMatcher();
-        matcher = gsp_.getMatcher();
-        matcher.setgenerateMap(true);
-//        double[] laser_angles = new double[scan.ranges.size()];
-//        double theta = angle_min_;
-//        for (int i = 0; i < scan.ranges.size(); i++) {
-//            if (gsp_laser_angle_increment_ < 0)
-//                laser_angles[scan.ranges.size() - i - 1] = theta;
-//            else
-//                laser_angles[i] = theta;
-//            theta += gsp_laser_angle_increment_;
-//        }
-//
-//        matcher.setLaserParameters(scan.ranges.size(), laser_angles,
-//                gsp_laser_.getPose());
-//
-//        matcher.setlaserMaxRange(maxRange_);
-//        matcher.setusableRange(maxUrange_);
+//        matcher = gsp_.getMatcher();
 //        matcher.setgenerateMap(true);
+        double[] laser_angles = new double[scan.ranges.size()];
+        double theta = angle_min_;
+        for (int i = 0; i < scan.ranges.size(); i++) {
+            if (gsp_laser_angle_increment_ < 0)
+                laser_angles[scan.ranges.size() - i - 1] = theta;
+            else
+                laser_angles[i] = theta;
+            theta += gsp_laser_angle_increment_;
+        }
+
+        matcher.setLaserParameters(scan.ranges.size(), laser_angles,
+                gsp_laser_.getPose());
+
+        matcher.setlaserMaxRange(maxRange_);
+        matcher.setusableRange(maxUrange_);
+        matcher.setgenerateMap(true);
 
         Particle best =
                 gsp_.getParticles().get(gsp_.getBestParticleIndex());
@@ -434,7 +444,7 @@ public class Sample {
         }
         System.out.println("count " + count);
         got_map_ = true;
-        matcher.setgenerateMap(false);
+//        matcher.setgenerateMap(false);
     }
 
     public static int MAP_IDX(int sx, int i, int j) {
