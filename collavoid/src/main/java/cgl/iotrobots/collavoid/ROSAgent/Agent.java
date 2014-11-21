@@ -6,6 +6,7 @@ import cgl.iotrobots.collavoid.Comparators.NeighborDistComparator;
 import cgl.iotrobots.collavoid.Comparators.VectorsLexigraphicComparator;
 import cgl.iotrobots.collavoid.LocalPlanner.LPutils;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
+import cgl.iotrobots.collavoid.msgmanager.MsgFactory;
 import cgl.iotrobots.collavoid.msgmanager.msgPublisher;
 import cgl.iotrobots.collavoid.utils.*;
 
@@ -16,6 +17,7 @@ import static cgl.iotrobots.collavoid.utils.utils.*;
 
 import collavoid_msgs.pose_twist_covariance_msgs;
 import geometry_msgs.*;
+import nav_msgs.OccupancyGrid;
 import nav_msgs.Odometry;
 import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
@@ -192,7 +194,8 @@ public class Agent extends AbstractNodeMain {
             }
         }
 
-        lastTimeMePublished = new Time();
+        lastTimeMePublished = new Time(); //for position share
+        lastTimePositionsPublished=new Time();//for visualization in rviz
         agentInit();
     }
 
@@ -401,7 +404,7 @@ public class Agent extends AbstractNodeMain {
 //        //odom_sub_ = nh.subscribe("odom",1, &ROSAgent::odomCallback, this);
 
 
-        position_share_sub_ = node.newSubscriber("/position_share_in", pose_twist_covariance_msgs._TYPE);
+        position_share_sub_ = node.newSubscriber("/position_share", pose_twist_covariance_msgs._TYPE);
         position_share_sub_.addMessageListener(new MessageListener<pose_twist_covariance_msgs>() {
             @Override
             public void onNewMessage(pose_twist_covariance_msgs msg) {
@@ -411,7 +414,7 @@ public class Agent extends AbstractNodeMain {
 
         /*TODO: Need particle cloud and the weights of the particles to calculate localization uncertainty,
           TODO: but currently just particle cloud.*/
-        amcl_posearray_sub_ = node.newSubscriber("/particlecloud",PoseArray._TYPE);
+        amcl_posearray_sub_ = node.newSubscriber(id_+"/particlecloud",PoseArray._TYPE);
         amcl_posearray_sub_.addMessageListener(new MessageListener<PoseArray>() {
             @Override
             public void onNewMessage(PoseArray msg) {
@@ -634,8 +637,8 @@ public class Agent extends AbstractNodeMain {
 
             if ((node.getCurrentTime().toSeconds() - lastTimePositionsPublished.toSeconds()) > publishPositionsPeriod) {
                 lastTimePositionsPublished = node.getCurrentTime();
-                msgPublisher.publishNeighborPositions(agentNeighbors, global_frame_, base_frame_, neighbors_pub_);
-                msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);
+                msgPublisher.publishNeighborPositions(agentNeighbors, global_frame_, base_frame_, neighbors_pub_);// for visualization
+                msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);//for visualize in rviz
             }
         } finally {
             neighbors_lock_.unlock();
@@ -697,7 +700,6 @@ public class Agent extends AbstractNodeMain {
         }
     }
     void publishMePoseTwist() {
-
         pose_twist_covariance_msgs me_msg=messageFactory.newFromType(pose_twist_covariance_msgs._TYPE);
         me_msg.getHeader().setStamp(node.getCurrentTime());
         me_msg.getHeader().setFrameId(base_frame_);
