@@ -74,11 +74,11 @@ public class GMap {
     }
 
     public boolean isInside(int x, int y) {
-        return m_storage.cellState(new IntPoint(x,y)) == AccessibilityState.Inside.getVal();
+        return (m_storage.cellState(new IntPoint(x,y)) & AccessibilityState.Inside.getVal()) > 0;
     }
 
     public boolean isInside(IntPoint p) {
-        return m_storage.cellState(p) == AccessibilityState.Inside.getVal();
+        return (m_storage.cellState(p) & AccessibilityState.Inside.getVal()) > 0;
     }
 
     public boolean isInsideD(DoublePoint p) {
@@ -154,10 +154,10 @@ public class GMap {
     public Object cell(IntPoint p, boolean c) {
         int s = m_storage.cellState(p);
         if (c) {
-            if ((s & AccessibilityState.Allocated.getVal()) > 0)
+            if ((s & 0x2) > 0)
                 return m_storage.cell(p);
         } else {
-            if ((s & AccessibilityState.Inside.getVal()) == 0)
+            if ((s & 0x1) == 0)
                 assert false;
             return m_storage.cell(p);
         }

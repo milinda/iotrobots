@@ -11,7 +11,7 @@ public class HierarchicalArray2D {
     Array2D array2D;
 //    Set<Point<Integer>> m_activeArea = new TreeSet<Point<Integer>>(new PointComparator());
     Set<IntPoint> m_activeArea = new HashSet<IntPoint>();
-    int m_patchMagnitude = 0;
+    int m_patchMagnitude = 5;
     int m_patchSize;
 
     public HierarchicalArray2D(int xsize, int ysize, int patchMagnitude) {
@@ -57,10 +57,6 @@ public class HierarchicalArray2D {
 
     public Object cell(IntPoint p) {
         return cell(p.x, p.y);
-    }
-
-    public boolean isAllocated(IntPoint p)  {
-        return isAllocated(p.x,p.y);
     }
 
     public int cellState(IntPoint p) {
@@ -140,15 +136,16 @@ public class HierarchicalArray2D {
 
 
     public int cellState(int x, int y) {
-        if (array2D.isInside(patchIndexes(new IntPoint(x, y)))) {
-            if (isAllocated(x,y)) {
-                return AccessibilityState.Inside.getVal() | AccessibilityState.Allocated.getVal();
+        IntPoint p = patchIndexes(new IntPoint(x, y));
+        if (array2D.isInside(p)) {
+            if (isAllocated(p)) {
+                return 0x1 | 0x2;
             }
             else {
-                return AccessibilityState.Inside.getVal();
+                return 0x1;
             }
         }
-        return AccessibilityState.Outside.getVal();
+        return 0x0;
     }
 
     public void allocActiveArea(){
@@ -176,6 +173,12 @@ public class HierarchicalArray2D {
 
     public boolean isAllocated(int x, int y) {
         IntPoint c=patchIndexes(x,y);
+        Object val = array2D.m_cells[c.x][c.y];
+        return (val != null);
+    }
+
+    public boolean isAllocated(IntPoint patchIndexes) {
+        IntPoint c=patchIndexes;
         Object val = array2D.m_cells[c.x][c.y];
         return (val != null);
     }
