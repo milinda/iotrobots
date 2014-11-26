@@ -36,7 +36,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * Created by hjh on 11/16/14.
  */
-public class agentPositionShareCallback {
+public class PositionShareCallbackTest {
 
         public static TransformListener tf;
         public static VoxelGrid cosmap_voxelGrid;
