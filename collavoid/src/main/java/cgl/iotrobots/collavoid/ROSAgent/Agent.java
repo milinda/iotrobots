@@ -699,6 +699,7 @@ public class Agent extends AbstractNodeMain {
             me_lock_.unlock();
         }
     }
+
     void publishMePoseTwist() {
         pose_twist_covariance_msgs me_msg=messageFactory.newFromType(pose_twist_covariance_msgs._TYPE);
         me_msg.getHeader().setStamp(node.getCurrentTime());
