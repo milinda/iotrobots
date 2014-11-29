@@ -6,48 +6,39 @@ import org.ros.node.topic.Publisher;
 /**
  * Created by hjh on 11/25/14.
  */
-public class odoPub {
+public class AgentNode {
 
-    private odoPubnode odoemetryPublishNode;
+    private PubSubNode pubSubNode;
+    private ConnectedNode node;
 
-    static public class odoPubnode extends AbstractNodeMain {
-        private boolean initialized=false;
-        //private Publisher<Odometry> odometryPublisher;
-        private ConnectedNode node;
+    public class PubSubNode extends AbstractNodeMain {
+        private boolean initialized = false;
 
         @Override
         public void onStart(ConnectedNode connectedNode) {
-            node=connectedNode;
-            //use frame ID to identify robot
-            //odometryPublisher = connectedNode.newPublisher("Odometry", Odometry._TYPE);
-            initialized=true;
+            node = connectedNode;
+            initialized = true;
         }
 
         @Override
         public GraphName getDefaultNodeName() {
-            return GraphName.of("robot");
+            return GraphName.of("agent");
         }
-
-
-        //public Publisher<Odometry> getOdometryPublisher() {
-//            return odometryPublisher;
-//        }
-
 
     }
 
-    public odoPub(String nodeName) {
+    public AgentNode(String nodeName) {
 
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic("localhost");
         final NodeMainExecutor executor = DefaultNodeMainExecutor.newDefault();
         nodeConfiguration.setNodeName(nodeName);
 
-        odoemetryPublishNode = new odoPubnode();
-        executor.execute(odoemetryPublishNode, nodeConfiguration);
+        pubSubNode = new PubSubNode();
+        executor.execute(pubSubNode, nodeConfiguration);
 
-        System.out.println("Initializing Odometry publisher");
+        System.out.println("Initializing Node "+nodeName+"..");
 
-        while(!odoemetryPublishNode.initialized) {
+        while (!pubSubNode.initialized) {
             System.out.print(".");
             try {
                 Thread.sleep(100);
@@ -68,14 +59,13 @@ public class odoPub {
 //        }
 //    }
 
-    public ConnectedNode getNode(){
-        if (odoemetryPublishNode.initialized){
-            return odoemetryPublishNode.node;
-        }else{
+    public ConnectedNode getNode() {
+        if (pubSubNode.initialized) {
+            return node;
+        } else {
             System.out.println("Error, node not initialized!");
             return null;
         }
-
     }
 
 

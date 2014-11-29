@@ -9,7 +9,19 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>Simulator1</artifactId>
+    <artifactId>Simulator</artifactId>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>simbad</groupId>
+            <artifactId>simbad</artifactId>
+            <scope>system</scope>
+            <version>1.4</version>
+            <systemPath>${project.basedir}/lib/simbad/simbad-1.4.jar</systemPath>
+        </dependency>
+
+    </dependencies>
 
 
 </project>

@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 /**
  * Created by hjh on 11/24/14.
  */
-public class CmdVelListener {
+public class CmdVelSub {
     private String nodeName;
     private double vl;
     private double vr;
@@ -43,7 +43,7 @@ public class CmdVelListener {
 
     }
 
-    public CmdVelListener(double dist, String nodeName) {
+    public CmdVelSub(double dist, String nodeName) {
         this.nodeName = nodeName;
         this.wheelDistance = dist;
         initalize();

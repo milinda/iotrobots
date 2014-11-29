@@ -1,3 +1,4 @@
+import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -15,7 +16,7 @@ public class Simple {
     /** Describe the robot */
     static public class Robot extends Agent {
 
-        CmdVelListener velListener;
+        CmdVelSub velListener;
 
         DifferentialKinematic kinematic;
         RangeSensorBelt sensors;
@@ -43,7 +44,7 @@ public class Simple {
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // create listening node
-            velListener=new CmdVelListener(this.getRadius(),this.getName());
+            velListener=new CmdVelSub(this.getRadius(),this.getName());
 
             try {
                 Thread.sleep(5000);
@@ -140,7 +141,6 @@ public class Simple {
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
-
     }
 
 } 

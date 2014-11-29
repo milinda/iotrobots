@@ -38,7 +38,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 
-
 public class Agent extends AbstractNodeMain {
     //config for simulation and some rules
     double leftPref;
@@ -152,7 +151,7 @@ public class Agent extends AbstractNodeMain {
     public List<PoseWeighted> pose_array_weighted_;
 
     //lock
-    public final Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
+    public Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
 
     //me stuff
     TransformListener tf_;
@@ -178,7 +177,7 @@ public class Agent extends AbstractNodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
-        this.node=connectedNode;
+        this.node = connectedNode;
         this.params = node.getParameterTree();
 
         //waiting for time
@@ -195,12 +194,12 @@ public class Agent extends AbstractNodeMain {
         }
 
         lastTimeMePublished = new Time(); //for position share
-        lastTimePositionsPublished=new Time();//for visualization in rviz
+        lastTimePositionsPublished = new Time();//for visualization in rviz
         agentInit();
     }
 
     //-----------------------method begin-------------------------------//
-    public Agent(String id,TransformListener tf) {
+    public Agent(String id, TransformListener tf) {
         this.me_lock_ = new ReentrantLock();
         this.obstacle_lock_ = new ReentrantLock();
         this.neighbors_lock_ = new ReentrantLock();
@@ -211,55 +210,55 @@ public class Agent extends AbstractNodeMain {
         this.cur_loc_unc_radius_ = 0;
         this.min_dist_obst_ = Double.MAX_VALUE;
 
-        this.holo_velocity_=new Vector2();
+        this.holo_velocity_ = new Vector2();
 
-        this.footprint_msg_=messageFactory.newFromType(PolygonStamped._TYPE);
-        this.base_odom_=messageFactory.newFromType(Odometry._TYPE);
+        this.footprint_msg_ = messageFactory.newFromType(PolygonStamped._TYPE);
+        this.base_odom_ = messageFactory.newFromType(Odometry._TYPE);
 
-        this.minkowski_footprint_=new ArrayList<Vector2>();
-        this.footPrintLines=new ArrayList<LinePair>();
-        this.obstacle_points_=new ArrayList<Vector2>();
-        this.pose_array_weighted_=new ArrayList<PoseWeighted>();
-        this.agentNeighbors=new ArrayList<Agent>();
+        this.minkowski_footprint_ = new ArrayList<Vector2>();
+        this.footPrintLines = new ArrayList<LinePair>();
+        this.obstacle_points_ = new ArrayList<Vector2>();
+        this.pose_array_weighted_ = new ArrayList<PoseWeighted>();
+        this.agentNeighbors = new ArrayList<Agent>();
 
-        this.tf_=tf;
-        this.id_=new String(id);
+        this.tf_ = tf;
+        this.id_ = new String(id);
     }
 
     //get parameters from the server
     public void agentInit() {
 
-        this.base_frame_ = params.getString("~/base_frame", "/base_link");
+        this.base_frame_ = params.getString("~/base_frame", id_+"/base");
         this.global_frame_ = params.getString("~/global_frame", "/map");
         this.standalone_ = params.getBoolean("~/standalone", false);
 
         //acceleration limits load from params_turtle.yaml
-        this.acc_lim_x_=params.getDouble("~/acc_lim_x");
-        this.acc_lim_y_=params.getDouble("~/acc_lim_y");
-        this.acc_lim_th_=params.getDouble("~/acc_lim_th");
+        this.acc_lim_x_ = params.getDouble("~/acc_lim_x");
+        this.acc_lim_y_ = params.getDouble("~/acc_lim_y");
+        this.acc_lim_th_ = params.getDouble("~/acc_lim_th");
 
         //holo_robot
-        this.holo_robot_=params.getBoolean("~/holo_robot");
+        this.holo_robot_ = params.getBoolean("~/holo_robot");
 
         if (!holo_robot_)
-            this.wheel_base_=params.getDouble("~/wheel_base");
+            this.wheel_base_ = params.getDouble("~/wheel_base");
         else
             this.wheel_base_ = 0.0;
 
         //min max speeds
-        this.max_vel_with_obstacles_=params.getDouble("~/max_vel_with_obstacles");
+        this.max_vel_with_obstacles_ = params.getDouble("~/max_vel_with_obstacles");
 
-        this.max_vel_x_=params.getDouble("~/max_vel_x");
-        this.min_vel_x_=params.getDouble("~/min_vel_x");
-        this.max_vel_y_=params.getDouble("~/max_vel_y");
-        this.min_vel_y_=params.getDouble("~/min_vel_y");
-        this.max_vel_th_=params.getDouble("~/max_vel_th");
-        this.min_vel_th_=params.getDouble("~/min_vel_th");
-        this.min_vel_th_inplace_=params.getDouble("~/min_vel_th_inplace");
+        this.max_vel_x_ = params.getDouble("~/max_vel_x");
+        this.min_vel_x_ = params.getDouble("~/min_vel_x");
+        this.max_vel_y_ = params.getDouble("~/max_vel_y");
+        this.min_vel_y_ = params.getDouble("~/min_vel_y");
+        this.max_vel_th_ = params.getDouble("~/max_vel_th");
+        this.min_vel_th_ = params.getDouble("~/min_vel_th");
+        this.min_vel_th_inplace_ = params.getDouble("~/min_vel_th_inplace");
 
         //set radius
-        this.footprint_radius_=params.getDouble("~/footprint_radius");
-        this.radius=this.footprint_radius_+this.cur_loc_unc_radius_;
+        this.footprint_radius_ = params.getDouble("~/footprint_radius");
+        this.radius = this.footprint_radius_ + this.cur_loc_unc_radius_;
 
         //set frames
         //robot_base_frame_ = costmap_ros_->getBaseFrameID(); need to investigate
@@ -268,71 +267,70 @@ public class Agent extends AbstractNodeMain {
 
         //sim period
         GraphName controller_frequency_param_name;
-        controller_frequency_param_name=params.search("~/controller_frequency");
+        controller_frequency_param_name = params.search("~/controller_frequency");
         double sim_period_;
-        if(controller_frequency_param_name==null){
+        if (controller_frequency_param_name == null) {
             sim_period_ = 0.05;
-        }
-        else {
+        } else {
             double controller_frequency = 0;
-            controller_frequency=params.getDouble(controller_frequency_param_name,20.0);
+            controller_frequency = params.getDouble(controller_frequency_param_name, 20.0);
 
-            if(controller_frequency > 0){
+            if (controller_frequency > 0) {
                 sim_period_ = 1.0 / controller_frequency;
-            }else{
+            } else {
                 this.node.getLog().warn("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
                 sim_period_ = 0.05;
             }
         }
-        this.node.getLog().info("Sim period is set to "+ String.format("%1$.2f",sim_period_));
-        this.simPeriod=sim_period_;
+        this.node.getLog().info("Sim period is set to " + String.format("%1$.2f", sim_period_));
+        this.simPeriod = sim_period_;
 
         //other params agent
         //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
         this.time_to_holo_ = params.getDouble("~/time_to_holo", 0.4);
         this.minErrorHolo = params.getDouble("~/min_error_holo", 0.01);
-        this.maxErrorHolo = params.getDouble( "~/max_error_holo", 0.15);
+        this.maxErrorHolo = params.getDouble("~/max_error_holo", 0.15);
         //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
         //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
-        this.eps_= params.getDouble( "~/eps", 0.1);
-        this.orca=params.getBoolean( "~/orca");
-        this.convex=params.getBoolean( "~/convex");
+        this.eps_ = params.getDouble("~/eps", 0.1);
+        this.orca = params.getBoolean("~/orca");
+        this.convex = params.getBoolean("~/convex");
         //params.getBoolean( "clearpath", &clearpath); not used
-        this.useTruancation=params.getBoolean( "~/use_truncation");
+        this.useTruancation = params.getBoolean("~/use_truncation");
 
         //num_samples = getParamDef(private_nh, "num_samples", 400); not used
         this.voType = params.getInteger("~/type_vo", 0); //HRVO
 
-        this.truncTime = params.getDouble("~/trunc_time",5.0);
+        this.truncTime = params.getDouble("~/trunc_time", 5.0);
         //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used
 
-        this.publishPositionsPeriod = 1.0/params.getDouble("~/publish_positions_frequency",10.0);
-        this.publishMePeriod = 1.0/params.getDouble("~/publish_me_frequency",10.0);
+        this.publishPositionsPeriod = 1.0 / params.getDouble("~/publish_positions_frequency", 10.0);
+        this.publishMePeriod = 1.0 / params.getDouble("~/publish_me_frequency", 10.0);
 
         //set Footprint, get footprint from the costmap while costmap subscibe to
         //footprint topic
-        List<Point> footprint_points=new ArrayList<Point>();
+        List<Point> footprint_points = new ArrayList<Point>();
         //TODO:footprint_points = costmap_ros_->getRobotFootprint();
 
-        PolygonStamped footprint=messageFactory.newFromType(PolygonStamped._TYPE);
-        Point32 p=messageFactory.newFromType(Point32._TYPE);
-        List<Point32> points=new ArrayList<Point32>();
-        for (int i = 0; i<footprint_points.size(); i++) {
-            p.setX((float)footprint_points.get(i).getX());
+        PolygonStamped footprint = messageFactory.newFromType(PolygonStamped._TYPE);
+        Point32 p = messageFactory.newFromType(Point32._TYPE);
+        List<Point32> points = new ArrayList<Point32>();
+        for (int i = 0; i < footprint_points.size(); i++) {
+            p.setX((float) footprint_points.get(i).getX());
             p.setY((float) footprint_points.get(i).getY());
             points.add(p);
         }
         footprint.getPolygon().setPoints(points);
 
         points.clear();
-        if (footprint.getPolygon().getPoints().size()>2)
+        if (footprint.getPolygon().getPoints().size() > 2)
             setFootprint(footprint);
         else {
             double angle = 0;
             double step = 2 * Math.PI / 72;
-            while(angle < 2 * Math.PI){
-                Point32 pt=messageFactory.newFromType(Point32._TYPE);
-                pt.setX((float)(this.footprint_radius_ * Math.cos(angle)));
+            while (angle < 2 * Math.PI) {
+                Point32 pt = messageFactory.newFromType(Point32._TYPE);
+                pt.setX((float) (this.footprint_radius_ * Math.cos(angle)));
                 pt.setY((float) (this.footprint_radius_ * Math.sin(angle)));
                 pt.setZ(0.0f);
                 points.add(pt);
@@ -362,7 +360,7 @@ public class Agent extends AbstractNodeMain {
         setFootprint(footprint);*/
         initPubSub(this.node);
         initialized_ = true;
-        logger.info("************************"+node.getName()+" is initialized.");
+        logger.info("************************" + node.getName() + " is initialized.");
     }
 
     //called by local planner, as a module
@@ -377,7 +375,7 @@ public class Agent extends AbstractNodeMain {
         if (this.standalone_) {
             this.node = newnode;
             this.params = node.getParameterTree();
-            use_obstacles_ = params.getBoolean("move_base/use_obstacles",true);
+            use_obstacles_ = params.getBoolean("move_base/use_obstacles", true);
             controlled = params.getBoolean("move_base/controlled", true);
         }
 
@@ -414,7 +412,7 @@ public class Agent extends AbstractNodeMain {
 
         /*TODO: Need particle cloud and the weights of the particles to calculate localization uncertainty,
           TODO: but currently just particle cloud.*/
-        amcl_posearray_sub_ = node.newSubscriber(id_+"/particlecloud",PoseArray._TYPE);
+        amcl_posearray_sub_ = node.newSubscriber(id_ + "/particlecloud", PoseArray._TYPE);
         amcl_posearray_sub_.addMessageListener(new MessageListener<PoseArray>() {
             @Override
             public void onNewMessage(PoseArray msg) {
@@ -424,7 +422,7 @@ public class Agent extends AbstractNodeMain {
 
 
         //to calculate position
-        odom_sub_=node.newSubscriber("odom",Odometry._TYPE);
+        odom_sub_ = node.newSubscriber("odom", Odometry._TYPE);
         odom_sub_.addMessageListener(new MessageListener<Odometry>() {
             @Override
             public void onNewMessage(Odometry msg) {
@@ -450,21 +448,21 @@ public class Agent extends AbstractNodeMain {
 
     }
 
-    void amclPoseArrayWeightedCallback(final PoseArray msg){
+    void amclPoseArrayWeightedCallback(final PoseArray msg) {
         this.convex_lock_.lock();
         try {
             pose_array_weighted_.clear();
-            PoseStamped in=messageFactory.newFromType(PoseStamped._TYPE);
+            PoseStamped in = messageFactory.newFromType(PoseStamped._TYPE);
             in.setHeader(msg.getHeader());
-            for (int i = 0; i <  msg.getPoses().size(); i++) {
+            for (int i = 0; i < msg.getPoses().size(); i++) {
                 in.setPose(msg.getPoses().get(i));
-                  //TODO: must transform!!!! All footprint are in base frame.
+                //TODO: must transform!!!! All footprint are in base frame.
 /*                try {
                     tf_ -> waitForTransform(global_frame_, base_frame_, in.header.stamp, ros::Duration (0.2));
                     tf_ -> transformPose(base_frame_, in, result);*/
                 //TODO: need weight
-                    PoseWeighted result=new PoseWeighted(0.0,in);
-                    pose_array_weighted_.add(result);
+                PoseWeighted result = new PoseWeighted(0.0, in);
+                pose_array_weighted_.add(result);
  /*               } catch (tf::TransformException ex){
                     ROS_ERROR("%s", ex.what());
                     ROS_ERROR("point transform failed");
@@ -478,56 +476,56 @@ public class Agent extends AbstractNodeMain {
                 //use convex shape
                 computeNewMinkowskiFootprint();
             }
-        }finally {
+        } finally {
             this.convex_lock_.unlock();
         }
 
     }
 
-    void computeNewLocUncertainty(){
-        List<ConvexHullPoint> points=new ArrayList<ConvexHullPoint>();
-        for (int i = 0; i <  pose_array_weighted_.size(); i++) {
-            ConvexHullPoint p=new ConvexHullPoint();
-            double x=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
-            double y=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
-            p.setPoint(new Vector2(x,y));
+    void computeNewLocUncertainty() {
+        List<ConvexHullPoint> points = new ArrayList<ConvexHullPoint>();
+        for (int i = 0; i < pose_array_weighted_.size(); i++) {
+            ConvexHullPoint p = new ConvexHullPoint();
+            double x = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
+            double y = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
+            p.setPoint(new Vector2(x, y));
             p.setWeight(pose_array_weighted_.get(i).getW());
             p.setIndex(i);
             p.setOrig_index(i);
             points.add(p);
         }
-        Collections.sort(points,new ConvexHullPointsPositionComparator());
+        Collections.sort(points, new ConvexHullPointsPositionComparator());
         double sum = 0.0;
         int j = 0;
-        while (sum <= 1.0 - eps_ && j <  points.size()) {
+        while (sum <= 1.0 - eps_ && j < points.size()) {
             //TODO:need weight or the loop will not stop
             sum += points.get(j).getWeight();
             j++;
         }
         //maximum two times of the footpint radius
-        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j-1).getPoint()));
+        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j - 1).getPoint()));
         //ROS_ERROR("Loc Uncertainty = %f", cur_loc_unc_radius_);
         radius = footprint_radius_ + cur_loc_unc_radius_;
     }
 
-    void computeNewMinkowskiFootprint(){
+    void computeNewMinkowskiFootprint() {
         boolean done = false;
-        List<ConvexHullPoint> convex_hull=new ArrayList<ConvexHullPoint>();
-        List<ConvexHullPoint> points=new ArrayList<ConvexHullPoint>();
+        List<ConvexHullPoint> convex_hull = new ArrayList<ConvexHullPoint>();
+        List<ConvexHullPoint> points = new ArrayList<ConvexHullPoint>();
         points.clear();
 
-        for (int i = 0; i <  pose_array_weighted_.size(); i++) {
-            ConvexHullPoint p=new ConvexHullPoint();
-            double x=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
-            double y=pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
-            p.setPoint(new Vector2(x,y));
+        for (int i = 0; i < pose_array_weighted_.size(); i++) {
+            ConvexHullPoint p = new ConvexHullPoint();
+            double x = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
+            double y = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
+            p.setPoint(new Vector2(x, y));
             p.setWeight(pose_array_weighted_.get(i).getW());
             p.setIndex(i);
             p.setOrig_index(i);
             points.add(p);
         }
-        Collections.sort(points,new VectorsLexigraphicComparator());
-        for (int i = 0; i <  points.size(); i++) {
+        Collections.sort(points, new VectorsLexigraphicComparator());
+        for (int i = 0; i < points.size(); i++) {
             points.get(i).setIndex(i);
         }
 
@@ -539,41 +537,41 @@ public class Agent extends AbstractNodeMain {
             convex_hull.clear();
             convex_hull = convexHull(points, true);
 
-            skip_list=new int[convex_hull.size()];
-            for (int j = 0; j<  convex_hull.size()-1; j++){
-                skip_list[j]=convex_hull.get(j).getIndex();
+            skip_list = new int[convex_hull.size()];
+            for (int j = 0; j < convex_hull.size() - 1; j++) {
+                skip_list[j] = convex_hull.get(j).getIndex();
                 sum += convex_hull.get(j).getWeight();
             }
-            total_sum +=sum;
+            total_sum += sum;
 
             //ROS_WARN("SUM = %f (%f), num Particles = %d, eps = %f", sum, total_sum, (int) points.size(), eps_);
 
-            if (total_sum >= eps_){
+            if (total_sum >= eps_) {
                 done = true;
                 break;
             }
 
             Arrays.sort(skip_list);
-            for (int i = skip_list.length -1; i >= 0; i--) {
+            for (int i = skip_list.length - 1; i >= 0; i--) {
                 points.remove(skip_list[i]);
             }
 
-            for (int i = 0; i <  points.size(); i++) {
+            for (int i = 0; i < points.size(); i++) {
                 points.get(i).setIndex(i);
             }
         }
 
-        List<Vector2> localization_footprint=new ArrayList<Vector2>();
-        List<Vector2> own_footprint=new ArrayList<Vector2>();
+        List<Vector2> localization_footprint = new ArrayList<Vector2>();
+        List<Vector2> own_footprint = new ArrayList<Vector2>();
         for (int i = 0; i < convex_hull.size(); i++) {
             localization_footprint.add(convex_hull.get(i).getPoint());
         }
 
-        for (int i = 0; i <footprint_msg_.getPolygon().getPoints().size() ; i++) {
-            Point32 p=footprint_msg_.getPolygon().getPoints().get(i);
+        for (int i = 0; i < footprint_msg_.getPolygon().getPoints().size(); i++) {
+            Point32 p = footprint_msg_.getPolygon().getPoints().get(i);
             own_footprint.add(new Vector2(p.getX(), p.getY()));
             //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
-                    }
+        }
         minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
         //publish footprint
         PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
@@ -583,14 +581,14 @@ public class Agent extends AbstractNodeMain {
 
 
     PolygonStamped createFootprintMsgFromVector2(final List<Vector2> footprint) {
-        PolygonStamped result=messageFactory.newFromType(PolygonStamped._TYPE);
+        PolygonStamped result = messageFactory.newFromType(PolygonStamped._TYPE);
         result.getHeader().setFrameId(base_frame_);
         result.getHeader().setStamp(node.getCurrentTime());
 
-        for (int i = 0; i <footprint.size() ; i++) {
-            Point32 p=messageFactory.newFromType(Point32._TYPE);
-            p.setX((float)footprint.get(i).getX());
-            p.setY((float)footprint.get(i).getY());
+        for (int i = 0; i < footprint.size(); i++) {
+            Point32 p = messageFactory.newFromType(Point32._TYPE);
+            p.setX((float) footprint.get(i).getX());
+            p.setY((float) footprint.get(i).getY());
             result.getPolygon().getPoints().add(p);
         }
         return result;
@@ -616,7 +614,7 @@ public class Agent extends AbstractNodeMain {
                 }
                 if (i >= agentNeighbors.size()) { //Robot is new, so it will be added to the list
 
-                    Agent new_robot = new Agent(cur_id,null);
+                    Agent new_robot = new Agent(cur_id, null);
                     new_robot.holo_robot_ = msg.getHoloRobot();
                     agentNeighbors.add(new_robot);
                     logger.info("I added a new neighbor with id " + cur_id + " and radius " + msg.getRadius());
@@ -647,10 +645,10 @@ public class Agent extends AbstractNodeMain {
 
     public void setMinkowskiFootprintVector2(PolygonStamped minkowski_footprint) {
         this.minkowski_footprint_.clear();
-        for (int i = 0; i <minkowski_footprint.getPolygon().getPoints().size() ; i++) {
-            double x=minkowski_footprint.getPolygon().getPoints().get(i).getX();
-            double y=minkowski_footprint.getPolygon().getPoints().get(i).getY();
-            this.minkowski_footprint_.add(new Vector2(x,y));
+        for (int i = 0; i < minkowski_footprint.getPolygon().getPoints().size(); i++) {
+            double x = minkowski_footprint.getPolygon().getPoints().get(i).getX();
+            double y = minkowski_footprint.getPolygon().getPoints().get(i).getY();
+            this.minkowski_footprint_.add(new Vector2(x, y));
 //            System.out.println(i+":"+minkowski_footprint.getPolygon().getPoints().get(i).getX());
 //            System.out.println(i+":"+minkowski_footprint.getPolygon().getPoints().get(i).getY());
         }
@@ -660,7 +658,7 @@ public class Agent extends AbstractNodeMain {
 
     }
 
-    void odomCallback(final Odometry msg){
+    void odomCallback(final Odometry msg) {
         //we assume that the odometry is published in the frame of the base??
         me_lock_.lock();
         try {
@@ -670,7 +668,7 @@ public class Agent extends AbstractNodeMain {
 
             last_seen_ = msg.getHeader().getStamp();
             //tf::Stamped < tf::Pose > global_pose;  use PoseStamped instead
-            PoseStamped global_pose=messageFactory.newFromType(PoseStamped._TYPE);
+            PoseStamped global_pose = messageFactory.newFromType(PoseStamped._TYPE);
             //let's get the pose of the robot in the frame of the plan
             /*global_pose.setIdentity();
             global_pose.frame_id_ = base_frame_;
@@ -691,17 +689,17 @@ public class Agent extends AbstractNodeMain {
             //base_odom_.pose.pose = pose_msg.pose;
             base_odom_.getPose().setPose(global_pose.getPose());
 
-            if ((node.getCurrentTime().toSeconds() - lastTimeMePublished.toSeconds()) > publishMePeriod){
+            if ((node.getCurrentTime().toSeconds() - lastTimeMePublished.toSeconds()) > publishMePeriod) {
                 lastTimeMePublished = node.getCurrentTime();
                 publishMePoseTwist();
             }
-        }finally {
+        } finally {
             me_lock_.unlock();
         }
     }
 
     void publishMePoseTwist() {
-        pose_twist_covariance_msgs me_msg=messageFactory.newFromType(pose_twist_covariance_msgs._TYPE);
+        pose_twist_covariance_msgs me_msg = messageFactory.newFromType(pose_twist_covariance_msgs._TYPE);
         me_msg.getHeader().setStamp(node.getCurrentTime());
         me_msg.getHeader().setFrameId(base_frame_);
 
@@ -713,7 +711,7 @@ public class Agent extends AbstractNodeMain {
         me_msg.getHolonomicVelocity().setY(holo_velocity_.getY());
 
         me_msg.setHoloRobot(holo_robot_);
-        me_msg.setRadius((float)(footprint_radius_ + cur_loc_unc_radius_));
+        me_msg.setRadius((float) (footprint_radius_ + cur_loc_unc_radius_));
         me_msg.setRobotId(id_);
 
         me_msg.setFootprint(createFootprintMsgFromVector2(minkowski_footprint_));
@@ -865,47 +863,47 @@ public class Agent extends AbstractNodeMain {
 //            if (orca_) {
 //                computeOrcaVelocity(pref_velocity);
 //            } else {
-                samples.clear();
+            samples.clear();
 //                if (clearpath_) {
-                    computeClearpathVelocity(pref_velocity);
+            computeClearpathVelocity(pref_velocity);
 //                } else {
 //                    computeSampledVelocity(pref_velocity);
 //                }
 //            }
 
 
-            double speed_ang = Math.atan2(newVelocity.getY(),newVelocity.getX());
+            double speed_ang = Math.atan2(newVelocity.getY(), newVelocity.getX());
             double dif_ang = Angles.shortest_angular_distance(position.getHeading(), speed_ang);
 
-            Vector3 linear=messageFactory.newFromType(Vector3._TYPE);
-            Vector3 angular=messageFactory.newFromType(Vector3._TYPE);
+            Vector3 linear = messageFactory.newFromType(Vector3._TYPE);
+            Vector3 angular = messageFactory.newFromType(Vector3._TYPE);
             if (!holo_robot_) {
                 double vel = Vector2.abs(newVelocity);
                 double vstar;
 
                 if (Math.abs(dif_ang) > EPSILON.EPSILON)
-                vstar = calcVstar(vel, dif_ang);//get nonholomonic velocity
+                    vstar = calcVstar(vel, dif_ang);//get nonholomonic velocity
                 else
-                vstar = max_vel_x_;
+                    vstar = max_vel_x_;
 
                 linear.setX(Math.min(vstar, vMaxAng()));
                 linear.setY(0.0);
                 cmd_vel.setLinear(linear);
 
                 //ROS_ERROR("dif_ang %f", dif_ang);
-                if (Math.abs(dif_ang) > 3.0 * Math.PI / 4.0){
+                if (Math.abs(dif_ang) > 3.0 * Math.PI / 4.0) {
                     angular.setZ(sign(base_odom_.getTwist().getTwist().getAngular().getZ()) * Math.min(Math.abs(dif_ang / time_to_holo_), max_vel_th_));
                     cmd_vel.setAngular(angular);
 
-                }
-                else{
+                } else {
                     angular.setZ(sign(dif_ang) * Math.min(Math.abs(dif_ang / time_to_holo_), max_vel_th_));
                     cmd_vel.setAngular(angular);
 
                 }
                 //ROS_ERROR("vstar = %.3f", vstar);
             } else {
-                Vector2 rotated_vel = Vector2.rotateVectorByAngle(newVelocity, -position.getHeading());//???????????????????????
+                //new velocity is caculated in world frame, it has to be transformed to robot base frame
+                Vector2 rotated_vel = Vector2.rotateVectorByAngle(newVelocity, -position.getHeading());
 
                 linear.setX(rotated_vel.getX());
                 linear.setY(rotated_vel.getY());
@@ -1077,9 +1075,9 @@ public class Agent extends AbstractNodeMain {
             computeObstacleLine(obst1);
         } else if (dist == Vector2.absSqr(Vector2.minus(position.getPos(), obst2))) {
             computeObstacleLine(obst2);
-        }else {
-            Vector2 position_obst = projectPointOnLine(obst1, Vector2.minus(obst2,obst1), position.getPos());
-            Vector2 rel_position = Vector2.minus(position_obst,position.getPos());
+        } else {
+            Vector2 position_obst = projectPointOnLine(obst1, Vector2.minus(obst2, obst1), position.getPos());
+            Vector2 rel_position = Vector2.minus(position_obst, position.getPos());
             dist = Math.sqrt(dist);
             double dist_to_footprint = getDistToFootprint(rel_position);
             if (dist_to_footprint == -1) {
@@ -1088,53 +1086,53 @@ public class Agent extends AbstractNodeMain {
             dist = dist - dist_to_footprint - 0.03;
 
             if (dist < 0.0) {
-                Line line=new Line();
-                line.setPoint(Vector2.mul(Vector2.normalize(rel_position),(dist - 0.02)));
+                Line line = new Line();
+                line.setPoint(Vector2.mul(Vector2.normalize(rel_position), (dist - 0.02)));
                 line.setDir(Vector2.normalize(Vector2.minus(obst1, obst2)));
                 addOrcaLines.add(line);
                 return;
             }
 
-            if (Vector2.abs(Vector2.minus(position.getPos(),obst1)) > 2 * footprint_radius_ &&
-                    Vector2.abs(Vector2.minus(position.getPos(),obst2)) > 2 * footprint_radius_) {
-                Line line=new Line();
-                line.setPoint(Vector2.mul(Vector2.normalize(rel_position),dist));
+            if (Vector2.abs(Vector2.minus(position.getPos(), obst1)) > 2 * footprint_radius_ &&
+                    Vector2.abs(Vector2.minus(position.getPos(), obst2)) > 2 * footprint_radius_) {
+                Line line = new Line();
+                line.setPoint(Vector2.mul(Vector2.normalize(rel_position), dist));
                 line.setDir(Vector2.negative(Vector2.normalize(Vector2.minus(obst1, obst2))));
                 addOrcaLines.add(line);
                 return;
 
             }
 
-            rel_position = Vector2.mul(Vector2.normalize(rel_position),Vector2.abs(rel_position) - dist / 2.0);
+            rel_position = Vector2.mul(Vector2.normalize(rel_position), Vector2.abs(rel_position) - dist / 2.0);
 
-            Vector<Vector2> obst=new Vector<Vector2>();
+            Vector<Vector2> obst = new Vector<Vector2>();
             obst.add(Vector2.minus(obst1, position_obst));
-            obst.add(Vector2.minus(obst2,position_obst));
+            obst.add(Vector2.minus(obst2, position_obst));
             List<Vector2> mink_sum = minkowskiSum(own_footprint, obst);
 
-            Vector2 min=new Vector2();
-            Vector2 max=new Vector2();
+            Vector2 min = new Vector2();
+            Vector2 max = new Vector2();
             double min_ang = 0.0;
             double max_ang = 0.0;
 
             for (int i = 0; i < mink_sum.size(); i++) {
-                double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position,mink_sum.get(i)));
-                if (leftOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position,mink_sum.get(i)))) {
+                double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
+                if (leftOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
                     if (-angle < min_ang) {
-                        min = Vector2.plus(rel_position,mink_sum.get(i));
+                        min = Vector2.plus(rel_position, mink_sum.get(i));
                         min_ang = -angle;
                     }
                 } else {
                     if (angle > max_ang) {
-                        max = Vector2.plus(rel_position,mink_sum.get(i));
+                        max = Vector2.plus(rel_position, mink_sum.get(i));
                         max_ang = angle;
                     }
                 }
             }
 
-            Line line=new Line();
+            Line line = new Line();
             line.setPoint(Vector2.mul(Vector2.normalize(rel_position), dist / 2.0));
-            if (Vector2.absSqr(Vector2.minus(position_obst,obst1)) > Vector2.absSqr(Vector2.minus(position_obst, obst2))) {
+            if (Vector2.absSqr(Vector2.minus(position_obst, obst1)) > Vector2.absSqr(Vector2.minus(position_obst, obst2))) {
                 // ROS_ERROR("max_ang = %.2f", max_ang);
                 line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(max), 0.1));
             } else {
@@ -1147,34 +1145,34 @@ public class Agent extends AbstractNodeMain {
         }
     }
 
-    void computeObstacleLine(Vector2 obst){
-        Line line=new Line();
-        Vector2 relative_position = Vector2.minus(obst,position.getPos());
+    void computeObstacleLine(Vector2 obst) {
+        Line line = new Line();
+        Vector2 relative_position = Vector2.minus(obst, position.getPos());
         double dist_to_footprint;
         double dist = Vector2.abs(Vector2.minus(position.getPos(), obst));
         if (!has_polygon_footprint_)
             dist_to_footprint = footprint_radius_;
         else {
             dist_to_footprint = getDistToFootprint(relative_position);
-            if (dist_to_footprint == -1){
+            if (dist_to_footprint == -1) {
                 dist_to_footprint = footprint_radius_;
             }
         }
-        dist  = dist - dist_to_footprint - 0.03;
+        dist = dist - dist_to_footprint - 0.03;
 
         line.setPoint(Vector2.normalize(Vector2.mul(relative_position, dist)));
-        line.setDir(new Vector2(-(Vector2.normalize(relative_position)).getY(),(Vector2.normalize(relative_position)).getX())) ;
+        line.setDir(new Vector2(-(Vector2.normalize(relative_position)).getY(), (Vector2.normalize(relative_position)).getX()));
         addOrcaLines.add(line);
     }
 
-    double getDistToFootprint(Vector2 point){
+    double getDistToFootprint(Vector2 point) {
         Vector2 result;
-        for (int i = 0; i < footPrintLines.size(); i++){
-            LinePair l1=new LinePair(footPrintLines.get(i).getFirst(),footPrintLines.get(i).getSecond());
-            LinePair l2=new LinePair(new Vector2(0.0,0.0),point);
+        for (int i = 0; i < footPrintLines.size(); i++) {
+            LinePair l1 = new LinePair(footPrintLines.get(i).getFirst(), footPrintLines.get(i).getSecond());
+            LinePair l2 = new LinePair(new Vector2(0.0, 0.0), point);
 
-            result = LinePair.Intersection(l1,l2);
-            if (result!= null) {
+            result = LinePair.Intersection(l1, l2);
+            if (result != null) {
                 //ROS_DEBUG("Result = %f, %f, dist %f", result.x(), result.y(), collvoid::abs(result));
                 return Vector2.abs(result);
             }
@@ -1191,13 +1189,13 @@ public class Agent extends AbstractNodeMain {
         try {
             radius += cur_allowed_error_;
 
-                if (controlled) {
-                    computeAgentVOs();
-                }
-                newVelocity = CP.calculateClearpathVelocity(samples, voAgents, addOrcaLines, pref_velocity, max_speed_x_, useTruancation);
+            if (controlled) {
+                computeAgentVOs();
+            }
+            newVelocity = CP.calculateClearpathVelocity(samples, voAgents, addOrcaLines, pref_velocity, max_speed_x_, useTruancation);
 
             radius -= cur_allowed_error_;
-        }finally {
+        } finally {
             neighbors_lock_.unlock();
         }
         //TODO:ADD PUBLISERS
@@ -1209,7 +1207,7 @@ public class Agent extends AbstractNodeMain {
 
     }
 
-    void computeAgentVOs(){
+    void computeAgentVOs() {
 
         for (Iterator<Agent> agent = agentNeighbors.iterator(); agent.hasNext(); ) {
             VO new_agent_vo;
@@ -1219,7 +1217,7 @@ public class Agent extends AbstractNodeMain {
                     new_agent_vo = CP.createVO(position.getPos(), footPrint, velocity, agent.next().position.getPos(), agent.next().footPrint, agent.next().velocity, voType);
                 } else {
                     new_agent_vo = CP.createVO(position.getPos(), footPrint, velocity, agent.next().position.getPos(), agent.next().footPrint, agent.next().velocity, CP.VOS);
-                                    }
+                }
             } else {
                 if (agent.next().controlled) {
                     new_agent_vo = CP.createVO(position.getPos(), radius, velocity, agent.next().position.getPos(), agent.next().radius, agent.next().velocity, voType);
@@ -1236,12 +1234,9 @@ public class Agent extends AbstractNodeMain {
     }
 
 
-
-
-
     /*++++++++++++++++++++++++Get and set stuff++++++++++++++++++++++++++*/
-    public Odometry getBaseOdom(){
-        Odometry odom=messageFactory.newFromType(Odometry._TYPE);
+    public Odometry getBaseOdom() {
+        Odometry odom = messageFactory.newFromType(Odometry._TYPE);
         odom.setTwist(this.base_odom_.getTwist());
         odom.setHeader(this.base_odom_.getHeader());
         odom.setPose(this.base_odom_.getPose());
@@ -1269,11 +1264,11 @@ public class Agent extends AbstractNodeMain {
             p = footprint_msg_.getPolygon().getPoints().get(i);
             point.setX(p.getX());
             point.setY(p.getY());
-            footPrintLines.add(new LinePair(old,point));
+            footPrintLines.add(new LinePair(old, point));
             old.setVector2(point);
         }
         //add last segment
-        footPrintLines.add(new LinePair(old,first));
+        footPrintLines.add(new LinePair(old, first));
         has_polygon_footprint_ = true;
     }
 

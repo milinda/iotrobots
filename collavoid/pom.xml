@@ -75,6 +75,14 @@
             <artifactId>netty</artifactId>
             <version>3.6.3.Final</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.ros.rosjava.tf</groupId>
+            <artifactId>pubsub</artifactId>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/rosjava_tf_core.jar</systemPath>
+        </dependency>
+
     </dependencies>
 
     <repositories>
