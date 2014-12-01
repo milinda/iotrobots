@@ -163,14 +163,6 @@ public class GMap {
         }
 
         return new PointAccumulator();
-//
-//        PointAccumulator pa = (PointAccumulator) m_storage.cell(p);
-//        if (pa != null) {
-//            return pa;
-//        } else {
-//            //System.out.println("Creating unknown Int: c: " + c + " s: " + s);
-//            return new PointAccumulator();
-//        }
     }
 
     public Object cell(DoublePoint p, boolean c) {
@@ -185,34 +177,6 @@ public class GMap {
                 assert false;
             return m_storage.cell(ip);
         }
-        //System.out.println("Creating unknown Double: c: " + c + " s: " + s);
         return new PointAccumulator();
     }
-
-
-    //FIXME check why the last line of the map is corrupted.
-//    public Array2D toDoubleArray() {
-//        Array2D darr= new Array2D(getMapSizeX()-1, getMapSizeY()-1);
-//        for(int x=0; x<getMapSizeX()-1; x++) {
-//            for (int y = 0; y < getMapSizeY() - 1; y++) {
-//                Point<Integer> p = new Point<Integer>(x, y);
-//                darr.cell(p) = cell(p);
-//            }
-//        }
-//        return darr;
-//    }
-
-//    public GMap toDoubleMap() {
-//        //FIXME size the map so that m_center will be setted accordingly
-//        Point<Double> pmin = map2world(new Point<Integer>(0,0));
-//        Point<Double> pmax= map2world(new Point<Integer>(getMapSizeX()-1,getMapSizeY()-1));
-//        Point<Double> center = new Point<Double>((pmax.x + pmin.x) * 0.5, (pmax.y + pmin.y) * 0.5);
-//        GMap  plainMap=new GMap(center, (pmax.x-pmin.x), (pmax.x-pmin.y), getDelta());
-//        for(int x=0; x<getMapSizeX()-1; x++)
-//            for(int y=0; y<getMapSizeY()-1; y++){
-//                Point<Integer> p = new Point<Integer>(x,y);
-//                plainMap.cell(p) = cell(p);
-//            }
-//        return plainMap;
-//    }
 }
