@@ -1,8 +1,12 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.utils.DoublePoint;
-import cgl.iotrobots.slam.core.utils.IntPoint;
 
+/**
+ * We put point accumulators to cells that are seen by the laser.
+ * if n = 0 means, we have see the cell, but no obstacle
+ * if n > 0 means a cell that has an obstacle
+ */
 public class PointAccumulator {
     public static final int SIGHT_INC = 1;
 
@@ -50,12 +54,7 @@ public class PointAccumulator {
     }
 
     public double doubleValue() {
-//        if (visits > 0) {
-//            System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAA");
-//        }
         return visits > 0 ? (double)n*SIGHT_INC/(double)visits:-1;
     }
-
-
 }
 

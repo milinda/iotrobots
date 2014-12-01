@@ -6,7 +6,6 @@ import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
-import cgl.iotrobots.slam.core.utils.IntPoint;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
@@ -140,11 +139,10 @@ public class GridSlamProcessor {
     }
 
     public void setSensorMap(Map<String, Sensor> smap) {
-    /*
-      Construct the angle table for the sensor
-
-      FIXME For now detect the readings of only the front laser, and assume its pose is in the center of the robot
-    */
+        /*
+          Construct the angle table for the sensor
+          FIXME For now detect the readings of only the front laser, and assume its pose is in the center of the robot
+        */
         RangeSensor rangeSensor = (RangeSensor) smap.get("ROBOTLASER1");
         m_beams = rangeSensor.beams().size();
         double[] angles = new double[rangeSensor.beams().size()];
@@ -176,8 +174,6 @@ public class GridSlamProcessor {
             p.setWeight(0);
             p.previousIndex = 0;
             m_particles.add(p);
-            // this is not needed
-            //		m_particles.back().node=new TNode(initialPose, 0, node, 0);
             // we use the root directly
             TNode node = new TNode(initialPose, 0, null, 0);
             p.node = node;
@@ -214,9 +210,6 @@ public class GridSlamProcessor {
             LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.weight);
         }
         LOG.info("ODO_UPDATE Time {}", reading.getTime());
-
-        //TODO invoke the callback
-        onOdometryUpdate();
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, m_odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
@@ -281,7 +274,6 @@ public class GridSlamProcessor {
                     LOG.debug(pose.x + " " + pose.y + " ");
                     LOG.debug(pose.theta + " " + it.weight + " ");
                 }
-                onScanmatchUpdate();
 
                 updateTreeWeights(false);
 
@@ -294,9 +286,8 @@ public class GridSlamProcessor {
                     m_matcher.computeActiveArea(it.map, it.pose, plainReading);
                     m_matcher.registerScan(it.map, it.pose, plainReading);
 
-                    // cyr: not needed anymore, particles refer to the root in the beginning!
+                    // not needed anymore, particles refer to the root in the beginning!
                     TNode node = new TNode(it.pose, 0., it.node, 0);
-                    //node->reading=0;
                     node.reading = reading_copy;
                     it.node = node;
 
@@ -364,10 +355,8 @@ public class GridSlamProcessor {
 
         if (m_neff < m_resampleThreshold * m_particles.size()) {
             LOG.info("*************RESAMPLE***************");
-            System.out.println("Resample");
             UniformResampler resampler = new UniformResampler();
             m_indexes = resampler.resampleIndexes(m_weights, adaptSize);
-
 
             StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(m_indexes.size());
             for (Integer it : m_indexes) {
@@ -376,30 +365,26 @@ public class GridSlamProcessor {
             LOG.debug(m_outputStream.toString());
 
 
-            onResampleUpdate();
-            //BEGIN: BUILDING TREE
+            //begin building tree
             List<Particle> temp = new ArrayList<Particle>();
             int j = 0;
-            List<Integer> deletedParticles = new ArrayList<Integer>();        //this is for deleteing the particles which have been resampled away.
+            //this is for deleteing the particles which have been resampled away.
+            List<Integer> deletedParticles = new ArrayList<Integer>();
 
-            //	 	cerr << "Existing Nodes:" ;
             for (int i = 0; i < m_indexes.size(); i++) {
-                //			cerr << " " << m_indexes[i];
                 while (j < m_indexes.get(i)) {
                     deletedParticles.add(j);
                     j++;
                 }
-                if (j == m_indexes.get(i))
+                if (j == m_indexes.get(i)) {
                     j++;
+                }
                 Particle p = new Particle(m_particles.get(m_indexes.get(i)));
 
-                TNode node = null;
+                TNode node ;
                 TNode oldNode = oldGeneration.get(m_indexes.get(i));
-                //			cerr << i << "->" << m_indexes[i] << "B("<<oldNode->childs <<") ";
                 node = new TNode(p.pose, 0, oldNode, 0);
-                //node->reading=0;
                 node.reading = reading;
-                //			cerr << "A("<<node->parent->childs <<") " <<endl;
 
                 temp.add(p);
                 p.node = node;
@@ -409,19 +394,15 @@ public class GridSlamProcessor {
                 deletedParticles.add(j);
                 j++;
             }
-            //		cerr << endl;
             m_outputStream = new StringBuilder("Deleting Nodes:");
             for (int i = 0; i < deletedParticles.size(); i++) {
                 m_outputStream.append(" ").append(deletedParticles.get(i));
                 m_particles.get(deletedParticles.get(i)).node = null;
             }
-            m_outputStream.append(" Done");
             LOG.debug(m_outputStream.toString());
 
-            //END: BUILDING TREE
             LOG.debug("Deleting old particles...");
             m_particles.clear();
-            LOG.debug("Done");
             LOG.debug("Copying Particles and  Registering  scans...");
             for (Particle it : temp) {
                 it.setWeight(0);
@@ -436,15 +417,12 @@ public class GridSlamProcessor {
             Iterator<TNode> node_it = oldGeneration.iterator();
             for (Particle it : m_particles) {
                 //create a new node in the particle tree and add it to the old tree
-                //BEGIN: BUILDING TREE
                 TNode node = null;
                 node = new TNode(it.pose, 0.0, node_it.next(), 0);
 
-                //node->reading=0;
                 node.reading = reading;
                 it.node = node;
 
-                //END: BUILDING TREE
                 m_matcher.invalidateActiveArea();
                 m_matcher.registerScan(it.map, it.pose, plainReading);
                 it.previousIndex = index;
@@ -452,18 +430,6 @@ public class GridSlamProcessor {
             }
         }
         return hasResampled;
-    }
-
-    private void onResampleUpdate() {
-
-    }
-
-    private void onOdometryUpdate() {
-
-    }
-
-    private void onScanmatchUpdate() {
-
     }
 
     void integrateScanSequence(TNode node) {
@@ -539,7 +505,6 @@ public class GridSlamProcessor {
 
     public void resetTree() {
         // don't calls this function directly, use updateTreeWeights(..) !
-
         for (Particle it : m_particles) {
             TNode n = it.node;
             while (n != null) {
@@ -566,9 +531,7 @@ public class GridSlamProcessor {
 
     double propagateWeights() {
         // don't calls this function directly, use updateTreeWeights(..) !
-
         // all nodes must be resetted to zero and weights normalized
-
         // the accumulated weight of the root
         double lastNodeWeight = 0;
         // sum of the weights in the leafs
@@ -669,12 +632,9 @@ public class GridSlamProcessor {
             for (TNode it : p) {
                 assert (it.parent == node);
                 it.parent = newnode;
-                //cerr + "PS(" + it->first + ", "+ it->second + ")";
                 childs++;
             }
-            ////cerr + endl;
             parentCache.removeAll(node);
-            //cerr + __PRETTY_FUNCTION__ + ": parentCache.size(POSTERASE)=" + parentCache.size() + endl;
             assert (childs == newnode.childs);
 
             //unmark the node
@@ -693,7 +653,6 @@ public class GridSlamProcessor {
         }
         for (TNode node : v) {
             while (node != null) {
-                //cerr +".";
                 node = node.parent;
             }
         }

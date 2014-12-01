@@ -2,9 +2,11 @@ package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
-import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * We use this class to calculate the cells between an observation and the robot laser position.
+ * These cells doesn't contain obstacles
+ */
 public class GridLineTraversalLine {
     public IntPoint points[];
 

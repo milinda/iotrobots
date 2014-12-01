@@ -45,8 +45,6 @@ public class ScanMatcher {
     int m_laserBeams;
     double m_laserAngles[] = new double[LASER_MAXBEAMS];
 
-//    List<IntPoint> m_linePoints = new ArrayList<IntPoint>();
-
     public void setlaserMaxRange(double m_laserMaxRange) {
         this.m_laserMaxRange = m_laserMaxRange;
     }
@@ -159,7 +157,6 @@ public class ScanMatcher {
     public void computeActiveArea(GMap map, DoubleOrientedPoint p, double[] readings) {
         if (m_activeAreaComputed)
             return;
-//        Set<Point<Integer>> activeArea = new TreeSet<Point<Integer>>(new PointComparator());
         Set<IntPoint> activeArea = new HashSet<IntPoint>();
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * m_laserPose.x - Math.sin(p.theta) * m_laserPose.y;
@@ -174,7 +171,6 @@ public class ScanMatcher {
         if (lp.y < min.y) min.y = lp.y;
         if (lp.x > max.x) max.x = lp.x;
         if (lp.y > max.y) max.y = lp.y;
-//        System.out.println("Computing active area");
         int readingIndex;
         int angleIndex = m_initialBeamsSkip;
         for (readingIndex = m_initialBeamsSkip; readingIndex < m_laserBeams; readingIndex++, angleIndex++) {
@@ -217,27 +213,16 @@ public class ScanMatcher {
                 IntPoint p1 = map.world2map(phit);
 
                 d += map.getDelta();
-                //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
-                //IntPoint p2=map.world2map(phit2);
-                // List<IntPoint> linePoints = new ArrayList<IntPoint>();
                 GridLineTraversalLine line = new GridLineTraversalLine();
                 line.points = m_linePoints;
-                //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.numPoints - 1; i++) {
                     IntPoint patch = map.getStorage().patchIndexes(m_linePoints[i]);
-                    //if (map.isInside(patch)) {
                     activeArea.add(patch);
-                    //}
-//                    System.out.println(patch.x + ", " + patch.y);
                 }
                 if (d <= m_usableRange) {
                     IntPoint patch = map.getStorage().patchIndexes(p1);
-//                    System.out.println(patch.x + ", " + patch.y);
-                    //if (map.isInside(patch)) {
-                        activeArea.add(patch);
-                    //}
-                    //activeArea.insert(map.storage().patchIndexes(p2));
+                    activeArea.add(patch);
                 }
             } else {
                 double r = readings[readingIndex];
@@ -252,14 +237,9 @@ public class ScanMatcher {
                 assert (p1.x >= 0 && p1.y >= 0);
                 IntPoint cp = map.getStorage().patchIndexes(p1);
                 assert (cp.x >= 0 && cp.y >= 0);
-                //if (map.isInside(cp)) {
-                    activeArea.add(cp);
-                //}
-//                System.out.println(cp.x + ", " + cp.y);
-
+                activeArea.add(cp);
             }
         //this allocates the unallocated cells in the active area of the map
-        //cout << "activeArea::size() " << activeArea.size() << endl;
         map.getStorage().setActiveArea(activeArea, true);
         m_activeAreaComputed = true;
     }
@@ -295,12 +275,8 @@ public class ScanMatcher {
                 IntPoint p1 = map.world2map(phit);
 
                 d += map.getDelta();
-                //Point phit2=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
-                //IntPoint p2=map.world2map(phit2);
-//                List<IntPoint> linePoints = new ArrayList<IntPoint>(20000);
                 GridLineTraversalLine line = new GridLineTraversalLine();
                 line.points = m_linePoints;
-                //GridLineTraversal::gridLine(p0, p2, &line);
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.numPoints - 1; i++) {
                     PointAccumulator pa = (PointAccumulator) map.cell(line.points[i], false);
@@ -316,9 +292,6 @@ public class ScanMatcher {
                     pa.update(true, phit);
                     e += pa.entropy();
                     esum += e;
-                    //	map.cell(p2).update(true,phit);
-//                    count++;
-//                    System.out.println(count + " " + pa.doubleValue());
                 }
 
 
@@ -349,8 +322,6 @@ public class ScanMatcher {
         do {
             currentScore = sc;
             sc = icpStep(pnew, map, start, readings);
-            //cerr << "pstart=" << start.x << " " <<start.y << " " << start.theta << endl;
-            //cerr << "pret=" << pnew.x << " " <<pnew.y << " " << pnew.theta << endl;
             start = pnew;
             iterations++;
         } while (sc > currentScore);
@@ -447,8 +418,6 @@ public class ScanMatcher {
             lacc += it.likelihood;
         }
         mean = DoubleOrientedPoint.mulN(mean, (1. / lacc));
-        //OrientedPoint delta=mean-currentPose;
-        //cout << "delta.x=" << delta.x << " delta.y=" << delta.y << " delta.theta=" << delta.theta << endl;
         Covariance3 cov = new Covariance3(0., 0., 0., 0., 0., 0.);
         for (ScoredMove it : moveList) {
             DoubleOrientedPoint delta = DoubleOrientedPoint.minus(it.pose, mean);
@@ -698,7 +667,6 @@ public class ScanMatcher {
                             bestMu = (DoublePoint.mulD(mu, mu)) < DoublePoint.mulD(bestMu, bestMu) ? mu : bestMu;
                         }
                     }
-                    //}
                 }
             if (found) {
                 s += Math.exp(-1.0 / m_gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
@@ -748,8 +716,6 @@ public class ScanMatcher {
                 for (int yy = -m_kernelSize; yy <= m_kernelSize; yy++) {
                     IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
                     IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
-                    //AccessibilityState s=map.storage().cellState(pr);
-                    //if (s&Inside && s&Allocated){
                     PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
                     PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
 
@@ -764,7 +730,6 @@ public class ScanMatcher {
                             bestCell = cell.mean();
                         }
                     }
-                    //}
                 }
             if (found) {
                 pairs.add(new DoublePointPair(phit, bestCell));
@@ -772,7 +737,6 @@ public class ScanMatcher {
         }
 
         DoubleOrientedPoint result = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-        //double icpError=icpNonlinearStep(result,pairs);
         LOG.error("result(" + pairs.size() + ")=" + result.x + " " + result.y + " " + result.theta);
         pret.x = p.x + result.x;
         pret.y = p.y + result.y;
