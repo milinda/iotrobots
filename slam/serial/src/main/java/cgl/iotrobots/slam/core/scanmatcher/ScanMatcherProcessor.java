@@ -80,7 +80,7 @@ public class ScanMatcherProcessor {
             m_odoPose = relPose;
         }
 
-        //compute the move in the scan m_matcher
+        //compute the move in the scan matcher
         //reference frame
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, m_odoPose);
@@ -118,11 +118,11 @@ public class ScanMatcherProcessor {
 
         assert(reading.size()==m_beams);
         /*
-            double * plainReading = new double[m_beams];
+            double * plainReading = new double[beams];
         #ifdef SCANMATHCERPROCESSOR_DEBUG
             cout << "PackedReadings ";
         #endif
-            for(unsigned int i=0; i<m_beams; i++){
+            for(unsigned int i=0; i<beams; i++){
                 plainReading[i]=reading[i];
         #ifdef SCANMATHCERPROCESSOR_DEBUG
                 cout << plainReading[i] << " ";

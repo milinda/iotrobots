@@ -15,154 +15,25 @@ import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class GridSlamProcessor {
+public class GridSlamProcessor extends AbstractGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(GridSlamProcessor.class);
 
-    private static final double m_distanceThresholdCheck = 20;
 
-    private List<Particle> m_particles = new ArrayList<Particle>();
-
-    List<Integer> m_indexes = new ArrayList<Integer>();
-    List<Double> m_weights = new ArrayList<Double>();
-
-    ScanMatcher m_matcher = new ScanMatcher();
-    MotionModel m_motionModel = new MotionModel();
-
-    int m_beams;
-    double last_update_time_;
-    double period_;
-
-    double m_minimumScore;
-
-    double m_resampleThreshold;
-
-    int m_count, m_readingCount;
-    DoubleOrientedPoint m_lastPartPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-    DoubleOrientedPoint m_odoPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-    DoubleOrientedPoint m_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-
-    double m_linearDistance, m_angularDistance;
-
-    double m_neff;
-
-    double m_xmin;
-    double m_ymin;
-    double m_xmax;
-    double m_ymax;
-
-    double m_delta;
-    double m_regScore;
-    double m_critScore;
-    double m_maxMove;
-    double m_linearThresholdDistance;
-    double m_angularThresholdDistance;
-    double m_obsSigmaGain;
-
-    public GridSlamProcessor() {
-        period_ = 0.0;
-        m_obsSigmaGain = 1;
-        m_resampleThreshold = 0.5;
-        m_minimumScore = 0.;
-    }
-
-    public void setSrr(double srr) {
-        m_motionModel.srr = srr;
-    }
-
-    public void setSrt(double srt) {
-        m_motionModel.srt = srt;
-    }
-
-    public MotionModel getMotionModel() {
-        return m_motionModel;
-    }
-
-    public ScanMatcher getMatcher() {
-        return m_matcher;
-    }
-
-    public List<Particle> getParticles() {
-        return m_particles;
-    }
-
-    public int getBestParticleIndex() {
-        int bi = 0;
-        double bw = -Double.MAX_VALUE;
-        for (int i = 0; i < m_particles.size(); i++)
-            if (bw < m_particles.get(i).weightSum) {
-                bw = m_particles.get(i).weightSum;
-                bi = i;
-            }
-        return bi;
-    }
-
-    public void setMinimumScore(double m_minimumScore) {
-        this.m_minimumScore = m_minimumScore;
-    }
-
-    public void setUpdatePeriod_(double period_) {
-        this.period_ = period_;
-    }
-
-    public void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
-                               int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
-        m_obsSigmaGain = likelihoodGain;
-        m_matcher.setMatchingParameters(urange, range, sigma, kernsize, lopt, aopt, iterations, likelihoodSigma, likelihoodSkip);
-        LOG.info(" -maxUrange " + urange
-                + " -maxUrange " + range
-                + " -sigma     " + sigma
-                + " -kernelSize " + kernsize
-                + " -lstep " + lopt
-                + " -lobsGain " + m_obsSigmaGain
-                + " -astep " + aopt);
-    }
-
-    public void setMotionModelParameters
-            (double srr, double srt, double str, double stt) {
-        m_motionModel.srr = srr;
-        m_motionModel.srt = srt;
-        m_motionModel.str = str;
-        m_motionModel.stt = stt;
-        LOG.info(" -srr " + srr + " -srt " + srt + " -str " + str + " -stt " + stt);
-    }
-
-    public void setUpdateDistances(double linear, double angular, double resampleThreshold) {
-        m_linearThresholdDistance = linear;
-        m_angularThresholdDistance = angular;
-        m_resampleThreshold = resampleThreshold;
-        LOG.info(" -linearUpdate " + linear
-                + " -angularUpdate " + angular
-                + " -resampleThreshold " + m_resampleThreshold);
-    }
-
-    public void setSensorMap(Map<String, Sensor> smap) {
-        /*
-          Construct the angle table for the sensor
-          FIXME For now detect the readings of only the front laser, and assume its pose is in the center of the robot
-        */
-        RangeSensor rangeSensor = (RangeSensor) smap.get("ROBOTLASER1");
-        m_beams = rangeSensor.beams().size();
-        double[] angles = new double[rangeSensor.beams().size()];
-        for (int i = 0; i < m_beams; i++) {
-            angles[i] = rangeSensor.beams().get(i).pose.theta;
-        }
-        m_matcher.setLaserParameters(m_beams, angles, rangeSensor.getPose());
-    }
 
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
-        m_xmin = xmin;
-        m_ymin = ymin;
-        m_xmax = xmax;
-        m_ymax = ymax;
-        m_delta = delta;
+        this.xmin = xmin;
+        this.ymin = ymin;
+        this.xmax = xmax;
+        this.ymax = ymax;
+        this.delta = delta;
 
-        LOG.info(" -xmin " + m_xmin + " -xmax " + m_xmax + " -ymin " + m_ymin
-                + " -ymax " + m_ymax + " -delta " + m_delta + " -particles " + size);
+        LOG.info(" -xmin " + this.xmin + " -xmax " + this.xmax + " -ymin " + this.ymin
+                + " -ymax " + this.ymax + " -delta " + this.delta + " -particles " + size);
 
-        m_particles.clear();
+        particles.clear();
 
         for (int i = 0; i < size; i++) {
-            int lastIndex = m_particles.size() - 1;
+            int lastIndex = particles.size() - 1;
             GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
             Particle p = new Particle(lmap);
 
@@ -170,17 +41,17 @@ public class GridSlamProcessor {
             p.previousPose = initialPose;
             p.setWeight(0);
             p.previousIndex = 0;
-            m_particles.add(p);
+            particles.add(p);
             // we use the root directly
             TNode node = new TNode(initialPose, 0, null, 0);
             p.node = node;
         }
 
 
-        m_neff = (double) size;
-        m_count = 0;
-        m_readingCount = 0;
-        m_linearDistance = m_angularDistance = 0;
+        neff = (double) size;
+        count = 0;
+        readingCount = 0;
+        linearDistance = angularDistance = 0;
     }
 
     public void processTruePos(OdometryReading o) {
@@ -190,33 +61,33 @@ public class GridSlamProcessor {
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
         DoubleOrientedPoint relPose = reading.getPose();
-        if (m_count == 0) {
-            m_lastPartPose = m_odoPose = relPose;
+        if (count == 0) {
+            lastPartPose = odoPose = relPose;
         }
 
-        for (Particle p : m_particles) {
-            p.pose = m_motionModel.drawFromMotion(p.pose, relPose, m_odoPose);
+        for (Particle p : particles) {
+            p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
             p.pose = relPose;
         }
 
-        LOG.info("ODOM " + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta + " " + reading.getTime());
-        LOG.info("ODO_UPDATE " + m_particles.size() + " ");
-        for (Particle p : m_particles) {
+        LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
+        LOG.info("ODO_UPDATE " + particles.size() + " ");
+        for (Particle p : particles) {
             LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.weight);
         }
         LOG.info("ODO_UPDATE Time {}", reading.getTime());
 
-        DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, m_odoPose);
+        DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
-        m_linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
-        m_angularDistance += Math.abs(move.theta);
+        linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
+        angularDistance += Math.abs(move.theta);
 
         // if the robot jumps throw a warning
-        if (m_linearDistance > m_distanceThresholdCheck) {
+        if (linearDistance > distanceThresholdCheck) {
             LOG.error("***********************************************************************");
-            LOG.error("********** Error: m_distanceThresholdCheck overridden!!!! *************");
-            LOG.error("m_distanceThresholdCheck=" + m_distanceThresholdCheck);
-            LOG.error("Old Odometry Pose= " + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta);
+            LOG.error("********** Error: distanceThresholdCheck overridden!!!! *************");
+            LOG.error("distanceThresholdCheck=" + distanceThresholdCheck);
+            LOG.error("Old Odometry Pose= " + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
             LOG.error("New Odometry Pose (reported from observation)= " + relPose.x + " " + relPose.y + " " + relPose.theta);
             LOG.error("***********************************************************************");
             LOG.error("** The Odometry has a big jump here. This is probably a bug in the   **");
@@ -225,35 +96,35 @@ public class GridSlamProcessor {
             LOG.error("***********************************************************************");
         }
 
-        m_odoPose = relPose;
+        odoPose = relPose;
         boolean processed = false;
 
         // process a scan only if the robot has traveled a given distance or a certain amount of time has elapsed
-        if (m_count == 0
-                || m_linearDistance >= m_linearThresholdDistance
-                || m_angularDistance >= m_angularThresholdDistance
+        if (count == 0
+                || linearDistance >= linearThresholdDistance
+                || angularDistance >= angularThresholdDistance
                 || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
             last_update_time_ = reading.getTime();
 
-            LOG.info("FRAME " + m_readingCount + " " + m_linearDistance + " " + m_angularDistance);
+            LOG.info("FRAME " + readingCount + " " + linearDistance + " " + angularDistance);
 
-            LOG.info("update frame " + m_readingCount + "update ld=" + m_linearDistance + " ad=" + m_angularDistance);
+            LOG.info("update frame " + readingCount + "update ld=" + linearDistance + " ad=" + angularDistance);
             LOG.info("Laser Pose= " + reading.getPose().x + " " + reading.getPose().y + " " + reading.getPose().theta);
 
             //this is for converting the reading in a scan-matcher feedable form
-            assert (reading.size() == m_beams);
-            double[] plainReading = new double[m_beams];
-            for (int i = 0; i < m_beams; i++) {
+            assert (reading.size() == beams);
+            double[] plainReading = new double[beams];
+            for (int i = 0; i < beams; i++) {
                 plainReading[i] = reading.get(i);
             }
-            LOG.info("m_count " + m_count);
+            LOG.info("count " + count);
 
             RangeReading reading_copy =
                     new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
                             (RangeSensor) reading.getSensor(),
                             reading.getTime());
 
-            if (m_count > 0) {
+            if (count > 0) {
                 scanMatch(plainReading);
 
                 LOG.debug("LASER_READING " + reading.size() + " ");
@@ -263,8 +134,8 @@ public class GridSlamProcessor {
                 DoubleOrientedPoint p = reading.getPose();
 
                 LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
-                LOG.debug("SM_UPDATE " + m_particles.size() + " ");
-                for (Particle it : m_particles) {
+                LOG.debug("SM_UPDATE " + particles.size() + " ");
+                for (Particle it : particles) {
                     DoubleOrientedPoint pose = it.pose;
                     LOG.debug(pose.x + " " + pose.y + " ");
                     LOG.debug(pose.theta + " " + it.weight + " ");
@@ -272,14 +143,14 @@ public class GridSlamProcessor {
 
                 updateTreeWeights(false);
 
-                LOG.info("neff = " + m_neff);
+                LOG.info("neff = " + neff);
                 resample(plainReading, adaptParticles, reading_copy);
             } else {
                 LOG.info("Registering First Scan");
-                for (Particle it : m_particles) {
-                    m_matcher.invalidateActiveArea();
-                    m_matcher.computeActiveArea(it.map, it.pose, plainReading);
-                    m_matcher.registerScan(it.map, it.pose, plainReading);
+                for (Particle it : particles) {
+                    matcher.invalidateActiveArea();
+                    matcher.computeActiveArea(it.map, it.pose, plainReading);
+                    matcher.registerScan(it.map, it.pose, plainReading);
 
                     // not needed anymore, particles refer to the root in the beginning!
                     TNode node = new TNode(it.pose, 0., it.node, 0);
@@ -290,19 +161,19 @@ public class GridSlamProcessor {
             }
             updateTreeWeights(false);
 
-            m_lastPartPose = m_odoPose; //update the past pose for the next iteration
-            m_linearDistance = 0;
-            m_angularDistance = 0;
-            m_count++;
+            lastPartPose = odoPose; //update the past pose for the next iteration
+            linearDistance = 0;
+            angularDistance = 0;
+            count++;
             processed = true;
 
             //keep ready for the next step
-            for (Particle it : m_particles) {
+            for (Particle it : particles) {
                 it.previousPose = it.pose;
             }
 
         }
-        m_readingCount++;
+        readingCount++;
         return processed;
     }
 
@@ -316,45 +187,45 @@ public class GridSlamProcessor {
     }
 
     void normalize() {
-        //normalize the log m_weights
-        double gain = 1. / (m_obsSigmaGain * m_particles.size());
+        //normalize the log weights
+        double gain = 1. / (obsSigmaGain * particles.size());
         double lmax = -Double.MAX_VALUE;
-        for (Particle it : m_particles) {
+        for (Particle it : particles) {
             lmax = it.weight > lmax ? it.weight : lmax;
         }
 
-        m_weights.clear();
+        weights.clear();
         double wcum = 0;
-        m_neff = 0;
-        for (Particle it : m_particles) {
+        neff = 0;
+        for (Particle it : particles) {
             double w = Math.exp(gain * (it.weight - lmax));
-            m_weights.add(w);
+            weights.add(w);
             wcum += w;
         }
 
-        m_neff = 0;
-        for (Double it : m_weights) {
+        neff = 0;
+        for (Double it : weights) {
             it = it / wcum;
             double w = it;
-            m_neff += w * w;
+            neff += w * w;
         }
-        m_neff = 1. / m_neff;
+        neff = 1. / neff;
     }
 
     public boolean resample(double[] plainReading, int adaptSize, RangeReading reading) {
         boolean hasResampled = false;
         List<TNode> oldGeneration = new ArrayList<TNode>();
-        for (Particle m_particle : m_particles) {
+        for (Particle m_particle : particles) {
             oldGeneration.add(m_particle.node);
         }
 
-        if (m_neff < m_resampleThreshold * m_particles.size()) {
+        if (neff < resampleThreshold * particles.size()) {
             LOG.info("*************RESAMPLE***************");
             UniformResampler resampler = new UniformResampler();
-            m_indexes = resampler.resampleIndexes(m_weights, adaptSize);
+            indexes = resampler.resampleIndexes(weights, adaptSize);
 
-            StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(m_indexes.size());
-            for (Integer it : m_indexes) {
+            StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(indexes.size());
+            for (Integer it : indexes) {
                 m_outputStream.append(it).append(" ");
             }
             LOG.debug(m_outputStream.toString());
@@ -366,51 +237,51 @@ public class GridSlamProcessor {
             //this is for deleteing the particles which have been resampled away.
             List<Integer> deletedParticles = new ArrayList<Integer>();
 
-            for (int i = 0; i < m_indexes.size(); i++) {
-                while (j < m_indexes.get(i)) {
+            for (int i = 0; i < indexes.size(); i++) {
+                while (j < indexes.get(i)) {
                     deletedParticles.add(j);
                     j++;
                 }
-                if (j == m_indexes.get(i)) {
+                if (j == indexes.get(i)) {
                     j++;
                 }
-                Particle p = new Particle(m_particles.get(m_indexes.get(i)));
+                Particle p = new Particle(particles.get(indexes.get(i)));
 
                 TNode node ;
-                TNode oldNode = oldGeneration.get(m_indexes.get(i));
+                TNode oldNode = oldGeneration.get(indexes.get(i));
                 node = new TNode(p.pose, 0, oldNode, 0);
                 node.reading = reading;
 
                 temp.add(p);
                 p.node = node;
-                p.previousIndex = m_indexes.get(i);
+                p.previousIndex = indexes.get(i);
             }
-            while (j < m_indexes.size()) {
+            while (j < indexes.size()) {
                 deletedParticles.add(j);
                 j++;
             }
             m_outputStream = new StringBuilder("Deleting Nodes:");
             for (int i = 0; i < deletedParticles.size(); i++) {
                 m_outputStream.append(" ").append(deletedParticles.get(i));
-                m_particles.get(deletedParticles.get(i)).node = null;
+                particles.get(deletedParticles.get(i)).node = null;
             }
             LOG.debug(m_outputStream.toString());
 
             LOG.debug("Deleting old particles...");
-            m_particles.clear();
+            particles.clear();
             LOG.debug("Copying Particles and  Registering  scans...");
             for (Particle it : temp) {
                 it.setWeight(0);
-                m_matcher.invalidateActiveArea();
-                m_matcher.registerScan(it.map, it.pose, plainReading);
-                m_particles.add(it);
+                matcher.invalidateActiveArea();
+                matcher.registerScan(it.map, it.pose, plainReading);
+                particles.add(it);
             }
             hasResampled = true;
         } else {
             int index = 0;
             LOG.debug("Registering Scans:");
             Iterator<TNode> node_it = oldGeneration.iterator();
-            for (Particle it : m_particles) {
+            for (Particle it : particles) {
                 //create a new node in the particle tree and add it to the old tree
                 TNode node = null;
                 node = new TNode(it.pose, 0.0, node_it.next(), 0);
@@ -418,8 +289,8 @@ public class GridSlamProcessor {
                 node.reading = reading;
                 it.node = node;
 
-                m_matcher.invalidateActiveArea();
-                m_matcher.registerScan(it.map, it.pose, plainReading);
+                matcher.invalidateActiveArea();
+                matcher.registerScan(it.map, it.pose, plainReading);
                 it.previousIndex = index;
                 index++;
             }
@@ -459,13 +330,13 @@ public class GridSlamProcessor {
             oldPose = aux.pose;
 
 
-            double[] plainReading = new double[m_beams];
-            for (int i = 0; i < m_beams; i++) {
+            double[] plainReading = new double[beams];
+            for (int i = 0; i < beams; i++) {
                 plainReading[i] = aux.reading.get(i);
             }
 
 
-            for (Particle it : m_particles) {
+            for (Particle it : particles) {
                 //compute the position relative to the path;
                 double s = Math.sin(oldPose.theta - it.pose.theta),
                         c = Math.cos(oldPose.theta - it.pose.theta);
@@ -476,8 +347,8 @@ public class GridSlamProcessor {
                 it.pose.theta = Math.atan2(Math.sin(it.pose.theta), Math.cos(it.pose.theta));
 
                 //register the scan
-                m_matcher.invalidateActiveArea();
-                m_matcher.computeActiveArea(it.map, it.pose, plainReading);
+                matcher.invalidateActiveArea();
+                matcher.computeActiveArea(it.map, it.pose, plainReading);
                 it.weight += dw;
                 it.weightSum += dw;
 
@@ -500,7 +371,7 @@ public class GridSlamProcessor {
 
     public void resetTree() {
         // don't calls this function directly, use updateTreeWeights(..) !
-        for (Particle it : m_particles) {
+        for (Particle it : particles) {
             TNode n = it.node;
             while (n != null) {
                 n.accWeight = 0;
@@ -533,8 +404,8 @@ public class GridSlamProcessor {
         double aw = 0;
 
         int count = 0;
-        for (Particle it : m_particles) {
-            double weight = m_weights.get(count++);
+        for (Particle it : particles) {
+            double weight = weights.get(count++);
             aw += weight;
             TNode n = it.node;
             n.accWeight = weight;
@@ -554,23 +425,23 @@ public class GridSlamProcessor {
     public void scanMatch(double[] plainReading) {
         // sample a new pose from each scan in the reference
         double sumScore = 0;
-        for (Particle it : m_particles) {
+        for (Particle it : particles) {
             DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
             double score = 0, l, s;
-            score = m_matcher.optimize(corrected, it.map, it.pose, plainReading);
+            score = matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
-            if (score > m_minimumScore) {
+            if (score > minimumScore) {
                 it.pose = new DoubleOrientedPoint(corrected);
             } else {
                 LOG.info("Scan Matching Failed, using odometry. Likelihood=");
-                LOG.info("lp:" + m_lastPartPose.x + " " + m_lastPartPose.y + " " + m_lastPartPose.theta);
-                LOG.info("op:" + m_odoPose.x + " " + m_odoPose.y + " " + m_odoPose.theta);
+                LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
+                LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
             }
 
-            ScanMatcher.LikeliHoodAndScore score1 = m_matcher.likelihoodAndScore(it.map, it.pose, plainReading);
+            ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
             l = score1.l;
             s = score1.s;
-//            LikeliHood likeliHood = m_matcher.likelihood(it.map, it.pose, plainReading);
+//            LikeliHood likeliHood = matcher.likelihood(it.map, it.pose, plainReading);
 //            l = likeliHood.likeliHood;
 
             sumScore += score;
@@ -579,10 +450,10 @@ public class GridSlamProcessor {
 
             //set up the selective copy of the active area
             //by detaching the areas that will be updated
-            m_matcher.invalidateActiveArea();
-            m_matcher.computeActiveArea(it.map, it.pose, plainReading);
+            matcher.invalidateActiveArea();
+            matcher.computeActiveArea(it.map, it.pose, plainReading);
         }
-        LOG.info("Average Scan Matching Score=" + sumScore / m_particles.size());
+        LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
     }
 
     List<TNode> getTrajectories() {
@@ -590,7 +461,7 @@ public class GridSlamProcessor {
         Multimap<TNode, TNode> parentCache = ArrayListMultimap.create();
         BlockingDeque<TNode> border = new LinkedBlockingDeque<TNode>();
 
-        for (Particle it : m_particles) {
+        for (Particle it : particles) {
             TNode node = it.node;
             while (node != null) {
                 node.flag = false;
@@ -598,7 +469,7 @@ public class GridSlamProcessor {
             }
         }
 
-        for (Particle it : m_particles) {
+        for (Particle it : particles) {
             TNode newnode = new TNode(it.node);
 
             v.add(newnode);
