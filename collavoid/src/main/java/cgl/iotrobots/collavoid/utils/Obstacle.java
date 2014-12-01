@@ -3,12 +3,12 @@ package cgl.iotrobots.collavoid.utils;
 import org.ros.message.Time;
 
 
-public class obstacle {
+public class Obstacle {
     private Vector2 begin;
     private Vector2 end;
     private Time lastSeen;
 
-    public obstacle(Vector2 p1, Vector2 p2) {
+    public Obstacle(Vector2 p1, Vector2 p2) {
         this.begin = new Vector2(p1.getX(), p1.getY());
         this.end = new Vector2(p2.getX(), p2.getY());
     }

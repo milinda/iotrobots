@@ -29,8 +29,8 @@ public class utils {
         return new Vector3d(p.getX(), -p.getZ(), p.getY());
     }
 
-    public static Quat4d toROSCoordinate(Quat4d q){
-        return new Quat4d(q.getX(),-q.getZ(),q.getY(),q.getW());
+    public static Quat4d toROSCoordinate(Quat4d q) {
+        return new Quat4d(q.getX(), -q.getZ(), q.getY(), q.getW());
     }
 
     public static Pose getPose(Point3d p3d, Quat4d quat4d) {
@@ -63,7 +63,7 @@ public class utils {
 
         for (int i = 0; i < 3; i++) {
             PointField pf = utils.messageFactory.newFromType(PointField._TYPE);
-            pf.setName(fieldName.substring(i, i+1));
+            pf.setName(fieldName.substring(i, i + 1));
             pf.setOffset(i * 4);
             pf.setDatatype(PointField.FLOAT32);
             pf.setCount(1);
@@ -77,21 +77,29 @@ public class utils {
         pc2.setRowStep(pc2.getPointStep() * scan.size());
         pc2.setIsDense(false);
 
-        ChannelBuffer buffer = ChannelBuffers.buffer(ByteOrder.LITTLE_ENDIAN,pc2.getRowStep());
+        ChannelBuffer buffer = ChannelBuffers.buffer(ByteOrder.LITTLE_ENDIAN, pc2.getRowStep());
         buffer.clear();
 
+        Point3d p3d;
         for (int i = 0; i < scan.size(); i++) {
             //in ros coordinate
-            Point3d p3d=new Point3d();
-            p3d=toROSCoordinate(scan.get(i));
-            buffer.setFloat(i*12,(float) p3d.getX());
-            buffer.setFloat(i*12+4,(float) p3d.getY());
-            buffer.setFloat(i*12+8,(float) p3d.getZ());
-//            pc2.getData().setFloat(i*12,(float) p3d.getX());
-//            pc2.getData().setFloat(i*12+4,(float) p3d.getY());
-//            pc2.getData().setFloat(i*12+8,(float) p3d.getZ());
+            double[] pt=new double[lPointField.size()];
+            p3d = toROSCoordinate(scan.get(i));
+            p3d.get(pt);
+            for (int j = 0; j <lPointField.size() ; j++) {
+                buffer.writeFloat ((float)pt[j]);
+            }
         }
         pc2.setData(buffer);
+    }
 
+    public static void Vector3ToPoint3d(Vector3 in, Point3d out) {
+        out.set(in.getX(), in.getY(), in.getZ());
+    }
+
+    public static void Point3dToVector3(Point3d in, Vector3 out) {
+        out.setX(in.getX());
+        out.setY(in.getY());
+        out.setZ(in.getZ());
     }
 }

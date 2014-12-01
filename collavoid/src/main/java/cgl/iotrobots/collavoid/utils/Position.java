@@ -1,10 +1,18 @@
 package cgl.iotrobots.collavoid.utils;
 
 
+import geometry_msgs.Point;
+
 public class Position {
 
-    private Vector2 pos;
+    private Vector2 pos=new Vector2();
     private double heading;//heading
+
+    public Position() {
+        this.pos.setX(0);
+        this.pos.setY(0);
+        this.heading = 0;
+    }
 
     public Position(double x, double y) {
         this.pos.setX(x);
@@ -26,14 +34,17 @@ public class Position {
         this.heading = heading;
     }
 
-    public Vector2 getPos(){
-        return new Vector2(this.pos);
+    public Vector2 getPos() {
+        return this.pos;
     }
 
-    public double getHeading(){
+    public double getHeading() {
         return this.heading;
     }
 
+    public void setHeading(double hd){
+        this.heading=hd;
+    }
 
 
 }

@@ -7,27 +7,26 @@
         <groupId>iotrobots</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>Simulator</artifactId>
+    <artifactId>rosjava_tf_core</artifactId>
 
     <dependencies>
-
         <dependency>
-            <groupId>simbad</groupId>
-            <artifactId>simbad</artifactId>
-            <scope>system</scope>
-            <version>1.4</version>
-            <systemPath>${project.basedir}/lib/simbad/simbad-1.4.jar</systemPath>
+            <groupId>org.ros.rosjava_messages</groupId>
+            <artifactId>tf2_msgs</artifactId>
+            <version>0.4.9</version>
         </dependency>
         <dependency>
-            <groupId>iotrobots</groupId>
-            <artifactId>collavoid</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.google.api.client</groupId>
+            <artifactId>google-api-client-repackaged-com-google-common-base</artifactId>
+            <version>1.2.3-alpha</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-ext</artifactId>
+            <version>0.9.0</version>
+        </dependency>
     </dependencies>
-
 
 </project>

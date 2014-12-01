@@ -3,6 +3,7 @@ import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
 import org.ros.node.topic.Subscriber;
+import sensor_msgs.PointCloud2;
 
 import javax.vecmath.Vector3d;
 import java.net.InetAddress;
@@ -34,6 +35,7 @@ public class CmdVelSub {
                     vr = (2 * v + w * wheelDistance) / 2;
                 }
             });
+
         }
 
         @Override

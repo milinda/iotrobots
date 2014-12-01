@@ -58,6 +58,7 @@ public class LaserScan {
     }
 
     public List<Point3d> getScan() {
+        //in robot base frame
         List<Point3d> res = new ArrayList<Point3d>();
         double d;
         for (int i = 0; i < sensors.getNumSensors(); i++) {

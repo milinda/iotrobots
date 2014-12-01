@@ -2,13 +2,11 @@ package test;
 
 import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
 import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
-import cgl.iotrobots.collavoid.ROSAgent.Agent;
 import cgl.iotrobots.collavoid.msgmanager.MsgFactory;
 import costmap_2d.VoxelGrid;
-import geometry_msgs.PolygonStamped;
 import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
-import org.ros.address.InetAddressFactory;
+import org.ros.node.ConnectedNode;
 import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
@@ -18,8 +16,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +26,7 @@ public class runAgentAlone {
 
     public static TransformListener tf;
     private static Logger logger = Logger.getLogger("runAgentAlone");
-    public static VoxelGrid cosmap_voxelGrid;
+    private static ConnectedNode connectedNode;
 
     public static void main(String[] args)throws InterruptedException{
 
@@ -47,7 +43,7 @@ public class runAgentAlone {
 
         hostname=StringFilter(hostname);//replace all non-alphabet and non-number character into _
 
-        LocalPlanner localPlanner=new LocalPlanner(hostname,tf,cosmap_voxelGrid);
+        LocalPlanner localPlanner=new LocalPlanner(connectedNode,tf);
 
         //set start and goal
         PoseStamped start=MsgFactory.messageFactory.newFromType(PoseStamped._TYPE);
@@ -72,7 +68,7 @@ public class runAgentAlone {
         final NodeMainExecutor runner= DefaultNodeMainExecutor.newDefault();
         String localPlannerId=new String("localPlanner_"+hostname);
         configuration.setNodeName(localPlannerId);
-        runner.execute(localPlanner,configuration);
+        //runner.execute(localPlanner,configuration);
 
         Twist cmd_vel= MsgFactory.messageFactory.newFromType(Twist._TYPE);
         Thread.sleep(5000);

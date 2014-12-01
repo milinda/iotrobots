@@ -1,20 +1,17 @@
 package cgl.iotrobots.collavoid.LocalPlanner;
 
-import cgl.iotrobots.collavoid.ROSAgent.Agent;
+import cgl.iotrobots.collavoid.ROSAgent.ROSAgent;
 import cgl.iotrobots.collavoid.utils.Angles;
 import cgl.iotrobots.collavoid.utils.Vector2;
 import costmap_2d.VoxelGrid;
 import geometry_msgs.*;
-import nav_msgs.GridCells;
 import nav_msgs.OccupancyGrid;
 import nav_msgs.Odometry;
 import nav_msgs.Path;
-import org.apache.commons.logging.Log;
 import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.MessageDefinitionProvider;
 import org.ros.message.MessageFactory;
-import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
 import org.ros.node.parameter.ParameterTree;
@@ -24,9 +21,6 @@ import org.ros.rosjava.tf.*;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 
 import java.lang.String;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -34,11 +28,11 @@ import java.util.logging.Logger;
 import static cgl.iotrobots.collavoid.utils.utils.sign;
 
 
-public class LocalPlanner extends AbstractNodeMain{
+public class LocalPlanner {
     //currently no dynamic reconfigurer
 
     //rosjava node params
-    String name;
+    String id;
     protected ConnectedNode node;
     private ParameterTree params;
 
@@ -50,7 +44,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
     boolean initialized_, skip_next_, setup_;
 
-    //Agent stuff
+    //ROSAgent stuff
 //  double simPeriod;
 //    double max_vel_x_, min_vel_x_;
 //    double max_vel_y_, min_vel_y_;
@@ -77,12 +71,12 @@ public class LocalPlanner extends AbstractNodeMain{
     double  time_horizon_obst_;
     double eps_;
 
-    Agent me;
+    ROSAgent me;
 
     double time_to_holo_, min_error_holo_, max_error_holo_;
 
-    String global_frame_; ///< @brief The frame in which the controller will run
-    String robot_base_frame_; ///< @brief Used as the base frame id of the robot
+    private String global_frame_; ///< @brief The frame in which the controller will run
+    private String base_frame_; ///< @brief Used as the base frame id of the robot
     public List<PoseStamped> global_plan_, transformed_plan_;
     Publisher g_plan_pub_, l_plan_pub_;
     Subscriber obstacles_sub_; //not used
@@ -98,61 +92,47 @@ public class LocalPlanner extends AbstractNodeMain{
     /*---------------methods begin-----------------*/
 
     //must pass connectednode,tf will be initialized from the caller, see rosjava_tf TfViz
-    public LocalPlanner(String hostname,TransformListener tf, VoxelGrid costmap_ros){
-        this.hostname=new String(hostname);
+    public LocalPlanner(ConnectedNode connectedNode, TransformListener tf){
+        this.node=connectedNode;
+        this.params=this.node.getParameterTree();
         tf_=tf;
+
+        id=node.getName().toString();
         initialized_=false;
-        costmap_ros_ = costmap_ros;
+        costmap_ros_ = null;
         current_waypoint_ = 0;
         skip_next_ = false;
 
         global_plan_=new ArrayList<PoseStamped>();
         transformed_plan_=new ArrayList<PoseStamped>();
-    }
 
-    @Override
-    public void onStart(final ConnectedNode connectedNode) {
-        this.node=connectedNode;
-        this.params=this.node.getParameterTree();
         initialize();
     }
-
-    @Override
-    public GraphName getDefaultNodeName() {
-        return null;
-    }
-
 
     //implement the interface of nav_core::BaseLocalPlanner Class in original ROS
     private void initialize(){
         if (!initialized_){
             logger=Logger.getLogger(node.getName().toString());
+            base_frame_ = params.getString("/base_frame", id+"/base");
+            global_frame_ = params.getString("/global_frame", "/map");
 
-            rot_stopped_velocity_ = params.getDouble("~/rot_stopped_velocity",0.01);
-            trans_stopped_velocity_ = params.getDouble("~/trans_stopped_velocity_",0.01);
+            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity",0.01);
+            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_",0.01);
 
             //base local planner params
-            yaw_goal_tolerance_ = params.getDouble("~/yaw_goal_tolerance", 0.05);
-            xy_goal_tolerance_  = params.getDouble("~/xy_goal_tolerance", 0.10);
-            latch_xy_goal_tolerance_ = params.getBoolean("~/latch_xy_goal_tolerance", false);
-            ignore_goal_yaw_ = params.getBoolean("~/ignore_goal_jaw", false);
+            yaw_goal_tolerance_ = params.getDouble("/yaw_goal_tolerance", 0.05);
+            xy_goal_tolerance_  = params.getDouble("/xy_goal_tolerance", 0.10);
+            latch_xy_goal_tolerance_ = params.getBoolean("/latch_xy_goal_tolerance", false);
+            ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
 
             /*----------spawn agent node---------*/
-            String agentId=new String("agent_"+hostname);
-            this.me=new Agent(agentId,tf_);
-            spawnAgent(this.me);
-            while(!me.initialized_){
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            //comment for test
+            this.me=new ROSAgent(this.node,tf_);
             radius_=me.footprint_radius_;
 
             /*------------------ Publishers----------------- */
-            Publisher<Path> g_plan_pub_=this.node.newPublisher("g_plan_pub_", Path._TYPE);
-            Publisher<Path> l_plan_pub_=this.node.newPublisher("l_plan_pub_", Path._TYPE);
+            Publisher<Path> g_plan_pub_=this.node.newPublisher(id+"/g_plan_pub_", Path._TYPE);
+            Publisher<Path> l_plan_pub_=this.node.newPublisher(id+"/l_plan_pub_", Path._TYPE);
             //ROS_ERROR("%s name of node", thisname.c_str());
 
             /*------------------Subscribers------------*/
@@ -181,16 +161,8 @@ public class LocalPlanner extends AbstractNodeMain{
         }
 
     }
-    /*Spawn agent*/
-    void spawnAgent(Agent agent){
-        NodeConfiguration configuration = NodeConfiguration.newPublic(node.getUri().getHost(),
-                node.getMasterUri());
-        final NodeMainExecutor runner= DefaultNodeMainExecutor.newDefault();
-        configuration.setNodeName(agent.id_);
-        runner.execute(agent,configuration);
-    }
 
-    /*Add obstacles*/
+    /*Add obstacles not used*/
     void obstaclesCallback(final OccupancyGrid msg){
         Vector2 origin=new Vector2(msg.getInfo().getOrigin().getPosition().getX(),msg.getInfo().getOrigin().getPosition().getY());
         int mapWith=msg.getInfo().getWidth();
@@ -249,7 +221,7 @@ public class LocalPlanner extends AbstractNodeMain{
     }
 
     //implement interface setPlan
-    boolean setPlan(final List<PoseStamped> orig_global_plan){
+    public boolean setPlan(final List<PoseStamped> orig_global_plan){
         if(!initialized_){
             this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
             return false;
@@ -261,11 +233,11 @@ public class LocalPlanner extends AbstractNodeMain{
         current_waypoint_ = 0;
         xy_tolerance_latch_ = false;
         //transformed_plan = global_plan;
-        //get the global plan in our frame
-        if(!transformGlobalPlan(tf_, global_plan_, costmap_ros_, global_frame_, transformed_plan_)){
-            this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
-            return false;
-        }
+        //get the global plan in our frame, comment for test
+//        if(!transformGlobalPlan(tf_, global_plan_, costmap_ros_, global_frame_, transformed_plan_)){
+//            this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
+//            return false;
+//        }
 
         return true;
     }
@@ -471,7 +443,7 @@ public class LocalPlanner extends AbstractNodeMain{
 
         Vector2 pref_vel = new Vector2(goal_dir.getX(),goal_dir.getY());
 
-        me.computeNewVelocity(pref_vel, cmd_vel);//may need synchronize
+        me.computeNewVelocity(pref_vel, cmd_vel);
 
         if(Math.abs(cmd_vel.getAngular().getZ())<me.min_vel_th_)
             angular.setZ(0.0);
@@ -759,6 +731,5 @@ public class LocalPlanner extends AbstractNodeMain{
         target_pose.setPose(transformed_plan_.get(transformed_plan_.size() - 1).getPose());
         current_waypoint_ = transformed_plan_.size()-1;
     }
-
 
 }

@@ -45,7 +45,6 @@ public class GlobalPlanner {
         dir_y /= length;
         x = start.getPose().getPosition().getX() + 0.1 * dir_x;
         y = start.getPose().getPosition().getY() + 0.1 * dir_y;
-//        node.getLog().debug(String.format("dir: %1$.2f, %2$.2f, cur: %3$.2f, %4$.2f", dir_x, dir_y, x, y));
 
         while (Math.abs(x - goal.getPose().getPosition().getX()) > 0.2 || Math.abs(y - goal.getPose().getPosition().getY()) > 0.2) {
             PoseStamped point=messageFactory.newFromType(PoseStamped._TYPE);

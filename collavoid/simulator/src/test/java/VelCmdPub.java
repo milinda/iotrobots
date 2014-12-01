@@ -20,7 +20,7 @@ public class VelCmdPub {
 
         @Override
         public void onStart(ConnectedNode connectedNode) {
-            final Publisher<Twist> velCmdPub = connectedNode.newPublisher("robot1/cmd_vel", Twist._TYPE);
+            final Publisher<Twist> velCmdPub = connectedNode.newPublisher("robot0/cmd_vel", Twist._TYPE);
 
             connectedNode.executeCancellableLoop(new CancellableLoop() {
                 @Override

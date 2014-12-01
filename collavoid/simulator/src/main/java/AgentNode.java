@@ -1,7 +1,5 @@
-import nav_msgs.Odometry;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
-import org.ros.node.topic.Publisher;
 
 /**
  * Created by hjh on 11/25/14.
@@ -36,7 +34,7 @@ public class AgentNode {
         pubSubNode = new PubSubNode();
         executor.execute(pubSubNode, nodeConfiguration);
 
-        System.out.println("Initializing Node "+nodeName+"..");
+        System.out.println("Initializing Node " + nodeName + "..");
 
         while (!pubSubNode.initialized) {
             System.out.print(".");
@@ -48,16 +46,6 @@ public class AgentNode {
         }
         System.out.println("Done!");
     }
-
-//    public Publisher<Odometry> getPublisher(){
-//
-//        if (odoemetryPublishNode.initialized){
-//            return odoemetryPublishNode.getOdometryPublisher();
-//        }else{
-//            System.out.println("Error, not initialized!");
-//            return null;
-//        }
-//    }
 
     public ConnectedNode getNode() {
         if (pubSubNode.initialized) {

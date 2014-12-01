@@ -1,33 +1,15 @@
 package test.AgentTest;
 
 
-import cgl.iotrobots.collavoid.ROSAgent.Agent;
-import cgl.iotrobots.collavoid.utils.*;
-import collavoid_msgs.pose_twist_covariance_msgs;
+import cgl.iotrobots.collavoid.ROSAgent.ROSAgent;
 import costmap_2d.VoxelGrid;
-import geometry_msgs.*;
-import nav_msgs.Odometry;
-import org.ros.concurrent.CancellableLoop;
-import org.ros.internal.message.DefaultMessageFactory;
-import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
-import org.ros.message.*;
-import org.ros.namespace.GraphName;
 import org.ros.node.*;
-import org.ros.node.parameter.ParameterTree;
-import org.ros.node.topic.Publisher;
-import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.pubsub.TransformListener;
-import sensor_msgs.LaserScan;
-import sensor_msgs.PointCloud;
 import test.node.PositionShareMux;
 
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -71,10 +53,10 @@ public class PositionShareCallbackTest {
 
         Thread.sleep(5000);
 
-        //start agent
-        configuration.setNodeName(agentId);
-        Agent agent=new Agent(agentId,tf);
-        runner.execute(agent,configuration);
+        //start ROSAgent
+//        configuration.setNodeName(agentId);
+//        ROSAgent ROSAgent =new ROSAgent(agentId,tf);
+//        runner.execute(ROSAgent,configuration);
 
     }
 

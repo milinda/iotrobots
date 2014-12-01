@@ -1,3 +1,6 @@
+import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
+import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
+import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
 import org.ros.message.MessageListener;
@@ -6,6 +9,7 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
+import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
@@ -15,6 +19,8 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainSimulator {
@@ -39,20 +45,30 @@ public class MainSimulator {
         private ConnectedNode node;
         //odometry publisher
         Publisher<Odometry> odometryPublisher = null;
-        Odometry odoMsg;
+        Odometry odomMsg;
         int odomSeq;
         //laser scan publisher
         Publisher<PointCloud2> laserscanPublisher = null;
         PointCloud2 pc2;
         int pc2Seq;
+        //velocity command publisher
+        Publisher<Twist> velocityPublisher = null;
+        Twist cmd_vel;
         //velocity command subscriber
         Subscriber<Twist> velocitySubscriber = null;
+        //tf listener
+        TransformListener tfl = null;
         //tf broadcaster
         TransformBroadcaster tfb = null;
         //frame
         String robotFrame;
         String odomFrame;
         String globalFrame;
+        //planner
+        InitPlannerThread plannerThread;
+        //for synchronization
+        Time time=new Time();
+
 
 
         public Robot(Vector3d position, double ori, String name) {
@@ -70,10 +86,11 @@ public class MainSimulator {
             // should be assigned to the laserscan, in the robot frame
             this.addSensorDevice(sensors, new Vector3d(0, 0, 0), 0);
             //initialize frames
-            robotFrame = this.getName() + "/base";
-            odomFrame = this.getName() + "/odometry";
-            globalFrame = "/map";
+            robotFrame = this.getName() + "_base";
+            odomFrame = this.getName() + "_odometry";
+            globalFrame = "map";
             initPubSub();
+
         }
 
         public void initPubSub() {
@@ -84,9 +101,9 @@ public class MainSimulator {
             if (odometryPublisher == null) {
                 odometryPublisher = node.newPublisher(this.getName() + "/odometry", Odometry._TYPE);
                 // initialize message
-                odoMsg = odometryPublisher.newMessage();
-                odoMsg.getHeader().setFrameId(odomFrame);
-                odoMsg.setChildFrameId(robotFrame);
+                odomMsg = odometryPublisher.newMessage();
+                odomMsg.getHeader().setFrameId(odomFrame);
+                odomMsg.setChildFrameId(robotFrame);
                 odomSeq = 0;
             }
             //initialize laser scan publisher
@@ -96,6 +113,10 @@ public class MainSimulator {
                 pc2 = laserscanPublisher.newMessage();
                 pc2.getHeader().setFrameId(robotFrame);
                 pc2Seq = 0;
+            }
+            if (velocityPublisher == null) {
+                velocityPublisher = node.newPublisher(this.getName() + "/cmd_vel", Twist._TYPE);
+                cmd_vel = velocityPublisher.newMessage();
             }
 
             //initialize velocity command subscriber
@@ -113,6 +134,9 @@ public class MainSimulator {
                     }
                 });
             }
+            if (tfl == null) {
+                tfl = new TransformListener(node);
+            }
 
             if (tfb == null) {
                 tfb = new TransformBroadcaster(node);
@@ -124,6 +148,19 @@ public class MainSimulator {
          */
         public void initBehavior() {
             this.rotateY(orientation);
+
+            //set start point and goal
+            Point3d start = new Point3d();
+            this.getCoords(start);
+            Point3d goal = new Point3d();
+            goal.set(-start.getX(), start.getY(), -start.getZ());
+
+            Quat4d oriGoal = getOrientation(this);
+            Transform3D tfr = new Transform3D(oriGoal, new Vector3d(0, 0, 0), 1);
+            tfr.rotY(Math.PI);
+            tfr.get(oriGoal);
+
+           plannerThread=new InitPlannerThread(node,tfl,start, goal, oriGoal);
         }
 
         /**
@@ -133,40 +170,46 @@ public class MainSimulator {
 
             kinematic.setWheelsVelocity(vl, vr);
 
+            time=node.getCurrentTime();
+            //send transform
+            sendTransform(time);
+            //publish scan in frequency of 1Hz
             if (getCounter() % 20 == 0) {
-                //publish odometry
-                setOdoMsg();
-                odometryPublisher.publish(odoMsg);
                 //publish laser scan in pointcloud2 format
-                setLaserscanMsg();
+                setLaserscanMsg(time);
                 laserscanPublisher.publish(pc2);
             }
-            //send transform in frequency of 10 HZ
+            //send odometry in frequency of 10 HZ
             if (getCounter() % 2 == 0) {
-                sendTransform();
+                setOdomMsg(time);
+                odometryPublisher.publish(odomMsg);
+
+                //control frequency is 10hz
+                //localPlanner.computeVelocityCommands(cmd_vel);
+                //velocityPublisher.publish(cmd_vel);
             }
 
         }
 
-        public void setOdoMsg() {
-            //get position
+        public void setOdomMsg(Time t) {
+            //get position and velocities, all in odometry frame
             Point3d cor = new Point3d();
             this.getCoords(cor);
             Quat4d ori = getOrientation(this);
 
-            odoMsg.getHeader().setStamp(node.getCurrentTime());
-            odoMsg.getHeader().setSeq(odomSeq++);
+            odomMsg.getHeader().setStamp(t);
+            odomMsg.getHeader().setSeq(odomSeq++);
 
-            odoMsg.getPose().setPose(utils.getPose(cor, ori));
-            odoMsg.getTwist().getTwist().setLinear(utils.getTwist(this.linearVelocity));
-            odoMsg.getTwist().getTwist().setAngular(utils.getTwist(this.angularVelocity));
+            odomMsg.getPose().setPose(utils.getPose(cor, ori));
+            odomMsg.getTwist().getTwist().setLinear(utils.getTwist(this.linearVelocity));
+            odomMsg.getTwist().getTwist().setAngular(utils.getTwist(this.angularVelocity));
 
         }
 
 
-        public void setLaserscanMsg() {
+        public void setLaserscanMsg(Time t) {
             pc2.getHeader().setSeq(pc2Seq++);
-            pc2.getHeader().setStamp(node.getCurrentTime());
+            pc2.getHeader().setStamp(t);
             utils.toPointCloud2(pc2, laserScan.getScan());
         }
 
@@ -179,7 +222,7 @@ public class MainSimulator {
             return ori;
         }
 
-        public void sendTransform() {
+        public void sendTransform(Time t) {
             String childFrame = robotFrame;
             String parentFrame = odomFrame;
 
@@ -196,11 +239,20 @@ public class MainSimulator {
 
             tfb.sendTransform(
                     parentFrame, childFrame,
+                    t,
                     tft3d.getX(), tft3d.getY(), tft3d.getZ(),
                     tfrq.getX(), tfrq.getY(), tfrq.getZ(), tfrq.getW()
             );
+            // currently map frame and odometry frame are the same
+            childFrame = odomFrame;
+            parentFrame = globalFrame;
+            tfb.sendTransform(
+                    parentFrame, childFrame,
+                    t,
+                    0, 0, 0,
+                    0, 0, 0, 1
+            );
         }
-
     }
 
     /**
@@ -231,8 +283,8 @@ public class MainSimulator {
 //            add(new Arch(new Vector3d(3, 0, -3), this));
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
-                add(new Robot(new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step)), Math.PI + i * step, "robot" + i));
-
+                Vector3d pose=new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
+                add(new Robot(pose, Math.PI + i * step, "robot" + i));
             }
         }
     }
