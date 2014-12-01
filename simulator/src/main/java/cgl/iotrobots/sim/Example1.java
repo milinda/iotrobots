@@ -47,7 +47,7 @@ public class Example1 {
             // nothing particular in this case
             sample.init();
             LaserScan scanI = new LaserScan();
-            scanI.angle_increment = -ANGLE / SENSORS;
+            scanI.angle_increment = ANGLE / SENSORS;
             scanI.angle_max = ANGLE ;
             scanI.angle_min = 0;
             scanI.ranges = new ArrayList<Double>();
@@ -107,7 +107,7 @@ public class Example1 {
             laserScan.angle_min = 0;
             laserScan.range_max = 100;
             laserScan.range_min = 0;
-            laserScan.angle_increment = -ANGLE/ SENSORS;
+            laserScan.angle_increment = ANGLE/ SENSORS;
 
 //            for (double angle = 0; angle < 2 * Math.PI / 2; angle += 2 * Math.PI / n) {
 //                int hits = sonars.getQuadrantHits(angle, angle + 2 * Math.PI / n);

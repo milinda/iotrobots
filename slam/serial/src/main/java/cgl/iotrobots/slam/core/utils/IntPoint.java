@@ -69,6 +69,9 @@ public class IntPoint {
         if (y != intPoint.y) return false;
 
         return true;
+
+//        boolean equal = this.x < intPoint.x || (this.x == intPoint.x) && this.y < intPoint.y;
+//        return equal;
     }
 
     @Override

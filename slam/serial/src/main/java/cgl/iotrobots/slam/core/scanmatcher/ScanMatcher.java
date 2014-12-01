@@ -291,7 +291,7 @@ public class ScanMatcher {
                     continue;
                 if (d > m_usableRange)
                     d = m_usableRange;
-                DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.x);
+                DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.y);
                 IntPoint p1 = map.world2map(phit);
 
                 d += map.getDelta();
