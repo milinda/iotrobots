@@ -287,10 +287,10 @@ public class Sample {
 
         reading.setPose(gmap_pose);
 
-        for (int i = 0; i < ranges_double.length; i++) {
-            System.out.format("%f, ", ranges_double[i]);
-        }
-        System.out.format("\n");
+//        for (int i = 0; i < ranges_double.length; i++) {
+//            System.out.format("%f, ", ranges_double[i]);
+//        }
+//        System.out.format("\n");
 
         return gsp_.processScan(reading, 0);
     }
@@ -389,7 +389,7 @@ public class Sample {
                 System.out.format("best pose: (%f %f %f) reading: (", n.pose.x, n.pose.y, n.pose.theta);
                 for (int i = 0; i < n.reading.size(); i++) {
                     readingArray[i] = n.reading.get(i);
-                    System.out.format("%f,", readingArray[i]);
+//                    System.out.format("%f,", readingArray[i]);
                 }
                 System.out.format(")\n");
 
