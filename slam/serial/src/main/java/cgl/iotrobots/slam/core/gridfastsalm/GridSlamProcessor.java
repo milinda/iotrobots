@@ -11,7 +11,6 @@ import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -58,8 +57,6 @@ public class GridSlamProcessor {
     double m_linearThresholdDistance;
     double m_angularThresholdDistance;
     double m_obsSigmaGain;
-
-    PrintWriter m_outputStream;
 
     public GridSlamProcessor() {
         period_ = 0.0;
@@ -188,9 +185,7 @@ public class GridSlamProcessor {
 
     public void processTruePos(OdometryReading o) {
         OdometrySensor os = (OdometrySensor) o.getSensor();
-        if (os != null && os.isIdeal() && m_outputStream != null) {
-            LOG.info("SIMULATOR_POS x:" + o.getPose().x + " y:" + o.getPose().y + " theta: " + o.getPose().theta);
-        }
+        LOG.info("SIMULATOR_POS x:" + o.getPose().x + " y:" + o.getPose().y + " theta: " + o.getPose().theta);
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
