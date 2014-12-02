@@ -12,7 +12,7 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
 public class Example1 {
-    public static final int SENSORS = 36;
+    public static final int SENSORS = 72;
 
     public static final double ANGLE = 2 * Math.PI;
 

@@ -147,7 +147,7 @@ public class Sample {
         xmax_ = 20.0;
         ymax_ = 20.0;
         delta_ = 0.05;
-        occ_thresh_ = 0.25;
+        occ_thresh_ = 0.3;
         llsamplerange_ = 0.01;
         llsamplestep_ = 0.01;
         lasamplerange_ = 0.005;
