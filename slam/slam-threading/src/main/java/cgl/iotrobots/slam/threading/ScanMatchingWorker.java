@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 public class ScanMatchingWorker implements Runnable {
     private static Logger LOG = LoggerFactory.getLogger(ScanMatchingWorker.class);
@@ -22,15 +23,18 @@ public class ScanMatchingWorker implements Runnable {
 
     private double[] plainReading;
 
+    private Semaphore semaphore;
+
     public ScanMatchingWorker(List<Particle> particles, int startIndex,
                               int endIndex, ScanMatcher matcher,
-                              double[] plainReading, double minimumScore) {
+                              double[] plainReading, double minimumScore, Semaphore semaphore) {
         this.particles = particles;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
         this.matcher = matcher;
         this.plainReading = plainReading;
         this.minimumScore = minimumScore;
+        this.semaphore = semaphore;
     }
 
     @Override
@@ -60,6 +64,8 @@ public class ScanMatchingWorker implements Runnable {
             //by detaching the areas that will be updated
             matcher.invalidateActiveArea();
             matcher.computeActiveArea(it.map, it.pose, plainReading);
+
+            semaphore.release();
         }
     }
 }

@@ -1,7 +1,7 @@
 package cgl.iotrobots.slam.core.sample;
 
 import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
+import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class Sample {
     private static Logger LOG = LoggerFactory.getLogger(Sample.class);
 
-    GridSlamProcessor gsp_;
+    public AbstractGridSlamProcessor gsp_;
     RangeSensor gsp_laser_;
     OdometrySensor gsp_odom_;
 
@@ -117,8 +117,6 @@ public class Sample {
     }
 
     public void init() {
-        gsp_ = new GridSlamProcessor();
-
         throttle_scans_ = 1;
 
         // gmapping parameters
@@ -223,6 +221,9 @@ public class Sample {
         return true;
     }
 
+    double totalScanTime = 0;
+    int count = 0;
+
     public void laserCallback(LaserScan scan, DoubleOrientedPoint pose) {
         long t0 =  System.currentTimeMillis();
         laser_count_++;
@@ -262,7 +263,11 @@ public class Sample {
             }
             System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
-        System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0) );
+        long scanTime = System.currentTimeMillis() - t0;
+        System.out.println("Total Scan Time: " + scanTime);
+        count++;
+        totalScanTime += scanTime;
+        System.out.println("Average: " + totalScanTime / count);
     }
 
     public boolean addScan(LaserScan scan, DoubleOrientedPoint gmap_pose) {

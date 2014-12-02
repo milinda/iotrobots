@@ -1,11 +1,8 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
-import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.core.utils.DoublePoint;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
@@ -17,42 +14,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class GridSlamProcessor extends AbstractGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(GridSlamProcessor.class);
-
-
-
-    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
-        this.xmin = xmin;
-        this.ymin = ymin;
-        this.xmax = xmax;
-        this.ymax = ymax;
-        this.delta = delta;
-
-        LOG.info(" -xmin " + this.xmin + " -xmax " + this.xmax + " -ymin " + this.ymin
-                + " -ymax " + this.ymax + " -delta " + this.delta + " -particles " + size);
-
-        particles.clear();
-
-        for (int i = 0; i < size; i++) {
-            int lastIndex = particles.size() - 1;
-            GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
-            Particle p = new Particle(lmap);
-
-            p.pose = new DoubleOrientedPoint(initialPose);
-            p.previousPose = initialPose;
-            p.setWeight(0);
-            p.previousIndex = 0;
-            particles.add(p);
-            // we use the root directly
-            TNode node = new TNode(initialPose, 0, null, 0);
-            p.node = node;
-        }
-
-
-        neff = (double) size;
-        count = 0;
-        readingCount = 0;
-        linearDistance = angularDistance = 0;
-    }
 
     public void processTruePos(OdometryReading o) {
         OdometrySensor os = (OdometrySensor) o.getSensor();
@@ -168,6 +129,11 @@ public class GridSlamProcessor extends AbstractGridSlamProcessor {
             matcher.computeActiveArea(it.map, it.pose, plainReading);
         }
         LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
+    }
+
+    @Override
+    public void setup() {
+
     }
 
     List<TNode> getTrajectories() {

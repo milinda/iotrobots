@@ -1,8 +1,10 @@
 package cgl.iotrobots.sim;
 
+import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.sample.LaserScan;
 import cgl.iotrobots.slam.core.sample.Sample;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -45,6 +47,7 @@ public class Example1 {
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
+            sample.gsp_ = new GridSlamProcessor();
             sample.init();
             LaserScan scanI = new LaserScan();
             scanI.angle_increment = ANGLE / SENSORS;
@@ -65,8 +68,7 @@ public class Example1 {
 
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
-            System.out.println("\n\nNew scan");
-
+            System.out.println("\n\n");
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
@@ -99,7 +101,7 @@ public class Example1 {
 //                        .println("Sonar num 0  = " + sonars.getMeasurement(0));
         }
 
-        LaserScan getLaserScan() {
+        private LaserScan getLaserScan() {
             int n = sonars.getNumSensors();
 
             LaserScan laserScan = new LaserScan();
@@ -109,17 +111,6 @@ public class Example1 {
             laserScan.range_min = 0;
             laserScan.angle_increment = ANGLE/ SENSORS;
 
-//            for (double angle = 0; angle < 2 * Math.PI / 2; angle += 2 * Math.PI / n) {
-//                int hits = sonars.getQuadrantHits(angle, angle + 2 * Math.PI / n);
-//                double val = 0;
-//                if (hits > 0) {
-//                    val = sonars.getQuadrantMeasurement(angle, angle + 2 * Math.PI / n);
-//                    System.out.println("Laser value: " + val);
-//                } else {
-//                    System.out.println("No object in range");
-//                }
-//                laserScan.ranges.add(val);
-//            }
             int angle = 0;
             for (int i = angle; i < n + angle; i++) {
                 if (sonars.hasHit(i % n)) {
