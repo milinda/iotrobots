@@ -101,32 +101,7 @@ public class GridSlamProcessor extends AbstractGridSlamProcessor {
         // sample a new pose from each scan in the reference
         double sumScore = 0;
         for (Particle it : particles) {
-            DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-            double score = 0, l, s;
-            score = matcher.optimize(corrected, it.map, it.pose, plainReading);
-            //    it->pose=corrected;
-            if (score > minimumScore) {
-                it.pose = new DoubleOrientedPoint(corrected);
-            } else {
-                LOG.info("Scan Matching Failed, using odometry. Likelihood=");
-                LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
-                LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
-            }
-
-            ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
-            l = score1.l;
-            s = score1.s;
-//            LikeliHood likeliHood = matcher.likelihood(it.map, it.pose, plainReading);
-//            l = likeliHood.likeliHood;
-
-            sumScore += score;
-            it.weight += l;
-            it.weightSum += l;
-
-            //set up the selective copy of the active area
-            //by detaching the areas that will be updated
-            matcher.invalidateActiveArea();
-            matcher.computeActiveArea(it.map, it.pose, plainReading);
+            sumScore = scanMatchParticle(plainReading, sumScore, it);
         }
         LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
     }

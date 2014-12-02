@@ -306,6 +306,36 @@ public abstract class AbstractGridSlamProcessor {
         return processed;
     }
 
+    protected double scanMatchParticle(double[] plainReading, double sumScore, Particle it) {
+        DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+        double score = 0, l, s;
+        score = matcher.optimize(corrected, it.map, it.pose, plainReading);
+        //    it->pose=corrected;
+        if (score > minimumScore) {
+            it.pose = new DoubleOrientedPoint(corrected);
+        } else {
+            LOG.info("Scan Matching Failed, using odometry. Likelihood=");
+            LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
+            LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
+        }
+
+        ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
+        l = score1.l;
+        s = score1.s;
+//            LikeliHood likeliHood = matcher.likelihood(it.map, it.pose, plainReading);
+//            l = likeliHood.likeliHood;
+
+        sumScore += score;
+        it.weight += l;
+        it.weightSum += l;
+
+        //set up the selective copy of the active area
+        //by detaching the areas that will be updated
+        matcher.invalidateActiveArea();
+        matcher.computeActiveArea(it.map, it.pose, plainReading);
+        return sumScore;
+    }
+
     public void resetTree() {
         // don't calls this function directly, use updateTreeWeights(..) !
         for (Particle it : particles) {
