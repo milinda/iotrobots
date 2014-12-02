@@ -341,10 +341,10 @@ public abstract class AbstractGridSlamProcessor {
         double aw = 0;
 
         int count = 0;
-        for (Particle it : particles) {
+        for (Particle particle : particles) {
             double weight = weights.get(count++);
             aw += weight;
-            TNode n = it.node;
+            TNode n = particle.node;
             n.accWeight = weight;
             lastNodeWeight += propagateWeight(n.parent, n.accWeight);
         }
@@ -368,23 +368,23 @@ public abstract class AbstractGridSlamProcessor {
         //normalize the log weights
         double gain = 1. / (obsSigmaGain * particles.size());
         double lmax = -Double.MAX_VALUE;
-        for (Particle it : particles) {
-            lmax = it.weight > lmax ? it.weight : lmax;
+        for (Particle particle : particles) {
+            lmax = particle.weight > lmax ? particle.weight : lmax;
         }
 
         weights.clear();
         double wcum = 0;
         neff = 0;
-        for (Particle it : particles) {
-            double w = Math.exp(gain * (it.weight - lmax));
+        for (Particle particle : particles) {
+            double w = Math.exp(gain * (particle.weight - lmax));
             weights.add(w);
             wcum += w;
         }
 
         neff = 0;
-        for (Double it : weights) {
-            it = it / wcum;
-            double w = it;
+        for (Double weight : weights) {
+            weight = weight / wcum;
+            double w = weight;
             neff += w * w;
         }
         neff = 1. / neff;

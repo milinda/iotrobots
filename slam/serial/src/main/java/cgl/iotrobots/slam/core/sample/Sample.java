@@ -204,13 +204,13 @@ public class Sample {
         gsp_.setUpdatePeriod_(temporalUpdate_);
         gsp_.getMatcher().setgenerateMap(false);
         gsp_.init(particles_, xmin_, ymin_, xmax_, ymax_, delta_, initialPose);
-        gsp_.getMatcher().setllsamplerange(llsamplerange_);
-        gsp_.getMatcher().setllsamplestep(llsamplestep_);
+        gsp_.getMatcher().setLLSamplerange(llsamplerange_);
+        gsp_.getMatcher().setLLSamplestep(llsamplestep_);
         /// @todo Check these calls; in the gmapping gui, they use
         /// llsamplestep and llsamplerange intead of lasamplestep and
         /// lasamplerange.  It was probably a typo, but who knows.
-        gsp_.getMatcher().setlasamplerange(lasamplerange_);
-        gsp_.getMatcher().setlasamplestep(lasamplestep_);
+        gsp_.getMatcher().setLSSamplerange(lasamplerange_);
+        gsp_.getMatcher().setLASamplestep(lasamplestep_);
         gsp_.setMinimumScore(minimum_score_);
 
         // Call the sampling function once to set the seed.
@@ -351,8 +351,8 @@ public class Sample {
         matcher.setLaserParameters(scan.ranges.size(), laser_angles,
                 gsp_laser_.getPose());
 
-        matcher.setlaserMaxRange(maxRange_);
-        matcher.setusableRange(maxUrange_);
+        matcher.setLaserMaxRange(maxRange_);
+        matcher.setUsableRange(maxUrange_);
         matcher.setgenerateMap(true);
 
         Particle best =

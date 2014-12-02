@@ -5,6 +5,9 @@ import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class is not used
+ */
 public class ParticleFilter {
     public List<Integer> resampleP(List<Particle> particles) {
         double cweight = 0;
