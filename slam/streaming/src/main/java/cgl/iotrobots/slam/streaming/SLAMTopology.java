@@ -57,6 +57,5 @@ public class SLAMTopology {
 
     private static void buildAllInOneTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
         StreamComponents components = streamTopologyBuilder.buildComponents();
-
     }
 }

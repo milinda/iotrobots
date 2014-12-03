@@ -167,7 +167,6 @@ public abstract class AbstractGridSlamProcessor {
         particles.clear();
 
         for (int i = 0; i < size; i++) {
-            int lastIndex = particles.size() - 1;
             GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
             Particle p = new Particle(lmap);
 
@@ -177,10 +176,8 @@ public abstract class AbstractGridSlamProcessor {
             p.previousIndex = 0;
             particles.add(p);
             // we use the root directly
-            TNode node = new TNode(initialPose, 0, null, 0);
-            p.node = node;
+            p.node = new TNode(initialPose, 0, null, 0);
         }
-
 
         neff = (double) size;
         count = 0;
@@ -308,7 +305,7 @@ public abstract class AbstractGridSlamProcessor {
 
     protected double scanMatchParticle(double[] plainReading, double sumScore, Particle it) {
         DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-        double score = 0, l, s;
+        double score, l;
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
         //    it->pose=corrected;
         if (score > minimumScore) {
@@ -321,9 +318,6 @@ public abstract class AbstractGridSlamProcessor {
 
         ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
         l = score1.l;
-        s = score1.s;
-//            LikeliHood likeliHood = matcher.likelihood(it.map, it.pose, plainReading);
-//            l = likeliHood.likeliHood;
 
         sumScore += score;
         it.weight += l;
