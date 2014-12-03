@@ -3,8 +3,6 @@ package cgl.iotrobots.slam.streaming;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.topology.IRichBolt;
-import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.TopologyBuilder;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;

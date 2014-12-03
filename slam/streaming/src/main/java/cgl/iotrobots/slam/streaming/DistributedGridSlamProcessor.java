@@ -230,13 +230,6 @@ public class DistributedGridSlamProcessor {
             p.pose = relPose;
         }
 
-        LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
-        LOG.info("ODO_UPDATE " + particles.size() + " ");
-        for (Particle p : particles) {
-            LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.weight);
-        }
-        LOG.info("ODO_UPDATE Time {}", reading.getTime());
-
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
         linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
@@ -244,16 +237,7 @@ public class DistributedGridSlamProcessor {
 
         // if the robot jumps throw a warning
         if (linearDistance > distanceThresholdCheck) {
-            LOG.error("***********************************************************************");
-            LOG.error("********** Error: distanceThresholdCheck overridden!!!! *************");
-            LOG.error("distanceThresholdCheck=" + distanceThresholdCheck);
-            LOG.error("Old Odometry Pose= " + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
-            LOG.error("New Odometry Pose (reported from observation)= " + relPose.x + " " + relPose.y + " " + relPose.theta);
-            LOG.error("***********************************************************************");
-            LOG.error("** The Odometry has a big jump here. This is probably a bug in the   **");
-            LOG.error("** odometry/laser input. We continue now, but the result is probably **");
-            LOG.error("** crap or can lead to a core dump since the map doesn't fit.... C&G **");
-            LOG.error("***********************************************************************");
+            LOG.error("The robot jumped too much");
         }
 
         odoPose = relPose;
@@ -266,47 +250,25 @@ public class DistributedGridSlamProcessor {
                 || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
             last_update_time_ = reading.getTime();
 
-            LOG.info("FRAME " + readingCount + " " + linearDistance + " " + angularDistance);
-
-            LOG.info("update frame " + readingCount + "update ld=" + linearDistance + " ad=" + angularDistance);
-            LOG.info("Laser Pose= " + reading.getPose().x + " " + reading.getPose().y + " " + reading.getPose().theta);
-
             //this is for converting the reading in a scan-matcher feedable form
-            assert (reading.size() == beams);
+            if (reading.size() != beams) {
+                throw new IllegalStateException("reading should contain " + beams + " beams");
+            }
             double[] plainReading = new double[beams];
             for (int i = 0; i < beams; i++) {
                 plainReading[i] = reading.get(i);
             }
-            LOG.info("count " + count);
 
-            RangeReading reading_copy =
+            RangeReading readingCopy =
                     new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
                             (RangeSensor) reading.getSensor(),
                             reading.getTime());
 
             if (count > 0) {
                 scanMatch(plainReading);
-
-                LOG.debug("LASER_READING " + reading.size() + " ");
-                for (Double b : reading) {
-                    LOG.debug(b + " ");
-                }
-                DoubleOrientedPoint p = reading.getPose();
-
-                LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
-                LOG.debug("SM_UPDATE " + particles.size() + " ");
-                for (Particle it : particles) {
-                    DoubleOrientedPoint pose = it.pose;
-                    LOG.debug(pose.x + " " + pose.y + " ");
-                    LOG.debug(pose.theta + " " + it.weight + " ");
-                }
-
                 updateTreeWeights(false);
-
-                LOG.info("neff = " + neff);
-                resample(plainReading, adaptParticles, reading_copy);
+                resample(plainReading, adaptParticles, readingCopy);
             } else {
-                LOG.info("Registering First Scan");
                 for (Particle it : particles) {
                     matcher.invalidateActiveArea();
                     matcher.computeActiveArea(it.map, it.pose, plainReading);
@@ -314,7 +276,7 @@ public class DistributedGridSlamProcessor {
 
                     // not needed anymore, particles refer to the root in the beginning!
                     TNode node = new TNode(it.pose, 0., it.node, 0);
-                    node.reading = reading_copy;
+                    node.reading = readingCopy;
                     it.node = node;
 
                 }
