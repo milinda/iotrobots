@@ -63,6 +63,8 @@ public class DistributedGridSlamProcessor {
     protected double angularThresholdDistance;
     protected double obsSigmaGain;
 
+    private List<Integer> activeParticles = new ArrayList<Integer>();
+
     public DistributedGridSlamProcessor() {
         period_ = 0.0;
         obsSigmaGain = 1;
@@ -138,6 +140,11 @@ public class DistributedGridSlamProcessor {
         LOG.info(" -linearUpdate " + linear
                 + " -angularUpdate " + angular
                 + " -resampleThreshold " + this.resampleThreshold);
+    }
+
+    public void setActiveParticles(List<Integer> activeParticles) {
+        this.activeParticles.clear();
+        this.activeParticles.addAll(activeParticles);
     }
 
     public void setSensorMap(Map<String, Sensor> smap) {
@@ -337,7 +344,8 @@ public class DistributedGridSlamProcessor {
     public void scanMatch(double[] plainReading) {
         // sample a new pose from each scan in the reference
         double sumScore = 0;
-        for (Particle it : particles) {
+        for (int index : activeParticles) {
+            Particle it = particles.get(index);
             sumScore = scanMatchParticle(plainReading, sumScore, it);
         }
         LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
