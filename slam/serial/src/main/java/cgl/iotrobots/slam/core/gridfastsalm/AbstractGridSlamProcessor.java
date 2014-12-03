@@ -64,6 +64,10 @@ public abstract class AbstractGridSlamProcessor {
         minimumScore = 0.;
     }
 
+    public abstract void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose);
+
+    public abstract boolean processScan(RangeReading reading, int adaptParticles);
+
     public abstract void scanMatch(double[] plainReading);
 
     public abstract void setup();
