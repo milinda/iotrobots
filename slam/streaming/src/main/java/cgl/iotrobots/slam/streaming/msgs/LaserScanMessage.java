@@ -2,7 +2,7 @@ package cgl.iotrobots.slam.streaming.msgs;
 
 import java.io.Serializable;
 
-public class LaserScan implements Serializable {
+public class LaserScanMessage implements Serializable {
     private long timestamp;
 
     private double range_max;

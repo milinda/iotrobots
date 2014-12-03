@@ -47,7 +47,7 @@ public class Example1 {
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
-            sample.gsp_ = new GridSlamProcessor();
+            sample.gsp_ = new ParallelGridSlamProcessor();
             sample.init();
             LaserScan scanI = new LaserScan();
             scanI.angle_increment = ANGLE / SENSORS;
@@ -76,7 +76,7 @@ public class Example1 {
             LaserScan laserScan = getLaserScan();
             sample.laserCallback(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
             // progress at 0.5 m/s
-            if (getCounter() % 100 == 0) {
+            if (getCounter() % 50 == 0) {
                 if (forward) {
                     forward = false;
                 } else {

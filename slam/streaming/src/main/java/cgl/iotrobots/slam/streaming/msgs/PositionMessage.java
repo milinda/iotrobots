@@ -1,14 +1,14 @@
 package cgl.iotrobots.slam.streaming.msgs;
 
-public class Position {
+public class PositionMessage {
     private double x;
     private double y;
     private double theta;
 
-    public Position() {
+    public PositionMessage() {
     }
 
-    public Position(double x, double y, double theta) {
+    public PositionMessage(double x, double y, double theta) {
         this.x = x;
         this.y = y;
         this.theta = theta;
