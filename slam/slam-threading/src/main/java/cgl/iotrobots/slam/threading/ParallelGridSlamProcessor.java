@@ -1,13 +1,13 @@
 package cgl.iotrobots.slam.threading;
 
-import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
+import cgl.iotrobots.slam.core.gridfastsalm.SharedMemoryGridSlamProcessor;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class ParallelGridSlamProcessor extends AbstractGridSlamProcessor {
+public class ParallelGridSlamProcessor extends SharedMemoryGridSlamProcessor {
     private int parallelism = 4;
 
     private ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());

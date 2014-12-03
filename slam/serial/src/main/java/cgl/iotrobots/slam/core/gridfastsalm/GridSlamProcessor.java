@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class GridSlamProcessor extends AbstractGridSlamProcessor {
+public class GridSlamProcessor extends SharedMemoryGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(GridSlamProcessor.class);
 
     public void processTruePos(OdometryReading o) {
