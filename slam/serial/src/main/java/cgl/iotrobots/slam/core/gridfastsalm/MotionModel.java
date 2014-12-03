@@ -4,7 +4,7 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.Stat;
 
 public class MotionModel {
-    double srr, str, srt, stt;
+    public double srr, str, srt, stt;
 
     public void setSrr(double srr) {
         this.srr = srr;
@@ -22,7 +22,7 @@ public class MotionModel {
         this.stt = stt;
     }
 
-    DoubleOrientedPoint drawFromMotion(DoubleOrientedPoint p, double linearMove, double angularMove) {
+    public DoubleOrientedPoint drawFromMotion(DoubleOrientedPoint p, double linearMove, double angularMove) {
         DoubleOrientedPoint n = new DoubleOrientedPoint(p);
         double lm = linearMove + Math.abs(linearMove) * Stat.sampleGaussian(srr, 0) + Math.abs(angularMove) * Stat.sampleGaussian(str, 0);
         double am = angularMove + Math.abs(linearMove) * Stat.sampleGaussian(srt, 0) + Math.abs(angularMove) * Stat.sampleGaussian(stt, 0);
@@ -33,11 +33,11 @@ public class MotionModel {
         return n;
     }
 
-    DoubleOrientedPoint drawFromMotionN(DoubleOrientedPoint p, DoubleOrientedPoint pnew, DoubleOrientedPoint pold) {
+    public DoubleOrientedPoint drawFromMotionN(DoubleOrientedPoint p, DoubleOrientedPoint pnew, DoubleOrientedPoint pold) {
         return pnew;
     }
 
-    DoubleOrientedPoint drawFromMotion(DoubleOrientedPoint p, DoubleOrientedPoint pnew, DoubleOrientedPoint pold) {
+    public DoubleOrientedPoint drawFromMotion(DoubleOrientedPoint p, DoubleOrientedPoint pnew, DoubleOrientedPoint pold) {
         double sxy = 0.3 * srr;
         DoubleOrientedPoint delta = absoluteDifference(pnew, pold);
         DoubleOrientedPoint noisypoint = new DoubleOrientedPoint(delta);
