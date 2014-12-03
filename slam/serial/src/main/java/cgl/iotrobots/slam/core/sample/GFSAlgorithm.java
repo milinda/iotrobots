@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Sample {
-    private static Logger LOG = LoggerFactory.getLogger(Sample.class);
+public class GFSAlgorithm {
+    private static Logger LOG = LoggerFactory.getLogger(GFSAlgorithm.class);
 
     public AbstractGridSlamProcessor gsp_;
     RangeSensor gsp_laser_;
@@ -81,8 +81,8 @@ public class Sample {
     String odom_frame_;
 
     public static void main(String[] args) {
-        Sample sample = new Sample();
-        sample.init();
+        GFSAlgorithm GFSAlgorithm = new GFSAlgorithm();
+        GFSAlgorithm.init();
 
         LaserScan scanI = new LaserScan();
         scanI.angle_increment = Math.PI / 10;
@@ -94,7 +94,7 @@ public class Sample {
         scanI.ranges.add(10.0);
         scanI.range_min = 0;
         scanI.range_max = 100;
-        sample.initMapper(scanI);
+        GFSAlgorithm.initMapper(scanI);
 
         for (int i = 0; i < 1000; i++) {
             LaserScan scan = new LaserScan();
@@ -110,10 +110,8 @@ public class Sample {
             // scan.ranges.add(10.0);
             scan.range_min = 0;
             scan.range_max = 100;
-            sample.laserCallback(scan, null);
+            GFSAlgorithm.laserScan(scan, null);
         }
-
-        printMap(sample.map_);
     }
 
     public void init() {
@@ -150,8 +148,6 @@ public class Sample {
         llsamplestep_ = 0.01;
         lasamplerange_ = 0.005;
         lasamplestep_ = 0.005;
-
-
     }
 
     public boolean initMapper(LaserScan scan) {
@@ -224,7 +220,7 @@ public class Sample {
     double totalScanTime = 0;
     int count = 0;
 
-    public void laserCallback(LaserScan scan, DoubleOrientedPoint pose) {
+    public void laserScan(LaserScan scan, DoubleOrientedPoint pose) {
         long t0 =  System.currentTimeMillis();
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
@@ -287,9 +283,6 @@ public class Sample {
                 ranges_double,
                 gsp_laser_,
                 scan.timestamp);
-        // ...but it deep copies them in RangeReading constructor, so we don't
-        // need to keep our array around.
-
         reading.setPose(gmap_pose);
 
 //        for (int i = 0; i < ranges_double.length; i++) {
@@ -336,8 +329,6 @@ public class Sample {
 
     public void updateMap(LaserScan scan) {
         ScanMatcher matcher = new ScanMatcher();
-//        matcher = gsp_.getMatcher();
-//        matcher.setgenerateMap(true);
         double[] laser_angles = new double[scan.ranges.size()];
         double theta = angle_min_;
         for (int i = 0; i < scan.ranges.size(); i++) {
@@ -377,16 +368,13 @@ public class Sample {
         LOG.debug("Trajectory tree:");
         synchronized (map_.currentPos) {
             for (TNode n = best.node; n != null; n = n.parent) {
-//            System.out.print("Tree: " + n.pose.x + "," + n.pose.y + "," + n.pose.theta);
                 LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
-                //System.out.format("best pose: %f %f %f\n", n.pose.x, n.pose.y, n.pose.theta);
                 if (n.reading == null) {
                     LOG.debug("Reading is NULL");
                     continue;
                 }
 
                 IntPoint p = best.map.world2map(n.pose);
-                // System.out.format("(%d, %d, %f) ", p.x, p.y, n.pose.theta);
                 map_.currentPos.add(p);
 
                 matcher.invalidateActiveArea();
@@ -408,7 +396,7 @@ public class Sample {
         if (map_.width != smap.getMapSizeX() || map_.height != smap.getMapSizeY()) {
 
             // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
-            //       so we must obtain the bounding box in a different way
+            // so we must obtain the bounding box in a different way
             DoublePoint wmin = smap.map2world(new IntPoint(0, 0));
             DoublePoint wmax = smap.map2world(new IntPoint(smap.getMapSizeX(), smap.getMapSizeY()));
 
@@ -449,28 +437,9 @@ public class Sample {
         }
         System.out.println("count " + count);
         got_map_ = true;
-//        matcher.setgenerateMap(false);
     }
 
     public static int MAP_IDX(int sx, int i, int j) {
         return ((sx) * (j) + (i));
-    }
-
-    public static void printMap(OutMap map) {
-        for (int x = 0; x < map.width; x++) {
-            for (int y = 0; y < map.height; y++) {
-                int occ  = map.data[MAP_IDX(map.width, x, y)];
-                if (occ == -1) {
-//                    System.out.print("o");
-                } else if (occ == 100) {
-                    //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
-//                    System.out.print("x");
-                } else {
-                    //System.out.println("v");
-                }
-
-            }
-            //System.out.print("\n");
-        }
     }
 }

@@ -386,7 +386,6 @@ public abstract class AbstractGridSlamProcessor {
     }
 
     public void updateTreeWeights(boolean weightsAlreadyNormalized) {
-
         if (!weightsAlreadyNormalized) {
             normalize();
         }

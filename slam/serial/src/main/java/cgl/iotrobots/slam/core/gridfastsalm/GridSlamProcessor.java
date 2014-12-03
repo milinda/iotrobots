@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
-import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.*;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import com.google.common.collect.ArrayListMultimap;

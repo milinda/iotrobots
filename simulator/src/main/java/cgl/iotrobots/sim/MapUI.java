@@ -1,7 +1,7 @@
 package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.sample.OutMap;
-import cgl.iotrobots.slam.core.sample.Sample;
+import cgl.iotrobots.slam.core.sample.GFSAlgorithm;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import javax.swing.*;
@@ -68,7 +68,7 @@ public class MapUI extends JFrame {
 
             for (int x = 0; x < map.width; x++) {
                 for (int y = 0; y < map.height; y++) {
-                    int occ = map.data[Sample.MAP_IDX(map.width, x, y)];
+                    int occ = map.data[GFSAlgorithm.MAP_IDX(map.width, x, y)];
 
                     Random rand = new Random();
                     float r = rand.nextFloat();
