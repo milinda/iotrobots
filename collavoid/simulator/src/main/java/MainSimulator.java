@@ -1,6 +1,5 @@
-import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
-import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
-import geometry_msgs.PoseStamped;
+import geometry_msgs.Pose;
+import geometry_msgs.PoseArray;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
 import org.ros.message.MessageListener;
@@ -8,6 +7,7 @@ import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
+import org.ros.rosjava.tf.Transform;
 import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
@@ -43,17 +43,19 @@ public class MainSimulator {
         CameraSensor camera;
         //node
         private ConnectedNode node;
+
         //odometry publisher
         Publisher<Odometry> odometryPublisher = null;
         Odometry odomMsg;
         int odomSeq;
         //laser scan publisher
         Publisher<PointCloud2> laserscanPublisher = null;
-        PointCloud2 pc2;
+        PointCloud2 pc2,pctmp;
         int pc2Seq;
         //velocity command publisher
         Publisher<Twist> velocityPublisher = null;
         Twist cmd_vel;
+
         //velocity command subscriber
         Subscriber<Twist> velocitySubscriber = null;
         //tf listener
@@ -67,8 +69,13 @@ public class MainSimulator {
         //planner
         InitPlannerThread plannerThread;
         //for synchronization
-        Time time=new Time();
+        Time time = new Time();
 
+        //pose array publisher, currently for test
+        Publisher<PoseArray> poseArrayPublisher=null;
+        PoseArray poseArray;
+        int paSeq;
+        Point3d previousPosition=null;
 
 
         public Robot(Vector3d position, double ori, String name) {
@@ -89,6 +96,7 @@ public class MainSimulator {
             robotFrame = this.getName() + "_base";
             odomFrame = this.getName() + "_odometry";
             globalFrame = "map";
+
             initPubSub();
 
         }
@@ -110,6 +118,7 @@ public class MainSimulator {
             if (laserscanPublisher == null) {
                 laserscanPublisher = node.newPublisher(this.getName() + "/scan/point_cloud2", PointCloud2._TYPE);
                 // initialize message
+                pctmp=laserscanPublisher.newMessage();
                 pc2 = laserscanPublisher.newMessage();
                 pc2.getHeader().setFrameId(robotFrame);
                 pc2Seq = 0;
@@ -117,6 +126,13 @@ public class MainSimulator {
             if (velocityPublisher == null) {
                 velocityPublisher = node.newPublisher(this.getName() + "/cmd_vel", Twist._TYPE);
                 cmd_vel = velocityPublisher.newMessage();
+            }
+            //for test
+            if (poseArrayPublisher==null){
+                poseArrayPublisher=node.newPublisher(this.getName()+"/particlecloud",PoseArray._TYPE);
+                poseArray=node.getTopicMessageFactory().newFromType(PoseArray._TYPE);
+                poseArray.getHeader().setFrameId(robotFrame);
+                paSeq=0;
             }
 
             //initialize velocity command subscriber
@@ -155,12 +171,12 @@ public class MainSimulator {
             Point3d goal = new Point3d();
             goal.set(-start.getX(), start.getY(), -start.getZ());
 
-            Quat4d oriGoal = getOrientation(this);
+            Quat4d oriGoal = getOrientation();
             Transform3D tfr = new Transform3D(oriGoal, new Vector3d(0, 0, 0), 1);
             tfr.rotY(Math.PI);
             tfr.get(oriGoal);
 
-           plannerThread=new InitPlannerThread(node,tfl,start, goal, oriGoal);
+            plannerThread = new InitPlannerThread(node, tfl, start, goal, oriGoal);
         }
 
         /**
@@ -170,14 +186,32 @@ public class MainSimulator {
 
             kinematic.setWheelsVelocity(vl, vr);
 
-            time=node.getCurrentTime();
+            time = node.getCurrentTime();
             //send transform
             sendTransform(time);
             //publish scan in frequency of 1Hz
-            if (getCounter() % 20 == 0) {
-                //publish laser scan in pointcloud2 format
-                setLaserscanMsg(time);
+            if (getCounter() % 20 == 0 ) {
+                pc2.getHeader().setSeq(pc2Seq++);
+                pc2.getHeader().setStamp(time);
+                //publish valid laser scan in pointcloud2 format
+
+                if(laserScan.getLaserscanPointCloud2(pctmp))
+                    laserScan.getLaserscanPointCloud2(pc2);
                 laserscanPublisher.publish(pc2);
+            }
+            //test
+            if (getCounter()%20==0){
+                Point3d cor = new Point3d();
+                this.getCoords(cor);
+                poseArray.getHeader().setStamp(time);
+                poseArray.getHeader().setSeq(paSeq++);
+                if (previousPosition==null||!cor.equals(previousPosition)){
+                    if (previousPosition==null)
+                        previousPosition=new Point3d();
+                    this.getCoords(previousPosition);
+                    setPoseArrayMsg();
+                }
+                poseArrayPublisher.publish(poseArray);
             }
             //send odometry in frequency of 10 HZ
             if (getCounter() % 2 == 0) {
@@ -188,14 +222,14 @@ public class MainSimulator {
                 //localPlanner.computeVelocityCommands(cmd_vel);
                 //velocityPublisher.publish(cmd_vel);
             }
-
         }
 
         public void setOdomMsg(Time t) {
             //get position and velocities, all in odometry frame
             Point3d cor = new Point3d();
             this.getCoords(cor);
-            Quat4d ori = getOrientation(this);
+            //cor.scale(10);
+            Quat4d ori = getOrientation();
 
             odomMsg.getHeader().setStamp(t);
             odomMsg.getHeader().setSeq(odomSeq++);
@@ -206,18 +240,11 @@ public class MainSimulator {
 
         }
 
-
-        public void setLaserscanMsg(Time t) {
-            pc2.getHeader().setSeq(pc2Seq++);
-            pc2.getHeader().setStamp(t);
-            utils.toPointCloud2(pc2, laserScan.getScan());
-        }
-
-        public static Quat4d getOrientation(Robot robot) {
+        public Quat4d getOrientation() {
             //get orientation
             Transform3D tfr = new Transform3D();
             Quat4d ori = new Quat4d();
-            robot.getRotationTransform(tfr);
+            this.getRotationTransform(tfr);
             tfr.get(ori);
             return ori;
         }
@@ -232,10 +259,17 @@ public class MainSimulator {
 
             this.getTranslationTransform(tf);
             tf.get(tft3d);
-            tft3d = utils.toROSCoordinate(tft3d);
             this.getRotationTransform(tf);
             tf.get(tfrq);
-            tfrq = utils.toROSCoordinate(tfrq);
+            tf.set(tfrq,tft3d,1);
+
+            tf.invert();
+
+            tf.get(tft3d);
+            tf.get(tfrq);
+
+            utils.toROSCoordinate(tft3d);
+            utils.toROSCoordinate(tfrq);
 
             tfb.sendTransform(
                     parentFrame, childFrame,
@@ -252,6 +286,25 @@ public class MainSimulator {
                     0, 0, 0,
                     0, 0, 0, 1
             );
+        }
+
+        public void setPoseArrayMsg(){
+            List<Pose> pa=new ArrayList<Pose>();
+            //get orientation
+            Transform3D tfr = new Transform3D();
+            this.getRotationTransform(tfr);
+
+            Quat4d ori = new Quat4d();
+            Point3d pt= new Point3d();
+            for (int i = 0; i <50 ; i++) {
+                // in robot base frame
+                pt.setX(utils.getGaussianNoise(0, this.radius/10));
+                pt.setZ(utils.getGaussianNoise(0, this.radius / 10));
+                tfr.rotY(utils.getGaussianNoise(0, 0.15));
+                tfr.get(ori);
+                pa.add(utils.getPose(pt, ori));
+            }
+            poseArray.setPoses(pa);
         }
     }
 
@@ -283,7 +336,7 @@ public class MainSimulator {
 //            add(new Arch(new Vector3d(3, 0, -3), this));
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
-                Vector3d pose=new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
+                Vector3d pose = new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
                 add(new Robot(pose, Math.PI + i * step, "robot" + i));
             }
         }

@@ -6,31 +6,32 @@ import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.MessageDefinitionProvider;
 import org.ros.message.MessageFactory;
+import org.ros.rosjava.tf.Transform;
 import sensor_msgs.PointCloud2;
 import sensor_msgs.PointField;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
+import javax.media.j3d.Transform3D;
+import javax.vecmath.*;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class utils {
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
     public static MessageFactory messageFactory = new DefaultMessageFactory(messageDefinitionProvider);
-
+    //public static Transform3D tftoROS=new Transform3D(new Quat4d(-1,0,0,Math.cos(Math.PI/4)),new Vector3d(0,0,0),1);
     public static Point3d toROSCoordinate(Point3d p) {
         return new Point3d(p.getX(), -p.getZ(), p.getY());
     }
 
-    public static Vector3d toROSCoordinate(Vector3d p) {
-        return new Vector3d(p.getX(), -p.getZ(), p.getY());
+    public static void toROSCoordinate(Vector3d p) {
+        p.set(p.getX(), -p.getZ(), p.getY());
     }
 
-    public static Quat4d toROSCoordinate(Quat4d q) {
-        return new Quat4d(q.getX(), -q.getZ(), q.getY(), q.getW());
+    public static void toROSCoordinate(Quat4d q) {
+            q.set(q.getX(),-q.getZ(),q.getY(),q.getW());
     }
 
     public static Pose getPose(Point3d p3d, Quat4d quat4d) {
@@ -49,7 +50,8 @@ public class utils {
 
     public static Vector3 getTwist(Vector3d vel) {
         Vector3 twist = messageFactory.newFromType(Vector3._TYPE);
-        Vector3d velROS = toROSCoordinate(vel);
+        Vector3d velROS = new Vector3d(vel);
+        toROSCoordinate(velROS);
         twist.setX(velROS.getX());
         twist.setY(velROS.getY());
         twist.setZ(velROS.getZ());
@@ -73,7 +75,7 @@ public class utils {
         pc2.setWidth(scan.size());
         pc2.setFields(lPointField);
         pc2.setIsBigendian(false);
-        pc2.setPointStep(4 * 3);
+        pc2.setPointStep(4 * lPointField.size());
         pc2.setRowStep(pc2.getPointStep() * scan.size());
         pc2.setIsDense(false);
 
@@ -83,11 +85,11 @@ public class utils {
         Point3d p3d;
         for (int i = 0; i < scan.size(); i++) {
             //in ros coordinate
-            double[] pt=new double[lPointField.size()];
+            double[] pt = new double[lPointField.size()];
             p3d = toROSCoordinate(scan.get(i));
             p3d.get(pt);
-            for (int j = 0; j <lPointField.size() ; j++) {
-                buffer.writeFloat ((float)pt[j]);
+            for (int j = 0; j < lPointField.size(); j++) {
+                buffer.writeFloat((float) pt[j]);
             }
         }
         pc2.setData(buffer);
@@ -101,5 +103,11 @@ public class utils {
         out.setX(in.getX());
         out.setY(in.getY());
         out.setZ(in.getZ());
+    }
+
+    public static double getGaussianNoise(double mean, double variance) {
+        Random r = new java.util.Random();
+        double noise = r.nextGaussian() * Math.sqrt(variance) + mean;
+        return noise;
     }
 }

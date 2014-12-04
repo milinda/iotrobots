@@ -23,8 +23,8 @@ public class LPutils {
         double q1=q.getY();
         double q2=q.getZ();
         double q3=q.getW();
-        //refer to http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-        return Math.atan2(2*(q0*q3+q1*q2),1-2*(q2*q2+q3*q3));
+        //refer to roll in http://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
+        return Math.atan2(2.0*(q0*q1 + q3*q2), q3*q3 + q0*q0 - q1*q1 - q2*q2);
     }
 
     public static double getGoalPositionDistance(Pose pose,double goalx,double goaly){

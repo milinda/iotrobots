@@ -23,18 +23,19 @@ public class InitPlannerThread extends Thread {
     Point3d goal;
     Quat4d oriGoal;
 
-    InitPlannerThread(ConnectedNode node, TransformListener tfl, Point3d start, Point3d goal, Quat4d oriGoal){
+    InitPlannerThread(ConnectedNode node, TransformListener tfl, Point3d start, Point3d goal, Quat4d oriGoal) {
         super("InitPlannerThread");
-        this.node=node;
-        this.tfl=tfl;
-        this.start=start;
-        this.goal=goal;
-        this.oriGoal=oriGoal;
+        this.node = node;
+        this.tfl = tfl;
+        this.start = start;
+        this.goal = goal;
+        this.oriGoal = oriGoal;
 
         start();
 
     }
-    public void run(){
+
+    public void run() {
         //initialize plan
         if (globalPlan == null) {
             globalPlan = new ArrayList<PoseStamped>();
@@ -50,7 +51,7 @@ public class InitPlannerThread extends Thread {
 
         start = utils.toROSCoordinate(start);
         goal = utils.toROSCoordinate(goal);
-        oriGoal = utils.toROSCoordinate(oriGoal);
+        utils.toROSCoordinate(oriGoal);
 
         PoseStamped startPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
         PoseStamped goalPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);

@@ -65,6 +65,8 @@ public class TransformBuffer {
 		assert(tx.parentFrame == this.parentFrame && tx.childFrame == this.childFrame);
 		//assert(tx.timestamp > ) // make sure it's new
 		history.put(new Long(tx.timestamp), tx);
+        if (history.size()>=this.maxCapacity)
+            history.remove(history.firstKey());
 	}
 	
 	public Transform lookupTransform(long t) {

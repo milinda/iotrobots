@@ -114,7 +114,7 @@ public class LocalPlanner {
         if (!initialized_){
             logger=Logger.getLogger(node.getName().toString());
             base_frame_ = params.getString("/base_frame", id+"/base");
-            global_frame_ = params.getString("/global_frame", "/map");
+            global_frame_ = params.getString("/global_frame", "map");
 
             rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity",0.01);
             trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_",0.01);
@@ -154,10 +154,10 @@ public class LocalPlanner {
             //dsrv_->setCallback(cb);
 
             initialized_ = true;
-            node.getLog().info("************************"+node.getName()+" is initialized!");
+            node.getLog().info("************************Local Planner"+node.getName()+" is initialized!");
         }
         else {
-            node.getLog().info("************************"+node.getName()+" has already been initialized, you can't call it twice, doing nothing");
+            node.getLog().info("************************Local Planner"+node.getName()+" has already been initialized, you can't call it twice, doing nothing");
         }
 
     }
@@ -252,7 +252,7 @@ public class LocalPlanner {
         Odometry base_odom=messageFactory.newFromType(Odometry._TYPE);
             me.me_lock_.lock();
             try{
-                base_odom = me.base_odom_;
+                base_odom = me.getBaseOdom();
             }finally {
                 me.me_lock_.unlock();
             }
@@ -308,9 +308,9 @@ public class LocalPlanner {
 
         me.me_lock_.lock();
         try{
-            linear.setX(me.base_odom_.getTwist().getTwist().getLinear().getX());
-            linear.setY(me.base_odom_.getTwist().getTwist().getLinear().getY());
-            angular.setZ(me.base_odom_.getTwist().getTwist().getAngular().getY());
+            linear.setX(me.getBaseOdom().getTwist().getTwist().getLinear().getX());
+            linear.setY(me.getBaseOdom().getTwist().getTwist().getLinear().getY());
+            angular.setZ(me.getBaseOdom().getTwist().getTwist().getAngular().getY());
             global_vel.setLinear(linear);
             global_vel.setAngular(angular);
         }finally {
@@ -690,7 +690,7 @@ public class LocalPlanner {
         {
             double dist = LPutils.getGoalPositionDistance(global_pose.getPose(), transformed_plan_.get(i).getPose().getPosition().getX(),
                     transformed_plan_.get(i).getPose().getPosition().getY());
-            if (dist < me.radius || dist < min_dist) {
+            if (dist < me.getRadius() || dist < min_dist) {
                 min_dist = dist;
                 target_pose.setHeader(transformed_plan_.get(i).getHeader());
                 target_pose.setPose(transformed_plan_.get(i).getPose());

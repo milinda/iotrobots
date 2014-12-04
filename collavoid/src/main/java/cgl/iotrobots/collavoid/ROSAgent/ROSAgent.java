@@ -6,7 +6,6 @@ import cgl.iotrobots.collavoid.Comparators.NeighborDistComparator;
 import cgl.iotrobots.collavoid.Comparators.VectorsLexigraphicComparator;
 import cgl.iotrobots.collavoid.LocalPlanner.LPutils;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
-import cgl.iotrobots.collavoid.msgmanager.msgPublisher;
 import cgl.iotrobots.collavoid.utils.*;
 
 import static cgl.iotrobots.collavoid.ClearPath.CP.convexHull;
@@ -38,7 +37,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 
-
 public class ROSAgent {
     //config for simulation and some rules
     double leftPref;
@@ -65,7 +63,7 @@ public class ROSAgent {
     public Position position; //contains the heading information
     public Vector2 velocity;
     public Vector2 newVelocity;
-    public double radius;
+    private double radius;
     //public List<Point<Double>> footPrint_global;
     public List<Vector2> footPrint_global;
 
@@ -124,7 +122,7 @@ public class ROSAgent {
     public double time_horizon_obst_;
 
     //ROSAgent description
-    public String id_;
+    private String id_;
     public String base_frame_, global_frame_;
     public double wheel_base_;
     public PolygonStamped footprint_msg_;
@@ -140,8 +138,8 @@ public class ROSAgent {
 
     public List<LinePair> footPrintLines;
 
-    public Time last_seen_;
-    public Odometry base_odom_;
+    private Time last_seen_;
+    private Odometry base_odom_;
 
     //LOC uncertatiny
     public double eps_;
@@ -154,12 +152,13 @@ public class ROSAgent {
     //lock
     public Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
 
-    //me stuff
+    //tf
     TransformListener tf_;
 
     //subscribers and publishers
     public Publisher lines_pub_, neighbors_pub_, polygon_pub_, vo_pub_, me_pub_, samples_pub_, speed_pub_, position_share_pub_, obstacles_pub_;
     public Subscriber amcl_posearray_sub_, position_share_sub_, odom_sub_, laser_scan_sub_, laser_notifier;
+    private MsgPublisher msgPublisher;
 
 
     //utils
@@ -170,7 +169,6 @@ public class ROSAgent {
     //to define messages
     public ConnectedNode node;
     public ParameterTree params;
-
 
 
     //-----------------------method begin-------------------------------//
@@ -197,24 +195,24 @@ public class ROSAgent {
         obstacle_points_ = new ArrayList<Vector2>();
         pose_array_weighted_ = new ArrayList<PoseWeighted>();
         ROSAgentNeighbors = new ArrayList<ROSAgent>();
-        obstacles_from_laser_=new ArrayList<Obstacle>();
-        initNode(connectedNode,tf);
+        obstacles_from_laser_ = new ArrayList<Obstacle>();
+        initNode(connectedNode, tf);
     }
 
     // for neighbor recording
-    public ROSAgent(String id){
-        id_=id;
+    public ROSAgent(String id) {
+        id_ = id;
         footprint_msg_ = messageFactory.newFromType(PolygonStamped._TYPE);
         base_odom_ = messageFactory.newFromType(Odometry._TYPE);
         holo_velocity_ = new Vector2();
-        position=new Position();
+        position = new Position();
 
         minkowski_footprint_ = new ArrayList<Vector2>();
-        last_seen_= new Time();
+        last_seen_ = new Time();
     }
 
     //initialize node
-    public void initNode(ConnectedNode connectedNode,TransformListener tf) {
+    public void initNode(ConnectedNode connectedNode, TransformListener tf) {
         node = connectedNode;
         params = node.getParameterTree();
         tf_ = tf;
@@ -232,13 +230,15 @@ public class ROSAgent {
                 }
             }
         }
+
+        msgPublisher = new MsgPublisher(node);
         agentInit();
     }
 
     //get parameters from the server
     public void agentInit() {
 
-        base_frame_ = params.getString("/base_frame", id_.substring(1)+"_base");//get rid of the / character
+        base_frame_ = params.getString("/base_frame", id_.substring(1) + "_base");//get rid of the / character
         global_frame_ = params.getString("/global_frame", "map");
         standalone_ = params.getBoolean("/standalone", false);
 
@@ -290,13 +290,15 @@ public class ROSAgent {
         node.getLog().info("Sim period is set to " + String.format("%1$.2f", sim_period_));
         simPeriod = sim_period_;
 
-        //other agent params
         //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
+        //non holo robot parameters
         time_to_holo_ = params.getDouble("/time_to_holo", 0.4);
         minErrorHolo = params.getDouble("/min_error_holo", 0.01);
         maxErrorHolo = params.getDouble("/max_error_holo", 0.15);
         //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
         //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
+
+        //parameters for convex footprint which considers localization uncertainty
         eps_ = params.getDouble("/eps", 0.1);
         orca = params.getBoolean("/orca");
         convex = params.getBoolean("/convex");
@@ -309,11 +311,13 @@ public class ROSAgent {
         truncTime = params.getDouble("/trunc_time", 5.0);
         //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
 
+        //visualization publish frequency
         publishPositionsPeriod = 1.0 / params.getDouble("/publish_positions_frequency", 10.0);
+        //position share publish frequency
         publishMePeriod = 1.0 / params.getDouble("/publish_me_frequency", 10.0);
 
         //set Footprint, get footprint from the costmap while costmap subscibe to
-        //footprint topic
+        //footprint topic, currently not uesed
         List<Point> footprint_points = new ArrayList<Point>();
         //TODO:footprint_points = costmap_ros_->getRobotFootprint();
 
@@ -348,7 +352,7 @@ public class ROSAgent {
 
         initPubSub(node);
         initialized_ = true;
-            }
+    }
 
 
     public void initPubSub(final ConnectedNode newnode) {
@@ -359,18 +363,18 @@ public class ROSAgent {
             controlled = params.getBoolean("move_base/controlled", true);
         }
 
-        //Publishers
-        vo_pub_=node.newPublisher(id_+"/v_vo",Marker._TYPE);
-        neighbors_pub_=node.newPublisher(id_+"/v_neighbors",MarkerArray._TYPE);
-        me_pub_=node.newPublisher(id_+"/v_ROSAgent",MarkerArray._TYPE);
-        lines_pub_=node.newPublisher(id_+"/v_orca_lines",Marker._TYPE);
-        obstacles_pub_=node.newPublisher(id_+"v_obstacles",Marker._TYPE);
-        samples_pub_=node.newPublisher(id_+"/v_samples",MarkerArray._TYPE);
-        speed_pub_=node.newPublisher(id_+"/v_speed",Marker._TYPE);
-        position_share_pub_ = node.newPublisher("/position_share", pose_twist_covariance_msgs._TYPE);
+        //Publishers, most for visualization purpose
+        neighbors_pub_ = node.newPublisher(id_ + "/v_neighbors", MarkerArray._TYPE);
+        me_pub_ = node.newPublisher(id_ + "/v_ROSAgent", MarkerArray._TYPE);
         //convex hull foot print taking localization uncertainty into account
-        polygon_pub_ = node.newPublisher(id_+"/convex_hull", PolygonStamped._TYPE);
+        polygon_pub_ = node.newPublisher(id_ + "/convex_hull", PolygonStamped._TYPE);
+        vo_pub_ = node.newPublisher(id_ + "/v_vo", Marker._TYPE);
+        lines_pub_ = node.newPublisher(id_ + "/v_orca_lines", Marker._TYPE);
+        obstacles_pub_ = node.newPublisher(id_ + "/v_obstacles", Marker._TYPE);
+        samples_pub_ = node.newPublisher(id_ + "/v_samples", MarkerArray._TYPE);
+        speed_pub_ = node.newPublisher(id_ + "/v_speed", Marker._TYPE);
 
+        position_share_pub_ = node.newPublisher("/position_share", pose_twist_covariance_msgs._TYPE);
 
         //Subscribers
         position_share_sub_ = node.newSubscriber("/position_share", pose_twist_covariance_msgs._TYPE);
@@ -387,11 +391,12 @@ public class ROSAgent {
         amcl_posearray_sub_.addMessageListener(new MessageListener<PoseArray>() {
             @Override
             public void onNewMessage(PoseArray msg) {
-                amclPoseArrayWeightedCallback(msg);
+                //amclPoseArrayWeightedCallback(msg);
+                PoseArrayTestCallback(msg);
             }
         });
 
-        odom_sub_ = node.newSubscriber(id_+"/odometry", Odometry._TYPE);
+        odom_sub_ = node.newSubscriber(id_ + "/odometry", Odometry._TYPE);
         odom_sub_.addMessageListener(new MessageListener<Odometry>() {
             @Override
             public void onNewMessage(Odometry msg) {
@@ -401,7 +406,7 @@ public class ROSAgent {
 
 //        //laser_scan_sub_.subscribe (nh, "base_scan", 1);
 //        //laser_notifier.reset(new tf::MessageFilter<sensor_msgs::LaserScan>(laser_scan_sub_, *tf_, global_frame_, 10));
-        laser_scan_sub_ = node.newSubscriber(id_+"/scan/point_cloud2", PointCloud2._TYPE);
+        laser_scan_sub_ = node.newSubscriber(id_ + "/scan/point_cloud2", PointCloud2._TYPE);
         laser_scan_sub_.addMessageListener(new MessageListener<PointCloud2>() {
             @Override
             public void onNewMessage(PointCloud2 msg) {
@@ -415,6 +420,32 @@ public class ROSAgent {
 //        laser_notifier->setTolerance(ros::Duration(0.1));
 
         logger.info("************************" + id_ + " is initialized.");
+
+    }
+
+    void PoseArrayTestCallback(PoseArray msg){
+        // in robot base frame do not need transform
+        double x,y;
+        List<Vector2> localization_footprint = new ArrayList<Vector2>();
+        List<Vector2> own_footprint = new ArrayList<Vector2>();
+        for (int i = 0; i < msg.getPoses().size(); i++) {
+            x=msg.getPoses().get(i).getPosition().getX();
+            y=msg.getPoses().get(i).getPosition().getY();
+            Vector2 p=new Vector2(x,y);
+            if(p.getLength()>0.1)
+                continue;
+            localization_footprint.add(p);
+        }
+
+        for (int i = 0; i < footprint_msg_.getPolygon().getPoints().size(); i++) {
+            Point32 p = footprint_msg_.getPolygon().getPoints().get(i);
+            own_footprint.add(new Vector2(p.getX(), p.getY()));
+            //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
+        }
+        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+        //publish footprint
+        PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
+        polygon_pub_.publish(msg_pub);
 
     }
 
@@ -545,6 +576,7 @@ public class ROSAgent {
         minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
         //publish footprint
         PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
+        // for visualization
         polygon_pub_.publish(msg_pub);
 
     }
@@ -586,8 +618,8 @@ public class ROSAgent {
                     ROSAgent new_robot = new ROSAgent(cur_id);
                     new_robot.holo_robot_ = msg.getHoloRobot();
                     ROSAgentNeighbors.add(new_robot);
-                    logger.info(id_+" added a new neighbor with id " + cur_id + " and radius " + msg.getRadius());
-                }
+                    logger.info(id_ + " added a new neighbor with id " + cur_id + " and radius " + msg.getRadius());
+                    }
 
                 ROSAgent lstagent = ROSAgentNeighbors.get(i);
                 lstagent.base_odom_.setPose(msg.getPose());
@@ -604,6 +636,10 @@ public class ROSAgent {
             if ((node.getCurrentTime().toSeconds() - lastTimePositionsPublished.toSeconds()) > publishPositionsPeriod) {
                 lastTimePositionsPublished = node.getCurrentTime();
                 msgPublisher.publishNeighborPositions(ROSAgentNeighbors, global_frame_, base_frame_, neighbors_pub_);// for visualization
+                //in case odometry call back is not called at the beginning
+                if (last_seen_==null){
+                    last_seen_=node.getCurrentTime();
+                }
                 msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);//for visualize in rviz
             }
         } finally {
@@ -632,9 +668,9 @@ public class ROSAgent {
         // velocity to robot frame.
         me_lock_.lock();
         try {
-            Twist twist=node.getTopicMessageFactory().newFromType(Twist._TYPE);
-            if(!tf_.transformTwist(base_frame_,msg.getHeader().getFrameId(),msg.getTwist().getTwist(),twist)){
-                node.getLog().error("Can not transform twist to base frame: "+msg.getHeader().getFrameId()+"->"+base_frame_);
+            Twist twist = node.getTopicMessageFactory().newFromType(Twist._TYPE);
+            if (!tf_.transformTwist(base_frame_, msg.getHeader(), msg.getTwist().getTwist(), twist)) {
+                node.getLog().error("Can not transform twist to base frame: " + msg.getHeader().getFrameId() + "->" + base_frame_);
                 return;
             }
             base_odom_.getTwist().setTwist(twist);
@@ -674,20 +710,20 @@ public class ROSAgent {
 
 
     public void baseScanCallback(final PointCloud2 msg, Duration dur_m) {
-        List<Point3d> point3ds=new ArrayList<Point3d>();
-        ChannelBuffer data= msg.getData().copy();
+        List<Point3d> point3ds = new ArrayList<Point3d>();
+        ChannelBuffer data = msg.getData().copy();
 
         //transform pointcloud2 from base frame to global frame
-        while (data.readableBytes()>0){
-            double[] pt=new double[msg.getFields().size()];
-            for (int k = 0; k <msg.getFields().size() ; k++) {
-                pt[k]=data.readFloat();
+        while (data.readableBytes() > 0) {
+            double[] pt = new double[msg.getFields().size()];
+            for (int k = 0; k < msg.getFields().size(); k++) {
+                pt[k] = data.readFloat();
             }
             point3ds.add(new Point3d(pt));
         }
 
-        if (!tf_.transformPoint3ds(global_frame_,base_frame_,point3ds,msg.getHeader().getStamp().totalNsecs(),dur_m)) {
-            node.getLog().error("Can not transform cloud points: "+base_frame_+"->"+global_frame_);
+        if (!tf_.transformPoint3ds(global_frame_, base_frame_, point3ds, msg.getHeader().getStamp().totalNsecs(), dur_m)) {
+            node.getLog().error("Can not transform cloud points: " + base_frame_ + "->" + global_frame_);
             return;
         }
 
@@ -701,10 +737,10 @@ public class ROSAgent {
             //    ROS_ERROR("%d", (int)cloud.points.size());
             Vector2 start;
             for (int i = 0; i < point3ds.size(); i++) {
-                start = new Vector2(point3ds.get(i).getX(),point3ds.get(i).getY());
+                start = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                 while (pointInNeighbor(start) && i < point3ds.size()) {
                     i++;
-                    start = new Vector2(point3ds.get(i).getX(),point3ds.get(i).getY());
+                    start = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                 }
                 if (i == point3ds.size()) {
                     //it is a agent
@@ -712,7 +748,7 @@ public class ROSAgent {
                 }
 
                 boolean found = false;
-                Vector2 prev = start;
+                Vector2 prev = new Vector2(start);
                 double first_ang = 0;
                 double prev_ang = 0;
                 Vector2 next;
@@ -721,10 +757,10 @@ public class ROSAgent {
                     if (i == point3ds.size()) {
                         break;
                     }
-                    next = new Vector2(point3ds.get(i).getX(),point3ds.get(i).getY());
+                    next = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                     while (pointInNeighbor(next) && i < point3ds.size()) {
                         i++;
-                        next = new Vector2(point3ds.get(i).getX(),point3ds.get(i).getY());
+                        next = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                     }
 
                     if (Vector2.abs(Vector2.minus(next, prev)) > 2 * footprint_radius_) {
@@ -733,7 +769,7 @@ public class ROSAgent {
                     }
                     Vector2 dif = Vector2.minus(next, start);
                     double ang = Math.atan2(dif.getY(), dif.getX());
-                    if (!prev.eq(start)) {
+                    if (!prev.equals(start)) {
                         if (ang - first_ang < threshold_concave) {
                             found = true;
                             i -= 2;
@@ -758,7 +794,7 @@ public class ROSAgent {
                     } else {
                         first_ang = ang;
                     }
-                    prev = next;
+                    prev = new Vector2(next);
                     prev_ang = ang;
                 }
                 Obstacle obst = new Obstacle(start, prev);
@@ -877,7 +913,12 @@ public class ROSAgent {
 
     //update status of the agent according to its velocity
     void upDateAgentState(ROSAgent agt) {
-        double time_dif = agt.node.getCurrentTime().toSeconds() - agt.last_seen_.toSeconds();
+        double time_dif;
+        if (last_seen_==null)
+            time_dif=0;
+        else
+            time_dif = agt.node.getCurrentTime().toSeconds() - agt.last_seen_.toSeconds();
+
         double yaw, x_dif, y_dif, th_dif, x, y, theta;
         Vector2 pt = new Vector2(0.0, 0.0);
 
@@ -903,8 +944,8 @@ public class ROSAgent {
 
         //update velocity
         if (agt.holo_robot_) {
-            x=agt.base_odom_.getTwist().getTwist().getLinear().getX();
-            y=agt.base_odom_.getTwist().getTwist().getLinear().getY();
+            x = agt.base_odom_.getTwist().getTwist().getLinear().getX();
+            y = agt.base_odom_.getTwist().getTwist().getLinear().getY();
             pt.setX(x);
             pt.setY(y);
             agt.velocity = Vector2.rotateVectorByAngle(pt, (yaw + th_dif));
@@ -997,7 +1038,7 @@ public class ROSAgent {
             int i = 0;
             Vector<Integer> delete_list = new Vector<Integer>();
             for (Iterator<Obstacle> obst = obstacles_from_laser_.iterator(); obst.hasNext(); ) {
-                if (!obst.next().getBegin().eq(obst.next().getEnd())) {//need to implement eq
+                if (!obst.next().getBegin().equals(obst.next().getEnd())) {//need to implement eq
                     double dist = distSqPointLineSegment(obst.next().getBegin(), obst.next().getEnd(), position.getPos());
                     if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
                         if (use_obstacles_) {
@@ -1158,10 +1199,10 @@ public class ROSAgent {
             neighbors_lock_.unlock();
         }
         //for visualization
-            publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
-            publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
-            publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
-            publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
+        msgPublisher.publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
+        msgPublisher.publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
+        msgPublisher.publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
+        msgPublisher.publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
 
 
     }
@@ -1193,16 +1234,30 @@ public class ROSAgent {
     }
 
 
-    /*++++++++++++++++++++++++Get and set stuff++++++++++++++++++++++++++*/
-    public Odometry getBaseOdom() {
-        Odometry odom = messageFactory.newFromType(Odometry._TYPE);
-        odom.setTwist(base_odom_.getTwist());
-        odom.setHeader(base_odom_.getHeader());
-        odom.setPose(base_odom_.getPose());
-        odom.setChildFrameId(base_odom_.getChildFrameId());
-        return odom;
+    /*++++++++++++++++++++++++Get stuff++++++++++++++++++++++++++*/
+    public double getRadius() {
+        return radius;
     }
 
+    public Odometry getBaseOdom() {
+        return base_odom_;
+    }
+
+    public Time getLastSeen() {
+        return last_seen_;
+    }
+
+    public boolean getIsHolo() {
+        return holo_robot_;
+    }
+
+    public String getId(){
+        return id_;
+    }
+
+    /*+++++++++++++++++++++++++Get stuff end+++++++++++++++++++++++++*/
+
+    /*++++++++++++++++++++++++Set stuff++++++++++++++++++++++++++*/
     public void setFootprint(PolygonStamped footprint) {
         if (footprint.getPolygon().getPoints().size() < 2) {
             logger.severe("The footprint specified has less than two nodes");
@@ -1232,6 +1287,6 @@ public class ROSAgent {
     }
 
 
-    /*+++++++++++++++++++++++++Get and set stuff end+++++++++++++++++++++++++*/
+    /*+++++++++++++++++++++++++Set stuff end+++++++++++++++++++++++++*/
 
 }

@@ -2,8 +2,6 @@ package test;
 
 import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
 import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
-import cgl.iotrobots.collavoid.msgmanager.MsgFactory;
-import costmap_2d.VoxelGrid;
 import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import org.ros.node.ConnectedNode;

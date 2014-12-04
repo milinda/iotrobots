@@ -1,3 +1,5 @@
+import org.ros.message.Time;
+import sensor_msgs.PointCloud2;
 import simbad.sim.RangeSensorBelt;
 
 import javax.media.j3d.Transform3D;
@@ -57,21 +59,28 @@ public class LaserScan {
         return sensors;
     }
 
-    public List<Point3d> getScan() {
+    public void getScan(List<Point3d> res) {
         //in robot base frame
-        List<Point3d> res = new ArrayList<Point3d>();
         double d;
+        res.clear();
         for (int i = 0; i < sensors.getNumSensors(); i++) {
-            if (!Double.isFinite(sensors.getMeasurement(i))) {
-                res.add(new Point3d(Double.NaN, Double.NaN, Double.NaN));
-            } else {
+            if (Double.isFinite(sensors.getMeasurement(i))) {
                 d = sensors.getMeasurement(i) + this.radius;
                 res.add(new Point3d(d * Math.cos(angles[i]), height, d * Math.sin(-angles[i])));
             }
         }
-        return res;
     }
 
+    public boolean getLaserscanPointCloud2(PointCloud2 pc2) {
+        List<Point3d> scan = new ArrayList<Point3d>();
+        getScan(scan);
+        if (scan.size() == 0) {
+            return false;
+        } else {
+            utils.toPointCloud2(pc2, scan);
+            return true;
+        }
+    }
 
     public void setHeight(double h) {
         this.height = h;

@@ -59,11 +59,17 @@ public class TransformTree extends AbstractTransformDatabase {
 				txBuff = new TransformBuffer(tx.parentFrame, tx.childFrame);
 				txBuff.put(tx);
 				graph.addEdge(tx.parentFrame, tx.childFrame, txBuff);
+//                if (tx.getId().equals("robot1_odometry->robot1_base"))
+//                System.out.println("add: "+tx.getId()+" at: "+tx.timestamp);
+                //System.out.println(tx.timestamp);
 			} else {
 				txBuff = graph.getEdge(tx.parentFrame, tx.childFrame);
 				txBuff.put(tx);
+//                if (tx.getId().equals("robot1_odometry->robot1_base"))
+//                System.out.println("add: "+tx.getId()+" at: "+tx.timestamp);
+                //System.out.println(tx.timestamp);
 			}
-	
+
 			/*
 			// TODO: check for childFrame->parentFrame, invert it and add (and print warning)
 			else if((txBuff = graph.getEdge(tx.childFrame, tx.parentFrame)) != null) {
@@ -109,19 +115,16 @@ public class TransformTree extends AbstractTransformDatabase {
 		else if(!graph.containsVertex(frame2)) return false;
 		else {
 			List<TransformBuffer> path = DijkstraShortestPath.findPathBetween(graph, frame1, frame2);
-			//return false;
 			return path != null && path.size() > 0;
 		}
 	}
 	
 	public boolean canTransform(String frame1, String frame2, long t) {
         List<TransformBuffer> path;
-        try {
+        if (canTransform(frame1,frame2))
             path= DijkstraShortestPath.findPathBetween(graph, frame1, frame2);
-        }catch (IllegalArgumentException e){
-            e.printStackTrace();
+        else
             return false;
-        }
 
 		if(path == null || path.size() == 0) return false;
 		for( TransformBuffer txBuff : path ) {
