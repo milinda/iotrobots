@@ -9,11 +9,11 @@ import backtype.storm.tuple.Tuple;
 import java.util.Map;
 
 public class ScanMatchBolt extends BaseRichBolt {
-    private DistributedGridSlamProcessor gfsp = null;
+    private DistributedScanMatcher gfsp = null;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        gfsp = new DistributedGridSlamProcessor();
+        gfsp = new DistributedScanMatcher();
 
 
     }

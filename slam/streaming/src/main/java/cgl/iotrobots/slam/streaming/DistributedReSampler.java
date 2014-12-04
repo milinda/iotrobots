@@ -1,7 +1,6 @@
 package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
@@ -20,8 +19,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class DistributedGridSlamProcessor {
-    private static Logger LOG = LoggerFactory.getLogger(DistributedGridSlamProcessor.class);
+public class DistributedReSampler {
+    private static Logger LOG = LoggerFactory.getLogger(DistributedScanMatcher.class);
 
     public static final double distanceThresholdCheck = 20;
 
@@ -63,9 +62,7 @@ public class DistributedGridSlamProcessor {
     protected double angularThresholdDistance;
     protected double obsSigmaGain;
 
-    private List<Integer> activeParticles = new ArrayList<Integer>();
-
-    public DistributedGridSlamProcessor() {
+    public DistributedReSampler() {
         period_ = 0.0;
         obsSigmaGain = 1;
         resampleThreshold = 0.5;
@@ -142,11 +139,6 @@ public class DistributedGridSlamProcessor {
                 + " -resampleThreshold " + this.resampleThreshold);
     }
 
-    public void setActiveParticles(List<Integer> activeParticles) {
-        this.activeParticles.clear();
-        this.activeParticles.addAll(activeParticles);
-    }
-
     public void setSensorMap(Map<String, Sensor> smap) {
         /*
           Construct the angle table for the sensor
@@ -159,64 +151,6 @@ public class DistributedGridSlamProcessor {
             angles[i] = rangeSensor.beams().get(i).pose.theta;
         }
         matcher.setLaserParameters(beams, angles, rangeSensor.getPose());
-    }
-
-    protected double scanMatchParticle(double[] plainReading, double sumScore, Particle it) {
-        DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-        double score, l;
-        score = matcher.optimize(corrected, it.map, it.pose, plainReading);
-        //    it->pose=corrected;
-        if (score > minimumScore) {
-            it.pose = new DoubleOrientedPoint(corrected);
-        } else {
-            LOG.info("Scan Matching Failed, using odometry. Likelihood=");
-            LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
-            LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
-        }
-
-        ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
-        l = score1.l;
-
-        sumScore += score;
-        it.weight += l;
-        it.weightSum += l;
-
-        //set up the selective copy of the active area
-        //by detaching the areas that will be updated
-        matcher.invalidateActiveArea();
-        matcher.computeActiveArea(it.map, it.pose, plainReading);
-        return sumScore;
-    }
-
-    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
-        this.xmin = xmin;
-        this.ymin = ymin;
-        this.xmax = xmax;
-        this.ymax = ymax;
-        this.delta = delta;
-
-        LOG.info(" -xmin " + this.xmin + " -xmax " + this.xmax + " -ymin " + this.ymin
-                + " -ymax " + this.ymax + " -delta " + this.delta + " -particles " + size);
-
-        particles.clear();
-
-        for (int i = 0; i < size; i++) {
-            GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
-            Particle p = new Particle(lmap);
-
-            p.pose = new DoubleOrientedPoint(initialPose);
-            p.previousPose = initialPose;
-            p.setWeight(0);
-            p.previousIndex = 0;
-            particles.add(p);
-            // we use the root directly
-            p.node = new TNode(initialPose, 0, null, 0);
-        }
-
-        neff = (double) size;
-        count = 0;
-        readingCount = 0;
-        linearDistance = angularDistance = 0;
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
@@ -265,7 +199,6 @@ public class DistributedGridSlamProcessor {
                             reading.getTime());
 
             if (count > 0) {
-                scanMatch(plainReading);
                 updateTreeWeights(false);
                 resample(plainReading, adaptParticles, readingCopy);
             } else {
@@ -278,7 +211,6 @@ public class DistributedGridSlamProcessor {
                     TNode node = new TNode(it.pose, 0., it.node, 0);
                     node.reading = readingCopy;
                     it.node = node;
-
                 }
             }
             updateTreeWeights(false);
@@ -298,21 +230,6 @@ public class DistributedGridSlamProcessor {
         readingCount++;
         return processed;
     }
-
-    /**
-     * Just scan match every single particle.
-     * If the scan matching fails, the particle gets a default likelihood.
-     */
-    public void scanMatch(double[] plainReading) {
-        // sample a new pose from each scan in the reference
-        double sumScore = 0;
-        for (int index : activeParticles) {
-            Particle it = particles.get(index);
-            sumScore = scanMatchParticle(plainReading, sumScore, it);
-        }
-        LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
-    }
-
 
     public void resetTree() {
         // don't calls this function directly, use updateTreeWeights(..) !
