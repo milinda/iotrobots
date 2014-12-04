@@ -4,6 +4,13 @@ import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import cgl.iotrobots.slam.core.grid.Array2D;
+import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
+import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+import cgl.iotrobots.slam.core.gridfastsalm.TNode;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import org.apache.commons.cli.BasicParser;
@@ -39,6 +46,9 @@ public class SLAMTopology {
         // also we cannot replay message because of the decoder
         conf.put(Config.TOPOLOGY_ACKER_EXECUTORS, 0);
 
+        // add the serializers
+        addSerializers(conf);
+
         // we are going to deploy on a real cluster
         if (!local) {
             conf.setNumWorkers(5);
@@ -55,5 +65,15 @@ public class SLAMTopology {
 
     private static void buildAllInOneTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
         StreamComponents components = streamTopologyBuilder.buildComponents();
+    }
+
+    private static void addSerializers(Config config) {
+        config.registerSerialization(DoublePoint.class);
+        config.registerSerialization(IntPoint.class);
+        config.registerSerialization(Particle.class);
+        config.registerSerialization(GMap.class);
+        config.registerSerialization(Array2D.class);
+        config.registerSerialization(HierarchicalArray2D.class);
+        config.registerSerialization(TNode.class);
     }
 }

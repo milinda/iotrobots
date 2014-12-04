@@ -254,13 +254,14 @@ public class DistributedScanMatcher {
                     it.node = node;
                 }
             }
-            updateTreeWeights(false);
 
             lastPartPose = odoPose; //update the past pose for the next iteration
             linearDistance = 0;
             angularDistance = 0;
             count++;
             processed = true;
+
+            // now send the particles to others
 
             //keep ready for the next step
             for (Particle it : particles) {
