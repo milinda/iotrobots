@@ -9,6 +9,7 @@ import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.sensorstream.core.StreamComponents;
@@ -75,5 +76,6 @@ public class SLAMTopology {
         config.registerSerialization(Array2D.class);
         config.registerSerialization(HierarchicalArray2D.class);
         config.registerSerialization(TNode.class);
+        config.registerSerialization(DoubleOrientedPoint.class);
     }
 }

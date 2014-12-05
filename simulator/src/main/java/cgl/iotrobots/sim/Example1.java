@@ -57,7 +57,7 @@ public class Example1 {
                 scanI.ranges.add(100.0);
             }
             scanI.range_min = 0;
-            scanI.range_max = 100;
+            scanI.rangeMax = 100;
             scanI.timestamp = System.currentTimeMillis();
 
             GFSAlgorithm.initMapper(scanI);
@@ -106,7 +106,7 @@ public class Example1 {
             LaserScan laserScan = new LaserScan();
             laserScan.angle_max = ANGLE;
             laserScan.angle_min = 0;
-            laserScan.range_max = 100;
+            laserScan.rangeMax = 100;
             laserScan.range_min = 0;
             laserScan.angle_increment = ANGLE/ SENSORS;
 

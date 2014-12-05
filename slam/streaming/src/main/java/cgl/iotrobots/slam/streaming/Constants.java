@@ -1,6 +1,6 @@
 package cgl.iotrobots.slam.streaming;
 
-public class Constants {
+public abstract class Constants {
     public static final String ARGS_NAME = "name";
     public static final String ARGS_LOCAL = "local";
     public static final String ARGS_DS_MODE = "ds_mode";
@@ -34,4 +34,8 @@ public class Constants {
     public static final String LLSAMPLESTEP = "llsamplestep";
     public static final String LASAMPLERANGE = "lasamplerange";
     public static final String LASAMPLESTEP = "lasamplestep";
+
+    public abstract class ScanMatchBoltConstants {
+        public static final String LASER_SCAN_TUPLE = "laser_scan";
+    }
 }

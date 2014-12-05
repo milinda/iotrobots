@@ -28,10 +28,10 @@ public class GFSAlgorithm {
     RangeSensor gsp_laser_;
     OdometrySensor gsp_odom_;
 
-    double gsp_laser_angle_increment_;
+    double gspLaserAngleIncrement;
     double angle_min_;
     double angle_max_;
-    int gsp_laser_beam_count_;
+    int gspLaserBeamCount;
 
     int laser_count_;
     int throttle_scans_;
@@ -93,7 +93,7 @@ public class GFSAlgorithm {
         scanI.ranges.add(10.0);
         scanI.ranges.add(10.0);
         scanI.range_min = 0;
-        scanI.range_max = 100;
+        scanI.rangeMax = 100;
         GFSAlgorithm.initMapper(scanI);
 
         for (int i = 0; i < 1000; i++) {
@@ -109,7 +109,7 @@ public class GFSAlgorithm {
             // scan.ranges.add(10.0);
             // scan.ranges.add(10.0);
             scan.range_min = 0;
-            scan.range_max = 100;
+            scan.rangeMax = 100;
             GFSAlgorithm.laserScan(scan, null);
         }
     }
@@ -151,19 +151,19 @@ public class GFSAlgorithm {
     }
 
     public boolean initMapper(LaserScan scan) {
-        gsp_laser_beam_count_ = scan.ranges.size();
+        gspLaserBeamCount = scan.ranges.size();
 
         int orientationFactor = 1;
 
         angle_min_ = orientationFactor * scan.angle_min;
         angle_max_ = orientationFactor * scan.angle_max;
-        gsp_laser_angle_increment_ = orientationFactor * scan.angle_increment;
-        LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angle_min_, angle_max_, gsp_laser_angle_increment_);
+        gspLaserAngleIncrement = orientationFactor * scan.angle_increment;
+        LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angle_min_, angle_max_, gspLaserAngleIncrement);
 
         DoubleOrientedPoint gmap_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
 
         // setting maxRange and maxUrange here so we can set a reasonable default
-        maxRange_ = scan.range_max - 0.01;
+        maxRange_ = scan.rangeMax - 0.01;
         maxUrange_ = maxRange_;
 
         // The laser must be called "FLASER".
@@ -172,8 +172,8 @@ public class GFSAlgorithm {
         // actual increment is negative, we'll swap the order of ranges before
         // feeding each scan to GMapping.
         gsp_laser_ = new RangeSensor("ROBOTLASER1",
-                gsp_laser_beam_count_,
-                Math.abs(gsp_laser_angle_increment_),
+                gspLaserBeamCount,
+                Math.abs(gspLaserAngleIncrement),
                 gmap_pose,
                 0.0,
                 maxRange_);
@@ -272,11 +272,11 @@ public class GFSAlgorithm {
             return false;
         }
 
-        if (scan.ranges.size() != gsp_laser_beam_count_) {
+        if (scan.ranges.size() != gspLaserBeamCount) {
             System.out.println("False 2");
             return false;
         }
-        Double[] ranges_double = getDoubles(scan);
+        Double[] ranges_double = getDoubles(scan, gspLaserAngleIncrement);
 
 
         RangeReading reading = new RangeReading(scan.ranges.size(),
@@ -293,17 +293,17 @@ public class GFSAlgorithm {
         return gsp_.processScan(reading, 0);
     }
 
-    private Double[] getDoubles(LaserScan scan) {
+    public static Double[] getDoubles(LaserScan scan, double gspLaserAngleIncrement) {
         // GMapping wants an array of doubles...
         Double[] ranges_double = new Double[scan.ranges.size()];
         // If the angle increment is negative, we have to invert the order of the readings.
-        if (gsp_laser_angle_increment_ < 0) {
+        if (gspLaserAngleIncrement < 0) {
             LOG.debug("Inverting scan");
             int num_ranges = scan.ranges.size();
             for (int i = 0; i < num_ranges; i++) {
                 // Must filter out short readings, because the mapper won't
                 if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = scan.range_max;
+                    ranges_double[i] = scan.rangeMax;
                 } else {
                     ranges_double[i] = scan.ranges.get(num_ranges - i - 1);
                 }
@@ -312,7 +312,7 @@ public class GFSAlgorithm {
             for (int i = 0; i < scan.ranges.size(); i++) {
                 // Must filter out short readings, because the mapper won't
                 if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = scan.range_max;
+                    ranges_double[i] = scan.rangeMax;
                 } else {
                     ranges_double[i] = scan.ranges.get(i);
                 }
@@ -332,11 +332,11 @@ public class GFSAlgorithm {
         double[] laser_angles = new double[scan.ranges.size()];
         double theta = angle_min_;
         for (int i = 0; i < scan.ranges.size(); i++) {
-            if (gsp_laser_angle_increment_ < 0)
+            if (gspLaserAngleIncrement < 0)
                 laser_angles[scan.ranges.size() - i - 1] = theta;
             else
                 laser_angles[i] = theta;
-            theta += gsp_laser_angle_increment_;
+            theta += gspLaserAngleIncrement;
         }
 
         matcher.setLaserParameters(scan.ranges.size(), laser_angles,
