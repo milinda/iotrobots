@@ -27,6 +27,9 @@ public class Particle {
     /** Entry to the trajectory tree */
     public TNode node;
 
+    public Particle() {
+    }
+
     public Particle(Particle p) {
         map = p.map;
         map.m_storage = new HierarchicalArray2D(p.map.m_storage);
@@ -51,5 +54,65 @@ public class Particle {
 
     public void setWeight(double weight) {
         this.weight = weight;
+    }
+
+    public void setMap(GMap map) {
+        this.map = map;
+    }
+
+    public void setPose(DoubleOrientedPoint pose) {
+        this.pose = pose;
+    }
+
+    public void setPreviousPose(DoubleOrientedPoint previousPose) {
+        this.previousPose = previousPose;
+    }
+
+    public void setWeightSum(double weightSum) {
+        this.weightSum = weightSum;
+    }
+
+    public void setGweight(double gweight) {
+        this.gweight = gweight;
+    }
+
+    public void setPreviousIndex(int previousIndex) {
+        this.previousIndex = previousIndex;
+    }
+
+    public void setNode(TNode node) {
+        this.node = node;
+    }
+
+    public GMap getMap() {
+        return map;
+    }
+
+    public DoubleOrientedPoint getPose() {
+        return pose;
+    }
+
+    public DoubleOrientedPoint getPreviousPose() {
+        return previousPose;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public double getWeightSum() {
+        return weightSum;
+    }
+
+    public double getGweight() {
+        return gweight;
+    }
+
+    public int getPreviousIndex() {
+        return previousIndex;
+    }
+
+    public TNode getNode() {
+        return node;
     }
 }

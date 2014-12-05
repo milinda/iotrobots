@@ -45,9 +45,11 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
 
         // we got all the particles, we will resample
+        // first we need to clear the current particles
         reSampler.getParticles().clear();
         for (ParticleValues values : particles) {
-            Particle p = pa
+            Particle p = new Particle();
+            p.setWeight();
 
             reSampler.getParticles().add(va)
         }
