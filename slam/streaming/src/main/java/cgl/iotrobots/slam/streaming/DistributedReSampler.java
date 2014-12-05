@@ -62,6 +62,8 @@ public class DistributedReSampler {
     protected double angularThresholdDistance;
     protected double obsSigmaGain;
 
+    protected int noParticles;
+
     public DistributedReSampler() {
         period_ = 0.0;
         obsSigmaGain = 1;
@@ -98,6 +100,14 @@ public class DistributedReSampler {
                 bi = i;
             }
         return bi;
+    }
+
+    public int getNoParticles() {
+        return noParticles;
+    }
+
+    public void setNoParticles(int noParticles) {
+        this.noParticles = noParticles;
     }
 
     public void setMinimumScore(double m_minimumScore) {

@@ -6,7 +6,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     private TopologyContext topologyContext;
 
-    private List<Particle> particles = new ArrayList<Particle>();
+    private List<ParticleValues> particles = new ArrayList<ParticleValues>();
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -32,24 +31,25 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        Object val = tuple.getValueByField(Constants.ScanMatchBoltConstants.LASER_SCAN_TUPLE);
-        RangeReading reading = null;
-        if (!(val instanceof RangeReading)) {
+        Object val = tuple.getValueByField(Constants.ScanMatchBoltConstants.PARTICLE_VALUE_FIELD);
+        ParticleValues value;
+        if (!(val instanceof ParticleValues)) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
+        value = (ParticleValues) val;
 
-        reading = (RangeReading) val;
-
-        reSampler.processScan(reading, 0);
-
+        particles.add(value.getIndex(), value);
         // now distribute the particles to the bolts
-        List<Particle> particles = reSampler.getParticles();
+        if (particles.size() < reSampler.getNoParticles()) {
+            return;
+        }
 
-        for (Particle particle : particles) {
-            int taskId = topologyContext.getThisTaskIndex();
-            List<Object> emit = new ArrayList<Object>();
-            emit.add();
-            outputCollector.emit(emit);
+        // we got all the particles, we will resample
+        reSampler.getParticles().clear();
+        for (ParticleValues values : particles) {
+            Particle p = pa
+
+            reSampler.getParticles().add(va)
         }
     }
 
