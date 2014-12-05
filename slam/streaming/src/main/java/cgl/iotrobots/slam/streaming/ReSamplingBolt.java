@@ -9,9 +9,13 @@ import backtype.storm.tuple.Tuple;
 import java.util.Map;
 
 public class ReSamplingBolt extends BaseRichBolt {
+    private OutputCollector outputCollector;
+
+    private TopologyContext topologyContext;
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-
+        this.topologyContext = topologyContext;
+        this.outputCollector = outputCollector;
     }
 
     @Override

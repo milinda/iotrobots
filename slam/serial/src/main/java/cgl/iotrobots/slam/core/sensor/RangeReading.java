@@ -2,13 +2,12 @@ package cgl.iotrobots.slam.core.sensor;
 
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
-import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RangeReading extends SensorReading {
-    DoubleOrientedPoint m_pose;
+    private DoubleOrientedPoint m_pose;
 
     public RangeReading(RangeSensor m_sensor, double m_time) {
         super(m_sensor, m_time);

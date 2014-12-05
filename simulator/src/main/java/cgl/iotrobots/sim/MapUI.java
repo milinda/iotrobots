@@ -1,7 +1,7 @@
 package cgl.iotrobots.sim;
 
-import cgl.iotrobots.slam.core.sample.OutMap;
-import cgl.iotrobots.slam.core.sample.GFSAlgorithm;
+import cgl.iotrobots.slam.core.app.OutMap;
+import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import javax.swing.*;

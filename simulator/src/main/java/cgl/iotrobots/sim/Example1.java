@@ -1,7 +1,7 @@
 package cgl.iotrobots.sim;
 
-import cgl.iotrobots.slam.core.sample.LaserScan;
-import cgl.iotrobots.slam.core.sample.GFSAlgorithm;
+import cgl.iotrobots.slam.core.app.LaserScan;
+import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;

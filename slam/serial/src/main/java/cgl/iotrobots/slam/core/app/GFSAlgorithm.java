@@ -1,4 +1,4 @@
-package cgl.iotrobots.slam.core.sample;
+package cgl.iotrobots.slam.core.app;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
@@ -10,10 +10,7 @@ import cgl.iotrobots.slam.core.sensor.OdometrySensor;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
-import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.core.utils.DoublePoint;
-import cgl.iotrobots.slam.core.utils.IntPoint;
-import cgl.iotrobots.slam.core.utils.Stat;
+import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,7 +273,7 @@ public class GFSAlgorithm {
             System.out.println("False 2");
             return false;
         }
-        Double[] ranges_double = getDoubles(scan, gspLaserAngleIncrement);
+        Double[] ranges_double = Utils.getDoubles(scan, gspLaserAngleIncrement);
 
 
         RangeReading reading = new RangeReading(scan.ranges.size(),
@@ -291,34 +288,6 @@ public class GFSAlgorithm {
 //        System.out.format("\n");
 
         return gsp_.processScan(reading, 0);
-    }
-
-    public static Double[] getDoubles(LaserScan scan, double gspLaserAngleIncrement) {
-        // GMapping wants an array of doubles...
-        Double[] ranges_double = new Double[scan.ranges.size()];
-        // If the angle increment is negative, we have to invert the order of the readings.
-        if (gspLaserAngleIncrement < 0) {
-            LOG.debug("Inverting scan");
-            int num_ranges = scan.ranges.size();
-            for (int i = 0; i < num_ranges; i++) {
-                // Must filter out short readings, because the mapper won't
-                if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = scan.rangeMax;
-                } else {
-                    ranges_double[i] = scan.ranges.get(num_ranges - i - 1);
-                }
-            }
-        } else {
-            for (int i = 0; i < scan.ranges.size(); i++) {
-                // Must filter out short readings, because the mapper won't
-                if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = scan.rangeMax;
-                } else {
-                    ranges_double[i] = scan.ranges.get(i);
-                }
-            }
-        }
-        return ranges_double;
     }
 
     public OutMap map_ = new OutMap();

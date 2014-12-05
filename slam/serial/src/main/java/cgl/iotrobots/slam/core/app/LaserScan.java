@@ -1,4 +1,4 @@
-package cgl.iotrobots.slam.core.sample;
+package cgl.iotrobots.slam.core.app;
 
 import java.util.ArrayList;
 import java.util.List;
