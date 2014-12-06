@@ -211,17 +211,6 @@ public class DistributedReSampler {
             if (count > 0) {
                 updateTreeWeights(false);
                 resample(plainReading, adaptParticles, readingCopy);
-            } else {
-                for (Particle it : particles) {
-                    matcher.invalidateActiveArea();
-                    matcher.computeActiveArea(it.map, it.pose, plainReading);
-                    matcher.registerScan(it.map, it.pose, plainReading);
-
-                    // not needed anymore, particles refer to the root in the beginning!
-                    TNode node = new TNode(it.pose, 0., it.node, 0);
-                    node.reading = readingCopy;
-                    it.node = node;
-                }
             }
             updateTreeWeights(false);
 
