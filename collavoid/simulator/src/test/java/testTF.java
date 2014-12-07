@@ -35,64 +35,29 @@ public class testTF {
 //        }
         Point3d pt=new Point3d(1,0,0);
         Point3d pt1=new Point3d();
-        Vector3d tftvec=new Vector3d(0,0,0);
-        Quat4d tfrqua=new Quat4d(1,0,0,Math.cos(Math.PI/4));
-        Quat4d tfrq=new Quat4d(1,0,0,Math.cos(Math.PI/4));
-        Transform3D tf=new Transform3D(tfrqua,tftvec,1);
+        Vector3d tftvec=new Vector3d(1,1,1);
+        Quat4d tfrqua=new Quat4d();
+
         Transform3D tft=new Transform3D();
         Transform3D tfr=new Transform3D();
+        tfr.rotZ(Math.PI);
+        tfr.get(tfrqua);
 
-        System.out.println(tfrqua.toString());
-        tf.invert();
-        tf.get(tftvec);
-        System.out.println(tftvec.toString());
-
-        tf.get(tfrqua);
-        System.out.println(tfrqua.toString()+"\n");
-
-
-
-        tf.set(tftvec);
-        tf.set(tfrqua);
-        tf.get(tftvec);
-        tf.get(tfrqua);
-        System.out.println(tftvec.toString());
-        System.out.println(tfrqua.toString());
-
-        tf.set(tfrqua,tftvec,1);
-        tf.transform(pt,pt1);
-        System.out.println(pt1.toString());
-        tf.invert();
-        tf.transform(pt1);
-        System.out.println(pt1.toString());
-
-        tfrqua.normalize();
         tft.set(tftvec);
-        tfr.set(tfrqua);
-
         tft.transform(pt,pt1);
-        System.out.println(pt1.toString());
-        tfr.transform(pt1,pt1);
-        System.out.println(pt1.toString());
-
-        tfr.transform(pt,pt1);
-        System.out.println(pt1.toString());
-        tft.transform(pt1,pt1);
-        System.out.println(pt1.toString());
-
-
-        tfr.invert();
-        tfr.transform(pt,pt1);
-        System.out.println(pt1.toString());
-
+        System.out.println(pt1);
         tftvec.scale(-1);
-        tfrqua.scale(-1);
         tft.set(tftvec);
-        tfr.set(tfrqua);
-        tft.transform(pt,pt1);
-        System.out.println(pt1.toString());
+        tft.transform(pt1);
+        System.out.println(pt1+"\n");
+
         tfr.transform(pt,pt1);
-        System.out.println(pt1.toString());
+        System.out.println(pt1);
+
+        tfrqua.setW(-tfrqua.getW());
+        tfr.set(tfrqua);
+        tfr.transform(pt1);
+        System.out.println(pt1);
 
 
     }

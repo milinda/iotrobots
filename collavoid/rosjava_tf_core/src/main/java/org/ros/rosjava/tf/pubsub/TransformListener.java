@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Observable;
 import javax.media.j3d.Transform3D;
 import javax.vecmath.Point3d;
+import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 
 //import com.touchgraph.graphlayout.GraphListener;
@@ -93,8 +94,9 @@ public class TransformListener extends Observable {
             transform = tfTree.lookupMostRecent(target_frame, source_frame);
             if (transform==null)
                 return tf;
-            tf=new Transform3D(transform.rotation, transform.translation, 1);
-            tf.invert();
+            transform.rotation.setW(-transform.rotation.getW());
+            transform.translation.scale(-1);
+            tf = new Transform3D(transform.rotation,transform.translation, 1);
             return tf;
         }
         return tf;
@@ -110,14 +112,15 @@ public class TransformListener extends Observable {
         }
         if (tfTree.canTransform(target_frame, source_frame, t)) {
             transform = tfTree.lookupTransformBetween(target_frame, source_frame, t);
-            tf = new Transform3D(transform.rotation, transform.translation, 1);
-            tf.invert();
+            transform.rotation.setW(-transform.rotation.getW());
+            transform.translation.scale(-1);
+            tf = new Transform3D(transform.rotation,transform.translation, 1);
             return tf;
         }
         return tf;
     }
 
-    private Transform3D transform(String target_frame, String source_frame, int cnt) {
+    public Transform3D transform(String target_frame, String source_frame, int cnt) {
         Transform3D tf3D=null;
         int i = 0;
         while (i < cnt) {
@@ -134,7 +137,24 @@ public class TransformListener extends Observable {
         return tf3D;
     }
 
+    public Transform3D transform(String target_frame, String source_frame, long t,int cnt) {
+        Transform3D tf3D=null;
+        int i = 0;
+        while (i < cnt) {
+            tf3D=transform(target_frame, source_frame,t);
+            if (tf3D != null)
+                break;
+            i++;
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return tf3D;
+    }
 
+    //not use
     private Transform3D transform(String target_frame, String source_frame, long t, Duration dur_m) {
         Transform3D tf3D=null;
         int i = 0;
@@ -156,7 +176,7 @@ public class TransformListener extends Observable {
     }
 
 
-    public boolean transformTwist(String target_frame, Header source_header, Twist source_twist, Twist dest_twist) {
+    public boolean transformTwist(String target_frame, String source_frame, Twist source_twist, Twist dest_twist) {
         Transform3D tf3d;
         Point3d ptLinear = new Point3d();
         Point3d ptAngular = new Point3d();
@@ -168,12 +188,19 @@ public class TransformListener extends Observable {
 
         // try transform 5 times as sometimes transform may fail
         // FIXME: sometimes transform fails
-        tf3d=transform(target_frame, source_header.getFrameId(),5);
+        tf3d=transform(target_frame, source_frame,5);
 
-        //only linear velocity need to rotate
-        tf3d.setTranslation(new Vector3d(0,0,0));
+
         if (tf3d == null)
             return false;
+        // in velocity space no translation in velocity
+        tf3d.setTranslation(new Vector3d(0,0,0));
+        // the robot publishes transforms that has reversed parent and children, so need to reverse transform
+        Quat4d tfrq=new Quat4d();
+        tf3d.get(tfrq);
+        tfrq.setW(-tfrq.getW());
+        tf3d.set(tfrq);
+
         tf3d.transform(ptLinear);
         tf3d.transform(ptAngular);
         Point3dToVector3(ptLinear, vcLinear);
@@ -183,9 +210,10 @@ public class TransformListener extends Observable {
         return true;
     }
 
-    public boolean transformPoint3ds(String target_frame, String source_frame, List<Point3d> points, long t, Duration dur_m) {
+    //not used
+    public boolean transformPoint3ds(String target_frame, String source_frame, List<Point3d> points, long t,Duration dur_m) {
         Transform3D tf3d;
-        tf3d=transform(target_frame, source_frame, t, dur_m);
+        tf3d=transform(target_frame, source_frame, t,dur_m);
         if (tf3d == null)
             return false;
 
@@ -194,6 +222,8 @@ public class TransformListener extends Observable {
         }
         return true;
     }
+
+
 
 
 

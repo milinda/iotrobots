@@ -1,9 +1,12 @@
 import org.ros.message.Time;
+import org.ros.rosjava.tf.Transform;
 import sensor_msgs.PointCloud2;
 import simbad.sim.RangeSensorBelt;
+import simbad.sim.Robot;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.Point3d;
+import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +62,11 @@ public class LaserScan {
         return sensors;
     }
 
+
+    public void setHeight(double h) {
+        this.height = h;
+    }
+
     public void getScan(List<Point3d> res) {
         //in robot base frame
         double d;
@@ -71,18 +79,25 @@ public class LaserScan {
         }
     }
 
-    public boolean getLaserscanPointCloud2(PointCloud2 pc2) {
+    public void getLaserscanPointCloud2(PointCloud2 pc2) {
         List<Point3d> scan = new ArrayList<Point3d>();
         getScan(scan);
-        if (scan.size() == 0) {
-            return false;
-        } else {
-            utils.toPointCloud2(pc2, scan);
-            return true;
+        utils.toPointCloud2(pc2, scan);
+    }
+
+    public void getScan(List<Point3d> res,MainSimulator.Robot robot) {
+        //in map frame
+        getScan(res);
+        double d;
+        Transform3D tf=robot.getTransform();
+        for (int i = 0; i <res.size() ; i++) {
+            tf.transform(res.get(i));
         }
     }
 
-    public void setHeight(double h) {
-        this.height = h;
+    public void getLaserscanPointCloud2(PointCloud2 pc2, MainSimulator.Robot robot) {
+        List<Point3d> scan = new ArrayList<Point3d>();
+        getScan(scan,robot);
+        utils.toPointCloud2(pc2, scan,robot);
     }
 }

@@ -19,9 +19,7 @@ public class GlobalPlanner {
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
     private static MessageFactory messageFactory = new DefaultMessageFactory(messageDefinitionProvider);
-    private static Pose pose=messageFactory.newFromType(Pose._TYPE);
-    private static Point pos=messageFactory.newFromType(Point._TYPE);
-    private static Quaternion ori=messageFactory.newFromType(Quaternion._TYPE);//for temporary assign use
+
 
     void initialize(String name, VoxelGrid costmap_ros){
     }
@@ -29,11 +27,6 @@ public class GlobalPlanner {
     //public boolean makePlan(ConnectedNode node,final PoseStamped start,final PoseStamped goal, List<PoseStamped> plan){
     public boolean makePlan(final PoseStamped start,final PoseStamped goal, List<PoseStamped> plan){
         //start and goal are supposed not to change
-      /*  node.getLog().debug(String.format("Got a start: %1$.2f, %2$.2f, and a goal: %3$.2f, %4$.2f",
-                start.getPose().getPosition().getX(),
-                start.getPose().getPosition().getY(),
-                goal.getPose().getPosition().getX(),
-                goal.getPose().getPosition().getY()));*/
 
         plan.clear();
         plan.add(start);
@@ -48,13 +41,11 @@ public class GlobalPlanner {
 
         while (Math.abs(x - goal.getPose().getPosition().getX()) > 0.2 || Math.abs(y - goal.getPose().getPosition().getY()) > 0.2) {
             PoseStamped point=messageFactory.newFromType(PoseStamped._TYPE);
-            pos.setX(x);
-            pos.setY(y);
-            ori.setW(1);// complex form while theta=0 real part w=cos(theta/2)=1
-            pose.setPosition(pos);
-            pose.setOrientation(ori);
+            point.setHeader(goal.getHeader());
+            point.getPose().getPosition().setX(x);
+            point.getPose().getPosition().setY(y);
+            point.getPose().setOrientation(start.getPose().getOrientation());
 
-            point.setPose(pose);
             plan.add(point);
             x += 0.1 * dir_x;
             y += 0.1 * dir_y;

@@ -26,8 +26,8 @@ public class VelCmdPub {
                 @Override
                 protected void setup() {
                     velcmd=velCmdPub.newMessage();
-                    velcmd.getLinear().setX(0.2);
-                    velcmd.getLinear().setY(-0.2);
+                    velcmd.getLinear().setX(0);
+                    velcmd.getLinear().setY(0);
                     seq=0;
                 }
 
@@ -36,7 +36,7 @@ public class VelCmdPub {
                     velCmdPub.publish(velcmd);
                     seq++;
                     if(seq==10){
-                        velcmd.getAngular().setZ(0.2);
+                        velcmd.getAngular().setZ(0.5);
                     }
                     Thread.sleep(100);
                 }

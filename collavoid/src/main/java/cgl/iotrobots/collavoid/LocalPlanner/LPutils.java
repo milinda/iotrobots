@@ -6,6 +6,8 @@ import geometry_msgs.PoseStamped;
 import geometry_msgs.Quaternion;
 import geometry_msgs.Vector3;
 import nav_msgs.Odometry;
+import nav_msgs.Path;
+import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 
@@ -13,8 +15,11 @@ import java.util.List;
 
 public class LPutils {
 //TODO
-    public static void publishPlan(final List<PoseStamped> path,final Publisher pub){
-
+    public static void publishPlanDeprecated(ConnectedNode node, final List<PoseStamped> path, final Publisher pub){
+        Path pathmsg=node.getTopicMessageFactory().newFromType(Path._TYPE);
+        pathmsg.setPoses(path);
+        pathmsg.setHeader(path.get(0).getHeader());
+        pub.publish(pathmsg);
     }
 
 

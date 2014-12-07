@@ -2,8 +2,10 @@ package cgl.iotrobots.collavoid.ROSAgent;
 
 import cgl.iotrobots.collavoid.utils.*;
 import geometry_msgs.Point;
+import geometry_msgs.PoseStamped;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
+import std_msgs.Header;
 import visualization_msgs.Marker;
 import visualization_msgs.MarkerArray;
 
@@ -112,7 +114,33 @@ public class MsgPublisher {
         vo_pub.publish(line_list);
     }
 
+    public void publishPlan(List<PoseStamped> path,String name_space, Publisher path_pub) {
+        MarkerArray pathPoint_array = MsgPublisherNode.getTopicMessageFactory().newFromType(MarkerArray._TYPE);
+        if (!(path.size()==0)) {
+            Header hd = path.get(0).getHeader();
+            for (int i = 0; i < path.size(); i++) {
 
+                Marker pathPoint = MsgPublisherNode.getTopicMessageFactory().newFromType(Marker._TYPE);
+
+                pathPoint.setHeader(hd);
+                pathPoint.setNs(name_space);
+                pathPoint.setAction(Marker.ADD);
+                pathPoint.setType(Marker.ARROW);
+                pathPoint.getScale().setX(0.05);
+                pathPoint.getScale().setY(0.03);
+                pathPoint.getScale().setZ(0.03);
+                pathPoint.getColor().setG((float) 0.5);
+                pathPoint.getColor().setA(1);
+                pathPoint.setId(i);
+                pathPoint.setPose(path.get(i).getPose());
+                pathPoint_array.getMarkers().add(pathPoint);
+            }
+        }
+        path_pub.publish(pathPoint_array);
+    }
+
+
+    //velocity samples
     public void publishPoints(Position pos, List<VelocitySample> points, String base_frame, String name_space, Publisher samples_pub) {
         MarkerArray point_array = MsgPublisherNode.getTopicMessageFactory().newFromType(MarkerArray._TYPE);
 
@@ -162,35 +190,49 @@ public class MsgPublisher {
     }
 
 
-    public void publishOrcaLines(List<Line> orca_lines, Position position, String base_frame, String name_space, Publisher line_pub) {
+    public void publishOrcaLines(List<Line> orca_lines, Position position, String frame, String name_space, Publisher line_pub) {
         Marker line_list = MsgPublisherNode.getTopicMessageFactory().newFromType(Marker._TYPE);
-        line_list.getHeader().setFrameId(base_frame);
+        line_list.getHeader().setFrameId(frame);
         line_list.getHeader().setStamp(MsgPublisherNode.getCurrentTime());
         line_list.setNs(name_space);
         line_list.setAction(Marker.ADD);
         line_list.getPose().getOrientation().setW(1.0);
         line_list.setType(Marker.LINE_LIST);
-        line_list.getScale().setX(0.015);
-        line_list.getColor().setR(1);
+        line_list.getScale().setX(0.01);
+        line_list.getColor().setR((float)0.5);
         line_list.getColor().setA(1);
         line_list.setId(1);
-        Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+
         for (int i = 0; i < orca_lines.size(); i++) {
+            Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+            // orca lines are in robot frame so need to add position
             p.setX(position.getPos().getX() + orca_lines.get(i).getPoint().getX() - orca_lines.get(i).getDir().getX());
             p.setY(position.getPos().getY() + orca_lines.get(i).getPoint().getY() - orca_lines.get(i).getDir().getY());
 
             line_list.getPoints().add(p);
-            p.setX(p.getX() + 3 * orca_lines.get(i).getDir().getX());
-            p.setY(p.getY() + 3 * orca_lines.get(i).getDir().getY());
-            line_list.getPoints().add(p);
+            Point p1 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+            p1.setX(p.getX() + 3 * orca_lines.get(i).getDir().getX());
+            p1.setY(p.getY() + 3 * orca_lines.get(i).getDir().getY());
+            line_list.getPoints().add(p1);
         }
+
+//        for (int i = 0; i < orca_lines.size(); i++) {
+//            Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+//            // orca lines are in robot frame so need to add position
+//            p.setX(position.getPos().getX() + orca_lines.get(i).getPoint().getX());
+//            p.setY(position.getPos().getY() + orca_lines.get(i).getPoint().getY());
+//            line_list.getPoints().add(p);
+//
+//        }
         line_pub.publish(line_list);
 
     }
 
-    public void publishObstacleLines(List<Obstacle> obstacles_lines, String base_frame, String name_space, Publisher line_pub) {
+
+
+    public void publishObstacleLines(List<Obstacle> obstacles_lines, String frame, String name_space, Publisher line_pub) {
         Marker line_list = MsgPublisherNode.getTopicMessageFactory().newFromType(Marker._TYPE);
-        line_list.getHeader().setFrameId(base_frame);
+        line_list.getHeader().setFrameId(frame);
         line_list.getHeader().setStamp(MsgPublisherNode.getCurrentTime());
         line_list.setNs(name_space);
         line_list.setAction(Marker.ADD);
@@ -200,10 +242,9 @@ public class MsgPublisher {
         line_list.getColor().setR(1);
         line_list.getColor().setA(1);
         line_list.setId(1);
-
-        Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
-        Point p1 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
         for (int i = 0; i < obstacles_lines.size(); i++) {
+            Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+            Point p1 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
 
             if (obstacles_lines.get(i).getBegin().equals(obstacles_lines.get(i).getEnd())) {
                 continue;

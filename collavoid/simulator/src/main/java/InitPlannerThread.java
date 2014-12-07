@@ -1,6 +1,7 @@
 import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
 import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
 import geometry_msgs.PoseStamped;
+import geometry_msgs.Twist;
 import org.ros.node.ConnectedNode;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 
@@ -22,6 +23,7 @@ public class InitPlannerThread extends Thread {
     Point3d start;
     Point3d goal;
     Quat4d oriGoal;
+    Twist cmd_vel;
 
     InitPlannerThread(ConnectedNode node, TransformListener tfl, Point3d start, Point3d goal, Quat4d oriGoal) {
         super("InitPlannerThread");
@@ -30,6 +32,7 @@ public class InitPlannerThread extends Thread {
         this.start = start;
         this.goal = goal;
         this.oriGoal = oriGoal;
+        this.cmd_vel=node.getTopicMessageFactory().newFromType(Twist._TYPE);
 
         start();
 
@@ -56,9 +59,11 @@ public class InitPlannerThread extends Thread {
         PoseStamped startPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
         PoseStamped goalPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
 
+        startPose.getHeader().setFrameId("map");
         startPose.getPose().getPosition().setX(start.getX());
         startPose.getPose().getPosition().setY(start.getY());
 
+        goalPose.getHeader().setFrameId("map");
         goalPose.getPose().getPosition().setX(goal.getX());
         goalPose.getPose().getPosition().setY(goal.getY());
         goalPose.getPose().getOrientation().setX(oriGoal.getX());
@@ -68,8 +73,24 @@ public class InitPlannerThread extends Thread {
 
         globalPlanner.makePlan(startPose, goalPose, globalPlan);
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if (!localPlanner.setPlan(globalPlan))
             node.getLog().error("Set global plan error!");
+
+
+//         while(this.isAlive()){
+//            localPlanner.computeVelocityCommands(cmd_vel);
+//            try {
+//                Thread.sleep(50);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
     }
 }

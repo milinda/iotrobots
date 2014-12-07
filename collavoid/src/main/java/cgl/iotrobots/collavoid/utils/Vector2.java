@@ -77,12 +77,6 @@ public class Vector2 {
         this.y += p1.getY();
     }
 
-//    public static Vector2 mul(Vector2 p1, Vector2 p2) {
-//        double x = p1.x * p2.x;
-//        double y = p1.y * p2.getY();
-//        return new Vector2(x, y);
-//    }
-
     public void mul(Vector2 p1) {
         this.x *= p1.getX();
         this.y *= p1.getY();

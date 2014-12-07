@@ -6,7 +6,6 @@ import cgl.iotrobots.collavoid.utils.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -27,15 +26,30 @@ public class CP {
     public static final int  VOS= 2;
 
 
+    // additional constraints include non holonomic robot constraints and acceleration constraints.
     public static Vector2 calculateClearpathVelocity(List<VelocitySample> samples, final List<VO> truncated_vos, final List<Line> additional_constraints, final Vector2 pref_vel, double max_speed, boolean use_truncation) {
 
+        boolean isWithinAllAdditionalConstraints=true;
         if (!isWithinAdditionalConstraints(additional_constraints, pref_vel)) {
-            for(Iterator<Line> line=additional_constraints.iterator();line.hasNext();){
+            isWithinAllAdditionalConstraints=false;
+            for (int i = 0; i < additional_constraints.size(); i++) {
                 VelocitySample pref_vel_sample=new VelocitySample();
                 // nearest point on vo line to pref vel
-                pref_vel_sample.setVelocity(intersectTwoLines(line.next().getPoint(), line.next().getDir(), pref_vel, new Vector2(line.next().getDir().getY(), -line.next().getDir().getX())));
+                pref_vel_sample.setVelocity(intersectTwoLines(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(),
+                        pref_vel,
+                        new Vector2(additional_constraints.get(i).getDir().getY(), -additional_constraints.get(i).getDir().getX())));
                 pref_vel_sample.setDistToPrefVel(Vector2.absSqr(Vector2.minus(pref_vel, pref_vel_sample.getVelocity())));
                 samples.add(pref_vel_sample);
+            }
+
+            //intersection point of vo lines
+            for (int i = 0; i < additional_constraints.size(); i++) {
+                for (int j = 0; j < additional_constraints.size(); j++) {
+                    addRayVelocitySamples(samples, pref_vel,
+                            additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(),
+                            additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(),
+                            max_speed, LINELINE);
+                }
             }
         }
         else {
@@ -44,20 +58,11 @@ public class CP {
             pref_vel_sample.setDistToPrefVel(0);
             samples.add(pref_vel_sample);
         }
-        VelocitySample null_vel_sample=new VelocitySample();
-        null_vel_sample.setVelocity(new Vector2(0,0));
-        null_vel_sample.setDistToPrefVel(Vector2.absSqr(pref_vel));
-        samples.add(null_vel_sample);
 
-        //intersection point of vo lines
-        for(Iterator<Line> line=additional_constraints.iterator();line.hasNext();){
-            for(Iterator<Line> line2=additional_constraints.iterator();line2.hasNext();){
-                   addRayVelocitySamples(samples, pref_vel, line.next().getPoint(), line.next().getDir(),line2.next().getPoint(), line2.next().getDir(), max_speed, LINELINE);
-            }
-        }
-
+        boolean isOutsideVOs=true;
         for (int i= 0 ; i<  truncated_vos.size(); i++){
             if (isInsideVO(truncated_vos.get(i), pref_vel, use_truncation)){
+                isOutsideVOs=false;
 
                 VelocitySample leg_projection=new VelocitySample();
                 if (leftOf(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRelativePosition(), pref_vel)){ //left of centerline, project on left leg
@@ -81,56 +86,63 @@ public class CP {
             }
         }
 
-        //calculate all the possible intersection of vo lines and vo cone or truncation
-        for (int i= 0 ; i<  truncated_vos.size(); i++){
-            for (int j = 0; j< additional_constraints.size(); j++){
-                if(!use_truncation) {
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRightLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
-                }
-                else {
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), Vector2.minus(truncated_vos.get(i).getTruncRight() , truncated_vos.get(i).getTruncLeft()),
-                            additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, SEGMENTLINE);
-                }
-            }
-
-            for (int j = i+1; j <  truncated_vos.size(); j++){
-
-                if (!use_truncation) {
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
-
-                }
-                else {
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
-
-
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getTruncLeft(),
-                            Vector2.minus(truncated_vos.get(j).getTruncRight() , truncated_vos.get(j).getTruncLeft()), max_speed, RAYSEGMENT); //left trunc
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getLeftLegDir(), truncated_vos.get(i).getTruncLeft(),
-                            Vector2.minus(truncated_vos.get(i).getTruncRight() , truncated_vos.get(i).getTruncLeft()), max_speed, RAYSEGMENT); //trunc left
-
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getTruncLeft(),
-                            Vector2.minus(truncated_vos.get(j).getTruncRight() , truncated_vos.get(j).getTruncLeft()), max_speed, RAYSEGMENT); //right trunc
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getRightLegDir(), truncated_vos.get(i).getTruncLeft(),
-                            Vector2.minus(truncated_vos.get(i).getTruncRight() , truncated_vos.get(i).getTruncLeft()), max_speed, RAYSEGMENT); //trunc right
-
-                    addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), Vector2.minus(truncated_vos.get(i).getTruncRight(),truncated_vos.get(i).getTruncLeft()),
-                            truncated_vos.get(j).getTruncLeft(), Vector2.minus(truncated_vos.get(j).getTruncRight() , truncated_vos.get(j).getTruncLeft()), max_speed, SEGMENTSEGMENT); //trunc trunc
-
-
+        if (!isOutsideVOs) {
+            //calculate all the possible intersection of vo lines and vo cone or truncation
+            for (int i = 0; i < truncated_vos.size(); i++) {
+                for (int j = 0; j < additional_constraints.size(); j++) {
+                    if (!use_truncation) {
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRightLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
+                    } else {
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, RAYLINE);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), Vector2.minus(truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getTruncLeft()),
+                                additional_constraints.get(j).getPoint(), additional_constraints.get(j).getDir(), max_speed, SEGMENTLINE);
+                    }
                 }
 
+                for (int j = i + 1; j < truncated_vos.size(); j++) {
+
+                    if (!use_truncation) {
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getPoint(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
+
+                    } else {
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getLeftLegDir(), max_speed, RAYRAY);
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getRightLegDir(), max_speed, RAYRAY);
+
+
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), truncated_vos.get(i).getLeftLegDir(), truncated_vos.get(j).getTruncLeft(),
+                                Vector2.minus(truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getTruncLeft()), max_speed, RAYSEGMENT); //left trunc
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(j).getTruncLeft(), truncated_vos.get(j).getLeftLegDir(), truncated_vos.get(i).getTruncLeft(),
+                                Vector2.minus(truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getTruncLeft()), max_speed, RAYSEGMENT); //trunc left
+
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getRightLegDir(), truncated_vos.get(j).getTruncLeft(),
+                                Vector2.minus(truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getTruncLeft()), max_speed, RAYSEGMENT); //right trunc
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getRightLegDir(), truncated_vos.get(i).getTruncLeft(),
+                                Vector2.minus(truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getTruncLeft()), max_speed, RAYSEGMENT); //trunc right
+
+                        addRayVelocitySamples(samples, pref_vel, truncated_vos.get(i).getTruncLeft(), Vector2.minus(truncated_vos.get(i).getTruncRight(), truncated_vos.get(i).getTruncLeft()),
+                                truncated_vos.get(j).getTruncLeft(), Vector2.minus(truncated_vos.get(j).getTruncRight(), truncated_vos.get(j).getTruncLeft()), max_speed, SEGMENTSEGMENT); //trunc trunc
+
+
+                    }
+
+                }
             }
         }
 
+        if (isOutsideVOs&&isWithinAllAdditionalConstraints)
+            return samples.get(0).getVelocity();
+
+        VelocitySample null_vel_sample=new VelocitySample();
+        null_vel_sample.setVelocity(new Vector2(0,0));
+        null_vel_sample.setDistToPrefVel(Vector2.absSqr(pref_vel));
+        samples.add(null_vel_sample);
 
         //    ROS_ERROR("projection list length  = %d", samples.size());
         //sort according to the distance to vel pref
@@ -178,8 +190,8 @@ public class CP {
     }
 
     static boolean isWithinAdditionalConstraints(final List<Line> additional_constraints, final Vector2 point) {
-        for(Iterator<Line> line=additional_constraints.iterator();line.hasNext();){
-           if (rightOf(line.next().getPoint(), line.next().getDir(), point) ) {
+        for (int i = 0; i < additional_constraints.size(); i++) {
+           if (rightOf(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(), point) ) {
                 return false;
             }
         }

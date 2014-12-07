@@ -12,6 +12,7 @@ import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.MessageDefinitionProvider;
 import org.ros.message.MessageFactory;
+import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
 import org.ros.node.parameter.ParameterTree;
@@ -19,7 +20,10 @@ import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.*;
 import org.ros.rosjava.tf.pubsub.TransformListener;
+import visualization_msgs.MarkerArray;
 
+import javax.media.j3d.Transform3D;
+import javax.vecmath.Vector3d;
 import java.lang.String;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +72,7 @@ public class LocalPlanner {
     //originally should be unsigned
     int current_waypoint_;
     //params ORCA
-    double  time_horizon_obst_;
+    double time_horizon_obst_;
     double eps_;
 
     ROSAgent me;
@@ -84,55 +88,56 @@ public class LocalPlanner {
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
     private static MessageFactory messageFactory = new DefaultMessageFactory(messageDefinitionProvider);
-    private static Vector3 linear=messageFactory.newFromType(Vector3._TYPE);
-    private static Vector3 angular=messageFactory.newFromType(Vector3._TYPE);//for temporary assign use
+    private static Vector3 linear = messageFactory.newFromType(Vector3._TYPE);
+    private static Vector3 angular = messageFactory.newFromType(Vector3._TYPE);//for temporary assign use
     private static Logger logger;
 
 
     /*---------------methods begin-----------------*/
 
     //must pass connectednode,tf will be initialized from the caller, see rosjava_tf TfViz
-    public LocalPlanner(ConnectedNode connectedNode, TransformListener tf){
-        this.node=connectedNode;
-        this.params=this.node.getParameterTree();
-        tf_=tf;
+    public LocalPlanner(ConnectedNode connectedNode, TransformListener tf) {
+        this.node = connectedNode;
+        this.params = this.node.getParameterTree();
+        tf_ = tf;
 
-        id=node.getName().toString();
-        initialized_=false;
+        id = node.getName().toString();
+        initialized_ = false;
         costmap_ros_ = null;
         current_waypoint_ = 0;
         skip_next_ = false;
 
-        global_plan_=new ArrayList<PoseStamped>();
-        transformed_plan_=new ArrayList<PoseStamped>();
+        transformed_plan_ = new ArrayList<PoseStamped>();
 
         initialize();
     }
 
     //implement the interface of nav_core::BaseLocalPlanner Class in original ROS
-    private void initialize(){
-        if (!initialized_){
-            logger=Logger.getLogger(node.getName().toString());
-            base_frame_ = params.getString("/base_frame", id+"/base");
+    private void initialize() {
+        if (!initialized_) {
+            logger = Logger.getLogger(node.getName().toString());
+            base_frame_ = params.getString("/base_frame", id.substring(1) + "_base");
             global_frame_ = params.getString("/global_frame", "map");
 
-            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity",0.01);
-            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_",0.01);
+            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity", 0.01);
+            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_", 0.01);
 
             //base local planner params
             yaw_goal_tolerance_ = params.getDouble("/yaw_goal_tolerance", 0.05);
-            xy_goal_tolerance_  = params.getDouble("/xy_goal_tolerance", 0.10);
+            xy_goal_tolerance_ = params.getDouble("/xy_goal_tolerance", 0.10);
             latch_xy_goal_tolerance_ = params.getBoolean("/latch_xy_goal_tolerance", false);
             ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
 
             /*----------spawn agent node---------*/
             //comment for test
-            this.me=new ROSAgent(this.node,tf_);
-            radius_=me.footprint_radius_;
+            this.me = new ROSAgent(this.node, tf_);
+            radius_ = me.footprint_radius_;
 
             /*------------------ Publishers----------------- */
-            Publisher<Path> g_plan_pub_=this.node.newPublisher(id+"/g_plan_pub_", Path._TYPE);
-            Publisher<Path> l_plan_pub_=this.node.newPublisher(id+"/l_plan_pub_", Path._TYPE);
+            g_plan_pub_ = this.node.newPublisher(id + "/g_plan_pub_", MarkerArray._TYPE);
+            //g_plan_pub_.setLatchMode(true);
+            l_plan_pub_ = this.node.newPublisher(id + "/l_plan_pub_", MarkerArray._TYPE);
+            //l_plan_pub_.setLatchMode(true);
             //ROS_ERROR("%s name of node", thisname.c_str());
 
             /*------------------Subscribers------------*/
@@ -154,38 +159,37 @@ public class LocalPlanner {
             //dsrv_->setCallback(cb);
 
             initialized_ = true;
-            node.getLog().info("************************Local Planner"+node.getName()+" is initialized!");
-        }
-        else {
-            node.getLog().info("************************Local Planner"+node.getName()+" has already been initialized, you can't call it twice, doing nothing");
+            node.getLog().info("************************Local Planner" + node.getName() + " is initialized!");
+        } else {
+            node.getLog().info("************************Local Planner" + node.getName() + " has already been initialized, you can't call it twice, doing nothing");
         }
 
     }
 
     /*Add obstacles not used*/
-    void obstaclesCallback(final OccupancyGrid msg){
-        Vector2 origin=new Vector2(msg.getInfo().getOrigin().getPosition().getX(),msg.getInfo().getOrigin().getPosition().getY());
-        int mapWith=msg.getInfo().getWidth();
-        double resolution=msg.getInfo().getResolution();
-        int occupancyThreshold=50;
-        List<Vector2> points=new ArrayList<Vector2>();
-        for (int i = 0; i <msg.getData().readableBytes() ; i++) {
-            if(msg.getData().getByte(i)>occupancyThreshold) {
+    void obstaclesCallback(final OccupancyGrid msg) {
+        Vector2 origin = new Vector2(msg.getInfo().getOrigin().getPosition().getX(), msg.getInfo().getOrigin().getPosition().getY());
+        int mapWith = msg.getInfo().getWidth();
+        double resolution = msg.getInfo().getResolution();
+        int occupancyThreshold = 50;
+        List<Vector2> points = new ArrayList<Vector2>();
+        for (int i = 0; i < msg.getData().readableBytes(); i++) {
+            if (msg.getData().getByte(i) > occupancyThreshold) {
                 int row = i % mapWith;
                 int col = i / mapWith;
-                double x=row*resolution;
-                double y=col*resolution;
+                double x = row * resolution;
+                double y = col * resolution;
                 //TODO:need transform to base frame!!!!
-                points.add(Vector2.plus(origin,new Vector2(x, y)));
+                points.add(Vector2.plus(origin, new Vector2(x, y)));
             }
         }
         me.obstacle_lock_.lock();
-        try{
+        try {
             me.obstacle_points_.clear();
-            for (int i = 0; i <points.size() ; i++) {
+            for (int i = 0; i < points.size(); i++) {
                 me.obstacle_points_.add(points.get(i));
             }
-        }finally {
+        } finally {
             me.obstacle_lock_.unlock();
         }
 
@@ -221,41 +225,43 @@ public class LocalPlanner {
     }
 
     //implement interface setPlan
-    public boolean setPlan(final List<PoseStamped> orig_global_plan){
-        if(!initialized_){
+    public boolean setPlan(final List<PoseStamped> orig_global_plan) {
+        if (!initialized_) {
             this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
             return false;
         }
 
         //reset the global plan
-        global_plan_.clear();
+        global_plan_ = new ArrayList<PoseStamped>();
         global_plan_ = orig_global_plan;
         current_waypoint_ = 0;
         xy_tolerance_latch_ = false;
-        //transformed_plan = global_plan;
         //get the global plan in our frame, comment for test
-//        if(!transformGlobalPlan(tf_, global_plan_, costmap_ros_, global_frame_, transformed_plan_)){
-//            this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
-//            return false;
-//        }
+        if (!transformGlobalPlan(true, global_plan_, global_frame_, base_frame_, transformed_plan_)) {
+            this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
+            return false;
+        }
 
+        me.msgPublisher.publishPlan(global_plan_,base_frame_, g_plan_pub_);
+        me.msgPublisher.publishPlan(transformed_plan_,base_frame_, l_plan_pub_);
         return true;
     }
+
     //implement interface isGoalReached
-    public boolean isGoalReached(){
-        if(!initialized_){
+    public boolean isGoalReached() {
+        if (!initialized_) {
             this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
             return false;
         }
 
         //copy over the odometry information
-        Odometry base_odom=messageFactory.newFromType(Odometry._TYPE);
-            me.me_lock_.lock();
-            try{
-                base_odom = me.getBaseOdom();
-            }finally {
-                me.me_lock_.unlock();
-            }
+        Odometry base_odom = messageFactory.newFromType(Odometry._TYPE);
+        me.me_lock_.lock();
+        try {
+            base_odom = me.getBaseOdom();
+        } finally {
+            me.me_lock_.unlock();
+        }
 
         //need implementation map, transform and check goal reached or not
 /*        Stamped<Pose> global_pose;
@@ -279,74 +285,32 @@ public class LocalPlanner {
 
 
     //implement interface for computeVelocityCommands
-    public boolean computeVelocityCommands(Twist cmd_vel){
-        if(!initialized_){
+    public boolean computeVelocityCommands(Twist cmd_vel) {
+        if (!initialized_) {
             this.node.getLog().error("This planner has not been initialized, please call initialize() before using this planner");
             return false;
         }
 
-        //TODO: Transform
-/*        PoseStamped global_pose;
-        Header hdr=messageFactory.newFromType(Header._TYPE);
-        hdr.setStamp(this.node.getCurrentTime());
-        hdr.setFrameId(robot_base_frame_);
-        global_pose.setHeader(hdr);
-        Pose pose=messageFactory.newFromType(Pose._TYPE);
-        Point p=messageFactory.newFromType(Point._TYPE);
-        Quaternion q=messageFactory.newFromType(Quaternion._TYPE);
-        p.setX(0.0);p.setY(0.0);p.setZ(0.0);
-        pose.setPosition(p);
-        q.setX(0.0);q.setY(0.0);q.setZ(0.0);q.setW(1);
-        pose.setOrientation(q);
-        global_pose.setPose(pose);
-        tf_.getTree().lookupTransformBetween();*/
-
-
-
-        // Set current velocities from odometry
-        Twist global_vel=messageFactory.newFromType(Twist._TYPE);
+        //get position and velocity,pose in global frame, velocity is in base frame
+        PoseStamped global_pose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
+        global_pose.getHeader().setFrameId(global_frame_);
+        global_pose.getHeader().setStamp(node.getCurrentTime());
+        Twist base_vel = messageFactory.newFromType(Twist._TYPE);
 
         me.me_lock_.lock();
-        try{
-            linear.setX(me.getBaseOdom().getTwist().getTwist().getLinear().getX());
-            linear.setY(me.getBaseOdom().getTwist().getTwist().getLinear().getY());
-            angular.setZ(me.getBaseOdom().getTwist().getTwist().getAngular().getY());
-            global_vel.setLinear(linear);
-            global_vel.setAngular(angular);
-        }finally {
+        try {
+            base_vel.setLinear(me.getBaseOdom().getTwist().getTwist().getLinear());//base frame
+            base_vel.setAngular(me.getBaseOdom().getTwist().getTwist().getAngular());
+            global_pose.setPose(me.getBaseOdom().getPose().getPose());//odometry or map frame
+        } finally {
             me.me_lock_.unlock();
         }
 
-        //TODO: Transform
-        //WARNNING not transformed
-/*        tf::Stamped<tf::Pose> robot_vel;
-        robot_vel.setData(tf::Transform(tf::createQuaternionFromYaw(global_vel.angular.z), tf::Vector3(global_vel.linear.x, global_vel.linear.y, 0)));
-        robot_vel.frame_id_ = robot_base_frame_;
-        robot_vel.stamp_ = ros::Time();*/
-        PoseStamped robot_vel=messageFactory.newFromType(PoseStamped._TYPE);
-
-/*        //WARNNING not transformed
-        tf::Stamped<tf::Pose> goal_point;
-        tf::poseStampedMsgToTF(global_plan_.back(), goal_point);*/
-        PoseStamped goal_point=messageFactory.newFromType(PoseStamped._TYPE);
-
-        //we assume the global goal is the last point in the global plan
-        //WARNNING not transformed
-        goal_point=global_plan_.get(global_plan_.size()-1);
+        PoseStamped goal_point;
+        goal_point = global_plan_.get(global_plan_.size() - 1);
         double goal_x = goal_point.getPose().getPosition().getX();
         double goal_y = goal_point.getPose().getPosition().getY();
-        double yaw = LPutils.getYaw(goal_point.getPose().getOrientation());
-        double goal_th = yaw;
-
-        //TODO:get position in global frame of the robot
-        //WARNNING not transformed
-        /*        tf::Stamped<tf::Pose> global_pose;
-        //let's get the pose of the robot in the frame of the plan
-        global_pose.setIdentity();
-        global_pose.frame_id_ = robot_base_frame_;
-        global_pose.stamp_ = ros::Time();
-        tf_->transformPose(global_frame_, global_pose, global_pose);*/
-        PoseStamped global_pose=messageFactory.newFromType(PoseStamped._TYPE);//???????
+        double goal_th = LPutils.getYaw(goal_point.getPose().getOrientation());
 
         //check to see if we've reached the goal position
         if (xy_tolerance_latch_ || (LPutils.getGoalPositionDistance(global_pose.getPose(), goal_x, goal_y) <= xy_goal_tolerance_)) {
@@ -355,7 +319,7 @@ public class LocalPlanner {
 
             //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
             //just rotate in place
-            if(latch_xy_goal_tolerance_)//test rotate in place??
+            if (latch_xy_goal_tolerance_)//test rotate in place??
                 xy_tolerance_latch_ = true;
 
             //check to see if the goal orientation has been reached
@@ -372,36 +336,35 @@ public class LocalPlanner {
                 cmd_vel.setAngular(angular);
                 rotating_to_goal_ = false;
                 xy_tolerance_latch_ = false;
-            }
-            else {
+            } else {
                 //copy over the odometry information
-                Odometry base_odom=messageFactory.newFromType(Odometry._TYPE);
+                Odometry base_odom = messageFactory.newFromType(Odometry._TYPE);
                 me.me_lock_.lock();
-                try{
-                    base_odom=me.getBaseOdom();
-                }finally {
+                try {
+                    base_odom = me.getBaseOdom();
+                } finally {
                     me.me_lock_.unlock();
                 }
 
                 //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
-                if(!rotating_to_goal_ && !LPutils.stopped(base_odom, rot_stopped_velocity_, trans_stopped_velocity_)){
+                if (!rotating_to_goal_ && !LPutils.stopped(base_odom, rot_stopped_velocity_, trans_stopped_velocity_)) {
                     //ROS_DEBUG("Not stopped yet. base_odom: x=%6.4f,y=%6.4f,z=%6.4f", base_odom.twist.twist.linear.x,base_odom.twist.twist.linear.y,base_odom.twist.twist.angular.z);
-                    if(!stopWithAccLimits(global_pose, robot_vel, cmd_vel))
+                    if (!stopWithAccLimits(global_pose, base_vel, cmd_vel))
                         return false;
                 }
                 //if we're stopped... then we want to rotate to goal
-                else{
+                else {
                     //set this so that we know its OK to be moving
                     rotating_to_goal_ = true;
-                    if(!rotateToGoal(global_pose, robot_vel, goal_th, cmd_vel))
+                    if (!rotateToGoal(global_pose, base_vel, goal_th, cmd_vel))
                         return false;
                 }
             }
 
             //publish an empty plan because we've reached our goal position
             transformed_plan_.clear();
-            LPutils.publishPlan(transformed_plan_, g_plan_pub_);
-            LPutils.publishPlan(transformed_plan_, l_plan_pub_);
+            me.msgPublisher.publishPlan(transformed_plan_, id, g_plan_pub_);
+            me.msgPublisher.publishPlan(transformed_plan_, id, l_plan_pub_);
             //we don't actually want to run the controller when we're just rotating to goal
             return true;
         }
@@ -410,88 +373,81 @@ public class LocalPlanner {
 /*        tf::Stamped<tf::Pose> target_pose;
         target_pose.setIdentity();
         target_pose.frame_id_ = robot_base_frame_;*/
-        PoseStamped target_pose=messageFactory.newFromType(PoseStamped._TYPE);
+        PoseStamped target_pose = messageFactory.newFromType(PoseStamped._TYPE);
 
-        if (!skip_next_){
-            if(!transformGlobalPlan(tf_, global_plan_, costmap_ros_, global_frame_, transformed_plan_)){
+        if (!skip_next_) {
+            if (!transformGlobalPlan(false, global_plan_, global_frame_, base_frame_, transformed_plan_)) {
                 this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
                 return false;
             }
-            PoseStamped target_pose_msg=messageFactory.newFromType(PoseStamped._TYPE);// what's this parameter for?
-            findBestWaypoint(target_pose_msg, global_pose);
+
+            findBestWaypoint(target_pose, global_pose);
         }
         //TODO
         /*tf::poseStampedMsgToTF(transformed_plan_[current_waypoint_], target_pose);*/
 
 
-        Twist res=messageFactory.newFromType(Twist._TYPE);
+        Twist pref_vel_twist = messageFactory.newFromType(Twist._TYPE);
 
-        linear.setX(target_pose.getPose().getPosition().getX() - global_pose.getPose().getPosition().getX());
-        linear.setY(target_pose.getPose().getPosition().getY() - global_pose.getPose().getPosition().getY());
-        res.setLinear(linear);
-        angular.setZ(Angles.shortest_angular_distance(LPutils.getYaw(global_pose.getPose().getOrientation()), Math.atan2(res.getLinear().getY(), res.getLinear().getX())));
-        res.setAngular(angular);
+        pref_vel_twist.getLinear().setX(target_pose.getPose().getPosition().getX() - global_pose.getPose().getPosition().getX());
+        pref_vel_twist.getLinear().setY(target_pose.getPose().getPosition().getY() - global_pose.getPose().getPosition().getY());
+//        pref_vel_twist.getAngular().setZ(Angles.shortest_angular_distance(LPutils.getYaw(global_pose.getPose().getOrientation()),
+//                Math.atan2(pref_vel_twist.getLinear().getY(), pref_vel_twist.getLinear().getX())));//not used
 
-        Vector2 goal_dir = new Vector2(res.getLinear().getX(),res.getLinear().getY());
-        if (Vector2.abs(goal_dir) > me.max_vel_x_) {
-            goal_dir = Vector2.mul(Vector2.normalize(goal_dir),me.max_vel_x_);
+        Vector2 pref_vel_vect = new Vector2(pref_vel_twist.getLinear().getX(), pref_vel_twist.getLinear().getY());
+
+        if (Vector2.abs(pref_vel_vect) > me.max_vel_x_) {
+            pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.max_vel_x_);
+        } else if (Vector2.abs(pref_vel_vect) < me.min_vel_x_) {
+            pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
         }
-        else if (Vector2.abs(goal_dir) < me.min_vel_x_) {
-            goal_dir =Vector2.mul(Vector2.normalize(goal_dir), me.min_vel_x_ * 1.2);
-        }
 
+//        System.out.println(pref_vel_vect.getX());
+//        System.out.println(pref_vel_vect.getY()+"\n");
 
-        Vector2 pref_vel = new Vector2(goal_dir.getX(),goal_dir.getY());
+        me.computeNewVelocity(pref_vel_vect, cmd_vel);
 
-        me.computeNewVelocity(pref_vel, cmd_vel);
+//        System.out.println(cmd_vel.getAngular().getZ());
+//        System.out.println(cmd_vel.getLinear().getX());
+//        System.out.println(cmd_vel.getLinear().getY()+"\n");
 
-        if(Math.abs(cmd_vel.getAngular().getZ())<me.min_vel_th_)
-            angular.setZ(0.0);
+        if (Math.abs(cmd_vel.getAngular().getZ()) < me.min_vel_th_)
+            cmd_vel.getAngular().setZ(0);
 
-        if(Math.abs(cmd_vel.getLinear().getX())<me.min_vel_x_)
-            linear.setX(0.0);
+        if (Math.abs(cmd_vel.getLinear().getX()) < me.min_vel_x_)
+            cmd_vel.getLinear().setX(0);
 
-        if(Math.abs(cmd_vel.getLinear().getY())<me.min_vel_y_)
-            linear.setY(0.0);
-
-        cmd_vel.setLinear(linear);
-        cmd_vel.setAngular(angular);
-
+        if (Math.abs(cmd_vel.getLinear().getY()) < me.min_vel_y_)
+            cmd_vel.getLinear().setY(0);
 
         boolean valid_cmd = true; //collision_planner_.checkTrajectory(cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z,true);
 
-        if (!valid_cmd){
-            angular.setZ(0.0);
-            linear.setX(0.0);
-            linear.setY(0.0);
-            cmd_vel.setLinear(linear);
-            cmd_vel.setAngular(angular);
+        if (!valid_cmd) {
+            cmd_vel.getAngular().setZ(0);
+            cmd_vel.getLinear().setX(0);
+            cmd_vel.getLinear().setY(0);
         }
 
         if (cmd_vel.getLinear().getX() == 0.0 && cmd_vel.getAngular().getZ() == 0.0 && cmd_vel.getLinear().getY() == 0.0) {
 
             this.node.getLog().debug("Did not find a good vel, calculated best holonomic velocity was:"
-                    + me.velocity.getX()+", "+me.velocity.getY()+", cur wp "+current_waypoint_+" of "+transformed_plan_.size()+" trying next waypoint");
-            if (current_waypoint_ < transformed_plan_.size()-1){
+                    + me.velocity.getX() + ", " + me.velocity.getY() + ", cur wp " + current_waypoint_ + " of " + transformed_plan_.size() + " trying next waypoint");
+            if (current_waypoint_ < transformed_plan_.size() - 1) {
                 current_waypoint_++;
-                skip_next_= true;
-            }
-            else {
+                skip_next_ = true;
+            } else {
                 //reached goal
                 transformed_plan_.clear();
-                LPutils.publishPlan(transformed_plan_, g_plan_pub_);
-                LPutils.publishPlan(transformed_plan_, l_plan_pub_);
-
+                me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
+                me.msgPublisher.publishPlan( transformed_plan_,id, l_plan_pub_);
                 return false;
             }
-        }
-        else {
+        } else {
             skip_next_ = false;
         }
 
-
-        List<PoseStamped> local_plan=new ArrayList<PoseStamped>();
-        PoseStamped pos=messageFactory.newFromType(PoseStamped._TYPE);
+        List<PoseStamped> local_plan = new ArrayList<PoseStamped>();
+        PoseStamped pos = messageFactory.newFromType(PoseStamped._TYPE);
 
         //TODO
         //tf::poseStampedTFToMsg(global_pose,pos);
@@ -499,61 +455,55 @@ public class LocalPlanner {
         pos.setHeader(global_pose.getHeader());
         local_plan.add(pos);
         local_plan.add(transformed_plan_.get(current_waypoint_));
-        LPutils.publishPlan(transformed_plan_, g_plan_pub_);
-        LPutils.publishPlan(local_plan, l_plan_pub_);
+        me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
+        me.msgPublisher.publishPlan( local_plan,id, l_plan_pub_);
 
         return true;
     }
 
 
-    boolean stopWithAccLimits(PoseStamped global_pose, final PoseStamped  robot_vel, Twist cmd_vel){
+    boolean stopWithAccLimits(PoseStamped global_pose, final Twist robot_vel, Twist cmd_vel) {
         //slow down with the maximum possible acceleration... we should really use the frequency that we're running at to determine what is feasible
         //but we'll use a tenth of a second to be consistent with the implementation of the local planner.
-        double vx = sign(robot_vel.getPose().getPosition().getX()) * Math.max(0.0, (Math.abs(robot_vel.getPose().getPosition().getX()) - me.acc_lim_x_ * me.simPeriod));
-        double vy = sign(robot_vel.getPose().getPosition().getY()) * Math.max(0.0, (Math.abs(robot_vel.getPose().getPosition().getY()) - me.acc_lim_y_ * me.simPeriod));
+        double vx = sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - me.acc_lim_x_ * me.simPeriod));
+        double vy = sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - me.acc_lim_y_ * me.simPeriod));
 
-        double vel_yaw = LPutils.getYaw(robot_vel.getPose().getOrientation());
-        double vth = sign(vel_yaw) * Math.max(0.0, (Math.abs(vel_yaw) - me.acc_lim_th_ * me.simPeriod));
+        double vth = sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - me.acc_lim_th_ * me.simPeriod));
 
         //we do want to check whether or not the command is valid?????????????
         boolean valid_cmd = true; //collision_planner_.checkTrajectory(vx, vy, vth, true);
 
         //if we have a valid command, we'll pass it on, otherwise we'll command all zeros
-        if(valid_cmd){
+        if (valid_cmd) {
             //ROS_DEBUG("Slowing down... using vx, vy, vth: %.2f, %.2f, %.2f", vx, vy, vth);
-            linear.setX(vx);
-            linear.setY(vy);
-            cmd_vel.setLinear(linear);
-            angular.setZ(vth);
-            cmd_vel.setAngular(angular);
+            cmd_vel.getLinear().setX(vx);
+            cmd_vel.getLinear().setY(vy);
+            cmd_vel.getAngular().setZ(vth);
             return true;
         }
 
-        linear.setX(0.0);
-        linear.setY(0.0);
-        linear.setZ(0.0);
-        cmd_vel.setLinear(linear);
+        cmd_vel.getLinear().setX(0);
+        cmd_vel.getLinear().setY(0);
+        cmd_vel.getAngular().setZ(0);
         return false;
     }
 
 
-    boolean rotateToGoal(final PoseStamped global_pose, final PoseStamped robot_vel, double goal_th, Twist cmd_vel){
+    boolean rotateToGoal(final PoseStamped global_pose, final Twist robot_vel, double goal_th, Twist cmd_vel) {
         if (ignore_goal_yaw_) {
-            angular.setZ(0.0);
-            cmd_vel.setAngular(angular);
+            cmd_vel.getAngular().setZ(0);
             return true;
         }
         double yaw = LPutils.getYaw(global_pose.getPose().getOrientation());
-        double vel_yaw = LPutils.getYaw(robot_vel.getPose().getOrientation());
-        linear.setX(0.0);
-        linear.setY(0.0);
-        cmd_vel.setLinear(linear);
+        double vel_yaw = robot_vel.getAngular().getZ();
+        cmd_vel.getLinear().setX(0);
+        cmd_vel.getLinear().setY(0);
 
         double ang_diff = Angles.shortest_angular_distance(yaw, goal_th);
 
-        double v_th_samp = ang_diff > 0.0 ? Math.min(me.max_vel_th_,
-                Math.max(me.min_vel_th_inplace_, ang_diff)) : Math.max(-1.0 * me.max_vel_th_,
-                Math.min(-1.0 * me.min_vel_th_inplace_, ang_diff));
+        double v_th_samp = ang_diff > 0.0 ?
+                Math.min(me.max_vel_th_, Math.max(me.min_vel_th_inplace_, ang_diff)) :
+                Math.max(-1.0 * me.max_vel_th_, Math.min(-1.0 * me.min_vel_th_inplace_, ang_diff));
 
         //take the acceleration limits of the robot into account
         double max_acc_vel = Math.abs(vel_yaw) + me.acc_lim_th_ * me.simPeriod;
@@ -566,26 +516,24 @@ public class LocalPlanner {
 
         v_th_samp = sign(v_th_samp) * Math.min(max_speed_to_stop, Math.abs(v_th_samp));
         if (Math.abs(v_th_samp) <= 0.0 * me.min_vel_th_inplace_)//???????????
-            v_th_samp  = 0.0;
+            v_th_samp = 0.0;
         else if (Math.abs(v_th_samp) < me.min_vel_th_inplace_)
-            v_th_samp = sign(v_th_samp) * Math.max(me.min_vel_th_inplace_,Math.abs(v_th_samp));
+            v_th_samp = sign(v_th_samp) * Math.max(me.min_vel_th_inplace_, Math.abs(v_th_samp));
         //we still want to lay down the footprint of the robot and check if the action is legal
         boolean valid_cmd = true;//collision_planner_.checkTrajectory(0.0, 0.0, v_th_samp,true);
 
-        this.node.getLog().debug("Moving to desired goal orientation, th cmd: %1$2f"+v_th_samp);
+        this.node.getLog().debug("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
 
-        if(valid_cmd){
-            angular.setZ(v_th_samp);
-            cmd_vel.setAngular(angular);
+        if (valid_cmd) {
+            cmd_vel.getAngular().setZ(v_th_samp);
             return true;
         }
-        angular.setZ(0.0);
-        cmd_vel.setAngular(angular);
+        cmd_vel.getAngular().setZ(0);
         return false;
     }
 
-    boolean transformGlobalPlan(final TransformListener tf,final List<PoseStamped> global_plan,final VoxelGrid costmap,final String global_frame,
-            List<PoseStamped> transformed_plan){
+    // transform global plan
+    boolean transformGlobalPlan(boolean initialPlan, final List<PoseStamped> global_plan, final String global_frame, final String base_frame, List<PoseStamped> transformed_plan) {
 
         final PoseStamped plan_pose = messageFactory.newFromType(PoseStamped._TYPE);
 
@@ -595,27 +543,38 @@ public class LocalPlanner {
         transformed_plan.clear();
 
         //TODO:exception handle
-//        try{
-            if (!(global_plan.size() > 0))
-            {
-                this.node.getLog().error("Recieved plan with zero length");
-                return false;
-            }
 
-            //TODO: transform
+        if (!(global_plan.size() > 0)) {
+            this.node.getLog().error("Recieved plan with zero length");
+            return false;
+        }
+
+        //currently global plan is in global frame do not need transform
+        //TODO: transform
 /*
             tf.lookupTransform(global_frame, ros::Time(),
                     plan_pose.header.frame_id, plan_pose.header.stamp,
                     plan_pose.header.frame_id, transform);
 */
-            org.ros.rosjava.tf.Transform transf;
-            transf=tf.getTree().lookupTransformBetween(global_frame,plan_pose.getHeader().getFrameId(),plan_pose.getHeader().getStamp().totalNsecs());
-            StampedTransform transform=new StampedTransform(plan_pose.getHeader().getStamp().totalNsecs(),
-                    transf.parentFrame,transf.childFrame,transf.translation,transf.rotation);
+        Time t;
+        Pose robot_pose = node.getTopicMessageFactory().newFromType(Pose._TYPE);
+        int cur_waypoint = 0;
+        if (!initialPlan) {
+
+            me.me_lock_.lock();
+            try {
+                robot_pose.setPosition(me.getBaseOdom().getPose().getPose().getPosition());
+                t = me.getLastSeen();
+            } finally {
+                me.me_lock_.unlock();
+            }
+//            tf3d=tf.transform().lookupTransformBetween(global_frame,plan_pose.getHeader().getFrameId(),plan_pose.getHeader().getStamp().totalNsecs());
+//            StampedTransform transform=new StampedTransform(plan_pose.getHeader().getStamp().totalNsecs(),
+//                    transf.parentFrame,transf.childFrame,transf.translation,transf.rotation);
 
             //TODO: transform
             //let's get the pose of the robot in the frame of the plan
-            PoseStamped robot_pose=messageFactory.newFromType(PoseStamped._TYPE);
+            //PoseStamped robot_pose=messageFactory.newFromType(PoseStamped._TYPE);
 /*            robot_pose.setIdentity();
             robot_pose.frame_id_ = costmap.getBaseFrameID();
             robot_pose.stamp_ = ros::Time();
@@ -626,11 +585,11 @@ public class LocalPlanner {
 
             double sq_dist = Double.MAX_VALUE;
 
-            int cur_waypoint = 0;
-            for (int i=0; i < global_plan_.size(); i++)
-            {
-                double dist = LPutils.getGoalPositionDistance(
-                        robot_pose.getPose(),
+            double dist;
+
+            for (int i = 0; i < global_plan_.size(); i++) {
+                dist = LPutils.getGoalPositionDistance(
+                        robot_pose,
                         global_plan_.get(i).getPose().getPosition().getX(),
                         global_plan_.get(i).getPose().getPosition().getY());
 
@@ -640,29 +599,38 @@ public class LocalPlanner {
                 }
             }
 
-            int i = cur_waypoint;
+        }else
+        {
+            t=node.getCurrentTime();
+        }
 
-            PoseStamped tf_pose;
-            PoseStamped newer_pose;
+        PoseStamped tf_pose;
+        PoseStamped newer_pose;
 
-            //now we'll transform until points are outside of our distance threshold
-            while(i < global_plan.size()) {
-                double x_diff = robot_pose.getPose().getPosition().getX() - global_plan.get(i).getPose().getPosition().getX();
-                double y_diff = robot_pose.getPose().getPosition().getY() - global_plan.get(i).getPose().getPosition().getY();
-                sq_dist = x_diff * x_diff + y_diff * y_diff;
+        int i = cur_waypoint;
 
-                final PoseStamped pose = global_plan.get(i);
+        //now we'll transform until points are outside of our distance threshold
+        while (i < global_plan.size()) {
+            //double x_diff = robot_pose.getPose().getPosition().getX() - global_plan.get(i).getPose().getPosition().getX();
+            //double y_diff = robot_pose.getPose().getPosition().getY() - global_plan.get(i).getPose().getPosition().getY();
+            //sq_dist = x_diff * x_diff + y_diff * y_diff;
+
+            PoseStamped pose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
+            pose.setHeader(global_plan.get(i).getHeader());
+            pose.getHeader().setStamp(t);
+            pose.setPose(global_plan.get(i).getPose());
+
 /*                poseStampedMsgToTF(pose, tf_pose);
                 tf_pose.setData(transform * tf_pose);
                 tf_pose.stamp_ = transform.stamp_;
                 tf_pose.frame_id_ = global_frame;
                 poseStampedTFToMsg(tf_pose, newer_pose);
-
  */
-                transformed_plan.add(global_plan.get(i));
+            transformed_plan.add(pose);
 
-                ++i;
-            }
+            ++i;
+        }
+
 /*        }
         catch(tf::LookupException& ex) {
             this.node.getLog().error("No Transform available Error: %s\n", ex.what());
@@ -683,11 +651,11 @@ public class LocalPlanner {
         return true;
     }
 
-    void findBestWaypoint(PoseStamped target_pose, final PoseStamped global_pose){
+
+    void findBestWaypoint(PoseStamped target_pose, final PoseStamped global_pose) {
         current_waypoint_ = 0;
         double min_dist = Double.MAX_VALUE;
-        for (int i=current_waypoint_; i < transformed_plan_.size(); i++)
-        {
+        for (int i = current_waypoint_; i < transformed_plan_.size(); i++) {
             double dist = LPutils.getGoalPositionDistance(global_pose.getPose(), transformed_plan_.get(i).getPose().getPosition().getX(),
                     transformed_plan_.get(i).getPose().getPosition().getY());
             if (dist < me.getRadius() || dist < min_dist) {
@@ -700,11 +668,11 @@ public class LocalPlanner {
         }
         //ROS_DEBUG("waypoint = %d, of %d", current_waypoint_, transformed_plan_.size());
 
-        if (current_waypoint_ == transformed_plan_.size()-1) //I am at the end of the plan
+        if (current_waypoint_ == transformed_plan_.size() - 1) //I am at the end of the plan
             return;
 
-        double dif_x = transformed_plan_.get(current_waypoint_+1).getPose().getPosition().getX() - target_pose.getPose().getPosition().getX();
-        double dif_y = transformed_plan_.get(current_waypoint_+1).getPose().getPosition().getY() - target_pose.getPose().getPosition().getY();
+        double dif_x = transformed_plan_.get(current_waypoint_ + 1).getPose().getPosition().getX() - target_pose.getPose().getPosition().getX();
+        double dif_y = transformed_plan_.get(current_waypoint_ + 1).getPose().getPosition().getY() - target_pose.getPose().getPosition().getY();
 
         double plan_dir = Math.atan2(dif_y, dif_x);
         double dif_ang = plan_dir;
@@ -712,24 +680,24 @@ public class LocalPlanner {
         //ROS_DEBUG("dif = %f,%f of %f",dif_x,dif_y, dif_ang );
 
 
-        for (int i=current_waypoint_+1; i<transformed_plan_.size(); i++) {
+        for (int i = current_waypoint_ + 1; i < transformed_plan_.size(); i++) {
             dif_x = transformed_plan_.get(i).getPose().getPosition().getX() - target_pose.getPose().getPosition().getX();
             dif_y = transformed_plan_.get(i).getPose().getPosition().getY() - target_pose.getPose().getPosition().getY();
 
             dif_ang = Math.atan2(dif_y, dif_x);
 
-            if(Math.abs(plan_dir - dif_ang) > 1.0* yaw_goal_tolerance_) {
-                target_pose.setHeader(transformed_plan_.get(i-1).getHeader());
-                target_pose.setPose(transformed_plan_.get(i-1).getPose());
-                current_waypoint_ = i-1;
+            if (Math.abs(plan_dir - dif_ang) > 1.0 * yaw_goal_tolerance_) {
+                target_pose.setHeader(transformed_plan_.get(i - 1).getHeader());
+                target_pose.setPose(transformed_plan_.get(i - 1).getPose());
+                current_waypoint_ = i - 1;
                 //ROS_DEBUG("waypoint = %d, of %d", current_waypoint_, transformed_plan_.size());
 
                 return;
             }
         }
-        target_pose.setHeader(transformed_plan_.get(transformed_plan_.size()-1).getHeader());
+        target_pose.setHeader(transformed_plan_.get(transformed_plan_.size() - 1).getHeader());
         target_pose.setPose(transformed_plan_.get(transformed_plan_.size() - 1).getPose());
-        current_waypoint_ = transformed_plan_.size()-1;
+        current_waypoint_ = transformed_plan_.size() - 1;
     }
 
 }

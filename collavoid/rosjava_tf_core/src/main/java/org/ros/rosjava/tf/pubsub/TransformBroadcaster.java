@@ -53,7 +53,6 @@ public class TransformBroadcaster {
 
 	public void sendTransform(
 									String parentFrame, String childFrame,
-                                    Time now,
 									double v_x, double v_y, double v_z,
 									double q_x, double q_y, double q_z, double q_w // quaternion
 									) {
@@ -63,7 +62,7 @@ public class TransformBroadcaster {
 		Preconditions.checkNotNull(connectednode);
 
 		TransformStamped txMsg =  connectednode.getTopicMessageFactory().newFromType(TransformStamped._TYPE);
-		txMsg.getHeader().setStamp(now);
+		txMsg.getHeader().setStamp(connectednode.getCurrentTime());
 		txMsg.getHeader().setFrameId(parentFrame);
 		txMsg.setChildFrameId(childFrame);
 

@@ -9,6 +9,7 @@ import org.ros.message.MessageFactory;
 import org.ros.rosjava.tf.Transform;
 import sensor_msgs.PointCloud2;
 import sensor_msgs.PointField;
+import simbad.sim.Robot;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
@@ -92,7 +93,15 @@ public class utils {
                 buffer.writeFloat((float) pt[j]);
             }
         }
-        pc2.setData(buffer);
+        if (scan.size()==0)
+            pc2.getData().clear();
+        else
+            pc2.setData(buffer);
+    }
+
+    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan,MainSimulator.Robot robot) {
+        pc2.getHeader().setFrameId(robot.globalFrame);
+        toPointCloud2(pc2,scan);
     }
 
     public static void Vector3ToPoint3d(Vector3 in, Point3d out) {

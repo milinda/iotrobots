@@ -1,7 +1,11 @@
+import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
+import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
+import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
+import org.apache.commons.logging.Log;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
@@ -40,7 +44,7 @@ public class MainSimulator {
         //sensors
         LaserScan laserScan;
         RangeSensorBelt sensors;
-        CameraSensor camera;
+        //CameraSensor camera;
         //node
         private ConnectedNode node;
 
@@ -67,7 +71,13 @@ public class MainSimulator {
         String odomFrame;
         String globalFrame;
         //planner
-        InitPlannerThread plannerThread;
+        GlobalPlanner globalPlanner = null;
+        LocalPlanner localPlanner = null;
+        List<PoseStamped> globalPlan = null;
+        Point3d start;
+        Point3d goal;
+        Quat4d oriGoal,oriStart;
+        boolean plannerSet;
         //for synchronization
         Time time = new Time();
 
@@ -78,6 +88,7 @@ public class MainSimulator {
         Point3d previousPosition=null;
 
 
+
         public Robot(Vector3d position, double ori, String name) {
             // initialize position and orientation
             super(position, name);
@@ -86,8 +97,8 @@ public class MainSimulator {
             kinematic = RobotFactory.setDifferentialDriveKinematicModel(this);
             wheelDistance = this.getRadius();
             // Add camera
-            camera = RobotFactory.addCameraSensor(this);
-            laserScan = new LaserScan(this.getRadius(), Math.PI, 180, 1.5, 3);
+            //camera = RobotFactory.addCameraSensor(this);
+            laserScan = new LaserScan(this.getRadius(), Math.PI, 180, 1.5,20);
             sensors = laserScan.getSensor();
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame
@@ -105,6 +116,7 @@ public class MainSimulator {
             // initialize node
             AgentNode agentNode = new AgentNode(this.getName());
             node = agentNode.getNode();
+            Log log=node.getLog();
             // initialize odometry publisher and message
             if (odometryPublisher == null) {
                 odometryPublisher = node.newPublisher(this.getName() + "/odometry", Odometry._TYPE);
@@ -142,11 +154,13 @@ public class MainSimulator {
                     @Override
                     public void onNewMessage(Twist msg) {
                         double v, w;
+                        //in ros coordinate
                         Vector3d vel = new Vector3d(msg.getLinear().getX(), msg.getLinear().getY(), msg.getLinear().getZ());
+                        //no need to transform the coordinate
                         v = vel.length();
                         w = msg.getAngular().getZ();
-                        vl = (2 * v - w * wheelDistance) / 2;
-                        vr = (2 * v + w * wheelDistance) / 2;
+                        vl =  v - w * wheelDistance / 2;
+                        vr =  v + w * wheelDistance / 2;
                     }
                 });
             }
@@ -164,19 +178,7 @@ public class MainSimulator {
          */
         public void initBehavior() {
             this.rotateY(orientation);
-
-            //set start point and goal
-            Point3d start = new Point3d();
-            this.getCoords(start);
-            Point3d goal = new Point3d();
-            goal.set(-start.getX(), start.getY(), -start.getZ());
-
-            Quat4d oriGoal = getOrientation();
-            Transform3D tfr = new Transform3D(oriGoal, new Vector3d(0, 0, 0), 1);
-            tfr.rotY(Math.PI);
-            tfr.get(oriGoal);
-
-            plannerThread = new InitPlannerThread(node, tfl, start, goal, oriGoal);
+            initPlanner();
         }
 
         /**
@@ -185,22 +187,19 @@ public class MainSimulator {
         public void performBehavior() {
 
             kinematic.setWheelsVelocity(vl, vr);
-
             time = node.getCurrentTime();
             //send transform
-            sendTransform(time);
-            //publish scan in frequency of 1Hz
-            if (getCounter() % 20 == 0 ) {
+            sendTransform();
+            //publish scan in frequency of 10Hz
+            if (getCounter() % 2== 0 ) {
                 pc2.getHeader().setSeq(pc2Seq++);
                 pc2.getHeader().setStamp(time);
-                //publish valid laser scan in pointcloud2 format
-
-                if(laserScan.getLaserscanPointCloud2(pctmp))
-                    laserScan.getLaserscanPointCloud2(pc2);
+                //publish valid laser scan in pointcloud2 format in global frame
+                laserScan.getLaserscanPointCloud2(pc2,this);
                 laserscanPublisher.publish(pc2);
             }
-            //test
-            if (getCounter()%20==0){
+            //test publish localization pose array
+            if (getCounter()%2==0){
                 Point3d cor = new Point3d();
                 this.getCoords(cor);
                 poseArray.getHeader().setStamp(time);
@@ -218,9 +217,16 @@ public class MainSimulator {
                 setOdomMsg(time);
                 odometryPublisher.publish(odomMsg);
 
+                // delay some time to set the planner
+            if (getCounter()%20==0&&!plannerSet){
+                plannerSet=true;
+                if (!localPlanner.setPlan(globalPlan))
+                    node.getLog().error("Set global plan error!");
+            }
+
                 //control frequency is 10hz
-                //localPlanner.computeVelocityCommands(cmd_vel);
-                //velocityPublisher.publish(cmd_vel);
+                if (localPlanner.computeVelocityCommands(cmd_vel));
+                velocityPublisher.publish(cmd_vel);
             }
         }
 
@@ -228,7 +234,6 @@ public class MainSimulator {
             //get position and velocities, all in odometry frame
             Point3d cor = new Point3d();
             this.getCoords(cor);
-            //cor.scale(10);
             Quat4d ori = getOrientation();
 
             odomMsg.getHeader().setStamp(t);
@@ -249,7 +254,7 @@ public class MainSimulator {
             return ori;
         }
 
-        public void sendTransform(Time t) {
+        public void sendTransform() {
             String childFrame = robotFrame;
             String parentFrame = odomFrame;
 
@@ -257,14 +262,7 @@ public class MainSimulator {
             Vector3d tft3d = new Vector3d();
             Quat4d tfrq = new Quat4d();
 
-            this.getTranslationTransform(tf);
-            tf.get(tft3d);
-            this.getRotationTransform(tf);
-            tf.get(tfrq);
-            tf.set(tfrq,tft3d,1);
-
-            tf.invert();
-
+            tf=getTransform();
             tf.get(tft3d);
             tf.get(tfrq);
 
@@ -273,7 +271,6 @@ public class MainSimulator {
 
             tfb.sendTransform(
                     parentFrame, childFrame,
-                    t,
                     tft3d.getX(), tft3d.getY(), tft3d.getZ(),
                     tfrq.getX(), tfrq.getY(), tfrq.getZ(), tfrq.getW()
             );
@@ -282,10 +279,21 @@ public class MainSimulator {
             parentFrame = globalFrame;
             tfb.sendTransform(
                     parentFrame, childFrame,
-                    t,
                     0, 0, 0,
                     0, 0, 0, 1
             );
+        }
+
+        public Transform3D getTransform(){
+            Transform3D tf = new Transform3D();
+            Vector3d tft3d = new Vector3d();
+            Quat4d tfrq = new Quat4d();
+            this.getTranslationTransform(tf);
+            tf.get(tft3d);
+            this.getRotationTransform(tf);
+            tf.get(tfrq);
+            tf.set(tfrq, tft3d, 1);
+            return tf;
         }
 
         public void setPoseArrayMsg(){
@@ -306,14 +314,72 @@ public class MainSimulator {
             }
             poseArray.setPoses(pa);
         }
+
+        private void initPlanner(){
+            if (globalPlan == null) {
+                globalPlan = new ArrayList<PoseStamped>();
+            } else {
+                globalPlan.clear();
+            }
+
+            if (globalPlanner == null)
+                globalPlanner = new GlobalPlanner();
+
+            if (localPlanner == null)
+                localPlanner = new LocalPlanner(node, tfl);
+
+            //set start point and goal
+            start = new Point3d();
+            this.getCoords(start);
+            goal = new Point3d();
+            goal.set(-start.getX(), start.getY(), -start.getZ());
+
+            oriStart = getOrientation();
+            oriGoal=new Quat4d();
+            Transform3D tfr = new Transform3D(oriStart, new Vector3d(0, 0, 0), 1);
+            Transform3D tfrPI=new Transform3D(new Quat4d(0,1,0,0),new Vector3d(),1);
+            tfr.mul(tfrPI);
+            tfr.get(oriGoal);
+
+            start = utils.toROSCoordinate(start);
+            goal = utils.toROSCoordinate(goal);
+            utils.toROSCoordinate(oriGoal);
+            utils.toROSCoordinate(oriStart);
+
+            PoseStamped startPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
+            PoseStamped goalPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
+
+            startPose.getHeader().setFrameId(globalFrame);
+            startPose.getPose().getPosition().setX(start.getX());
+            startPose.getPose().getPosition().setY(start.getY());
+            startPose.getPose().getOrientation().setX(oriStart.getX());
+            startPose.getPose().getOrientation().setY(oriStart.getY());
+            startPose.getPose().getOrientation().setZ(oriStart.getZ());
+            startPose.getPose().getOrientation().setW(oriStart.getW());
+
+            goalPose.getHeader().setFrameId(globalFrame);
+            goalPose.getPose().getPosition().setX(goal.getX());
+            goalPose.getPose().getPosition().setY(goal.getY());
+            goalPose.getPose().getOrientation().setX(oriGoal.getX());
+            goalPose.getPose().getOrientation().setY(oriGoal.getY());
+            goalPose.getPose().getOrientation().setZ(oriGoal.getZ());
+            goalPose.getPose().getOrientation().setW(oriGoal.getW());
+
+            globalPlanner.makePlan(startPose, goalPose, globalPlan);
+
+            plannerSet=false;
+        }
+
     }
+
+
 
     /**
      * Describe the environement
      */
     static public class MyEnv extends EnvironmentDescription {
         public MyEnv() {
-            final int robotNb = 5;
+            final int robotNb = 1;
             final double posRadius = 6;
 
             light1IsOn = true;
@@ -330,9 +396,9 @@ public class MainSimulator {
             Wall w4 = new Wall(new Vector3d(0, 0, -9), 19, 2, this);
             add(w4);
 
-            Box b1 = new Box(new Vector3d(4, 0, 0), new Vector3f(1, 1, 1),
+            Box b1 = new Box(new Vector3d(4, 0, 0), new Vector3f(1, 1, 4),
                     this);
-            add(b1);
+            //add(b1);
 //            add(new Arch(new Vector3d(3, 0, -3), this));
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
