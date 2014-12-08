@@ -1,7 +1,6 @@
 package cgl.iotrobots.slam.streaming.rabbitmq;
 
 import cgl.iotcloud.core.msg.MessageContext;
-import cgl.iotcloud.core.transport.TransportConstants;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -22,7 +21,7 @@ public class RabbitMQSender {
 
     private Connection conn;
 
-    private BlockingQueue<MessageContext> outQueue;
+    private BlockingQueue<Message> outQueue;
 
     private String exchangeName;
 
@@ -34,16 +33,28 @@ public class RabbitMQSender {
 
     private ExecutorService executorService;
 
-    public RabbitMQSender(BlockingQueue<MessageContext> outQueue,
+    private boolean topic;
+
+    public RabbitMQSender(BlockingQueue<Message> outQueue,
                           String exchangeName,
                           String routingKey,
                           String queueName,
                           String url) {
+        this(outQueue, exchangeName, routingKey, queueName, url, false);
+    }
+
+    public RabbitMQSender(BlockingQueue<Message> outQueue,
+                          String exchangeName,
+                          String routingKey,
+                          String queueName,
+                          String url,
+                          boolean topic) {
         this.outQueue = outQueue;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
         this.url = url;
         this.queueName = queueName;
+        this.topic = topic;
     }
 
     public void setExecutorService(ExecutorService executorService) {
@@ -63,7 +74,12 @@ public class RabbitMQSender {
             }
 
             channel = conn.createChannel();
-            channel.exchangeDeclare(exchangeName, "direct", false);
+            if (!topic) {
+                channel.exchangeDeclare(exchangeName, "direct", false);
+            } else {
+                channel.exchangeDeclare(exchangeName, "fanout", false);
+            }
+
             channel.queueDeclare(this.queueName, false, false, true, null);
             channel.queueBind(queueName, exchangeName, routingKey);
 
@@ -98,11 +114,9 @@ public class RabbitMQSender {
             while (run) {
                 try {
                     try {
-                        MessageContext input = outQueue.take();
+                        Message input = outQueue.take();
 
                         Map<String, Object> props = new HashMap<String, Object>();
-                        props.put(TransportConstants.SENSOR_ID, input.getSensorId());
-
                         for (Map.Entry<String, Object> e : input.getProperties().entrySet()) {
                             props.put(e.getKey(), e.getValue());
                         }
@@ -124,6 +138,7 @@ public class RabbitMQSender {
             String message = "Unexpected notification type";
             LOG.error(message);
             throw new RuntimeException(message);
+
         }
     }
 }

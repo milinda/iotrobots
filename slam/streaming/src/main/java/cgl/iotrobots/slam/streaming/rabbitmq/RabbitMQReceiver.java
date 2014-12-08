@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.streaming.rabbitmq;
 
-import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.transport.TransportConstants;
 import com.rabbitmq.client.*;
 import org.slf4j.Logger;
@@ -19,7 +18,7 @@ public class RabbitMQReceiver {
 
     private Connection conn;
 
-    private BlockingQueue<MessageContext> inQueue;
+    private BlockingQueue<Message> inQueue;
 
     private String queueName;
 
@@ -31,7 +30,7 @@ public class RabbitMQReceiver {
 
     private String routingKey;
 
-    public RabbitMQReceiver(BlockingQueue<MessageContext> inQueue,
+    public RabbitMQReceiver(BlockingQueue<Message> inQueue,
                             String queueName,
                             String url) {
         this.inQueue = inQueue;
@@ -76,28 +75,18 @@ public class RabbitMQReceiver {
                             long deliveryTag = envelope.getDeliveryTag();
                             // RabbitMQMessage message = new RabbitMQMessage(properties, body);
                             // get the sensor id from the properties
-                            Object sensorId = null;
                             Map<String, Object> props = new HashMap<String, Object>();
                             if (properties != null && properties.getHeaders() != null) {
-                                sensorId = properties.getHeaders().get(TransportConstants.SENSOR_ID);
                                 for (Map.Entry<String, Object> e : properties.getHeaders().entrySet()) {
                                     props.put(e.getKey(), e.getValue().toString());
                                 }
                             }
-                            if (sensorId == null) {
-                                MessageContext message = new MessageContext("default", body, props);
-                                try {
-                                    inQueue.put(message);
-                                } catch (InterruptedException e) {
-                                    LOG.error("Failed to put the object to the queue");
-                                }
-                            } else {
-                                MessageContext message = new MessageContext(sensorId.toString(), body, props);
-                                try {
-                                    inQueue.put(message);
-                                } catch (InterruptedException e) {
-                                    LOG.error("Failed to put the object to the queue");
-                                }
+
+                            Message message = new Message(body, props);
+                            try {
+                                inQueue.put(message);
+                            } catch (InterruptedException e) {
+                                LOG.error("Failed to put the object to the queue");
                             }
                             channel.basicAck(deliveryTag, false);
                         }
