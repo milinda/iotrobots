@@ -7,6 +7,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     private TopologyContext topologyContext;
 
-    private List<ParticleValues> particles = new ArrayList<ParticleValues>();
+    private List<ParticleValues> particleValueses = new ArrayList<ParticleValues>();
 
     private RangeReading reading;
 
@@ -38,7 +39,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         ParticleValues value;
         if (val != null && (val instanceof ParticleValues)) {
             value = (ParticleValues) val;
-            particles.add(value.getIndex(), value);
+            particleValueses.add(value.getIndex(), value);
         } else {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
@@ -49,15 +50,15 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
         reading = (RangeReading) val;
 
-        // now distribute the particles to the bolts
-        if (particles.size() < reSampler.getNoParticles() || reading == null) {
+        // now distribute the particleValueses to the bolts
+        if (particleValueses.size() < reSampler.getNoParticles() || reading == null) {
             return;
         }
 
-        // we got all the particles, we will resample
-        // first we need to clear the current particles
+        // we got all the particleValueses, we will resample
+        // first we need to clear the current particleValueses
         reSampler.getParticles().clear();
-        for (ParticleValues pv : particles) {
+        for (ParticleValues pv : particleValueses) {
             Particle p = new Particle();
             p.setWeight(pv.getWeight());
             p.setGweight(pv.getGweight());
@@ -70,8 +71,9 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
 
         reSampler.processScan(reading, 0);
+        // now distribute the resampled particleValueses
+        List<Integer> particles = reSampler.getIndexes();
 
-        // now distribute the resampled particles
 
         reading = null;
     }
@@ -79,5 +81,39 @@ public class ReSamplingBolt extends BaseRichBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
 
+    }
+
+    /**
+     * This method create an assignment of the resampled particles to the tasks running in Storm.
+     * In this case the tasks will be the bolts running the ScanMatching code.
+     * @param indexes the re sampled indexes
+     * @return an assignment of particles
+     */
+    private ParticleAssignments createAssignments(List<Integer> indexes) {
+        // create a matrix of size noOfParticles x noOfparticles
+        int noOfParticles = reSampler.getNoParticles();
+
+        // assume taskIndexes are going from 0
+        double [][]cost = new double[noOfParticles][noOfParticles];
+        for (int i = 0; i < noOfParticles; i++) {
+            cost[i] = new double[noOfParticles];
+            for (int j = 0; j < noOfParticles; j++) {
+                int index = indexes.get(j);
+                ParticleValues pv = particleValueses.get(index);
+                // now see weather this particle is from this worker
+                int particleTaskIndex = pv.getTaskId();
+                int thrueTaskIndex = j % noOfParticles;
+                if (particleTaskIndex == thrueTaskIndex) {
+                    cost[i][j] = 1;
+                } else {
+                    cost[i][j] = 0;
+                }
+            }
+        }
+
+        HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
+        int []assingments = algorithm.execute();
+
+        return null;
     }
 }

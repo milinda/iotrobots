@@ -25,6 +25,7 @@ public class DistributedReSampler {
 
     protected List<Particle> particles = new ArrayList<Particle>();
 
+    protected List<Integer> indexes = new ArrayList<Integer>();
 
     protected List<Double> weights = new ArrayList<Double>();
 
@@ -386,5 +387,9 @@ public class DistributedReSampler {
             }
         }
         return hasResampled;
+    }
+
+    public List<Integer> getIndexes() {
+        return indexes;
     }
 }

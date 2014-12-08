@@ -39,7 +39,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         if (!(val instanceof RangeReading)) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
-
+        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
         reading = (RangeReading) val;
 
         gfsp.processScan(reading, 0);
@@ -52,7 +52,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             Particle particle = particles.get(index);
 
             int taskId = topologyContext.getThisTaskIndex();
-            ParticleValues particleValues = new ParticleValues(taskId, index, particle.pose,
+            ParticleValues particleValues = new ParticleValues(taskId, index, totalTasks, particle.pose,
                     particle.previousPose, particle.weight,
                     particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
             List<Object> emit = new ArrayList<Object>();

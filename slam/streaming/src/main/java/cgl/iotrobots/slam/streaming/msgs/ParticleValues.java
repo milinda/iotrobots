@@ -32,10 +32,12 @@ public class ParticleValues {
     /** Entry to the trajectory tree */
     public TNode node;
 
+    private int totalTasks;
+
     public ParticleValues() {
     }
 
-    public ParticleValues(int taskId, int index, DoubleOrientedPoint pose,
+    public ParticleValues(int taskId, int index, int totalTasks, DoubleOrientedPoint pose,
                           DoubleOrientedPoint previousPose, double weight,
                           double weightSum, double gweight, int previousIndex,
                           TNode node) {
@@ -48,6 +50,23 @@ public class ParticleValues {
         this.gweight = gweight;
         this.previousIndex = previousIndex;
         this.node = node;
+        this.totalTasks = totalTasks;
+    }
+
+    public int getTotalTasks() {
+        return totalTasks;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
+    }
+
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTotalTasks(int totalTasks) {
+        this.totalTasks = totalTasks;
     }
 
     public int getIndex() {
