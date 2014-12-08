@@ -2,6 +2,7 @@ package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
+import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
@@ -12,8 +13,8 @@ import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 
-public class Example1 {
-    public static final int SENSORS = 72;
+public class SimbardExample {
+    public static final int SENSORS = 180;
 
     public static final double ANGLE = 2 * Math.PI;
 
@@ -46,7 +47,7 @@ public class Example1 {
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
-            GFSAlgorithm.gsp_ = new ParallelGridSlamProcessor();
+            GFSAlgorithm.gsp_ = new GridSlamProcessor();
             GFSAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.angle_increment = ANGLE / SENSORS;
@@ -64,7 +65,7 @@ public class Example1 {
         }
 
         boolean forward = false;
-
+        double prevX = 0;
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
             System.out.println("\n\n");
@@ -73,7 +74,9 @@ public class Example1 {
 
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
+
             GFSAlgorithm.laserScan(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            prevX = point3D.x;
             // progress at 0.5 m/s
             if (getCounter() % 50 == 0) {
                 if (forward) {
@@ -122,7 +125,6 @@ public class Example1 {
                 }
             }
 //            System.out.format("\n");
-
             laserScan.timestamp = System.currentTimeMillis();
 
             return laserScan;
@@ -164,8 +166,6 @@ public class Example1 {
             add(new Arch(new Vector3d(3, 0, -3), this));
             add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
-
-
         }
     }
 

@@ -120,10 +120,10 @@ public class GFSAlgorithm {
         minimum_score_ = 0;
         sigma_ = 0.05;
         kernelSize_ = 1;
-        lstep_ = 0.005;
-        astep_ = 0.005;
+        lstep_ = 0.05;
+        astep_ = 0.05;
         iterations_ = 5;
-        lsigma_ = .05;
+        lsigma_ = .075;
         ogain_ = 3.0;
         lskip_ = 0;
         srr_ = 0.1;
@@ -133,7 +133,7 @@ public class GFSAlgorithm {
         linearUpdate_ = .05;
         angularUpdate_ = 0.05;
         temporalUpdate_ = 0.0;
-        resampleThreshold_ = 2;
+        resampleThreshold_ = .5;
         particles_ = 30;
         xmin_ = -20.0;
         ymin_ = -20.0;

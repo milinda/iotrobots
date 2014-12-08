@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.streaming;
 
-import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
@@ -26,7 +25,7 @@ public class DistributedReSampler {
 
     protected List<Particle> particles = new ArrayList<Particle>();
 
-    protected List<Integer> indexes = new ArrayList<Integer>();
+
     protected List<Double> weights = new ArrayList<Double>();
 
     protected ScanMatcher matcher = new ScanMatcher();
@@ -321,21 +320,13 @@ public class DistributedReSampler {
         }
 
         if (neff < resampleThreshold * particles.size()) {
-            LOG.info("*************RESAMPLE***************");
             UniformResampler resampler = new UniformResampler();
-            indexes = resampler.resampleIndexes(weights, adaptSize);
-
-            StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(indexes.size());
-            for (Integer it : indexes) {
-                m_outputStream.append(it).append(" ");
-            }
-            LOG.debug(m_outputStream.toString());
-
+            List<Integer> indexes = resampler.resampleIndexes(weights, adaptSize);
 
             //begin building tree
             List<Particle> temp = new ArrayList<Particle>();
             int j = 0;
-            //this is for deleteing the particles which have been resampled away.
+            //this is for deleting the particles which have been resampled away.
             List<Integer> deletedParticles = new ArrayList<Integer>();
 
             for (int i = 0; i < indexes.size(); i++) {
@@ -361,12 +352,10 @@ public class DistributedReSampler {
                 deletedParticles.add(j);
                 j++;
             }
-            m_outputStream = new StringBuilder("Deleting Nodes:");
+
             for (int i = 0; i < deletedParticles.size(); i++) {
-                m_outputStream.append(" ").append(deletedParticles.get(i));
                 particles.get(deletedParticles.get(i)).node = null;
             }
-            LOG.debug(m_outputStream.toString());
 
             LOG.debug("Deleting old particles...");
             particles.clear();
