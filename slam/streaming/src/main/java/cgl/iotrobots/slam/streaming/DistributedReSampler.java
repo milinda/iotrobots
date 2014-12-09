@@ -152,7 +152,6 @@ public class DistributedReSampler {
     public void setSensorMap(Map<String, Sensor> smap) {
         /*
           Construct the angle table for the sensor
-          FIXME For now detect the readings of only the front laser, and assume its pose is in the center of the robot
         */
         RangeSensor rangeSensor = (RangeSensor) smap.get("ROBOTLASER1");
         beams = rangeSensor.beams().size();

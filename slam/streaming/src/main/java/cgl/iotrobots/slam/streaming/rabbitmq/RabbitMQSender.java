@@ -1,144 +1,181 @@
 package cgl.iotrobots.slam.streaming.rabbitmq;
 
-import cgl.iotcloud.core.msg.MessageContext;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 
 public class RabbitMQSender {
+    public static final int DEFAULT_PRE_FETCH = 64;
+
     private static Logger LOG = LoggerFactory.getLogger(RabbitMQSender.class);
+
+    private Connection connection;
 
     private Channel channel;
 
-    private Connection conn;
+    private QueueingConsumer consumer;
 
-    private BlockingQueue<Message> outQueue;
+    private String consumerTag;
 
     private String exchangeName;
 
-    private String routingKey;
+    private int prefetchCount = DEFAULT_PRE_FETCH;
 
-    private String queueName;
+    private boolean isReQueueOnFail = false;
 
     private String url;
 
-    private ExecutorService executorService;
-
-    private boolean topic;
-
-    public RabbitMQSender(BlockingQueue<Message> outQueue,
-                          String exchangeName,
-                          String routingKey,
-                          String queueName,
-                          String url) {
-        this(outQueue, exchangeName, routingKey, queueName, url, false);
-    }
-
-    public RabbitMQSender(BlockingQueue<Message> outQueue,
-                          String exchangeName,
-                          String routingKey,
-                          String queueName,
-                          String url,
-                          boolean topic) {
-        this.outQueue = outQueue;
+    public RabbitMQSender(String url, String exchangeName) {
         this.exchangeName = exchangeName;
-        this.routingKey = routingKey;
         this.url = url;
-        this.queueName = queueName;
-        this.topic = topic;
     }
 
-    public void setExecutorService(ExecutorService executorService) {
-        this.executorService = executorService;
+    public void setPrefetchCount(int prefetchCount) {
+        this.prefetchCount = prefetchCount;
     }
 
-    public void start() {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setAutomaticRecoveryEnabled(true);
-        factory.setNetworkRecoveryInterval(5000);
-        try {
-            factory.setUri(url);
-            if (executorService != null) {
-                conn = factory.newConnection(executorService);
-            } else {
-                conn = factory.newConnection();
-            }
+    public void setReQueueOnFail(boolean isReQueueOnFail) {
+        this.isReQueueOnFail = isReQueueOnFail;
+    }
 
-            channel = conn.createChannel();
-            if (!topic) {
-                channel.exchangeDeclare(exchangeName, "direct", false);
-            } else {
-                channel.exchangeDeclare(exchangeName, "fanout", false);
-            }
+    private void reset() {
+        consumerTag = null;
+    }
 
-            channel.queueDeclare(this.queueName, false, false, true, null);
-            channel.queueBind(queueName, exchangeName, routingKey);
-
-            Thread t = new Thread(new Worker());
-            t.start();
-        } catch (IOException e) {
-            String msg = "Error creating the RabbitMQ channel";
-            LOG.error(msg, e);
-            throw new RuntimeException(msg, e);
-        } catch (Exception e) {
-            String msg = "Error creating the RabbitMQ channel";
-            LOG.error(msg, e);
-            throw new RuntimeException(msg, e);
+    private void reInitIfNecessary() throws Exception {
+        if (consumerTag == null || consumer == null) {
+            close();
+            open();
         }
     }
 
-    public void stop() {
+    public void close() {
+        LOG.info("Closing channel to exchange {}", exchangeName);
         try {
-            channel.queueDelete(queueName, true, false);
-            channel.close();
-            conn.close();
-        } catch (IOException e) {
-            LOG.error("Error closing the rabbit MQ connection", e);
-        }
-    }
-
-    private class Worker implements Runnable {
-        @Override
-        public void run() {
-            boolean run = true;
-            int errorCount = 0;
-            while (run) {
-                try {
-                    try {
-                        Message input = outQueue.take();
-
-                        Map<String, Object> props = new HashMap<String, Object>();
-                        for (Map.Entry<String, Object> e : input.getProperties().entrySet()) {
-                            props.put(e.getKey(), e.getValue());
-                        }
-                        channel.basicPublish(exchangeName, routingKey,
-                                new AMQP.BasicProperties.Builder().headers(props).build(), input.getBody());
-                    } catch (InterruptedException e) {
-                        LOG.error("Exception occurred in the worker listening for consumer changes", e);
-                    }
-                } catch (Throwable t) {
-                    errorCount++;
-                    if (errorCount <= 3) {
-                        LOG.error("Error occurred " + errorCount + " times.. trying to continue the worker", t);
-                    } else {
-                        LOG.error("Error occurred " + errorCount + " times.. terminating the worker", t);
-                        run = false;
-                    }
+            if (channel != null && channel.isOpen()) {
+                if (consumerTag != null) {
+                    channel.basicCancel(consumerTag);
                 }
+                channel.close();
             }
-            String message = "Unexpected notification type";
-            LOG.error(message);
-            throw new RuntimeException(message);
+        } catch (Exception e) {
+            LOG.debug("error closing channel and/or cancelling consumer", e);
+        }
+        try {
+            LOG.info("closing connection to rabbitmq: " + connection);
+            connection.close();
+        } catch (Exception e) {
+            LOG.debug("error closing connection", e);
+        }
+        consumer = null;
+        consumerTag = null;
+        channel = null;
+        connection = null;
+    }
 
+    public void open() throws Exception {
+        try {
+            connection = createConnection();
+            channel = connection.createChannel();
+            if (prefetchCount > 0) {
+                LOG.info("setting basic.qos / prefetch count to " + prefetchCount + " for " + exchangeName);
+                channel.basicQos(prefetchCount);
+            }
+            channel.exchangeDeclare(exchangeName, "direct", false);
+        } catch (Exception e) {
+            reset();
+            String msg = "could not open channel for exchange " + exchangeName;
+            LOG.error(msg);
+            throw new Exception(msg, e);
+        }
+    }
+
+    public void send(Message input, String routingKey) throws Exception {
+        try {
+            Map<String, Object> props = new HashMap<String, Object>();
+            for (Map.Entry<String, Object> e : input.getProperties().entrySet()) {
+                props.put(e.getKey(), e.getValue());
+            }
+            channel.basicPublish(exchangeName, routingKey,
+                    new AMQP.BasicProperties.Builder().headers(props).build(), input.getBody());
+        } catch (IOException e) {
+            String msg = "Failed to publish message to exchange: " + exchangeName;
+            LOG.error(msg, e);
+            throw new Exception(msg, e);
+        }
+    }
+
+    private Connection createConnection() throws IOException {
+        try {
+            ConnectionFactory connectionFactory = new ConnectionFactory();
+            connectionFactory.setUri(url);
+            Connection connection = connectionFactory.newConnection();
+            connection.addShutdownListener(new ShutdownListener() {
+                public void shutdownCompleted(ShutdownSignalException cause) {
+                }
+            });
+            LOG.info("connected to rabbitmq: " + connection + " for " + exchangeName);
+            return connection;
+        } catch (Exception e) {
+            LOG.info("connection failed to rabbitmq: " + connection + " for " + exchangeName);
+            return null;
+        }
+    }
+
+    public void ackMessage(Long msgId) throws Exception {
+        try {
+            channel.basicAck(msgId, false);
+        } catch (ShutdownSignalException sse) {
+            reset();
+            String msg = "shutdown signal received while attempting to ack message";
+            LOG.error(msg, sse);
+            throw new Exception(msg, sse);
+        } catch (Exception e) {
+            String s = "could not ack for msgId: " + msgId;
+            LOG.error(s, e);
+            throw new Exception(s, e);
+        }
+    }
+
+    public void failMessage(Long msgId) throws Exception {
+        if (isReQueueOnFail) {
+            failWithRedelivery(msgId);
+        } else {
+            deadLetter(msgId);
+        }
+    }
+
+    public void failWithRedelivery(Long msgId) throws Exception {
+        try {
+            channel.basicReject(msgId, true);
+        } catch (ShutdownSignalException sse) {
+            reset();
+            String msg = "shutdown signal received while attempting to fail with redelivery";
+            LOG.error(msg, sse);
+            throw new Exception(msg, sse);
+        } catch (Exception e) {
+            String msg = "could not fail with redelivery for msgId: " + msgId;
+            LOG.error(msg, e);
+            throw new Exception(msg, e);
+        }
+    }
+
+    public void deadLetter(Long msgId) throws Exception {
+        try {
+            channel.basicReject(msgId, false);
+        } catch (ShutdownSignalException sse) {
+            reset();
+            String msg = "shutdown signal received while attempting to fail with no redelivery";
+            LOG.error(msg, sse);
+            throw new Exception(msg, sse);
+        } catch (Exception e) {
+            String msg = "could not fail with dead-lettering (when configured) for msgId: " + msgId;
+            LOG.error(msg, e);
+            throw new Exception(msg, e);
         }
     }
 }

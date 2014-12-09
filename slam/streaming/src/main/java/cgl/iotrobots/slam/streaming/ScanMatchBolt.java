@@ -9,6 +9,7 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
+import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ public class ScanMatchBolt extends BaseRichBolt {
     private OutputCollector outputCollector;
 
     private TopologyContext topologyContext;
+
+    private RabbitMQReceiver receiver;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -67,4 +70,6 @@ public class ScanMatchBolt extends BaseRichBolt {
                 Constants.ScanMatchBoltConstants.TIME_FIELD,
                 Constants.ScanMatchBoltConstants.PARTICLE_VALUE));
     }
+
+
 }

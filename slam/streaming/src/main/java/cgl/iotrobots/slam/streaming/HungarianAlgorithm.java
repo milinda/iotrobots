@@ -338,11 +338,12 @@ public class HungarianAlgorithm {
 //        };
 
         double[][] multi = new double[][]{
-                { 0, 0, 0, 0, 1},
-                { 1, 1, 1, 1, 0},
-                { 0, 0, 0, 0, 1},
-                { 1, 1, 1, 1, 0},
-                { 0, 0, 0, 0, 1}
+                { 0, 0, 0, 0, 1, 1},
+                { 1, 1, 1, 1, 0, 0},
+                { 0, 0, 0, 0, 1, 1},
+                { 1, 1, 1, 1, 0, 0},
+                { 0, 0, 0, 0, 1, 1},
+                { 1, 1, 1, 1, 0, 0}
         };
 
         HungarianAlgorithm algorithm = new HungarianAlgorithm(multi);

@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class ReSamplingBolt extends BaseRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(ReSamplingBolt.class);
@@ -40,8 +38,6 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     private RabbitMQSender sender;
 
-    private BlockingQueue<Message> outQueue = new LinkedBlockingQueue<Message>();
-
     private String url = "amqp://localhost:";
 
     @Override
@@ -50,7 +46,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
-        this.sender = new RabbitMQSender(outQueue, "slam", "particleAssingments", "particle_assignments", url, true);
+        this.sender = new RabbitMQSender(url, "slam");
     }
 
     @Override
@@ -97,13 +93,16 @@ public class ReSamplingBolt extends BaseRichBolt {
         // now distribute the resampled particleValueses
         List<Integer> particles = reSampler.getIndexes();
 
+        // first we will distribute the new assignments
+        // this will distribute the current maps
         ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
         distributeAssignments(assignments);
 
-        // distribute the new particles
+        // distribute the new particle values according to
         for (int i = 0; i < reSampler.getParticles().size(); i++) {
             Particle p = reSampler.getParticles().get(i);
-            ParticleValues pv = new ParticleValues(-1, i, -1, p.getPose(), p.getPreviousPose(), p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
+            ParticleValues pv = new ParticleValues(-1, i, -1, p.getPose(), p.getPreviousPose(),
+                    p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
 
         }
 
@@ -129,15 +128,15 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         Message message = new Message(b, new HashMap<String, Object>());
         try {
-            outQueue.put(message);
-        } catch (InterruptedException e) {
-            LOG.error("Failed to add the message");
+            sender.send(message, "all");
+        } catch (Exception e) {
+            LOG.error("Failed to send the message", e);
         }
     }
 
     /**
      * This method create an assignment of the resampled particles to the tasks running in Storm.
-     * In this case the tasks will be the bolts running the ScanMatching code.
+     * In this case the tasks wille.printStackTrace(); be the bolts running the ScanMatching code.
      * @param indexes the re sampled indexes
      * @return an assignment of particles
      */
@@ -166,12 +165,18 @@ public class ReSamplingBolt extends BaseRichBolt {
         HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
         int []assignments = algorithm.execute();
         ParticleAssignments particleAssignments = new ParticleAssignments();
-        for (int i = 0; i < assignments.length; i++) {
-            int thrueTaskIndex = i % noOfParticles;
-            int particleIndex = assignments[i];
-            int previousParticleIndex = indexes.get(particleIndex);
-            ParticleValues pv = particleValueses.get(previousParticleIndex);
-            ParticleAssignment assignment = new ParticleAssignment(previousParticleIndex, i,
+
+        // go through the particle indexs and try to find their new assignments
+        for (int i = 0; i < indexes.size(); i++) {
+            int particle = indexes.get(i);
+            int thrueTaskIndex = -1;
+            for (int j = 0; j < assignments.length; j++) {
+                if (assignments[j] == i) {
+                    thrueTaskIndex = j % noOfParticles;
+                }
+            }
+            ParticleValues pv = particleValueses.get(particle);
+            ParticleAssignment assignment = new ParticleAssignment(particle, i,
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);
         }
