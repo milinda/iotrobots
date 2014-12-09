@@ -92,6 +92,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             reSampler.getParticles().add(pv.getIndex(), p);
         }
 
+        // do the resampling
         reSampler.processScan(reading, 0);
         // now distribute the resampled particleValueses
         List<Integer> particles = reSampler.getIndexes();
@@ -100,6 +101,11 @@ public class ReSamplingBolt extends BaseRichBolt {
         distributeAssignments(assignments);
 
         // distribute the new particles
+        for (int i = 0; i < reSampler.getParticles().size(); i++) {
+            Particle p = reSampler.getParticles().get(i);
+            ParticleValues pv = new ParticleValues(-1, i, -1, p.getPose(), p.getPreviousPose(), p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
+
+        }
 
         reading = null;
     }
