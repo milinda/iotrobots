@@ -392,7 +392,7 @@ public class GFSAlgorithm {
                 PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
                 double occ = pointAccumulator.doubleValue();
                 assert (occ <= 1.0);
-                //System.out.println("threshold: "  + occ_thresh_  + " occ: "  + occ);
+                //System.out.println("threshold: "  + occThresh  + " occ: "  + occ);
                 if (occ < 0) {
                     map_.data[MAP_IDX(map_.width, x, y)] = -1;
                 } else if (occ > occ_thresh_) {

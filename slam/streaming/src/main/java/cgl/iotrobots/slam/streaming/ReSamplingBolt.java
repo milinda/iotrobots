@@ -9,7 +9,7 @@ import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
-import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.rabbitmq.Message;
 import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQSender;
 import com.esotericsoftware.kryo.Kryo;
@@ -26,16 +26,20 @@ import java.util.Map;
 public class ReSamplingBolt extends BaseRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(ReSamplingBolt.class);
 
+    /** We will re sample here */
     private DistributedReSampler reSampler;
 
     private OutputCollector outputCollector;
 
     private TopologyContext topologyContext;
 
-    private List<ParticleValues> particleValueses = new ArrayList<ParticleValues>();
+    /** we will collect the values until we get all of them */
+    private List<ParticleValue> particleValueses = new ArrayList<ParticleValue>();
 
+    /** This is the reading message we will get */
     private RangeReading reading;
 
+    /** The RabbitMQ send used for sending out the re sampled particles back to the scan match bolts */
     private RabbitMQSender sender;
 
     private String url = "amqp://localhost:";
@@ -52,9 +56,9 @@ public class ReSamplingBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-        ParticleValues value;
-        if (val != null && (val instanceof ParticleValues)) {
-            value = (ParticleValues) val;
+        ParticleValue value;
+        if (val != null && (val instanceof ParticleValue)) {
+            value = (ParticleValue) val;
             particleValueses.add(value.getIndex(), value);
         } else {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
@@ -76,7 +80,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // we got all the particleValueses, we will resample
         // first we need to clear the current particleValueses
         reSampler.getParticles().clear();
-        for (ParticleValues pv : particleValueses) {
+        for (ParticleValue pv : particleValueses) {
             Particle p = new Particle();
             p.setWeight(pv.getWeight());
             p.setGweight(pv.getGweight());
@@ -101,7 +105,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // distribute the new particle values according to
         for (int i = 0; i < reSampler.getParticles().size(); i++) {
             Particle p = reSampler.getParticles().get(i);
-            ParticleValues pv = new ParticleValues(-1, i, -1, p.getPose(), p.getPreviousPose(),
+            ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
                     p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
 
         }
@@ -150,7 +154,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             cost[i] = new double[noOfParticles];
             for (int j = 0; j < noOfParticles; j++) {
                 int index = indexes.get(j);
-                ParticleValues pv = particleValueses.get(index);
+                ParticleValue pv = particleValueses.get(index);
                 // now see weather this particle is from this worker
                 int particleTaskIndex = pv.getTaskId();
                 int thrueTaskIndex = j % noOfParticles;
@@ -175,7 +179,7 @@ public class ReSamplingBolt extends BaseRichBolt {
                     thrueTaskIndex = j % noOfParticles;
                 }
             }
-            ParticleValues pv = particleValueses.get(particle);
+            ParticleValue pv = particleValueses.get(particle);
             ParticleAssignment assignment = new ParticleAssignment(particle, i,
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);

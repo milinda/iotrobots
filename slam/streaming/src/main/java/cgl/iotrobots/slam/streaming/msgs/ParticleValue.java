@@ -7,7 +7,7 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
  * Particle without the map. This will be emited by the ScanMatchBolt,
  * The resampling bolt will use these values to choose the best particles.
  */
-public class ParticleValues {
+public class ParticleValue {
     /** the task that sent the particle */
     public int taskId;
     /** The index of the particle */
@@ -34,13 +34,13 @@ public class ParticleValues {
 
     private int totalTasks;
 
-    public ParticleValues() {
+    public ParticleValue() {
     }
 
-    public ParticleValues(int taskId, int index, int totalTasks, DoubleOrientedPoint pose,
-                          DoubleOrientedPoint previousPose, double weight,
-                          double weightSum, double gweight, int previousIndex,
-                          TNode node) {
+    public ParticleValue(int taskId, int index, int totalTasks, DoubleOrientedPoint pose,
+                         DoubleOrientedPoint previousPose, double weight,
+                         double weightSum, double gweight, int previousIndex,
+                         TNode node) {
         this.taskId = taskId;
         this.index = index;
         this.pose = pose;

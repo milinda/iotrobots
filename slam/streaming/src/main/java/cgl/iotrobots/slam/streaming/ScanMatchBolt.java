@@ -7,7 +7,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,11 +66,11 @@ public class ScanMatchBolt extends BaseRichBolt {
             Particle particle = particles.get(index);
 
             int taskId = topologyContext.getThisTaskIndex();
-            ParticleValues particleValues = new ParticleValues(taskId, index, totalTasks, particle.pose,
+            ParticleValue particleValue = new ParticleValue(taskId, index, totalTasks, particle.pose,
                     particle.previousPose, particle.weight,
                     particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
             List<Object> emit = new ArrayList<Object>();
-            emit.add(particleValues);
+            emit.add(particleValue);
             outputCollector.emit(emit);
         }
     }
