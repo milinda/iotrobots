@@ -46,12 +46,12 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
-        this.sender = new RabbitMQSender(url, "slam");
+        this.sender = new RabbitMQSender(url, "");
     }
 
     @Override
     public void execute(Tuple tuple) {
-        Object val = tuple.getValueByField(Constants.ScanMatchBoltConstants.PARTICLE_VALUE_FIELD);
+        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         ParticleValues value;
         if (val != null && (val instanceof ParticleValues)) {
             value = (ParticleValues) val;
@@ -60,7 +60,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
 
-        val = tuple.getValueByField(Constants.ScanMatchBoltConstants.LASER_SCAN_TUPLE);
+        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
         if (val != null && !(val instanceof RangeReading)) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }

@@ -35,11 +35,15 @@ public abstract class Constants {
     public static final String LASAMPLERANGE = "lasamplerange";
     public static final String LASAMPLESTEP = "lasamplestep";
 
-    public abstract class ScanMatchBoltConstants {
+    public abstract class Fields {
         public static final String TIME_FIELD = "time";
         public static final String LASER_SCAN_TUPLE = "laser_scan";
         public static final String PARTICLE_VALUE = "particle_value";
         public static final String SENSOR_ID_FIELD = "sensorID";
         public static final String PARTICLE_VALUE_FIELD = "particleValue";
+    }
+
+    public abstract class Messages {
+        public static final String SLAM_EXCHANGE = "slam";
     }
 }

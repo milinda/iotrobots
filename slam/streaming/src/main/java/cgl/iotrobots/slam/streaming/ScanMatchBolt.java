@@ -4,12 +4,13 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
 import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQReceiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.Map;
  * and then distribute the particles to re-sampler
  */
 public class ScanMatchBolt extends BaseRichBolt {
+    private Logger LOG = LoggerFactory.getLogger(ScanMatchBolt.class);
+
     private DistributedScanMatcher gfsp = null;
 
     private OutputCollector outputCollector;
@@ -28,17 +31,25 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private RabbitMQReceiver receiver;
 
+    private String url = "";
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         gfsp = new DistributedScanMatcher();
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
+        try {
+            this.receiver = new RabbitMQReceiver(url, Constants.Messages.SLAM_EXCHANGE);
+        } catch (Exception e) {
+            LOG.error("failed to create the message receiver", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void execute(Tuple tuple) {
-        Object val = tuple.getValueByField(Constants.ScanMatchBoltConstants.LASER_SCAN_TUPLE);
-        RangeReading reading = null;
+        Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
+        RangeReading reading;
         if (!(val instanceof RangeReading)) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
@@ -66,10 +77,8 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields(Constants.ScanMatchBoltConstants.SENSOR_ID_FIELD,
-                Constants.ScanMatchBoltConstants.TIME_FIELD,
-                Constants.ScanMatchBoltConstants.PARTICLE_VALUE));
+        outputFieldsDeclarer.declare(new backtype.storm.tuple.Fields(Constants.Fields.SENSOR_ID_FIELD,
+                Constants.Fields.TIME_FIELD,
+                Constants.Fields.PARTICLE_VALUE));
     }
-
-
 }
