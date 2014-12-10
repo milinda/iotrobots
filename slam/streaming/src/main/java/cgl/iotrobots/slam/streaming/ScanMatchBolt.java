@@ -146,6 +146,9 @@ public class ScanMatchBolt extends BaseRichBolt {
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                 try {
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryo, body, ParticleAssignments.class);
+                    // first we need to determine the expected new maps for this particle
+
+
                     // now go through the assignments and send them to the bolts directly
                     distributeAssignments(assignments);
                     state = MatchState.WAITING_FOR_NEW_PARTICLES;
@@ -153,10 +156,20 @@ public class ScanMatchBolt extends BaseRichBolt {
                     LOG.error("Failed to deserialize assignment", e);
                 }
             } else if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
-
+                ParticleMaps particleMaps = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
+                // now go through the assignments and send them to the bolts directly
+                addMaps(particleMaps);
             } else {
                 LOG.error("Received message when we are in an unexpected state {}", state);
             }
+        }
+    }
+
+    private void computeExpectedParticles(ParticleAssignments assignments) {
+        List<ParticleAssignment> assignmentList = assignments.getAssignments();
+        int taskId = topologyContext.getThisTaskIndex();
+        for (int i = 0; i < assignmentList.size(); i++) {
+
         }
     }
 
@@ -172,11 +185,14 @@ public class ScanMatchBolt extends BaseRichBolt {
                     Particle p = gfsp.getParticles().get(previousIndex);
                     // create a new ParticleMaps
                     ParticleMaps particleMaps = new ParticleMaps(p.getMap(), p.getNode(), assignment.getNewIndex(), assignment.getNewTask());
-
                 } else {
                     LOG.error("The particle {} is not in this bolt's active list, something is wrong", assignment.getPreviousIndex());
                 }
             }
         }
+    }
+
+    private void addMaps(ParticleMaps particleMaps) {
+
     }
 }
