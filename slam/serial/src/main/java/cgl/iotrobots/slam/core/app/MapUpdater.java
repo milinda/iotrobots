@@ -25,20 +25,24 @@ public class MapUpdater {
     double ymax;
     double delta;
     double occThresh;
-    private OutMap map = new OutMap();
+    private GFSMap map = new GFSMap();
 
-    public MapUpdater(double maxRange_, double maxUrange_, double xmin_, double ymin_, double xmax_, double ymax_, double delta_, double occ_thresh_) {
-        this.maxRange_ = maxRange_;
-        this.maxUrange_ = maxUrange_;
-        this.xmin = xmin_;
-        this.ymin = ymin_;
-        this.xmax = xmax_;
-        this.ymax = ymax_;
-        this.delta = delta_;
-        this.occThresh = occ_thresh_;
+    public MapUpdater(double maxRange, double maxUrange, double xmin, double ymin, double xmax, double ymax, double delta, double occThresh) {
+        this.maxRange_ = maxRange;
+        this.maxUrange_ = maxUrange;
+        this.xmin = xmin;
+        this.ymin = ymin;
+        this.xmax = xmax;
+        this.ymax = ymax;
+        this.delta = delta;
+        this.occThresh = occThresh;
     }
 
-    public void updateMap(LaserScan scan, Particle best, double angles[], DoubleOrientedPoint laserPose) {
+    public GFSMap getMap() {
+        return map;
+    }
+
+    public GFSMap updateMap(Particle best, double angles[], DoubleOrientedPoint laserPose) {
         ScanMatcher matcher = new ScanMatcher();
         matcher.setLaserParameters(angles.length, angles, laserPose);
 
@@ -133,6 +137,7 @@ public class MapUpdater {
         }
         System.out.println("count " + count);
         got_map_ = true;
+        return map;
     }
 
     public static int MAP_IDX(int sx, int i, int j) {

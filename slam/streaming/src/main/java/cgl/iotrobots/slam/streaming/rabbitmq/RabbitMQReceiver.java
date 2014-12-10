@@ -33,6 +33,25 @@ public class RabbitMQReceiver {
         }
     }
 
+    public RabbitMQReceiver(String brokerUrl, String exchangeName, boolean topic) throws Exception {
+        this.exchangeName = exchangeName;
+        this.url = brokerUrl;
+
+        try {
+            connection = createConnection();
+            channel = connection.createChannel();
+            if (!topic) {
+                channel.exchangeDeclare(exchangeName, "direct", false);
+            } else {
+                channel.exchangeDeclare(exchangeName, "fanout", false);
+            }
+        } catch (Exception e) {
+            String msg = "could not open channel for exchange " + exchangeName;
+            LOG.error(msg);
+            throw new Exception(msg, e);
+        }
+    }
+
     public String listen(final MessageHandler handler) throws Exception {
         try {
             Map<String, String> props = handler.getProperties();

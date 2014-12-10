@@ -4,7 +4,6 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -21,7 +20,7 @@ public class SimbardExample {
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
-        GFSAlgorithm GFSAlgorithm = new GFSAlgorithm();
+        GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
         CameraSensor camera;
 
@@ -47,8 +46,8 @@ public class SimbardExample {
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
-            GFSAlgorithm.gsp_ = new GridSlamProcessor();
-            GFSAlgorithm.init();
+            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+            gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.angle_increment = ANGLE / SENSORS;
             scanI.angle_max = ANGLE ;
@@ -61,7 +60,7 @@ public class SimbardExample {
             scanI.rangeMax = 100;
             scanI.timestamp = System.currentTimeMillis();
 
-            GFSAlgorithm.initMapper(scanI);
+            gfsAlgorithm.initMapper(scanI);
         }
 
         boolean forward = false;
@@ -75,7 +74,7 @@ public class SimbardExample {
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
 
-            GFSAlgorithm.laserScan(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            gfsAlgorithm.laserScan(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
             prevX = point3D.x;
             // progress at 0.5 m/s
             if (getCounter() % 50 == 0) {
@@ -95,7 +94,7 @@ public class SimbardExample {
 //            if ((getCounter() % 100) == 0)
 //                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
 
-            mapUI.setMap(GFSAlgorithm.map_);
+            mapUI.setMap(gfsAlgorithm.getMap());
 
             // print front sonar every 100 frames
 //            if (getCounter() % 100 == 0)

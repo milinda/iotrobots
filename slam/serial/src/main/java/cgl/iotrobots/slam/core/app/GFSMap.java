@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class OutMap {
+/**
+ * This is the map output by the MapUpdater
+ */
+public class GFSMap {
     public int width;
     public int height;
 
@@ -24,10 +27,10 @@ public class OutMap {
 
     Position originOrientation = new Position();
 
-    public OutMap() {
+    public GFSMap() {
     }
 
-    public OutMap(int width, int height) {
+    public GFSMap(int width, int height) {
         this.width = width;
         this.height = height;
 

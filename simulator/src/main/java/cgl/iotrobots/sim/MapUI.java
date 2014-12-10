@@ -1,6 +1,6 @@
 package cgl.iotrobots.sim;
 
-import cgl.iotrobots.slam.core.app.OutMap;
+import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Random;
 
 public class MapUI extends JFrame {
-    OutMap map;
+    GFSMap map;
 
     private ImagePanel im = new ImagePanel();
 
@@ -26,7 +26,7 @@ public class MapUI extends JFrame {
         setVisible(true);
     }
 
-    public void setMap(OutMap map) {
+    public void setMap(GFSMap map) {
         this.map = map;
         im.setMap();
     }

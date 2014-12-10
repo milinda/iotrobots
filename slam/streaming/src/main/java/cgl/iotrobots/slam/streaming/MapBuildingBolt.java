@@ -5,6 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.MapUpdater;
 
 import java.util.Map;
@@ -24,11 +25,15 @@ public class MapBuildingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        GFSMap map = mapUpdater.updateMap(null, null, null);
+
 
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-
+        outputFieldsDeclarer.declare(new backtype.storm.tuple.Fields(Constants.Fields.SENSOR_ID_FIELD,
+                Constants.Fields.TIME_FIELD,
+                Constants.Fields.PARTICLE_VALUE));
     }
 }

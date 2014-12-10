@@ -44,6 +44,8 @@ public abstract class Constants {
     }
 
     public abstract class Messages {
-        public static final String SLAM_EXCHANGE = "slam";
+        public static final String BROADCAST_EXCHANGE = "slam_broadcast";
+        public static final String DIRECT_EXCHANGE = "slam_direct";
+        public static final String PARTICLE_ASSIGNMENT_ROUTING_KEY = "pa";
     }
 }
