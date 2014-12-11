@@ -3,7 +3,10 @@ package cgl.iotrobots.slam.streaming;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
+import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
@@ -14,12 +17,23 @@ import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
+import cgl.sensorstream.core.rabbitmq.DefaultRabbitMQMessageBuilder;
+import com.ss.commons.*;
+import com.ss.rabbitmq.ErrorReporter;
+import com.ss.rabbitmq.RabbitMQSpout;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SLAMTopology {
+    private static Logger LOG = LoggerFactory.getLogger(SLAMTopology.class);
+
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
 
@@ -68,6 +82,19 @@ public class SLAMTopology {
         StreamComponents components = streamTopologyBuilder.buildComponents();
     }
 
+    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
+        StreamComponents components = streamTopologyBuilder.buildComponents();
+
+        // first create a rabbitmq Spout
+        ErrorReporter reporter = new ErrorReporter() {
+            @Override
+            public void reportError(Throwable throwable) {
+                LOG.error("error occured", throwable);
+            }
+        };
+        RabbitMQSpout spout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(), reporter);
+    }
+
     private static void addSerializers(Config config) {
         config.registerSerialization(DoublePoint.class);
         config.registerSerialization(IntPoint.class);
@@ -77,5 +104,104 @@ public class SLAMTopology {
         config.registerSerialization(HierarchicalArray2D.class);
         config.registerSerialization(TNode.class);
         config.registerSerialization(DoubleOrientedPoint.class);
+    }
+
+    private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {
+
+        @Override
+        public MessageBuilder getMessageBuilder() {
+            return new DefaultRabbitMQMessageBuilder();
+        }
+
+        @Override
+        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+        }
+
+        @Override
+        public int queueSize() {
+            return 64;
+        }
+
+        @Override
+        public Map<String, String> getProperties() {
+            return new HashMap<String, String>();
+        }
+
+        @Override
+        public DestinationSelector getDestinationSelector() {
+            return new DestinationSelector() {
+                @Override
+                public String select(Tuple tuple) {
+                    return null;
+                }
+            };
+        }
+
+        @Override
+        public DestinationChanger getDestinationChanger() {
+            return new StaticDestinations();
+        }
+    }
+
+    private static class RabbitMQStaticSpoutConfigurator implements SpoutConfigurator {
+        @Override
+        public MessageBuilder getMessageBuilder() {
+            return new DefaultRabbitMQMessageBuilder();
+        }
+
+        @Override
+        public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+            outputFieldsDeclarer.declare(new Fields(Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD, Constants.Fields.LASER_SCAN_TUPLE));
+        }
+
+        @Override
+        public int queueSize() {
+            return 64;
+        }
+
+        @Override
+        public Map<String, String> getProperties() {
+            return new HashMap<String, String>();
+        }
+
+        @Override
+        public DestinationChanger getDestinationChanger() {
+            return new StaticDestinations();
+        }
+    }
+
+    private static class StaticDestinations implements DestinationChanger {
+        private DestinationChangeListener dstListener;
+
+        @Override
+        public void start() {
+            DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", null, null, null);
+            dstListener.addDestination("rabbitmq", configuration);
+        }
+
+        @Override
+        public void stop() {
+            dstListener.removeDestination("rabbitmq");
+        }
+
+        @Override
+        public void registerListener(DestinationChangeListener destinationChangeListener) {
+            this.dstListener = destinationChangeListener;
+        }
+
+        @Override
+        public void setTask(int i, int i2) {
+
+        }
+
+        @Override
+        public int getTaskIndex() {
+            return 0;
+        }
+
+        @Override
+        public int getTotalTasks() {
+            return 0;
+        }
     }
 }
