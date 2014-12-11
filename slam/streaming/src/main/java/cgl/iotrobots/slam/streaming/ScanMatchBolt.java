@@ -15,6 +15,7 @@ import cgl.iotrobots.slam.streaming.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.org.mozilla.javascript.internal.ast.Assignment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +48,10 @@ public class ScanMatchBolt extends BaseRichBolt {
     private Kryo kryo;
 
     private MatchState state = MatchState.WAITING_FOR_READING;
+
+    private int expectingParticles = 0;
+
+    private ParticleAssignments assignments = null;
 
     private enum MatchState {
         WAITING_FOR_READING,
@@ -131,12 +136,71 @@ public class ScanMatchBolt extends BaseRichBolt {
                 Constants.Fields.PARTICLE_VALUE));
     }
 
-    private class ParticleAssignmentHandler implements MessageHandler {
+    private class MaHandler implements MessageHandler {
         @Override
         public Map<String, String> getProperties() {
             Map<String, String> props = new HashMap<String, String>();
             props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
 
+            return props;
+        }
+
+        @Override
+        public void onMessage(Message message) {
+            byte []body = message.getBody();
+            if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
+                try {
+                    ParticleMaps pm = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
+                    boolean found = false;
+                    // first we need to determine the expected new maps for this particle
+                    if (assignments != null) {
+                        List<ParticleAssignment> assignmentList = assignments.getAssignments();
+                        int taskId = topologyContext.getThisTaskIndex();
+                        assignmentExists(pm, assignmentList);
+
+                        addMaps(pm);
+                    } else {
+
+                    }
+
+                    if (!found) {
+                        String msg = "We got a particle that doesn't belong here";
+                        LOG.error(msg);
+                        throw new RuntimeException(msg);
+                    }
+                    // now go through the assignments and send them to the bolts directly
+                    state = MatchState.WAITING_FOR_NEW_PARTICLES;
+                } catch (Exception e) {
+                    LOG.error("Failed to deserialize assignment", e);
+                }
+            } else if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
+                ParticleMaps particleMaps = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
+                // now go through the assignments and send them to the bolts directly
+                addMaps(particleMaps);
+            } else {
+                LOG.error("Received message when we are in an unexpected state {}", state);
+            }
+        }
+    }
+
+    private boolean assignmentExists(ParticleMaps pm, List<ParticleAssignment> assignmentList) {
+        boolean found = false;
+        for (int i = 0; i < assignmentList.size(); i++) {
+            ParticleAssignment assignment = assignmentList.get(i);
+            if (assignment.getNewTask() == pm.getTask() && assignment.getNewIndex() == pm.getIndex()) {
+                found = true;
+            }
+        }
+
+
+    }
+
+    private class ParticleAssignmentHandler implements MessageHandler {
+        @Override
+        public Map<String, String> getProperties() {
+            int taskId = topologyContext.getThisTaskIndex();
+            Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + taskId);
             return props;
         }
 
@@ -169,7 +233,10 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
         int taskId = topologyContext.getThisTaskIndex();
         for (int i = 0; i < assignmentList.size(); i++) {
-
+            ParticleAssignment assignment = assignmentList.get(i);
+            if (assignment.getNewTask() == taskId) {
+                expectingParticles++;
+            }
         }
     }
 

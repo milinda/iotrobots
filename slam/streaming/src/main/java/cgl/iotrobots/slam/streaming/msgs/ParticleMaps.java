@@ -37,4 +37,20 @@ public class ParticleMaps {
     public void setNode(TNode node) {
         this.node = node;
     }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public int getTask() {
+        return task;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public void setTask(int task) {
+        this.task = task;
+    }
 }
