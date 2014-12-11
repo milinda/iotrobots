@@ -56,9 +56,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private enum MatchState {
         WAITING_FOR_READING,
         COMPUTING_INIT_READINGS,
-        WAITING_FOR_PARTICLE_ASSIGNMENTS,
-        DISTRIBUTED_NEW_ASSIGNMENTS,
-        WAITING_FOR_NEW_PARTICLES,
+        WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES,
         COMPUTING_NEW_PARTICLES,
     }
 
@@ -75,9 +73,6 @@ public class ScanMatchBolt extends BaseRichBolt {
             this.sender.open();
 
             this.assignmentReceiver.listen(new ParticleAssignmentHandler());
-
-
-
         } catch (Exception e) {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
@@ -108,7 +103,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<Integer> activeParticles = gfsp.getActiveParticles();
         List<Particle> particles = gfsp.getParticles();
 
-        state = MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS;
+        state = MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES;
 
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
         // these will be used by the re sampler to re sample particles
@@ -136,7 +131,10 @@ public class ScanMatchBolt extends BaseRichBolt {
                 Constants.Fields.PARTICLE_VALUE));
     }
 
-    private class MaHandler implements MessageHandler {
+    /** We are going to keep the particles maps until we get an assignment */
+    private List<ParticleMaps> particleMapses = new ArrayList<ParticleMaps>();
+
+    private class MapHandler implements MessageHandler {
         @Override
         public Map<String, String> getProperties() {
             Map<String, String> props = new HashMap<String, String>();
@@ -148,35 +146,36 @@ public class ScanMatchBolt extends BaseRichBolt {
         @Override
         public void onMessage(Message message) {
             byte []body = message.getBody();
-            if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
+            if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
                     ParticleMaps pm = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
-                    boolean found = false;
                     // first we need to determine the expected new maps for this particle
                     if (assignments != null) {
-                        List<ParticleAssignment> assignmentList = assignments.getAssignments();
-                        int taskId = topologyContext.getThisTaskIndex();
-                        assignmentExists(pm, assignmentList);
+                        // first check weather particleMapses not empty. If not empty handle those first
+                        if (!particleMapses.isEmpty()) {
+                            for (ParticleMaps existingPm : particleMapses) {
+                                addMaps(existingPm);
+                            }
 
+                            particleMapses.clear();
+                        }
+                        // now go through the assignments and send them to the bolts directly
                         addMaps(pm);
+
+                        // we have received all the particles we need to do the processing after resampling
+
+                        if (expectingParticles == 0) {
+                            state = MatchState.COMPUTING_NEW_PARTICLES;
+                            gfsp.processAfterReSampling();
+                            state = MatchState.WAITING_FOR_READING;
+                        }
                     } else {
-
+                        // because we haven't received the assignments yet, we will keep the values temporaly in this list
+                        particleMapses.add(pm);
                     }
-
-                    if (!found) {
-                        String msg = "We got a particle that doesn't belong here";
-                        LOG.error(msg);
-                        throw new RuntimeException(msg);
-                    }
-                    // now go through the assignments and send them to the bolts directly
-                    state = MatchState.WAITING_FOR_NEW_PARTICLES;
                 } catch (Exception e) {
                     LOG.error("Failed to deserialize assignment", e);
                 }
-            } else if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
-                ParticleMaps particleMaps = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
-                // now go through the assignments and send them to the bolts directly
-                addMaps(particleMaps);
             } else {
                 LOG.error("Received message when we are in an unexpected state {}", state);
             }
@@ -184,15 +183,12 @@ public class ScanMatchBolt extends BaseRichBolt {
     }
 
     private boolean assignmentExists(ParticleMaps pm, List<ParticleAssignment> assignmentList) {
-        boolean found = false;
-        for (int i = 0; i < assignmentList.size(); i++) {
-            ParticleAssignment assignment = assignmentList.get(i);
+        for (ParticleAssignment assignment : assignmentList) {
             if (assignment.getNewTask() == pm.getTask() && assignment.getNewIndex() == pm.getIndex()) {
-                found = true;
+                return true;
             }
         }
-
-
+        return false;
     }
 
     private class ParticleAssignmentHandler implements MessageHandler {
@@ -207,22 +203,17 @@ public class ScanMatchBolt extends BaseRichBolt {
         @Override
         public void onMessage(Message message) {
             byte []body = message.getBody();
-            if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+            if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryo, body, ParticleAssignments.class);
-                    // first we need to determine the expected new maps for this particle
-
+                    // we are going to keep the assignemtns so that we can check the receiving particles
+                    ScanMatchBolt.this.assignments = assignments;
 
                     // now go through the assignments and send them to the bolts directly
                     distributeAssignments(assignments);
-                    state = MatchState.WAITING_FOR_NEW_PARTICLES;
                 } catch (Exception e) {
                     LOG.error("Failed to deserialize assignment", e);
                 }
-            } else if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
-                ParticleMaps particleMaps = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
-                // now go through the assignments and send them to the bolts directly
-                addMaps(particleMaps);
             } else {
                 LOG.error("Received message when we are in an unexpected state {}", state);
             }
@@ -260,6 +251,17 @@ public class ScanMatchBolt extends BaseRichBolt {
     }
 
     private void addMaps(ParticleMaps particleMaps) {
+        List<ParticleAssignment> assignmentList = assignments.getAssignments();
+        int taskId = topologyContext.getThisTaskIndex();
+        boolean found = assignmentExists(particleMaps, assignmentList);
 
+        if (!found) {
+            String msg = "We got a particle that doesn't belong here";
+            LOG.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        // we have received one particle
+        expectingParticles--;
     }
 }

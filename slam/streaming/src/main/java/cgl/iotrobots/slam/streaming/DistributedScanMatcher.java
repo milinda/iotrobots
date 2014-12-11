@@ -304,6 +304,10 @@ public class DistributedScanMatcher {
         return sumScore;
     }
 
+    public void processAfterReSampling() {
+
+    }
+
     /**
      * Just scan match every single particle.
      * If the scan matching fails, the particle gets a default likelihood.
