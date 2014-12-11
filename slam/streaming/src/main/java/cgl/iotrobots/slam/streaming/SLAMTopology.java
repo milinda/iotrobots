@@ -18,9 +18,11 @@ import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import cgl.sensorstream.core.rabbitmq.DefaultRabbitMQMessageBuilder;
+import cgl.sensorstream.core.rabbitmq.RabbitMQBoltConfigurator;
 import com.ss.commons.*;
 import com.ss.rabbitmq.ErrorReporter;
 import com.ss.rabbitmq.RabbitMQSpout;
+import com.ss.rabbitmq.bolt.RabbitMQBolt;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -93,6 +95,17 @@ public class SLAMTopology {
             }
         };
         RabbitMQSpout spout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(), reporter);
+        RabbitMQBolt sendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(), reporter);
+
+        ScanMatchBolt scanMatchBolt = new ScanMatchBolt();
+        ReSamplingBolt reSamplingBolt = new ReSamplingBolt();
+        MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
+
+        builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
+        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.RE_SAMPLE_BOLT);
+        builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
     }
 
     private static void addSerializers(Config config) {

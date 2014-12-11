@@ -48,4 +48,12 @@ public abstract class Constants {
         public static final String DIRECT_EXCHANGE = "slam_direct";
         public static final String PARTICLE_ASSIGNMENT_ROUTING_KEY = "pa";
     }
+
+    public abstract class Topology {
+        public static final String RECEIVE_SPOUT = "receive_spout";
+        public static final String SCAN_MATCH_BOLT = "scan_match_bolt";
+        public static final String RE_SAMPLE_BOLT = "re_sample_bolt";
+        public static final String MAP_BOLT = "map_bolt";
+        public static final String SEND_BOLD = "send_bolt";
+    }
 }
