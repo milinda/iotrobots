@@ -1,11 +1,17 @@
+package cgl.iotrobots.collavoid.utils;
+
 import org.ros.address.InetAddressFactory;
+import org.ros.master.uri.MasterUriProvider;
+import org.ros.master.uri.StaticMasterUriProvider;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
+
+import java.net.URI;
 
 /**
  * Created by hjh on 11/25/14.
  */
-public class AgentNode {
+public class ROSAgentNode {
 
     private PubSubNode pubSubNode;
     private ConnectedNode node;
@@ -26,10 +32,13 @@ public class AgentNode {
 
     }
 
-    public AgentNode(String nodeName) {
+    public ROSAgentNode(String nodeName) {
         String host = InetAddressFactory.newNonLoopback().getHostAddress()
                 .toString();
-        NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(host);
+//        String masterIP="156.56.93.131";
+//        String masterIP="149.160.224.207";
+        String masterIP="localhost";
+        NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(host,URI.create("http://"+masterIP+":11311") );
         final NodeMainExecutor executor = DefaultNodeMainExecutor.newDefault();
         nodeConfiguration.setNodeName(nodeName);
 

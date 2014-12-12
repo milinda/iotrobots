@@ -26,7 +26,7 @@ public class CP {
     public static final int  VOS= 2;
 
 
-    // additional constraints include non holonomic robot constraints and acceleration constraints.
+    // additional constraints include non holonomic robot constraints, acceleration constraints. vos from obstacles are not included in clear path method
     public static Vector2 calculateClearpathVelocity(List<VelocitySample> samples, final List<VO> truncated_vos, final List<Line> additional_constraints, final Vector2 pref_vel, double max_speed, boolean use_truncation) {
 
         boolean isWithinAllAdditionalConstraints=true;
@@ -86,6 +86,9 @@ public class CP {
             }
         }
 
+        if (isOutsideVOs&&isWithinAllAdditionalConstraints)
+            return samples.get(0).getVelocity();
+
         if (!isOutsideVOs) {
             //calculate all the possible intersection of vo lines and vo cone or truncation
             for (int i = 0; i < truncated_vos.size(); i++) {
@@ -136,9 +139,6 @@ public class CP {
             }
         }
 
-        if (isOutsideVOs&&isWithinAllAdditionalConstraints)
-            return samples.get(0).getVelocity();
-
         VelocitySample null_vel_sample=new VelocitySample();
         null_vel_sample.setVelocity(new Vector2(0,0));
         null_vel_sample.setDistToPrefVel(Vector2.absSqr(pref_vel));
@@ -146,6 +146,7 @@ public class CP {
 
         //    ROS_ERROR("projection list length  = %d", samples.size());
         //sort according to the distance to vel pref
+        if (samples.size()>1)
         Collections.sort(samples,new VelocitySamplesComparator());
 
         Vector2 new_vel=new Vector2();
@@ -201,7 +202,7 @@ public class CP {
 
     static boolean isInsideVO(VO vo, Vector2 point, boolean use_truncation) {
         boolean trunc = leftOf(vo.getTruncLeft(), Vector2.minus(vo.getTruncRight(),vo.getTruncLeft()), point);
-        if (Vector2.abs(Vector2.minus(vo.getTruncLineCenter(), vo.getTruncRight())) < EPSILON.EPSILON)
+        if (Vector2.abs(Vector2.minus(vo.getTruncLeft(), vo.getTruncRight())) < EPSILON.EPSILON)
             trunc = true;
         return rightOf(vo.getPoint(),vo.getLeftLegDir(), point) && leftOf(vo.getPoint(), vo.getRightLegDir(), point) && (!use_truncation || trunc);
     }
@@ -319,7 +320,7 @@ public class CP {
 
     public static VO createObstacleVO(Vector2 position1, double radius1, final List<Vector2> footprint1, Vector2 obst1, Vector2 obst2){
         VO result=new VO();
-
+        //obstacle mid point
         Vector2 position_obst = Vector2.mul(Vector2.plus(obst1,obst2),0.5);
 
         List<Vector2> obst=new ArrayList<Vector2>();
@@ -363,10 +364,12 @@ public class CP {
             }
         }
         if (min_dist < 0) {
-            result.setLeftLegDir(Vector2.negative(Vector2.normalize(Vector2.minus(obst1, obst2))));
+            // the left side of left leg and right side of right leg is the collision free area
+            result.setRelativePosition(rel_position);
+            result.setLeftLegDir(Vector2.negative(Vector2.normalize(Vector2.minus(obst1,obst2))));//?????????????
             result.setRightLegDir(Vector2.negative(result.getLeftLegDir()));
 
-            result.setPoint(Vector2.minus(rel_position,Vector2.mul(Vector2.normal(result.getLeftLegDir()),1.5 * radius1))) ;
+            result.setPoint(Vector2.minus(rel_position,Vector2.mul(Vector2.normal(result.getLeftLegDir()),1.5* radius1))) ;
             result.setTruncLeft(result.getPoint());
             result.setTruncRight(result.getPoint());
             return result;
@@ -376,10 +379,9 @@ public class CP {
         double ang_rel = Math.atan2(rel_position.getY(), rel_position.getX());
         result.setLeftLegDir(new Vector2(Math.cos(ang_rel + max_ang), Math.sin(ang_rel + max_ang)));
         result.setRightLegDir(new Vector2(Math.cos(ang_rel + min_ang), Math.sin(ang_rel + min_ang)));
-
-        result.setLeftLegDir(Vector2.rotateVectorByAngle(result.getLeftLegDir(), 0.15));
+        // set margin
+        result.setLeftLegDir(Vector2.rotateVectorByAngle(result.getLeftLegDir(), 0.05));
         result.setRightLegDir(Vector2.rotateVectorByAngle(result.getRightLegDir(), -0.05));
-
 
         result.setRelativePosition(rel_position);
         result.setCombinedRadius(Vector2.abs(rel_position) - min_dist);
@@ -416,7 +418,7 @@ public class CP {
         return new Vector2(x_i, y_i);
     }
 
-
+    // dissertation 2.2.2
     //by footprint
     public static VO createVO(Vector2 position1, final List<Vector2> footprint1, Vector2 vel1, Vector2 position2, final List<Vector2> footprint2, Vector2 vel2, int TYPE) {
         if (TYPE == HRVOS) {

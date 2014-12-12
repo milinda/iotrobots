@@ -1,82 +1,82 @@
+import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
+import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
+import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
 import org.apache.commons.logging.Log;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
-import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
+import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
-import std_msgs.*;
 
 import javax.media.j3d.Transform3D;
-import javax.vecmath.*;
-import java.lang.String;
-import java.nio.ByteOrder;
-import java.util.*;
+import javax.vecmath.Point3d;
+import javax.vecmath.Quat4d;
+import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
+import java.util.ArrayList;
+import java.util.List;
 
 
-public class MainSimulator {
-    static final int robotNb = 2;
-    static final double posRadius = 4;
+public class MainSimulatorWithPlanner {
 
     /**
      * Describe the robot
      */
     static public class Robot extends Agent {
 
-        //id
-        int id;
-
         //orientation
         double orientation;
         //kinematic
         DifferentialKinematic kinematic;
+        private double vl;
+        private double vr;
         private double wheelDistance;
-
         //sensors
         LaserScan laserScan;
         RangeSensorBelt sensors;
-
+        //CameraSensor camera;
         //node
         private ConnectedNode node;
-        private ParameterTree params;
 
         //odometry publisher
         Publisher<Odometry> odometryPublisher = null;
         Odometry odomMsg;
         int odomSeq;
-
         //laser scan publisher
         Publisher<PointCloud2> laserscanPublisher = null;
         PointCloud2 pc2,pctmp;
         int pc2Seq;
+        //velocity command publisher
+        Publisher<Twist> velocityPublisher = null;
+        Twist cmd_vel;
 
         //velocity command subscriber
         Subscriber<Twist> velocitySubscriber = null;
-//        Queue<List<Double>> cmdQueue;
-//        private List<Double> vel_cmd;
-        private double vl,vr;
-
-        // control command subscriber
-        Subscriber<std_msgs.String> ctlCmdSubscriber=null;
-        String ctlCmd;
-
+        //tf listener
+        TransformListener tfl = null;
         //tf broadcaster
         TransformBroadcaster tfb = null;
         //frame
         String robotFrame;
         String odomFrame;
         String globalFrame;
-
+        //planner
+        GlobalPlanner globalPlanner = null;
+        LocalPlanner localPlanner = null;
+        List<PoseStamped> globalPlan = null;
+        Point3d start;
+        Point3d goal;
+        Quat4d oriGoal,oriStart;
+        boolean plannerSet;
         //for synchronization
         Time time = new Time();
 
@@ -86,11 +86,11 @@ public class MainSimulator {
         int paSeq;
         Point3d previousPosition=null;
 
-        public Robot(Vector3d position, double ori, int id) {
 
+
+        public Robot(Vector3d position, double ori, String name) {
             // initialize position and orientation
-            super(position, "robot"+id);
-            this.id=id;
+            super(position, name);
             this.radius=(float)0.17;
             orientation = ori;
             //use differential model
@@ -98,7 +98,7 @@ public class MainSimulator {
             wheelDistance = this.getRadius();
             // Add camera
             //camera = RobotFactory.addCameraSensor(this);
-            laserScan = new LaserScan(this.radius,57.0/180*Math.PI, 100,1.2,3.5,20);
+            laserScan = new LaserScan(this.radius,57.0/180*Math.PI, 100,1.2, 3.5,20);
             sensors = laserScan.getSensor();
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame
@@ -116,9 +116,7 @@ public class MainSimulator {
             // initialize node
             AgentNode agentNode = new AgentNode(this.getName());
             node = agentNode.getNode();
-            params=node.getParameterTree();
-            params.set("robotNb",robotNb);
-            params.set("posRadius",posRadius);
+            Log log=node.getLog();
             // initialize odometry publisher and message
             if (odometryPublisher == null) {
                 odometryPublisher = node.newPublisher(this.getName() + "/odometry", Odometry._TYPE);
@@ -137,7 +135,10 @@ public class MainSimulator {
                 pc2.getHeader().setFrameId(robotFrame);
                 pc2Seq = 0;
             }
-
+            if (velocityPublisher == null) {
+                velocityPublisher = node.newPublisher(this.getName() + "/cmd_vel", Twist._TYPE);
+                cmd_vel = velocityPublisher.newMessage();
+            }
             //for test
             if (poseArrayPublisher==null){
                 poseArrayPublisher=node.newPublisher(this.getName()+"/particlecloud",PoseArray._TYPE);
@@ -147,15 +148,12 @@ public class MainSimulator {
             }
 
             //initialize velocity command subscriber
-
-//            cmdQueue=new ArrayDeque<List<Double>>(6);
             if (velocitySubscriber == null) {
                 velocitySubscriber = node.newSubscriber(this.getName() + "/cmd_vel", Twist._TYPE);
                 velocitySubscriber.addMessageListener(new MessageListener<Twist>() {
                     @Override
                     public void onNewMessage(Twist msg) {
                         double v, w;
-//                        double vl_,vr_;
                         //in ros coordinate
                         Vector3d vel = new Vector3d(msg.getLinear().getX(), msg.getLinear().getY(), msg.getLinear().getZ());
                         //no need to transform the coordinate
@@ -163,26 +161,11 @@ public class MainSimulator {
                         w = msg.getAngular().getZ();
                         vl =  v - w * wheelDistance / 2;
                         vr =  v + w * wheelDistance / 2;
-//                        List<Double> velcmd=new ArrayList<Double>(2);
-//                        velcmd.add(vl_);
-//                        velcmd.add(vr_);
-//                        if (!cmdQueue.offer(velcmd)){
-//                            cmdQueue.poll();
-//                            cmdQueue.offer(velcmd);
-//                        }
                     }
-                },4);
+                },10);
             }
-
-            if (ctlCmdSubscriber==null){
-                ctlCmdSubscriber=node.newSubscriber("/ctl_cmd", std_msgs.String._TYPE);
-                ctlCmd=new String();
-                ctlCmdSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
-                    @Override
-                    public void onNewMessage(std_msgs.String string) {
-                        ctlCmd=string.getData();
-                    }
-                });
+            if (tfl == null) {
+                tfl = new TransformListener(node);
             }
 
             if (tfb == null) {
@@ -194,53 +177,25 @@ public class MainSimulator {
          * This method is called by the simulator engine on reset.
          */
         public void initBehavior() {
-            float colorvalue=(float)this.id/robotNb;
-            setColor(new Color3f(0,colorvalue,0));
             this.rotateY(orientation);
-            vl=0;
-            vr=0;
-//            vel_cmd=new ArrayList<Double>(2);
-//            vel_cmd.clear();
-//            vel_cmd.add(0.0);
-//            vel_cmd.add(0.0);
+            initPlanner();
         }
 
         /**
          * This method is call cyclically (20 times per second)  by the simulator engine.
          */
         public void performBehavior() {
-//            double vl=vel_cmd.get(0)/2;
-//            double vr=vel_cmd.get(1)/2;
-//            vel_cmd=cmdQueue.poll();
-//
-//            if (vel_cmd==null){
-//                if(Math.sqrt(vl*vl+vr*vr)<0.005)
-//                    kinematic.setWheelsVelocity(0,0);
-//                else
-//                    kinematic.setWheelsVelocity(vl, vr);
-//                vel_cmd=new ArrayList<Double>(2);
-//                vel_cmd.add(vl);
-//                vel_cmd.add(vr);
-//            }else
-//            {
-//                kinematic.setWheelsVelocity(vel_cmd.get(0),vel_cmd.get(1));
-//                System.out.println(vel_cmd.get(0));
-//            }
 
-            if (ctlCmd.equals("pause"))
-                kinematic.setWheelsVelocity(0,0);
-            else
-                kinematic.setWheelsVelocity(vl,vr);
-
+            kinematic.setWheelsVelocity(vl, vr);
             time = node.getCurrentTime();
             //send transform
             sendTransform();
             //publish scan in frequency of 10Hz
-            if (getCounter() % 1== 0 ) {
+            if (getCounter() % 2== 0 ) {
                 pc2.getHeader().setSeq(pc2Seq++);
                 pc2.getHeader().setStamp(time);
                 //publish valid laser scan in pointcloud2 format in global frame
-                laserScan.getLaserscanPointCloud2(pc2, this);
+                laserScan.getLaserscanPointCloud2(pc2,this);
                 laserscanPublisher.publish(pc2);
             }
             //test publish localization pose array
@@ -261,8 +216,18 @@ public class MainSimulator {
             if (getCounter() % 1 == 0) {
                 setOdomMsg(time);
                 odometryPublisher.publish(odomMsg);
+
+                // delay some time to set the planner
+            if (getCounter()%20==0&&!plannerSet){
+                plannerSet=true;
+                if (!localPlanner.setPlan(globalPlan))
+                    node.getLog().error("Set global plan error!");
             }
 
+                //control frequency is 10hz
+                if (localPlanner.computeVelocityCommands(cmd_vel));
+                velocityPublisher.publish(cmd_vel);
+            }
         }
 
         public void setOdomMsg(Time t) {
@@ -341,13 +306,68 @@ public class MainSimulator {
             Point3d pt= new Point3d();
             for (int i = 0; i <50 ; i++) {
                 // in robot base frame
-                pt.setX(utilsSim.getGaussianNoise(0, this.radius/10));
+                pt.setX(utilsSim.getGaussianNoise(0, this.radius / 10));
                 pt.setZ(utilsSim.getGaussianNoise(0, this.radius / 10));
                 tfr.rotY(utilsSim.getGaussianNoise(0, 0.15));
                 tfr.get(ori);
                 pa.add(utilsSim.getPose(pt, ori));
             }
             poseArray.setPoses(pa);
+        }
+
+        private void initPlanner(){
+            if (globalPlan == null) {
+                globalPlan = new ArrayList<PoseStamped>();
+            } else {
+                globalPlan.clear();
+            }
+
+            if (globalPlanner == null)
+                globalPlanner = new GlobalPlanner();
+
+            if (localPlanner == null)
+                localPlanner = new LocalPlanner(node, tfl);
+
+            //set start point and goal
+            start = new Point3d();
+            this.getCoords(start);
+            goal = new Point3d();
+            goal.set(-start.getX(), start.getY(), -start.getZ());
+
+            oriStart = getOrientation();
+            oriGoal=new Quat4d();
+            Transform3D tfr = new Transform3D(oriStart, new Vector3d(0, 0, 0), 1);
+            Transform3D tfrPI=new Transform3D(new Quat4d(0,1,0,0),new Vector3d(),1);
+            tfr.mul(tfrPI);
+            tfr.get(oriGoal);
+
+            start = utilsSim.toROSCoordinate(start);
+            goal = utilsSim.toROSCoordinate(goal);
+            utilsSim.toROSCoordinate(oriGoal);
+            utilsSim.toROSCoordinate(oriStart);
+
+            PoseStamped startPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
+            PoseStamped goalPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
+
+            startPose.getHeader().setFrameId(globalFrame);
+            startPose.getPose().getPosition().setX(start.getX());
+            startPose.getPose().getPosition().setY(start.getY());
+            startPose.getPose().getOrientation().setX(oriStart.getX());
+            startPose.getPose().getOrientation().setY(oriStart.getY());
+            startPose.getPose().getOrientation().setZ(oriStart.getZ());
+            startPose.getPose().getOrientation().setW(oriStart.getW());
+
+            goalPose.getHeader().setFrameId(globalFrame);
+            goalPose.getPose().getPosition().setX(goal.getX());
+            goalPose.getPose().getPosition().setY(goal.getY());
+            goalPose.getPose().getOrientation().setX(oriGoal.getX());
+            goalPose.getPose().getOrientation().setY(oriGoal.getY());
+            goalPose.getPose().getOrientation().setZ(oriGoal.getZ());
+            goalPose.getPose().getOrientation().setW(oriGoal.getW());
+
+            globalPlanner.makePlan(startPose, goalPose, globalPlan);
+
+            plannerSet=false;
         }
 
     }
@@ -359,6 +379,8 @@ public class MainSimulator {
      */
     static public class MyEnv extends EnvironmentDescription {
         public MyEnv() {
+            final int robotNb = 2;
+            final double posRadius = 5;
 
             light1IsOn = true;
             light2IsOn = false;
@@ -383,7 +405,7 @@ public class MainSimulator {
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
                 Vector3d pose = new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
-                add(new Robot(pose, Math.PI + i * step, i));
+                add(new Robot(pose, Math.PI + i * step, "robot" + i));
             }
         }
     }

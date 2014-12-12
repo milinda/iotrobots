@@ -6,19 +6,16 @@ import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.MessageDefinitionProvider;
 import org.ros.message.MessageFactory;
-import org.ros.rosjava.tf.Transform;
 import sensor_msgs.PointCloud2;
 import sensor_msgs.PointField;
-import simbad.sim.Robot;
 
-import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class utils {
+public class utilsSim {
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
     public static MessageFactory messageFactory = new DefaultMessageFactory(messageDefinitionProvider);
@@ -65,7 +62,7 @@ public class utils {
         String fieldName = "xyz";
 
         for (int i = 0; i < 3; i++) {
-            PointField pf = utils.messageFactory.newFromType(PointField._TYPE);
+            PointField pf = utilsSim.messageFactory.newFromType(PointField._TYPE);
             pf.setName(fieldName.substring(i, i + 1));
             pf.setOffset(i * 4);
             pf.setDatatype(PointField.FLOAT32);
@@ -99,7 +96,12 @@ public class utils {
             pc2.setData(buffer);
     }
 
-    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan,MainSimulator.Robot robot) {
+    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan, MainSimulator.Robot robot) {
+        pc2.getHeader().setFrameId(robot.globalFrame);
+        toPointCloud2(pc2,scan);
+    }
+
+    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan, MainSimulatorWithPlanner.Robot robot) {
         pc2.getHeader().setFrameId(robot.globalFrame);
         toPointCloud2(pc2,scan);
     }

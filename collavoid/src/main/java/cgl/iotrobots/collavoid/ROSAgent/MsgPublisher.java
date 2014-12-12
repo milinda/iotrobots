@@ -28,25 +28,28 @@ public class MsgPublisher {
         line_list.setNs(name_space);
         line_list.setAction(Marker.ADD);
         line_list.getPose().getOrientation().setW(1);
-        line_list.setType(Marker.LINE_LIST);
-        line_list.getScale().setX(0.02);
-        line_list.getColor().setR(0);
-        line_list.getColor().setG(1);
+        line_list.setType(Marker.ARROW);
+        line_list.getScale().setX(0.01);
+        line_list.getScale().setY(0.03);
+        line_list.getColor().setR((float)0.3);
+        line_list.getColor().setG((float)0.5);
         line_list.getColor().setA(1);
         line_list.setId(0);
         Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
         p.setX(pos.getPos().getX());
         p.setY(pos.getPos().getY());
-        p.setZ(0.2);
+        p.setZ(0.5);
         line_list.getPoints().add(p);
-        p.setX(p.getX() + vel.getX());
-        p.setY(p.getY() + vel.getY());
-        line_list.getPoints().add(p);
+        Point p1 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+        p1.setX(p.getX() + vel.getX());
+        p1.setY(p.getY() + vel.getY());
+        p1.setZ(p.getZ());
+        line_list.getPoints().add(p1);
 
         speed_pub.publish(line_list);
     }
 
-
+    // currently use clear path method vos contain agent vos and obstacle vos
     public void publishVOs(Position pos, List<VO> truncated_vos, boolean use_truncation, String base_frame, String name_space, Publisher vo_pub) {
         Marker line_list = MsgPublisherNode.getTopicMessageFactory().newFromType(Marker._TYPE);
         line_list.getHeader().setFrameId(base_frame);
@@ -62,53 +65,59 @@ public class MsgPublisher {
         if (!use_truncation) {
             for (int i = 0; i < truncated_vos.size(); i++) {
                 Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
-
                 //Apex
                 p.setX(pos.getPos().getX() + truncated_vos.get(i).getPoint().getX());
                 p.setY(pos.getPos().getY() + truncated_vos.get(i).getPoint().getY());
                 line_list.getPoints().add(p);
 
-                p.setX(p.getX() + 3 * truncated_vos.get(i).getLeftLegDir().getX());
-                p.setY(p.getY() + 3 * truncated_vos.get(i).getLeftLegDir().getY());
-                line_list.getPoints().add(p);
+                Point p1 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p1.setX(p.getX() + 3 * truncated_vos.get(i).getLeftLegDir().getX());
+                p1.setY(p.getY() + 3 * truncated_vos.get(i).getLeftLegDir().getY());
+                line_list.getPoints().add(p1);
 
                 //Apex
-                p.setX(pos.getPos().getX() + truncated_vos.get(i).getPoint().getX());
-                p.setY(pos.getPos().getY() + truncated_vos.get(i).getPoint().getY());
-                line_list.getPoints().add(p);
+                Point p3 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p3.setX(pos.getPos().getX() + truncated_vos.get(i).getPoint().getX());
+                p3.setY(pos.getPos().getY() + truncated_vos.get(i).getPoint().getY());
+                line_list.getPoints().add(p3);
 
-                p.setX(p.getX() + 3 * truncated_vos.get(i).getRightLegDir().getX());
-                p.setY(p.getY() + 3 * truncated_vos.get(i).getRightLegDir().getY());
-                line_list.getPoints().add(p);
+                Point p4 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p4.setX(p.getX() + 3 * truncated_vos.get(i).getRightLegDir().getX());
+                p4.setY(p.getY() + 3 * truncated_vos.get(i).getRightLegDir().getY());
+                line_list.getPoints().add(p4);
 
             }
         } else {
             for (int i = 0; i < truncated_vos.size(); i++) {
                 Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
-
-                p.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncLeft().getX());
-                p.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncLeft().getY());
-
-                line_list.getPoints().add(p);
-                p.setX(pos.getPos().getX() + 3 * truncated_vos.get(i).getLeftLegDir().getX());
-                p.setY(pos.getPos().getY() + 3 * truncated_vos.get(i).getLeftLegDir().getY());
-                line_list.getPoints().add(p);
-
-                p.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncRight().getX());
-                p.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncRight().getY());
-
-                line_list.getPoints().add(p);
-                p.setX(pos.getPos().getX() + 3 * truncated_vos.get(i).getRightLegDir().getX());
-                p.setY(pos.getPos().getY() + 3 * truncated_vos.get(i).getRightLegDir().getY());
-                line_list.getPoints().add(p);
-
                 p.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncLeft().getX());
                 p.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncLeft().getY());
                 line_list.getPoints().add(p);
 
-                p.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncRight().getX());
-                p.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncRight().getY());
-                line_list.getPoints().add(p);
+                Point p1 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p1.setX(p.getX() + 3 * truncated_vos.get(i).getLeftLegDir().getX());
+                p1.setY(p.getY() + 3 * truncated_vos.get(i).getLeftLegDir().getY());
+                line_list.getPoints().add(p1);
+
+                Point p2 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p2.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncRight().getX());
+                p2.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncRight().getY());
+                line_list.getPoints().add(p2);
+
+                Point p3 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p3.setX(p.getX() + 3 * truncated_vos.get(i).getRightLegDir().getX());
+                p3.setY(p.getY() + 3 * truncated_vos.get(i).getRightLegDir().getY());
+                line_list.getPoints().add(p3);
+
+                Point p4 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p4.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncLeft().getX());
+                p4.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncLeft().getY());
+                line_list.getPoints().add(p4);
+
+                Point p5 = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
+                p5.setX(pos.getPos().getX() + truncated_vos.get(i).getTruncRight().getX());
+                p5.setY(pos.getPos().getY() + truncated_vos.get(i).getTruncRight().getY());
+                line_list.getPoints().add(p5);
             }
         }
         vo_pub.publish(line_list);
@@ -154,16 +163,16 @@ public class MsgPublisher {
             sphere.setAction(Marker.ADD);
             sphere.getPose().getOrientation().setW(1);
             sphere.setType(Marker.SPHERE);
-            sphere.getScale().setX(0.1);
-            sphere.getScale().setY(0.1);
-            sphere.getScale().setZ(0.1);
-            sphere.getColor().setR((float) 0.5);
+            sphere.getScale().setX(0.05);
+            sphere.getScale().setY(0.05);
+            sphere.getScale().setZ(0.05);
+            sphere.getColor().setB((float) 0.5);
             sphere.getColor().setA(1);
             sphere.setId(i);
             Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
             p.setX(pos.getPos().getX() + points.get(i).getVelocity().getX());
             p.setY(pos.getPos().getY() + points.get(i).getVelocity().getY());
-            p.setZ(0.1);
+            p.setZ(0.5);
             sphere.getPoints().add(p);
             sphere.getPose().getPosition().setX(p.getX());
             sphere.getPose().getPosition().setY(p.getY());
@@ -189,7 +198,7 @@ public class MsgPublisher {
         samples_pub.publish(point_array);
     }
 
-
+    // currently use clear path method additional constraints (orca_lines) include non holonomic robot constraints, acceleration constraints.
     public void publishOrcaLines(List<Line> orca_lines, Position position, String frame, String name_space, Publisher line_pub) {
         Marker line_list = MsgPublisherNode.getTopicMessageFactory().newFromType(Marker._TYPE);
         line_list.getHeader().setFrameId(frame);
@@ -216,14 +225,6 @@ public class MsgPublisher {
             line_list.getPoints().add(p1);
         }
 
-//        for (int i = 0; i < orca_lines.size(); i++) {
-//            Point p = MsgPublisherNode.getTopicMessageFactory().newFromType(Point._TYPE);
-//            // orca lines are in robot frame so need to add position
-//            p.setX(position.getPos().getX() + orca_lines.get(i).getPoint().getX());
-//            p.setY(position.getPos().getY() + orca_lines.get(i).getPoint().getY());
-//            line_list.getPoints().add(p);
-//
-//        }
         line_pub.publish(line_list);
 
     }

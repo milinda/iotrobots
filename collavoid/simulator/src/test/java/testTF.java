@@ -24,14 +24,14 @@ public class testTF {
     static PointCloud2 pc2;
 
     public static void main(String[] args){
-//        AgentNode agentNode=new AgentNode("testTF");
+//        ROSAgentNode agentNode=new ROSAgentNode("testTF");
 //        ConnectedNode node=agentNode.getNode();
 //
 //        tfl=new TransformListener(node);
         //test random
 
 //        for (int i = 0; i <1000 ; i++) {
-//            System.out.println(utils.getGaussianNoise(0,0.5));
+//            System.out.println(utilsSim.getGaussianNoise(0,0.5));
 //        }
         Point3d pt=new Point3d(1,0,0);
         Point3d pt1=new Point3d();

@@ -7,23 +7,18 @@ import costmap_2d.VoxelGrid;
 import geometry_msgs.*;
 import nav_msgs.OccupancyGrid;
 import nav_msgs.Odometry;
-import nav_msgs.Path;
 import org.ros.internal.message.DefaultMessageFactory;
 import org.ros.internal.message.definition.MessageDefinitionReflectionProvider;
 import org.ros.message.MessageDefinitionProvider;
 import org.ros.message.MessageFactory;
 import org.ros.message.Time;
-import org.ros.namespace.GraphName;
 import org.ros.node.*;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
-import org.ros.rosjava.tf.*;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 import visualization_msgs.MarkerArray;
 
-import javax.media.j3d.Transform3D;
-import javax.vecmath.Vector3d;
 import java.lang.String;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +70,7 @@ public class LocalPlanner {
     double time_horizon_obst_;
     double eps_;
 
-    ROSAgent me;
+    public ROSAgent me;
 
     double time_to_holo_, min_error_holo_, max_error_holo_;
 
@@ -92,6 +87,9 @@ public class LocalPlanner {
     private static Vector3 angular = messageFactory.newFromType(Vector3._TYPE);//for temporary assign use
     private static Logger logger;
 
+    // time consuming test
+    long vel_cal_delay_max;
+
 
     /*---------------methods begin-----------------*/
 
@@ -101,7 +99,7 @@ public class LocalPlanner {
         this.params = this.node.getParameterTree();
         tf_ = tf;
 
-        id = node.getName().toString();
+        id = node.getName().toString().replace("/planner_","");
         initialized_ = false;
         costmap_ros_ = null;
         current_waypoint_ = 0;
@@ -116,7 +114,7 @@ public class LocalPlanner {
     private void initialize() {
         if (!initialized_) {
             logger = Logger.getLogger(node.getName().toString());
-            base_frame_ = params.getString("/base_frame", id.substring(1) + "_base");
+            base_frame_ = params.getString("/base_frame", id + "_base");
             global_frame_ = params.getString("/global_frame", "map");
 
             rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity", 0.01);
@@ -129,7 +127,7 @@ public class LocalPlanner {
             ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
 
             /*----------spawn agent node---------*/
-            //comment for test
+
             this.me = new ROSAgent(this.node, tf_);
             radius_ = me.footprint_radius_;
 
@@ -158,6 +156,14 @@ public class LocalPlanner {
             //dynamic_reconfigure::Server<collvoid_local_planner::CollvoidConfig>::CallbackType cb = boost::bind(&CollvoidLocalPlanner::reconfigureCB, this, _1, _2);
             //dsrv_->setCallback(cb);
 
+            //wait for the agent to initialize
+            while (!me.initialized_){
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             initialized_ = true;
             node.getLog().info("************************Local Planner" + node.getName() + " is initialized!");
         } else {
@@ -166,7 +172,7 @@ public class LocalPlanner {
 
     }
 
-    /*Add obstacles not used*/
+    /*Add obstacles from map, not used*/
     void obstaclesCallback(final OccupancyGrid msg) {
         Vector2 origin = new Vector2(msg.getInfo().getOrigin().getPosition().getX(), msg.getInfo().getOrigin().getPosition().getY());
         int mapWith = msg.getInfo().getWidth();
@@ -324,6 +330,7 @@ public class LocalPlanner {
 
             //check to see if the goal orientation has been reached
             double angle = LPutils.getGoalOrientationAngleDifference(global_pose.getPose(), goal_th);
+
             //check to see if the goal orientation has been reached
             if (Math.abs(angle) <= yaw_goal_tolerance_) {
 
@@ -402,14 +409,14 @@ public class LocalPlanner {
             pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
         }
 
-//        System.out.println(pref_vel_vect.getX());
-//        System.out.println(pref_vel_vect.getY()+"\n");
-
+        //time consuming test
+        long startTime=System.nanoTime();
         me.computeNewVelocity(pref_vel_vect, cmd_vel);
-
-//        System.out.println(cmd_vel.getAngular().getZ());
-//        System.out.println(cmd_vel.getLinear().getX());
-//        System.out.println(cmd_vel.getLinear().getY()+"\n");
+        long consumingTime=System.nanoTime()-startTime;
+        if (vel_cal_delay_max <consumingTime){
+            vel_cal_delay_max =consumingTime;
+            System.out.println("agent "+id+" velocity computing max duration: "+(double) vel_cal_delay_max /1000000000+"s");
+        }
 
         if (Math.abs(cmd_vel.getAngular().getZ()) < me.min_vel_th_)
             cmd_vel.getAngular().setZ(0);
@@ -564,7 +571,10 @@ public class LocalPlanner {
             me.me_lock_.lock();
             try {
                 robot_pose.setPosition(me.getBaseOdom().getPose().getPose().getPosition());
-                t = me.getLastSeen();
+                if (me.getLastSeen()==null)
+                    t=node.getCurrentTime();
+                else
+                    t = me.getLastSeen();
             } finally {
                 me.me_lock_.unlock();
             }

@@ -52,9 +52,9 @@ public class InitPlannerThread extends Thread {
         if (localPlanner == null)
             localPlanner = new LocalPlanner(node, tfl);
 
-        start = utils.toROSCoordinate(start);
-        goal = utils.toROSCoordinate(goal);
-        utils.toROSCoordinate(oriGoal);
+        start = utilsSim.toROSCoordinate(start);
+        goal = utilsSim.toROSCoordinate(goal);
+        utilsSim.toROSCoordinate(oriGoal);
 
         PoseStamped startPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
         PoseStamped goalPose = node.getTopicMessageFactory().newFromType(PoseStamped._TYPE);
