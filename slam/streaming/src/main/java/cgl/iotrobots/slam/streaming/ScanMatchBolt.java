@@ -15,7 +15,6 @@ import cgl.iotrobots.slam.streaming.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.org.mozilla.javascript.internal.ast.Assignment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +40,8 @@ public class ScanMatchBolt extends BaseRichBolt {
     /** Partciles are sent directly, so we will create a direct receiver */
     private RabbitMQReceiver particleReceiver;
 
+    private RabbitMQReceiver particleValueReceiver;
+
     private RabbitMQSender sender;
 
     private String url = "";
@@ -50,6 +51,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private MatchState state = MatchState.WAITING_FOR_READING;
 
     private int expectingParticles = 0;
+    private int expectingParticleValues = 0;
 
     private ParticleAssignments assignments = null;
 
@@ -69,6 +71,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         try {
             this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             this.particleReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
+            this.particleValueReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             this.sender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE);
             this.sender.open();
 
@@ -86,6 +89,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             outputCollector.ack(tuple);
             return;
         }
+        outputCollector.ack(tuple);
 
         Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
         RangeReading reading;
@@ -118,6 +122,8 @@ public class ScanMatchBolt extends BaseRichBolt {
             emit.add(particleValue);
             outputCollector.emit(emit);
         }
+        // clear the active particles list
+        activeParticles.clear();
     }
 
     /**
@@ -163,7 +169,6 @@ public class ScanMatchBolt extends BaseRichBolt {
                         addMaps(pm);
 
                         // we have received all the particles we need to do the processing after resampling
-
                         if (expectingParticles == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
                             gfsp.processAfterReSampling();
@@ -182,9 +187,9 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
-    private boolean assignmentExists(ParticleMaps pm, List<ParticleAssignment> assignmentList) {
+    private boolean assignmentExists(int task, int index, List<ParticleAssignment> assignmentList) {
         for (ParticleAssignment assignment : assignmentList) {
-            if (assignment.getNewTask() == pm.getTask() && assignment.getNewIndex() == pm.getIndex()) {
+            if (assignment.getNewTask() == task && assignment.getNewIndex() == index) {
                 return true;
             }
         }
@@ -227,6 +232,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             ParticleAssignment assignment = assignmentList.get(i);
             if (assignment.getNewTask() == taskId) {
                 expectingParticles++;
+                expectingParticleValues++;
             }
         }
     }
@@ -243,6 +249,14 @@ public class ScanMatchBolt extends BaseRichBolt {
                     Particle p = gfsp.getParticles().get(previousIndex);
                     // create a new ParticleMaps
                     ParticleMaps particleMaps = new ParticleMaps(p.getMap(), p.getNode(), assignment.getNewIndex(), assignment.getNewTask());
+
+                    byte []b = Utils.serialize(kryo, particleMaps);
+                    Message message = new Message(b, new HashMap<String, Object>());
+                    try {
+                        sender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + assignment.getNewTask());
+                    } catch (Exception e) {
+                        LOG.error("Failed to send the new particle map");
+                    }
                 } else {
                     LOG.error("The particle {} is not in this bolt's active list, something is wrong", assignment.getPreviousIndex());
                 }
@@ -250,15 +264,110 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
-    private void addMaps(ParticleMaps particleMaps) {
+    private List<ParticleValue> particleValues = new ArrayList<ParticleValue>();
+
+    private class ParticleValueHandler implements MessageHandler {
+        @Override
+        public Map<String, String> getProperties() {
+            return null;
+        }
+
+        @Override
+        public void onMessage(Message message) {
+            byte []body = message.getBody();
+            if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
+                try {
+                    ParticleValue pm = (ParticleValue) Utils.deSerialize(kryo, body, ParticleValue.class);
+                    // first we need to determine the expected new maps for this particle
+                    if (assignments != null) {
+                        // first check weather particleMapses not empty. If not empty handle those first
+                        if (!particleMapses.isEmpty()) {
+                            for (ParticleValue existingPm : particleValues) {
+                                addParticle(existingPm);
+                            }
+
+                            particleMapses.clear();
+                        }
+                        // now go through the assignments and send them to the bolts directly
+                        addParticle(pm);
+
+                        // we have received all the particles we need to do the processing after resampling
+                        if (expectingParticleValues == 0) {
+                            state = MatchState.COMPUTING_NEW_PARTICLES;
+                            gfsp.processAfterReSampling();
+                            state = MatchState.WAITING_FOR_READING;
+                        }
+                    } else {
+                        // because we haven't received the assignments yet, we will keep the values temporaly in this list
+                        particleValues.add(pm);
+                    }
+                } catch (Exception e) {
+                    LOG.error("Failed to deserialize assignment", e);
+                }
+            } else {
+                LOG.error("Received message when we are in an unexpected state {}", state);
+            }
+        }
+    }
+
+    /**
+     * The particle values calculated after the resampling
+     * @param value values
+     */
+    private void addParticle(ParticleValue value) {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
         int taskId = topologyContext.getThisTaskIndex();
-        boolean found = assignmentExists(particleMaps, assignmentList);
+        boolean found = assignmentExists(value.getTaskId(), value.getIndex(), assignmentList);
 
         if (!found) {
             String msg = "We got a particle that doesn't belong here";
             LOG.error(msg);
             throw new RuntimeException(msg);
+        }
+
+        int newIndex = value.getIndex();
+        Particle p = gfsp.getParticles().get(newIndex);
+
+        p.setPose(value.getPose());
+        p.setWeightSum(value.getWeightSum());
+        p.setWeight(value.getWeight());
+        p.setPreviousIndex(value.getPreviousIndex());
+        p.setGweight(value.getGweight());
+        p.setPreviousPose(value.getPreviousPose());
+
+        // add the new particle index
+        if (!gfsp.getActiveParticles().contains(newIndex)) {
+            gfsp.getActiveParticles().add(newIndex);
+        }
+
+        // we have received one particle
+        expectingParticleValues--;
+    }
+
+    /**
+     * Add a new partcle maps and node tree to the particle
+     * @param particleMaps the map and node tree
+     */
+    private void addMaps(ParticleMaps particleMaps) {
+        List<ParticleAssignment> assignmentList = assignments.getAssignments();
+        int taskId = topologyContext.getThisTaskIndex();
+        boolean found = assignmentExists(particleMaps.getTask(), particleMaps.getIndex(), assignmentList);
+
+        if (!found) {
+            String msg = "We got a particle that doesn't belong here";
+            LOG.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        int newIndex = particleMaps.getIndex();
+        Particle p = gfsp.getParticles().get(newIndex);
+
+        p.setNode(particleMaps.getNode());
+        p.setMap(particleMaps.getMap());
+
+        // add the new particle index
+        if (!gfsp.getActiveParticles().contains(newIndex)) {
+            gfsp.getActiveParticles().add(newIndex);
         }
 
         // we have received one particle
