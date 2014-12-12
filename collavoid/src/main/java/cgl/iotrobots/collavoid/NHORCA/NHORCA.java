@@ -13,31 +13,14 @@ import static cgl.iotrobots.collavoid.utils.utils.sign;
 //some of the implementations of formulation 13 in the NHORCA paper, add orcalines coursed by NH constraints
 
 public class NHORCA {
-
-    public static double beta(double T, double theta, double v_max_ang){
-        return - ((2.0 * T * T * Math.sin(theta)) / theta) * v_max_ang;
-    }
-
-    public static double gamma(double T, double theta, double error, double v_max_ang) {
-        return ((2.0 * T * T * (1.0 - Math.cos(theta))) / (theta * theta)) * v_max_ang * v_max_ang - error * error;
-    }
-
-    public static double calcVstar(double vh, double theta){
-        return vh * ((theta * Math.sin(theta))/(2.0 * (1.0 - Math.cos(theta))));
-    }
-
-    public static double calcVstarError(double T,double theta, double error) {
-        return calcVstar(error/T,theta) * Math.sqrt((2.0 * (1.0 - Math.cos(theta))) / (2.0 * (1.0 - Math.cos(theta)) - Math.pow(Math.sin(theta), 2)));
-    }
-
-
     //from orca
     //in velocity space
     public static void addMovementConstraintsDiffSimple(double max_track_speed, double heading, List<Line> additional_orca_lines) {
         Line maxVel1;
         Line maxVel2;
 
-        //nearly no turn just forth or back
+        //if angle difference is more than PI/2 then set angle difference to PI/2 and
+        //this is the max holo velocity that can track.
         Vector2 dir = new Vector2(Math.cos(heading), Math.sin(heading));
         Vector2 pt=Vector2.mul(new Vector2(-dir.getY(),dir.getX()),0.95*max_track_speed);
         maxVel1=new Line(pt,Vector2.negative(dir));
@@ -51,15 +34,17 @@ public class NHORCA {
 
     //from orca
     public static void addMovementConstraintsDiff(double error, double T,  double max_vel_x, double max_vel_th, double heading, double v_max_ang, List<Line> additional_orca_lines){
+        // the max tracking angle
         double min_theta = Math.PI / 2.0;
         double max_track_speed = calculateMaxTrackSpeedAngle(T,min_theta, error, max_vel_x, max_vel_th, v_max_ang);
 
+        //normal vector of heading, clock wise
         Vector2 first_point = new Vector2(Math.cos(heading - min_theta),Math.sin(heading - min_theta));
         first_point.mul(max_track_speed);
 
         double steps = 10.0;
         double step_size = - Math.PI / steps;
-
+        // set all holo velocity that can be tracked for angle from heading-PI/2 to heading+PI/2
         for (int i=1; i<=(int)steps; i++) {
             Line line;
             double cur_ang = min_theta + i* step_size;
@@ -128,28 +113,49 @@ public class NHORCA {
     }
 
 
-    //from orca
+    //from original program orca, parameters are corresponding to the NHrobot reference
+    //                                                      T        theta_H        e               v_max             w                 v_max_w
     public static double calculateMaxTrackSpeedAngle(double T, double theta, double error, double max_vel_x, double max_vel_th, double v_max_ang){
         if (Math.abs(theta) <= EPSILON.EPSILON)
             return max_vel_x;
         if (Math.abs(theta / T) <= max_vel_th) {// formulation 13 in paper NHORCA
             double vstar_error = NHORCA.calcVstarError(T, theta, error);
+            double vstar=calcVstar(error/T,theta);
             if (vstar_error <= v_max_ang) {
                 //return 0;
-                return Math.min(vstar_error * (2.0 * (1.0 - Math.cos(theta))) / (theta * Math.sin(theta)), max_vel_x);
+                return Math.min(vstar_error /vstar, max_vel_x);
             }
             else {
                 double a, b, g;
                 a = T * T;
-                b = NHORCA.beta(T, theta, v_max_ang);
-                g = NHORCA.gamma(T, theta, error, v_max_ang);
+                b = beta(T, theta, v_max_ang);
+                g = gamma(T, theta, error, v_max_ang);
                 //return 1;
-                return Math.min((-b + Math.sqrt(Math.pow(b, 2) - 4 * Math.pow(a, 2) * g)) / (2.0 * g), max_vel_x);
+                //different from the reference not sure right or wrong so stick to the original reference
+                //return Math.min((-b + Math.sqrt(Math.pow(b, 2) - 4 * Math.pow(a, 2) * g)) / (2.0 * g), max_vel_x);
+                return Math.min((-b + Math.sqrt(Math.pow(b, 2) - 4 * a * g)) / (2.0 * g), max_vel_x);
             }
         }
         else
             //  return 2;
+        //set theta to positive
             return Math.min(sign(theta) * error * max_vel_th / theta, max_vel_x);
+    }
+
+    public static double beta(double T, double theta, double v_max_ang){
+        return - ((2.0 * T * T * Math.sin(theta)) / theta) * v_max_ang;
+    }
+
+    public static double gamma(double T, double theta, double error, double v_max_ang) {
+        return ((2.0 * T * T * (1.0 - Math.cos(theta))) / (theta * theta)) * v_max_ang * v_max_ang - error * error;
+    }
+
+    public static double calcVstar(double vh, double theta){
+        return vh * ((theta * Math.sin(theta))/(2.0 * (1.0 - Math.cos(theta))));
+    }
+
+    public static double calcVstarError(double T,double theta, double error) {
+        return calcVstar(error/T,theta) * Math.sqrt((2.0 * (1.0 - Math.cos(theta))) / (2.0 * (1.0 - Math.cos(theta)) - Math.pow(Math.sin(theta), 2)));
     }
 
 }

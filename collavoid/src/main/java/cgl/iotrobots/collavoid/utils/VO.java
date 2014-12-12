@@ -1,6 +1,7 @@
 package cgl.iotrobots.collavoid.utils;
 
 public class VO {
+    //counter clock wise direction
     private Vector2 point;
     private Vector2 relativePosition;
     private double combinedRadius;

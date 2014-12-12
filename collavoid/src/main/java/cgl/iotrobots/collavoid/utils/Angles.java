@@ -3,7 +3,7 @@ package cgl.iotrobots.collavoid.utils;
 public class Angles {
 
     public static double normalize_angle_positive(double angle) {
-        return ((angle % 2.0 * Math.PI) + 2.0 * Math.PI) % 2.0 * Math.PI;//why mod twice??
+        return ((angle % (2.0 * Math.PI)) + 2.0 * Math.PI) % (2.0 * Math.PI);//why mod twice??
     }
 
     public static double normalize_angle(double angle) {

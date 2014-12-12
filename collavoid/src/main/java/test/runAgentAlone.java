@@ -1,9 +1,10 @@
 package test;
 
+import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
 import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
-import cgl.iotrobots.collavoid.ROSAgent.Agent;
-import costmap_2d.VoxelGrid;
-import org.ros.address.InetAddressFactory;
+import geometry_msgs.PoseStamped;
+import geometry_msgs.Twist;
+import org.ros.node.ConnectedNode;
 import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
@@ -23,7 +24,7 @@ public class runAgentAlone {
 
     public static TransformListener tf;
     private static Logger logger = Logger.getLogger("runAgentAlone");
-    public static VoxelGrid cosmap_voxelGrid;
+    private static ConnectedNode connectedNode;
 
     public static void main(String[] args)throws InterruptedException{
 
@@ -40,24 +41,40 @@ public class runAgentAlone {
 
         hostname=StringFilter(hostname);//replace all non-alphabet and non-number character into _
 
+        LocalPlanner localPlanner=new LocalPlanner(connectedNode,tf);
+
+        //set start and goal
+        PoseStamped start=MsgFactory.messageFactory.newFromType(PoseStamped._TYPE);
+        PoseStamped goal=MsgFactory.messageFactory.newFromType(PoseStamped._TYPE);
+        start.getPose().getPosition().setX(1.0);
+        start.getPose().getPosition().setY(1.0);
+        start.getPose().getOrientation().setW(1);
+        goal.getPose().getPosition().setX(3.0);
+        goal.getPose().getPosition().setY(3.0);
+        goal.getPose().getOrientation().setW(1);
+
+        //make global plan
+        GlobalPlanner globalPlanner=new GlobalPlanner();
+        if(!globalPlanner.makePlan(start,goal,localPlanner.global_plan_)){
+            logger.severe("unable to make a global plan");
+            System.exit(-1);
+        }
+
+        //execute localPlanner
         NodeConfiguration configuration = NodeConfiguration.newPublic(IP.toString(),
                 URI.create("http://localhost:11311"));
-
         final NodeMainExecutor runner= DefaultNodeMainExecutor.newDefault();
-        //test agent
-//        String agentId=new String("agent_"+hostname);
-//        logger.info("My name is: " + agentId);
-//        Agent agent=new Agent(agentId,tf);
-//        configuration.setNodeName(agentId);
-//        runner.execute(agent,configuration);
-
-        LocalPlanner localPlanner=new LocalPlanner(hostname,tf,cosmap_voxelGrid);
         String localPlannerId=new String("localPlanner_"+hostname);
         configuration.setNodeName(localPlannerId);
-        runner.execute(localPlanner,configuration);
+        //runner.execute(localPlanner,configuration);
 
-        //setParameters setParams=new setParameters();
-        //runner.execute(setParams, configuration);
+        Twist cmd_vel= MsgFactory.messageFactory.newFromType(Twist._TYPE);
+        Thread.sleep(5000);
+        if(localPlanner.computeVelocityCommands(cmd_vel)){
+            System.out.println("+++++++++++++++++++++Velocity computed!!");
+        }else{
+            System.out.println("---------------------Velocity computation failed!!");
+        }
 
     }
 

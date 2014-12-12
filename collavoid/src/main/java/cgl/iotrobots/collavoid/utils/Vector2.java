@@ -2,6 +2,7 @@ package cgl.iotrobots.collavoid.utils;
 
 import geometry_msgs.Point32;
 
+import java.util.Objects;
 
 
 public class Vector2 {
@@ -45,6 +46,10 @@ public class Vector2 {
         this.y = p.getY();
     }
 
+    public double getLength(){
+        return Vector2.abs(this);
+    }
+
 
     public static Vector2 negative(Vector2 v) {
         return new Vector2(-v.x, -v.y);
@@ -71,12 +76,6 @@ public class Vector2 {
         this.x += p1.getX();
         this.y += p1.getY();
     }
-
-//    public static Vector2 mul(Vector2 p1, Vector2 p2) {
-//        double x = p1.x * p2.x;
-//        double y = p1.y * p2.getY();
-//        return new Vector2(x, y);
-//    }
 
     public void mul(Vector2 p1) {
         this.x *= p1.getX();
@@ -113,13 +112,19 @@ public class Vector2 {
         return Math.sqrt(Vector2.absSqr(p1));
     }
 
-    public boolean eq(Vector2 v2) {
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Vector2))
+            return false;
+        Vector2 v2=(Vector2)obj;
         if (this.x == v2.getX() && this.y == v2.getY()) {
             return true;
         } else {
             return false;
         }
     }
+
+
 
     public static Vector2 normalize(Vector2 p) {
         double x = p.getX() / abs(p);

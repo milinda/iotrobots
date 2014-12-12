@@ -1,12 +1,12 @@
 package cgl.iotrobots.collavoid.Comparators;
 
-import cgl.iotrobots.collavoid.ROSAgent.Agent;
+import cgl.iotrobots.collavoid.ROSAgent.ROSAgent;
 import cgl.iotrobots.collavoid.utils.Vector2;
 
 public class NeighborDistComparator {
-    public Agent agt;
+    public ROSAgent agt;
 
-    public NeighborDistComparator(Agent a) {
+    public NeighborDistComparator(ROSAgent a) {
         this.agt = a;
     }
 
@@ -15,8 +15,8 @@ public class NeighborDistComparator {
         return new java.util.Comparator() {
 
             public int compare(Object o1, Object o2) {
-                if (o1 instanceof Agent && o2 instanceof Agent) {
-                    return compare((Agent) o1, (Agent) o2);
+                if (o1 instanceof ROSAgent && o2 instanceof ROSAgent) {
+                    return compare((ROSAgent) o1, (ROSAgent) o2);
                 } else {
                     System.err.println("comparator not found!!");
                     return 1;
@@ -24,7 +24,7 @@ public class NeighborDistComparator {
                 }
             }
 
-            public int compare(Agent a1, Agent a2) {
+            public int compare(ROSAgent a1, ROSAgent a2) {
                 Vector2 pos = agt.position.getPos(), nb1 = a1.position.getPos(), nb2 = a2.position.getPos();
                 Vector2 relativePos1 = Vector2.minus(pos, nb1);
                 Vector2 relativePos2 = Vector2.minus(pos, nb2);
