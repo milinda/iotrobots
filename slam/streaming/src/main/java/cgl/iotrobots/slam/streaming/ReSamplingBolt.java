@@ -40,9 +40,13 @@ public class ReSamplingBolt extends BaseRichBolt {
     private RangeReading reading;
 
     /** The RabbitMQ send used for sending out the re sampled particles back to the scan match bolts */
-    private RabbitMQSender sender;
+    private RabbitMQSender assignmentSender;
+
+    private RabbitMQSender valueSender;
 
     private String url = "amqp://localhost:";
+
+    private Kryo kryo;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -50,7 +54,17 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
-        this.sender = new RabbitMQSender(url, "");
+        this.kryo = new Kryo();
+
+        try {
+            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE);
+            this.assignmentSender.open();
+
+            this.valueSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
+            this.valueSender.open();
+        } catch (Exception e) {
+            LOG.error("Failed to create the sender", e);
+        }
     }
 
     @Override
@@ -108,9 +122,21 @@ public class ReSamplingBolt extends BaseRichBolt {
             ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
                     p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
 
+            byte []b = Utils.serialize(kryo, pv);
+            Message message = new Message(b, new HashMap<String, Object>());
+            int taskId = getTaskForParticle(i, assignments.getAssignments());
+            try {
+                valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + taskId);
+            } catch (Exception e) {
+                LOG.error("Failed to send the message");
+            }
         }
 
         reading = null;
+    }
+
+    private int getTaskForParticle(int particleIndex, List<ParticleAssignment> assignments) {
+        return 0;
     }
 
     @Override
@@ -123,16 +149,11 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @param assignments the particle assignments
      */
     private void distributeAssignments(ParticleAssignments assignments) {
-        Kryo kryo = new Kryo();
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        Output output = new Output();
-        kryo.writeObject(output, assignments);
-        output.flush();
-        byte []b = byteArrayOutputStream.toByteArray();
+        byte []b = Utils.serialize(kryo, assignments);
 
         Message message = new Message(b, new HashMap<String, Object>());
         try {
-            sender.send(message, "all");
+            assignmentSender.send(message, "all");
         } catch (Exception e) {
             LOG.error("Failed to send the message", e);
         }

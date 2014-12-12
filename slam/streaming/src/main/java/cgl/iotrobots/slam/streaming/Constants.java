@@ -48,6 +48,7 @@ public abstract class Constants {
         public static final String DIRECT_EXCHANGE = "slam_direct";
         public static final String PARTICLE_ASSIGNMENT_ROUTING_KEY = "pa";
         public static final String PARTICLE_MAP_ROUTING_KEY ="pm";
+        public static final String PARTICLE_VALUE_ROUTING_KEY ="pv";
     }
 
     public abstract class Topology {

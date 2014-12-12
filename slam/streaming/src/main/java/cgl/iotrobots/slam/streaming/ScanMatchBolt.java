@@ -76,6 +76,8 @@ public class ScanMatchBolt extends BaseRichBolt {
             this.sender.open();
 
             this.assignmentReceiver.listen(new ParticleAssignmentHandler());
+            this.particleReceiver.listen(new MapHandler());
+            this.particleValueReceiver.listen(new ParticleValueHandler());
         } catch (Exception e) {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
@@ -269,7 +271,10 @@ public class ScanMatchBolt extends BaseRichBolt {
     private class ParticleValueHandler implements MessageHandler {
         @Override
         public Map<String, String> getProperties() {
-            return null;
+            int taskId = topologyContext.getThisTaskIndex();
+            Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + taskId);
+            return props;
         }
 
         @Override
