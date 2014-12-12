@@ -1,9 +1,9 @@
 package cgl.iotrobots.slam.core;
 
-import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-
 public class GFSConfiguration {
     protected int beams;
+
+    protected int noOfParticles;
 
     protected double minimumScore;
 
@@ -11,7 +11,10 @@ public class GFSConfiguration {
 
     protected double linearDistance, angularDistance;
 
-    protected double neff;
+    protected double srr;
+    protected double srt;
+    protected double str;
+    protected double stt;
 
     protected double xmin;
     protected double ymin;
@@ -24,11 +27,11 @@ public class GFSConfiguration {
     protected double maxMove;
     protected double linearThresholdDistance;
     protected double angularThresholdDistance;
+    protected double updatePeriod;
     protected double obsSigmaGain;
 
-    protected double laserMaxRange;
-    protected double usableRange;
     protected double gaussianSigma;
+    protected double likelihoodGain;
     protected double likelihoodSigma;
     protected int kernelSize;
     protected double optAngularDelta;
@@ -46,6 +49,83 @@ public class GFSConfiguration {
     protected double linearOdometryReliability = 0;
     protected double freeCellRatio = Math.sqrt(2.0);
     protected int initialBeamsSkip = 0;
+
+    protected double maxURage;
+    protected double maxRange;
+
+    protected double mapUpdateInterval = 5.0;
+
+    public double getMaxURage() {
+        return maxURage;
+    }
+
+    public double getMaxRange() {
+        return maxRange;
+    }
+
+    public void setMaxURage(double maxURage) {
+        this.maxURage = maxURage;
+    }
+
+    public void setMaxRange(double maxRange) {
+        this.maxRange = maxRange;
+    }
+
+    public double getLikelihoodGain() {
+        return likelihoodGain;
+    }
+
+    public void setLikelihoodGain(double likelihoodGain) {
+        this.likelihoodGain = likelihoodGain;
+    }
+
+    public int getNoOfParticles() {
+        return noOfParticles;
+    }
+
+    public void setNoOfParticles(int noOfParticles) {
+        this.noOfParticles = noOfParticles;
+    }
+
+    public double getUpdatePeriod() {
+        return updatePeriod;
+    }
+
+    public void setUpdatePeriod(double updatePeriod) {
+        this.updatePeriod = updatePeriod;
+    }
+
+    public double getSrr() {
+        return srr;
+    }
+
+    public double getSrt() {
+        return srt;
+    }
+
+    public double getStr() {
+        return str;
+    }
+
+    public double getStt() {
+        return stt;
+    }
+
+    public void setSrr(double srr) {
+        this.srr = srr;
+    }
+
+    public void setSrt(double srt) {
+        this.srt = srt;
+    }
+
+    public void setStr(double str) {
+        this.str = str;
+    }
+
+    public void setStt(double stt) {
+        this.stt = stt;
+    }
 
     public int getBeams() {
         return beams;
@@ -67,9 +147,6 @@ public class GFSConfiguration {
         return angularDistance;
     }
 
-    public double getNeff() {
-        return neff;
-    }
 
     public double getXmin() {
         return xmin;
@@ -113,14 +190,6 @@ public class GFSConfiguration {
 
     public double getObsSigmaGain() {
         return obsSigmaGain;
-    }
-
-    public double getLaserMaxRange() {
-        return laserMaxRange;
-    }
-
-    public double getUsableRange() {
-        return usableRange;
     }
 
     public double getGaussianSigma() {
@@ -215,10 +284,6 @@ public class GFSConfiguration {
         this.angularDistance = angularDistance;
     }
 
-    public void setNeff(double neff) {
-        this.neff = neff;
-    }
-
     public void setXmin(double xmin) {
         this.xmin = xmin;
     }
@@ -261,14 +326,6 @@ public class GFSConfiguration {
 
     public void setObsSigmaGain(double obsSigmaGain) {
         this.obsSigmaGain = obsSigmaGain;
-    }
-
-    public void setLaserMaxRange(double laserMaxRange) {
-        this.laserMaxRange = laserMaxRange;
-    }
-
-    public void setUsableRange(double usableRange) {
-        this.usableRange = usableRange;
     }
 
     public void setGaussianSigma(double gaussianSigma) {
@@ -341,5 +398,13 @@ public class GFSConfiguration {
 
     public void setInitialBeamsSkip(int initialBeamsSkip) {
         this.initialBeamsSkip = initialBeamsSkip;
+    }
+
+    public double getMapUpdateInterval() {
+        return mapUpdateInterval;
+    }
+
+    public void setMapUpdateInterval(double mapUpdateInterval) {
+        this.mapUpdateInterval = mapUpdateInterval;
     }
 }

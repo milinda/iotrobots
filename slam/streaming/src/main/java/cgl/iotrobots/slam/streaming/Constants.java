@@ -8,6 +8,7 @@ public abstract class Constants {
     // configurations
     public static final String MAP_UPDATE_INTERVAL = "map_update_interval";
     public static final String MAXURANGE = "maxUrange";
+    public static final String MAX_RANGE = "maxRange";
     public static final String SIGMA = "sigma";
     public static final String KERNELSIZE = "kernelSize";
     public static final String LSTEP = "lstep";
