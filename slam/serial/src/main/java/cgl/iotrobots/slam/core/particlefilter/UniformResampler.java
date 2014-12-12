@@ -15,8 +15,9 @@ public class UniformResampler {
             n++;
         }
 
-        if (nparticles > 0)
+        if (nparticles > 0) {
             n = nparticles;
+        }
 
         //compute the interval
         double interval = cweight / n;
@@ -24,7 +25,6 @@ public class UniformResampler {
         //compute the initial target weight
         double target = interval * (new Random().nextDouble());
         //compute the resampled indexes
-
         cweight = 0;
         List<Integer> indexes = new ArrayList<Integer>(n);
         n = 0;

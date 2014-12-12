@@ -1,7 +1,8 @@
 package cgl.iotrobots.sim;
 
-import cgl.iotrobots.slam.core.sample.OutMap;
-import cgl.iotrobots.slam.core.sample.Sample;
+import cgl.iotrobots.slam.core.app.GFSMap;
+import cgl.iotrobots.slam.core.app.GFSAlgorithm;
+import cgl.iotrobots.slam.core.utils.IntPoint;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,12 +13,7 @@ import java.io.IOException;
 import java.util.Random;
 
 public class MapUI extends JFrame {
-    int w = 200;
-    int h = 200;
-
-
-
-    OutMap map;
+    GFSMap map;
 
     private ImagePanel im = new ImagePanel();
 
@@ -30,7 +26,7 @@ public class MapUI extends JFrame {
         setVisible(true);
     }
 
-    public void setMap(OutMap map) {
+    public void setMap(GFSMap map) {
         this.map = map;
         im.setMap();
     }
@@ -58,10 +54,21 @@ public class MapUI extends JFrame {
                 }
             }
             int count = 0;
+            try {
+                synchronized (map.currentPos) {
+                    for (IntPoint p : map.currentPos) {
+                        colorArea(image, p.x, p.y, map.width, map.height, 1);
+                    }
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+//            map.currentPos.clear();
 
             for (int x = 0; x < map.width; x++) {
                 for (int y = 0; y < map.height; y++) {
-                    int occ = map.data[Sample.MAP_IDX(map.width, x, y)];
+                    int occ = map.data[GFSAlgorithm.MAP_IDX(map.width, x, y)];
 
                     Random rand = new Random();
                     float r = rand.nextFloat();
@@ -70,20 +77,16 @@ public class MapUI extends JFrame {
                     Color randomColor = new Color(r, gg, b);
                     // image.setRGB(x, y, randomColor.getRGB());
                     if (occ == 100) {
-                        //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
                         count++;
-
-                        // image.setRGB(x, y, Color.WHITE.getRGB());
-                        colorArea(image, x, y, map.width, map.height);
+                        colorArea(image, x, y, map.width, map.height, 1);
                     }
                 }
             }
-            System.out.println("One scan completed: " + count);
+            // System.out.println("One scan completed: " + count);
 
 
-//            BufferedImage r = scale(image, BufferedImage.TYPE_INT_ARGB, w, h, map.width, map.height);
             try {
-                image = getScaledImage(image, 600, 600);
+                image = getScaledImage(image, 800, 800);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -93,19 +96,11 @@ public class MapUI extends JFrame {
         }
     }
 
-    public static void colorArea(BufferedImage image, int x, int y, int w, int h) {
-        int size = 4;
-//        System.out.println("x, y" + x + ", " + y);
+    public static void colorArea(BufferedImage image, int x, int y, int w, int h, int size) {
         for (int i = -size; i < size; i++) {
             for (int j = -size; j < size; j++) {
                 if (x + i < w && x + i > 0 && y + j < h && y + j > 0) {
-                    Random rand = new Random();
-                    float r = rand.nextFloat();
-                    float gg = rand.nextFloat();
-                    float b = rand.nextFloat();
-                    Color randomColor = new Color(r, gg, b);
                     image.setRGB(x + i, y + j, Color.WHITE.getRGB());
-//                    image.setRGB(x + i, y + j, randomColor.getRGB());
                 }
             }
         }

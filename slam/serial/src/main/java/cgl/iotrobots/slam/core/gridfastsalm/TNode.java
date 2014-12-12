@@ -1,11 +1,11 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.core.utils.OrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
 public class TNode {
     /**The pose of the robot*/
-    public OrientedPoint<Double> pose;
+    public DoubleOrientedPoint pose;
 
     /**The weight of the particle*/
     public double weight;
@@ -30,7 +30,7 @@ public class TNode {
     /**visit flag (internally used)*/
     public boolean flag;
 
-    public TNode(OrientedPoint<Double> p, double w, TNode n, int c) {
+    public TNode(DoubleOrientedPoint p, double w, TNode n, int c) {
         pose = p;
         weight = w;
         childs = c;

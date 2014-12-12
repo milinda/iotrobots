@@ -2,6 +2,7 @@ package cgl.iotrobots.slam.core.sensor;
 
 public class OdometrySensor extends Sensor {
     boolean m_ideal =  false;
+
     public OdometrySensor(String name, boolean ideal) {
         super(name);
         m_ideal = ideal;

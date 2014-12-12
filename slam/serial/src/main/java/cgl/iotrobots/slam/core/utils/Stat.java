@@ -3,6 +3,7 @@ package cgl.iotrobots.slam.core.utils;
 import java.util.Random;
 
 public class Stat {
+    static Random random = new Random();
     public static double sampleGaussian(double sigma, long S) {
       /*
         static gsl_rng * r = NULL;
@@ -28,17 +29,18 @@ public class Stat {
 
         do {
             do {
-                r = random.nextDouble();
+                r = Stat.random.nextDouble();
             } while (r == 0.0);
             x1 = 2.0 * r - 1.0;
             do {
-                r = random.nextDouble();
+                r = Stat.random.nextDouble();
             } while (r == 0.0);
-            x2 = 2.0 * random.nextDouble() - 1.0;
+            x2 = 2.0 * Stat.random.nextDouble() - 1.0;
             w = x1 * x1 + x2 * x2;
         } while (w > 1.0 || w == 0.0);
 
-        return (sigma * x2 * Math.sqrt(-2.0 * Math.log(w) / w));
+        double val = (sigma * x2 * Math.sqrt(-2.0 * Math.log(w) / w));
+        return val;
     }
 
     static void tred2(double V[][], double d[], double e[]) {
