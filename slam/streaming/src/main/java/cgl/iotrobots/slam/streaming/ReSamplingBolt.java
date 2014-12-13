@@ -78,6 +78,8 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        outputCollector.ack(tuple);
+
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         ParticleValue value;
         if (val != null && (val instanceof ParticleValue)) {
