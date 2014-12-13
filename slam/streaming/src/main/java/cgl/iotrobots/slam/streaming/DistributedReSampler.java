@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.streaming;
 
+import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
@@ -160,6 +161,39 @@ public class DistributedReSampler {
             angles[i] = rangeSensor.beams().get(i).pose.theta;
         }
         matcher.setLaserParameters(beams, angles, rangeSensor.getPose());
+    }
+
+    public void init(int size, double xmin, double ymin,
+                     double xmax, double ymax, double delta,
+                     DoubleOrientedPoint initialPose) {
+        this.xmin = xmin;
+        this.ymin = ymin;
+        this.xmax = xmax;
+        this.ymax = ymax;
+        this.delta = delta;
+
+        LOG.info(" -xmin " + this.xmin + " -xmax " + this.xmax + " -ymin " + this.ymin
+                + " -ymax " + this.ymax + " -delta " + this.delta + " -particles " + size);
+
+        particles.clear();
+
+        for (int i = 0; i < size; i++) {
+            GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            Particle p = new Particle(lmap);
+
+            p.pose = new DoubleOrientedPoint(initialPose);
+            p.previousPose = initialPose;
+            p.setWeight(0);
+            p.previousIndex = 0;
+            particles.add(p);
+            // we use the root directly
+            p.node = new TNode(initialPose, 0, null, 0);
+        }
+
+        neff = (double) size;
+        count = 0;
+        readingCount = 0;
+        linearDistance = angularDistance = 0;
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {

@@ -5,6 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
@@ -12,6 +13,8 @@ import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.rabbitmq.*;
+import cgl.sensorstream.core.StreamComponents;
+import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +85,13 @@ public class ScanMatchBolt extends BaseRichBolt {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
         }
+
+        // read the configuration of the scanmatcher from topology.xml
+        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+        StreamComponents components = streamTopologyBuilder.buildComponents();
+        // use the configuration to create the scanmatcher
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        gfsp = ProcessorFactory.createMatcher(cfg);
     }
 
     @Override

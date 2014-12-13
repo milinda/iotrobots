@@ -5,6 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
@@ -12,6 +13,8 @@ import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.rabbitmq.Message;
 import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQSender;
+import cgl.sensorstream.core.StreamComponents;
+import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
 import org.slf4j.Logger;
@@ -65,6 +68,12 @@ public class ReSamplingBolt extends BaseRichBolt {
         } catch (Exception e) {
             LOG.error("Failed to create the sender", e);
         }
+        // read the configuration of the scanmatcher from topology.xml
+        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+        StreamComponents components = streamTopologyBuilder.buildComponents();
+        // use the configuration to create the resampler
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        reSampler = ProcessorFactory.createReSampler(cfg);
     }
 
     @Override
