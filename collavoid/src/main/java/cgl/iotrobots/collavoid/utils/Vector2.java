@@ -99,7 +99,11 @@ public class Vector2 {
     }
 
     public static double det(Vector2 v1, Vector2 v2) {
-        return v1.getX() * v2.getY() - v1.getY() * v2.getX();
+        return det(v1.getX(),v1.getY(),v2.getX(),v2.getY());
+    }
+
+    public static double det(double x1,double y1,double x2,double y2){
+        return x1*y2-y1*x2;
     }
 
     public static double absSqr(Vector2 p1) {

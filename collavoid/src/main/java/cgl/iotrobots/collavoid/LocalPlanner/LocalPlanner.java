@@ -248,8 +248,8 @@ public class LocalPlanner {
             return false;
         }
 
-        me.msgPublisher.publishPlan(global_plan_,base_frame_, g_plan_pub_);
-        me.msgPublisher.publishPlan(transformed_plan_,base_frame_, l_plan_pub_);
+//        me.msgPublisher.publishPlan(global_plan_,base_frame_, g_plan_pub_);
+//        me.msgPublisher.publishPlan(transformed_plan_,base_frame_, l_plan_pub_);
         return true;
     }
 
@@ -370,8 +370,8 @@ public class LocalPlanner {
 
             //publish an empty plan because we've reached our goal position
             transformed_plan_.clear();
-            me.msgPublisher.publishPlan(transformed_plan_, id, g_plan_pub_);
-            me.msgPublisher.publishPlan(transformed_plan_, id, l_plan_pub_);
+//            me.msgPublisher.publishPlan(transformed_plan_, id, g_plan_pub_);
+//            me.msgPublisher.publishPlan(transformed_plan_, id, l_plan_pub_);
             //we don't actually want to run the controller when we're just rotating to goal
             return true;
         }
@@ -445,8 +445,8 @@ public class LocalPlanner {
             } else {
                 //reached goal
                 transformed_plan_.clear();
-                me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
-                me.msgPublisher.publishPlan( transformed_plan_,id, l_plan_pub_);
+//                me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
+//                me.msgPublisher.publishPlan( transformed_plan_,id, l_plan_pub_);
                 return false;
             }
         } else {
@@ -462,8 +462,8 @@ public class LocalPlanner {
         pos.setHeader(global_pose.getHeader());
         local_plan.add(pos);
         local_plan.add(transformed_plan_.get(current_waypoint_));
-        me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
-        me.msgPublisher.publishPlan( local_plan,id, l_plan_pub_);
+//        me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
+//        me.msgPublisher.publishPlan( local_plan,id, l_plan_pub_);
 
         return true;
     }

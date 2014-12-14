@@ -247,7 +247,29 @@ public class CP {
         }
     }
 
+//    // use new footprint type
+//    public static FootPrint minkowskiSum(final FootPrint polygon1, final FootPrint polygon2){
+//        List<Vector2> result=new ArrayList<Vector2>();
+//        List< ConvexHullPoint > convex_hull=new ArrayList<ConvexHullPoint>();
+//
+//        FootPrint ConvexHullPoints=new FootPrint();
+//        for (int i = 0; i <  polygon1.size(); i++) {
+//            for (int j = 0; j <  polygon2.size(); j++) {
+//                double x=polygon1
+//                p.setPoint(Vector2.plus(polygon1.get(i),polygon2.get(j)));
+//                convex_hull.add(p);
+//            }
+//
+//        }
+//        convex_hull = convexHull(convex_hull,false);
+//        for (int i = 0; i< convex_hull.size(); i++) {
+//            result.add(convex_hull.get(i).getPoint());
+//        }
+//        return result;
+//
+//    }
 
+    //original
     public static List<Vector2> minkowskiSum(final List<Vector2> polygon1, final List<Vector2> polygon2){
         List<Vector2> result=new ArrayList<Vector2>();
         List< ConvexHullPoint > convex_hull=new ArrayList<ConvexHullPoint>();

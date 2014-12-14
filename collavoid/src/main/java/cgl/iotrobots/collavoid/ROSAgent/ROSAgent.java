@@ -68,7 +68,6 @@ public class ROSAgent {
     public Vector2 velocity;
     public Vector2 newVelocity;
     private double radius;
-    //public List<Point<Double>> footPrint_rotated;
     public List<Vector2> footPrint_rotated;
 
     //allowed error for non-holonomic robot
@@ -152,6 +151,7 @@ public class ROSAgent {
 
     //COLLVOID
     public List<Vector2> minkowski_footprint_;
+    //public FootPrint minkowski_footprint_;
     public List<PoseWeighted> pose_array_weighted_;
 
     //lock
@@ -163,7 +163,7 @@ public class ROSAgent {
     //subscribers and publishers
     public Publisher lines_pub_, neighbors_pub_, polygon_pub_, vo_pub_, me_pub_, samples_pub_, speed_pub_, position_share_pub_, obstacles_pub_;
     public Subscriber amcl_posearray_sub_, position_share_sub_, odom_sub_, laser_scan_sub_, laser_notifier;
-    public MsgPublisher msgPublisher;
+    //public MsgPublisher msgPublisher;
 
 
     //utils
@@ -199,7 +199,9 @@ public class ROSAgent {
         lastTimeMePublished = new Time(); //for position share
         lastTimePositionsPublished = new Time();//for visualization in rviz
 
+
         minkowski_footprint_ = new ArrayList<Vector2>();
+        //minkowski_footprint_=new FootPrint();
         originalFootPrintLines = new ArrayList<LinePair>();
         obstacle_points_ = new ArrayList<Vector2>();
         pose_array_weighted_ = new ArrayList<PoseWeighted>();
@@ -220,6 +222,7 @@ public class ROSAgent {
         position = new Position();
 
         minkowski_footprint_ = new ArrayList<Vector2>();
+        //minkowski_footprint_=new FootPrint();
         last_seen_ = new Time();
     }
 
@@ -243,7 +246,7 @@ public class ROSAgent {
             }
         }
 
-        msgPublisher = new MsgPublisher(node);
+        //msgPublisher = new MsgPublisher(node);
         agentInit();
     }
 
@@ -442,6 +445,36 @@ public class ROSAgent {
 
     }
 
+    // test array new footprint
+//    void PoseArrayTestCallback(PoseArray msg) {
+//        // in robot base frame do not need transform
+//        double x, y;
+//        FootPrint localization_footprint=new FootPrint();
+//        FootPrint own_footprint=new FootPrint();
+//
+//        for (int i = 0; i < msg.getPoses().size(); i++) {
+//            x = msg.getPoses().get(i).getPosition().getX();
+//            y = msg.getPoses().get(i).getPosition().getY();
+//            Vector2 p = new Vector2(x, y);
+//            if (p.getLength() > 0.1)
+//                continue;
+//            localization_footprint.addPoint(x,y);
+//        }
+//
+//        //for testing replaced the algorithm computeNewMinkowskiFootprint
+//        for (int i = 0; i < footprint_original_msg_.getPolygon().getPoints().size(); i++) {
+//            Point32 p = footprint_original_msg_.getPolygon().getPoints().get(i);
+//            own_footprint.addPoint(p.getX(), p.getY());
+//            //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
+//        }
+//        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+//        //publish footprint
+//        PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
+//        polygon_pub_.publish(msg_pub);
+//
+//    }
+
+    // original test case
     void PoseArrayTestCallback(PoseArray msg) {
         // in robot base frame do not need transform
         double x, y;
@@ -657,12 +690,12 @@ public class ROSAgent {
 
             if ((node.getCurrentTime().toSeconds() - lastTimePositionsPublished.toSeconds()) > publishPositionsPeriod) {
                 lastTimePositionsPublished = node.getCurrentTime();
-                msgPublisher.publishNeighborPositions(ROSAgentNeighbors, global_frame_, base_frame_, neighbors_pub_);// for visualization
+                //msgPublisher.publishNeighborPositions(ROSAgentNeighbors, global_frame_, base_frame_, neighbors_pub_);// for visualization
                 //in case odometry call back is not called at the beginning
                 if (last_seen_ == null) {
                     last_seen_ = node.getCurrentTime();
                 }
-                msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);//for visualize in rviz
+                //msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);//for visualize in rviz
             }
         } finally {
             neighbors_lock_.unlock();
@@ -750,11 +783,13 @@ public class ROSAgent {
         if (msg.getWidth() * msg.getHeight() == 0) {
             obstacle_lock_.lock();
             try{
-                obstacles_from_laser_.clear();}finally {
+                obstacles_from_laser_.clear();
+            }finally {
                 obstacle_lock_.unlock();
             }
                     return;
         }
+        System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
             ChannelBuffer data = msg.getData().copy();
             while (data.readableBytes() > 0) {
                 double[] pt = new double[msg.getFields().size()];
@@ -847,7 +882,7 @@ public class ROSAgent {
         }
 
         //tell its original frame
-        msgPublisher.publishObstacleLines(obstacles_from_laser_, global_frame_, base_frame_, obstacles_pub_);
+        //msgPublisher.publishObstacleLines(obstacles_from_laser_, global_frame_, base_frame_, obstacles_pub_);
     }
 
     boolean pointInNeighbor(Vector2 point) {
@@ -1251,10 +1286,10 @@ public class ROSAgent {
             neighbors_lock_.unlock();
         }
         //for visualization
-        msgPublisher.publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
-        msgPublisher.publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
-        msgPublisher.publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
-        msgPublisher.publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
+//        msgPublisher.publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
+//        msgPublisher.publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
+//        msgPublisher.publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
+//        msgPublisher.publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
 
 
     }

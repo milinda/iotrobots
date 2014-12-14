@@ -394,6 +394,7 @@ public class MainSimulator {
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
 
+
     }
 
 } 

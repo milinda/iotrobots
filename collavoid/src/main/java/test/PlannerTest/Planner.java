@@ -16,6 +16,10 @@ import org.ros.rosjava.tf.pubsub.TransformListener;
 import javax.media.j3d.Transform3D;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +55,7 @@ public class Planner {
 
     //test
     long planner_delay =0;
+    String fileName="/home/hjh/Dropbox/";
 
     public Planner(TransformListener tfl, int id) {
         ROSAgentNode agentNode=new ROSAgentNode("planner_robot"+id);
@@ -61,6 +66,7 @@ public class Planner {
         this.id_string = "robot" + id;
         this.robotNb = params.getInteger("/robotNb");
         this.posRadius = params.getDouble("/posRadius");
+        this.fileName=fileName+id_string+"TimeConsumingLog.txt";
         initPlanner();
     }
 
@@ -137,28 +143,51 @@ public class Planner {
             }
         });
         chkPlannersThd.start();
+        // open file to record time delay
+        writeTitle();
+
 
         node.executeCancellableLoop(new CancellableLoop() {
+            long last_pub=0;
+            double pub_period=0;
+            long startTime=0;
+            double consumingTime=0;
+            double time=0;
+            boolean firstTime=true;
             @Override
             protected void loop() throws InterruptedException {
 
                 if (flagAllReady) {
                     if (node.getCurrentTime().toSeconds() - lastPublished.toSeconds() > ctr_period) {
-                        long startTime=System.nanoTime();
+
+                            startTime=System.nanoTime();
 
                         if (localPlanner.computeVelocityCommands(cmd_vel));{
-                        velocityPublisher.publish(cmd_vel);
+                            velocityPublisher.publish(cmd_vel);
 
-                            long consumingTime=System.nanoTime()-startTime;
-                            if (planner_delay <consumingTime){
-                                planner_delay =consumingTime;
-                                System.out.println("localPlanner "+id_int+" max duration: "+(double) planner_delay /1000000000+"s");
-                            }
+                            consumingTime=(System.nanoTime()-startTime)/1000000000.0;
+                            if (firstTime){
+                                pub_period=0;
+                            firstTime=false;}
+                            else
+                            pub_period=(System.nanoTime()-last_pub)/1000000000.0;
+                            last_pub=System.nanoTime();
+                            time=time+pub_period;
+//                            appendData(time,
+//                                    localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getX(),
+//                                    localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getY(),
+//                                    localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getZ(),
+//                                    pub_period,
+//                                    consumingTime);
+
+
                         }
                         lastPublished=node.getCurrentTime();
+                    }else {
+                        Thread.sleep(10);
                     }
                 }
-                Thread.sleep((long) ctr_period * 1000);
+
             }
         });
     }
@@ -183,6 +212,38 @@ public class Planner {
         }
         node.getLog().info("Sim period is set to " + String.format("%1$.2f", ctl_period_));
         return ctl_period_;
+    }
+
+    public void writeTitle()
+    {
+        try
+        {
+            FileWriter writer=new FileWriter(fileName);
+            writer.write("Time              ");
+            writer.write("x                 ");
+            writer.write("y                 ");
+            writer.write("z                 ");
+            writer.write("PubPeriod         ");
+            writer.write("ConsumingTime     \n");
+            writer.close();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void appendData(double tsec,double x,double y,double z,double pubPeriod,double consumingTime)
+    {
+        String data=tsec+"     "+x+"     "+y+"     "+z+"     "+pubPeriod+"     "+consumingTime+"\n";
+        try
+        {
+            FileWriter writer=new FileWriter(fileName,true);
+            writer.write(data);
+            writer.close();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
 }
