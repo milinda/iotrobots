@@ -47,7 +47,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private RabbitMQSender sender;
 
-    private String url = "";
+    private String url = "amqp://localhost:5672";
 
     private Kryo kryo;
 
@@ -71,6 +71,14 @@ public class ScanMatchBolt extends BaseRichBolt {
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
         this.kryo = new Kryo();
+        // read the configuration of the scanmatcher from topology.xml
+        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+        StreamComponents components = streamTopologyBuilder.buildComponents();
+        // use the configuration to create the scanmatcher
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        gfsp = ProcessorFactory.createMatcher(cfg);
+
+        this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             this.particleReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
@@ -85,13 +93,6 @@ public class ScanMatchBolt extends BaseRichBolt {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
         }
-
-        // read the configuration of the scanmatcher from topology.xml
-        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
-        StreamComponents components = streamTopologyBuilder.buildComponents();
-        // use the configuration to create the scanmatcher
-        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
-        gfsp = ProcessorFactory.createMatcher(cfg);
     }
 
     @Override

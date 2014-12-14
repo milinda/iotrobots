@@ -35,6 +35,7 @@ public abstract class Constants {
     public static final String LLSAMPLESTEP = "llsamplestep";
     public static final String LASAMPLERANGE = "lasamplerange";
     public static final String LASAMPLESTEP = "lasamplestep";
+    public static final String RABBITMQ_URL = "rabbitmq_url";
 
     public abstract class Fields {
         public static final String TIME_FIELD = "time";

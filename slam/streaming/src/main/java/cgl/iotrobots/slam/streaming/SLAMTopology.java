@@ -54,7 +54,7 @@ public class SLAMTopology {
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildAllInOneTopology(builder, streamTopologyBuilder);
+            buildTestTopology(builder, streamTopologyBuilder);
         }
 
         Config conf = new Config();

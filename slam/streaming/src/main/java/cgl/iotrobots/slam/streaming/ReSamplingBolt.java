@@ -47,7 +47,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     private RabbitMQSender valueSender;
 
-    private String url = "amqp://localhost:";
+    private String url = "amqp://localhost:5672";
 
     private Kryo kryo;
 
@@ -58,7 +58,14 @@ public class ReSamplingBolt extends BaseRichBolt {
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
         this.kryo = new Kryo();
+        // read the configuration of the scanmatcher from topology.xml
+        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+        StreamComponents components = streamTopologyBuilder.buildComponents();
+        // use the configuration to create the resampler
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        reSampler = ProcessorFactory.createReSampler(cfg);
 
+        this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE);
             this.assignmentSender.open();
@@ -68,12 +75,8 @@ public class ReSamplingBolt extends BaseRichBolt {
         } catch (Exception e) {
             LOG.error("Failed to create the sender", e);
         }
-        // read the configuration of the scanmatcher from topology.xml
-        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
-        StreamComponents components = streamTopologyBuilder.buildComponents();
-        // use the configuration to create the resampler
-        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
-        reSampler = ProcessorFactory.createReSampler(cfg);
+
+
     }
 
     @Override

@@ -17,7 +17,7 @@ bolts:
         properties:
           ackMode: "auto"
 conf:
-    rabbitmq_url: "amqp://"
+    rabbitmq_url: "amqp://localhost:5672"
     map_update_interval: 5.0
     maxRnage: 100.0
     maxUrange: 100.0
