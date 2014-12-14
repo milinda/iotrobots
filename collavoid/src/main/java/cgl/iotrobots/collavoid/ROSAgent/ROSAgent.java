@@ -9,7 +9,7 @@ import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.utils.*;
 
 import static cgl.iotrobots.collavoid.ClearPath.CP.convexHull;
-import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSum;
+import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSumConvexHull;
 import static cgl.iotrobots.collavoid.NHORCA.NHORCA.calcVstar;
 import static cgl.iotrobots.collavoid.utils.utils.*;
 
@@ -29,7 +29,6 @@ import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
-import std_msgs.*;
 import visualization_msgs.MarkerArray;
 import visualization_msgs.Marker;
 
@@ -467,7 +466,7 @@ public class ROSAgent {
 //            own_footprint.addPoint(p.getX(), p.getY());
 //            //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
 //        }
-//        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+//        minkowski_footprint_ = minkowskiSumConvexHull(localization_footprint, own_footprint);
 //        //publish footprint
 //        PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
 //        polygon_pub_.publish(msg_pub);
@@ -495,7 +494,7 @@ public class ROSAgent {
             own_footprint.add(new Vector2(p.getX(), p.getY()));
             //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
         }
-        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+        minkowski_footprint_ = minkowskiSumConvexHull(localization_footprint, own_footprint);
         //publish footprint
         PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
         polygon_pub_.publish(msg_pub);
@@ -627,7 +626,7 @@ public class ROSAgent {
             own_footprint.add(new Vector2(p.getX(), p.getY()));
             //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
         }
-        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+        minkowski_footprint_ = minkowskiSumConvexHull(localization_footprint, own_footprint);
         //publish footprint
         PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
         // for visualization
@@ -1195,7 +1194,7 @@ public class ROSAgent {
             Vector<Vector2> obst = new Vector<Vector2>();
             obst.add(Vector2.minus(obst1, position_obst));
             obst.add(Vector2.minus(obst2, position_obst));
-            List<Vector2> mink_sum = minkowskiSum(own_footprint, obst);
+            List<Vector2> mink_sum = minkowskiSumConvexHull(own_footprint, obst);
 
             Vector2 min = new Vector2();
             Vector2 max = new Vector2();

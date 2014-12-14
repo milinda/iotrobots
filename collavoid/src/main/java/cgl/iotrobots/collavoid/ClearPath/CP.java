@@ -247,47 +247,17 @@ public class CP {
         }
     }
 
-//    // use new footprint type
-//    public static FootPrint minkowskiSum(final FootPrint polygon1, final FootPrint polygon2){
-//        List<Vector2> result=new ArrayList<Vector2>();
-//        List< ConvexHullPoint > convex_hull=new ArrayList<ConvexHullPoint>();
-//
-//        FootPrint ConvexHullPoints=new FootPrint();
-//        for (int i = 0; i <  polygon1.size(); i++) {
-//            for (int j = 0; j <  polygon2.size(); j++) {
-//                double x=polygon1
-//                p.setPoint(Vector2.plus(polygon1.get(i),polygon2.get(j)));
-//                convex_hull.add(p);
-//            }
-//
-//        }
-//        convex_hull = convexHull(convex_hull,false);
-//        for (int i = 0; i< convex_hull.size(); i++) {
-//            result.add(convex_hull.get(i).getPoint());
-//        }
-//        return result;
-//
-//    }
+    public static List<ConvexHullPoint> minkowskiSumConvexHull(final List<ConvexHullPoint> p1, final List<ConvexHullPoint> p2) {
+        List<ConvexHullPoint> result = new ArrayList<ConvexHullPoint>();
 
-    //original
-    public static List<Vector2> minkowskiSum(final List<Vector2> polygon1, final List<Vector2> polygon2){
-        List<Vector2> result=new ArrayList<Vector2>();
-        List< ConvexHullPoint > convex_hull=new ArrayList<ConvexHullPoint>();
-
-        for (int i = 0; i <  polygon1.size(); i++) {
-            for (int j = 0; j <  polygon2.size(); j++) {
+        for (int i = 0; i < p1.size(); i++) {
+            for (int j = 0; j < p2.size(); j++) {
                 ConvexHullPoint p=new ConvexHullPoint();
-                p.setPoint(Vector2.plus(polygon1.get(i),polygon2.get(j)));
-                convex_hull.add(p);
+                p.setPoint(p1.get(i).getX() + p2.get(j).getX(), p1.get(i).getY() + p2.get(j).getY());
+                result.add(p);
             }
-
-        }
-        convex_hull = convexHull(convex_hull,false);
-        for (int i = 0; i< convex_hull.size(); i++) {
-            result.add(convex_hull.get(i).getPoint());
         }
         return result;
-
     }
 
     // Returns a list of points on the convex hull in counter-clockwise order.
@@ -349,7 +319,7 @@ public class CP {
         obst.add(Vector2.minus(obst1, position_obst));
         obst.add(Vector2.minus(obst2,position_obst));
 
-        List<Vector2> mink_sum = minkowskiSum(footprint1, obst);
+        List<Vector2> mink_sum = minkowskiSumConvexHull(footprint1, obst);
 
         Vector2 min_left, min_right;
         double min_ang =  0.0;
@@ -527,7 +497,7 @@ public class CP {
     //basic method by footprint
     private static VO createVO(Vector2 position1, List<Vector2> footprint1, Vector2 position2, List<Vector2> footprint2, Vector2 vel2){
         VO result=new VO();
-        List<Vector2> mink_sum = minkowskiSum(footprint1, footprint2);
+        List<Vector2> mink_sum = minkowskiSumConvexHull(footprint1, footprint2);
 
         Vector2 min_left=new Vector2();
         Vector2 min_right=new Vector2();

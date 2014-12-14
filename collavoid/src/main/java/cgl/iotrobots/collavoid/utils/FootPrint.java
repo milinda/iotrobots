@@ -14,12 +14,14 @@ public class FootPrint {
         XArray = new double[step];
         YArray = new double[step];
         size = 0;
+        sorted = false;
     }
 
     public FootPrint(int capacity) {
         XArray = new double[capacity];
         YArray = new double[capacity];
         this.size = 0;
+        sorted = false;
     }
 
     public int size(){
@@ -242,6 +244,13 @@ public class FootPrint {
             this.unSort();
 
         return result;
+    }
+
+    public void clear() {
+        XArray = new double[step];
+        YArray = new double[step];
+        size = 0;
+        sorted = false;
     }
 
 }
