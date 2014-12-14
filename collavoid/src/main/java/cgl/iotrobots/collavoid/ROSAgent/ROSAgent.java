@@ -445,7 +445,7 @@ public class ROSAgent {
 
     }
 
-    // test array new footprint
+    //   test array new footprint
 //    void PoseArrayTestCallback(PoseArray msg) {
 //        // in robot base frame do not need transform
 //        double x, y;
