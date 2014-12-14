@@ -48,14 +48,14 @@ public class ConfigurationBuilder {
     }
 
     public static int getIntProperty(Map conf, String property) {
-        return (int) conf.get(property);
+        return (Integer) conf.get(property);
     }
 
     public static double getDoubleProperty(Map conf, String property) {
-        return (double) conf.get(property);
+        return (Double) conf.get(property);
     }
 
     public static double getStringProperty(Map conf, String property) {
-        return (double) conf.get(property);
+        return (Double) conf.get(property);
     }
 }
