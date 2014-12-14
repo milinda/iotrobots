@@ -47,3 +47,4 @@ conf:
     llsamplestep: 0.01
     lasamplerange: 0.005
     lasamplestep: 0.005
+    occ_threshold: 0.3

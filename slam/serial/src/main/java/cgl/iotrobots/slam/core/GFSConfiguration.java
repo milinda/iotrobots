@@ -55,6 +55,16 @@ public class GFSConfiguration {
 
     protected double mapUpdateInterval = 5.0;
 
+    protected double occThresh = .3;
+
+    public double getOccThresh() {
+        return occThresh;
+    }
+
+    public void setOccThresh(double occThresh) {
+        this.occThresh = occThresh;
+    }
+
     public double getMaxURage() {
         return maxURage;
     }

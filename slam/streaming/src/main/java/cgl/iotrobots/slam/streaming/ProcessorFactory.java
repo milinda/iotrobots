@@ -1,7 +1,9 @@
 package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.GFSConfiguration;
+import cgl.iotrobots.slam.core.app.MapUpdater;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import scala.collection.mutable.MapBuilder;
 
 /**
  * Creates objects of the processors using the Configurations
@@ -37,5 +39,9 @@ public class ProcessorFactory {
                 cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0));
 
         return reSampler;
+    }
+
+    public static MapUpdater createMapBuilder(GFSConfiguration cfg) {
+        return new MapUpdater(cfg.getMaxRange(), cfg.getMaxURage(), cfg.getXmin(), cfg.getYmin(), cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), cfg.getOccThresh());
     }
 }

@@ -42,6 +42,7 @@ public class ConfigurationBuilder {
         configuration.setLlsamplestep(getDoubleProperty(conf, Constants.LLSAMPLESTEP));
         configuration.setLasamplerange(getDoubleProperty(conf, Constants.LASAMPLERANGE));
         configuration.setLasamplestep(getDoubleProperty(conf, Constants.LASAMPLESTEP));
+        configuration.setOccThresh(getDoubleProperty(conf, Constants.OCC_THRESH));
 
         return configuration;
     }

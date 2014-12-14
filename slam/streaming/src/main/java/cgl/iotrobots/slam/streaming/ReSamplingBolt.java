@@ -16,11 +16,9 @@ import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQSender;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,8 +51,6 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        reSampler = new DistributedReSampler();
-
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
         this.kryo = new Kryo();
@@ -75,8 +71,6 @@ public class ReSamplingBolt extends BaseRichBolt {
         } catch (Exception e) {
             LOG.error("Failed to create the sender", e);
         }
-
-
     }
 
     @Override
