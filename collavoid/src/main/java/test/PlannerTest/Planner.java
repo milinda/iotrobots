@@ -160,7 +160,7 @@ public class Planner {
                         startTime = System.nanoTime();
 
                         if (localPlanner.computeVelocityCommands(cmd_vel)) {
-                            //velocityPublisher.publish(cmd_vel);
+                            velocityPublisher.publish(cmd_vel);
 
                             consumingTime = (System.nanoTime() - startTime) / 1000000000.0;
                             if (firstTime) {

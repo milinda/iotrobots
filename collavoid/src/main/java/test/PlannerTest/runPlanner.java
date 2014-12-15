@@ -5,6 +5,7 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,16 @@ public class runPlanner {
         for (int i = 0; i < robotNb; i++) {
             planners.add(new Planner(tfl, i));
         }
+
+        doShutDownWork();
+    }
+
+    private static void doShutDownWork() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                node.shutdown();
+            }
+        });
     }
 }
 
