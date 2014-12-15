@@ -9,6 +9,23 @@ public class ConvexHullPoint {
     private int index = 0;
     private int orig_index = 0;
 
+    public ConvexHullPoint() {
+        x = 0;
+        y = 0;
+        weight = 0;
+    }
+
+    public ConvexHullPoint(double x, double y) {
+        this.x = x;
+        this.y = y;
+        weight = 0;
+    }
+
+    public ConvexHullPoint(double x, double y, double w) {
+        this.x = x;
+        this.y = y;
+        weight = w;
+    }
 
     public void setPoint(double x, double y) {
         this.x = x;

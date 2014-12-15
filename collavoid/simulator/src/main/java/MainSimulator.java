@@ -2,9 +2,6 @@ import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
-import org.apache.commons.logging.Log;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
@@ -15,17 +12,15 @@ import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
-import std_msgs.*;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
-import java.lang.String;
-import java.nio.ByteOrder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainSimulator {
-    static final int robotNb = 4;
+    static final int robotNb = 3;
     static final double posRadius = 4;
 
     /**
@@ -98,7 +93,7 @@ public class MainSimulator {
             wheelDistance = this.getRadius();
             // Add camera
             //camera = RobotFactory.addCameraSensor(this);
-            laserScan = new LaserScan(this.radius,57.0/180*Math.PI, 100,1.2,3.5,20);
+            laserScan = new LaserScan(this.radius, 57.0 / 180 * Math.PI, 100, 0, 3.5, 20);
             sensors = laserScan.getSensor();
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame
@@ -176,7 +171,7 @@ public class MainSimulator {
 
             if (ctlCmdSubscriber==null){
                 ctlCmdSubscriber=node.newSubscriber("/ctl_cmd", std_msgs.String._TYPE);
-                ctlCmd=new String();
+                ctlCmd = "";
                 ctlCmdSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
                     @Override
                     public void onNewMessage(std_msgs.String string) {
@@ -293,7 +288,7 @@ public class MainSimulator {
             String childFrame = robotFrame;
             String parentFrame = odomFrame;
 
-            Transform3D tf = new Transform3D();
+            Transform3D tf;
             Vector3d tft3d = new Vector3d();
             Quat4d tfrq = new Quat4d();
 

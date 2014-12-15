@@ -87,9 +87,6 @@ public class LocalPlanner {
     private static Vector3 angular = messageFactory.newFromType(Vector3._TYPE);//for temporary assign use
     private static Logger logger;
 
-    // time consuming test
-    long vel_cal_delay_max;
-
 
     /*---------------methods begin-----------------*/
 
@@ -192,8 +189,8 @@ public class LocalPlanner {
         me.obstacle_lock_.lock();
         try {
             me.obstacle_points_.clear();
-            for (int i = 0; i < points.size(); i++) {
-                me.obstacle_points_.add(points.get(i));
+            for (Vector2 pt : points) {
+                me.obstacle_points_.add(pt);
             }
         } finally {
             me.obstacle_lock_.unlock();
@@ -242,7 +239,7 @@ public class LocalPlanner {
         global_plan_ = orig_global_plan;
         current_waypoint_ = 0;
         xy_tolerance_latch_ = false;
-        //get the global plan in our frame, comment for test
+        //get the global plan in our frame
         if (!transformGlobalPlan(true, global_plan_, global_frame_, base_frame_, transformed_plan_)) {
             this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
             return false;
@@ -325,7 +322,7 @@ public class LocalPlanner {
 
             //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
             //just rotate in place
-            if (latch_xy_goal_tolerance_)//test rotate in place??
+            if (latch_xy_goal_tolerance_)
                 xy_tolerance_latch_ = true;
 
             //check to see if the goal orientation has been reached
@@ -409,14 +406,8 @@ public class LocalPlanner {
             pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
         }
 
-        //time consuming test
-        long startTime=System.nanoTime();
         me.computeNewVelocity(pref_vel_vect, cmd_vel);
-        long consumingTime=System.nanoTime()-startTime;
-        if (vel_cal_delay_max <consumingTime){
-            vel_cal_delay_max =consumingTime;
-            System.out.println("agent "+id+" velocity computing max duration: "+(double) vel_cal_delay_max /1000000000+"s");
-        }
+
 
         if (Math.abs(cmd_vel.getAngular().getZ()) < me.min_vel_th_)
             cmd_vel.getAngular().setZ(0);

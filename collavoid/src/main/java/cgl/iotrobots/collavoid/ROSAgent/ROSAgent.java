@@ -208,7 +208,7 @@ public class ROSAgent {
         obstacles_from_laser_ = new ArrayList<Obstacle>();
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
-        samples=new ArrayList<VelocitySample>();
+        samples = new ArrayList<VelocitySample>();
         initNode(connectedNode, tf);
     }
 
@@ -230,7 +230,7 @@ public class ROSAgent {
         node = connectedNode;
         params = node.getParameterTree();
         tf_ = tf;
-        id_ = new String(connectedNode.getName().toString().replace("/planner_",""));
+        id_ = new String(connectedNode.getName().toString().replace("/planner_", ""));
 
         //waiting for time
         while (true) {
@@ -374,7 +374,7 @@ public class ROSAgent {
 
     public void initPubSub(final ConnectedNode newnode) {
         //---------------test area
-        ctlCmdPub=node.newPublisher("/ctl_cmd",std_msgs.String._TYPE);
+        ctlCmdPub = node.newPublisher("/ctl_cmd", std_msgs.String._TYPE);
 
 
         if (standalone_) {
@@ -404,7 +404,7 @@ public class ROSAgent {
             public void onNewMessage(pose_twist_covariance_msgs msg) {
                 positionShareCallback(msg);
             }
-        },10);
+        }, 10);
 
         /*TODO: Need particle cloud and the weights of the particles to calculate localization uncertainty,
           TODO: but currently just particle cloud.*/
@@ -435,7 +435,7 @@ public class ROSAgent {
                 baseScanCallback(msg, dur);
 
             }
-        },10);
+        }, 10);
 
 //        laser_notifier->registerCallback(boost::bind(&ROSAgent::baseScanCallback, this, _1));
 //        laser_notifier->setTolerance(ros::Duration(0.1));
@@ -563,62 +563,62 @@ public class ROSAgent {
 
     // MinkowskiFootprint considering localization uncertainty
     void computeNewMinkowskiFootprint() {
-        boolean done = false;
-        List<ConvexHullPoint> convex_hull = new ArrayList<ConvexHullPoint>();
-        List<ConvexHullPoint> points = new ArrayList<ConvexHullPoint>();
-        points.clear();
+        ConvexHullPoint[] convex_hull = new ConvexHullPoint[0];
+        ConvexHullPoint[] points = new ConvexHullPoint[pose_array_weighted_.size()];
 
         for (int i = 0; i < pose_array_weighted_.size(); i++) {
             ConvexHullPoint p = new ConvexHullPoint();
             double x = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
             double y = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
-            p.setPoint(new Vector2(x, y));
+            p.setPoint(x, y);
             p.setWeight(pose_array_weighted_.get(i).getW());
             p.setIndex(i);
             p.setOrig_index(i);
-            points.add(p);
+            points[i] = p;
         }
-        Collections.sort(points, new VectorsLexigraphicComparator());
-        for (int i = 0; i < points.size(); i++) {
-            points.get(i).setIndex(i);
+        Arrays.sort(points, new VectorsLexigraphicComparator());
+        for (int i = 0; i < points.length; i++) {
+            points[i].setIndex(i);
         }
 
         double total_sum = 0;
 
         int[] skip_list;
-        while (!done && points.size() >= 3) {
+        while (points.length >= 3) {
             double sum = 0;
-            convex_hull.clear();
             convex_hull = convexHull(points, true);
 
-            skip_list = new int[convex_hull.size()];
-            for (int j = 0; j < convex_hull.size() - 1; j++) {
-                skip_list[j] = convex_hull.get(j).getIndex();
-                sum += convex_hull.get(j).getWeight();
+            skip_list = new int[convex_hull.length];
+            for (int j = 0; j < convex_hull.length - 1; j++) {
+                skip_list[j] = convex_hull[j].getIndex();
+                sum += convex_hull[j].getWeight();
             }
             total_sum += sum;
 
             //ROS_WARN("SUM = %f (%f), num Particles = %d, eps = %f", sum, total_sum, (int) points.size(), eps_);
 
             if (total_sum >= eps_) {
-                done = true;
                 break;
             }
 
             Arrays.sort(skip_list);
-            for (int i = skip_list.length - 1; i >= 0; i--) {
-                points.remove(skip_list[i]);
-            }
+            ConvexHullPoint[] pointsTmp = new ConvexHullPoint[points.length - skip_list.length];
+            int l = 0, k = 0;
+            for (int j = 0; j < points.length; j++) {
+                if (j != skip_list[l++]) {
+                    ConvexHullPoint pt = new ConvexHullPoint(points[j].getX(), points[j].getY());
+                    pt.setIndex(k);
+                    pointsTmp[k++] = pt;
+                }
 
-            for (int i = 0; i < points.size(); i++) {
-                points.get(i).setIndex(i);
             }
+            points = pointsTmp;
         }
 
         List<Vector2> localization_footprint = new ArrayList<Vector2>();
         List<Vector2> own_footprint = new ArrayList<Vector2>();
-        for (int i = 0; i < convex_hull.size(); i++) {
-            localization_footprint.add(new Vector2(convex_hull.get(i).getX(), convex_hull.get(i).getY()));
+        for (int i = 0; i < convex_hull.length; i++) {
+            localization_footprint.add(new Vector2(convex_hull[i].getX(), convex_hull[i].getY()));
         }
 
         for (int i = 0; i < footprint_original_msg_.getPolygon().getPoints().size(); i++) {
@@ -707,12 +707,7 @@ public class ROSAgent {
             double x = minkowski_footprint.getPolygon().getPoints().get(i).getX();
             double y = minkowski_footprint.getPolygon().getPoints().get(i).getY();
             minkowski_footprint_.add(new Vector2(x, y));
-//            System.out.println(i+":"+minkowski_footprint.getPolygon().getPoints().get(i).getX());
-//            System.out.println(i+":"+minkowski_footprint.getPolygon().getPoints().get(i).getY());
         }
-//        for (Iterator<Point32> it = minkowski_footprint.getPolygon().getPoints().iterator(); it.hasNext(); ) {
-//            this.minkowski_footprint_.add(new Vector2(it.next().getX(), it.next().getY()));
-//        }
 
     }
 
@@ -731,7 +726,7 @@ public class ROSAgent {
 //                node.getLog().error("Can not transform twist to base frame: " + msg.getHeader().getFrameId() + "->" + base_frame_);
 //                return;
 //            }
-            twist.getLinear().setX(Vector2.abs(new Vector2(msg.getTwist().getTwist().getLinear().getX(),msg.getTwist().getTwist().getLinear().getY())));
+            twist.getLinear().setX(Vector2.abs(new Vector2(msg.getTwist().getTwist().getLinear().getX(), msg.getTwist().getTwist().getLinear().getY())));
             twist.getAngular().setZ(msg.getTwist().getTwist().getAngular().getZ());
 
             base_odom_.getTwist().setTwist(twist);// base frame
@@ -781,23 +776,23 @@ public class ROSAgent {
 
         if (msg.getWidth() * msg.getHeight() == 0) {
             obstacle_lock_.lock();
-            try{
+            try {
                 obstacles_from_laser_.clear();
-            }finally {
+            } finally {
                 obstacle_lock_.unlock();
             }
-                    return;
+            return;
         }
         //System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
-            ChannelBuffer data = msg.getData().copy();
-            while (data.readableBytes() > 0) {
-                double[] pt = new double[msg.getFields().size()];
-                for (int k = 0; k < msg.getFields().size(); k++) {
-                    pt[k] = data.readFloat();
-                }
-                point3ds.add(new Point3d(pt));
+        ChannelBuffer data = msg.getData().copy();
+        while (data.readableBytes() > 0) {
+            double[] pt = new double[msg.getFields().size()];
+            for (int k = 0; k < msg.getFields().size(); k++) {
+                pt[k] = data.readFloat();
             }
-            //no need to transform rviz will transform automatically
+            point3ds.add(new Point3d(pt));
+        }
+        //no need to transform rviz will transform automatically
 //            if (!tf_.transformPoint3ds(global_frame_, base_frame_, point3ds, msg.getHeader().getStamp().totalNsecs(), dur_m)) {
 //                node.getLog().error("Can not transform cloud points: " + base_frame_ + "->" + global_frame_);
 //                return;
@@ -812,7 +807,7 @@ public class ROSAgent {
             Vector2 start;
             for (int i = 0; i < point3ds.size(); i++) {
                 start = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
-                while (pointInNeighbor(start) && i < point3ds.size()-1) {
+                while (pointInNeighbor(start) && i < point3ds.size() - 1) {
                     i++;
                     start = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                 }
@@ -832,7 +827,7 @@ public class ROSAgent {
                         break;
                     }
                     next = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
-                    while (pointInNeighbor(next) && i < point3ds.size()-1) {
+                    while (pointInNeighbor(next) && i < point3ds.size() - 1) {
                         i++;
                         next = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                     }
@@ -887,7 +882,7 @@ public class ROSAgent {
     boolean pointInNeighbor(Vector2 point) {
         double dist;
         for (int i = 0; i < ROSAgentNeighbors.size(); i++) {
-            dist=Vector2.abs(Vector2.minus(point, ROSAgentNeighbors.get(i).position.getPos()));
+            dist = Vector2.abs(Vector2.minus(point, ROSAgentNeighbors.get(i).position.getPos()));
             if (dist <= ROSAgentNeighbors.get(i).radius) {
                 return true;
             }
@@ -1130,7 +1125,7 @@ public class ROSAgent {
                             if (orca) {// currently set to false
                                 createObstacleLine(own_footprint, obst.getBegin(), obst.getEnd());
                             } else {//called from CP
-                                VO obstacle_vo = CP.createObstacleVO(position.getPos(), footprint_radius_,footPrint_rotated, obst.getBegin(), obst.getEnd());
+                                VO obstacle_vo = CP.createObstacleVO(position.getPos(), footprint_radius_, footPrint_rotated, obst.getBegin(), obst.getEnd());
                                 voAgents.add(obstacle_vo);
                             }
                         }
