@@ -6,8 +6,11 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.GFSConfiguration;
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
@@ -119,11 +122,25 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
         RangeReading reading;
-        if (!(val instanceof RangeReading)) {
+        if (!(val instanceof LaserScan)) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
+
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-        reading = (RangeReading) val;
+        LaserScan scan = (LaserScan) val;
+        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
+        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
+                scan.getRanges().size(),
+                Math.abs(scan.getAngle_increment()),
+                new DoubleOrientedPoint(0, 0, 0),
+                0.0,
+                scan.getRangeMax());
+
+        reading = new RangeReading(scan.getRanges().size(),
+                ranges_double,
+                sensor,
+                scan.getTimestamp());
+        reading.setPose(scan.getPose());
 
         // now we will start the computation
         state = MatchState.COMPUTING_INIT_READINGS;
