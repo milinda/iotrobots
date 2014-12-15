@@ -308,7 +308,7 @@ public class CP {
 
         //    ROS_WARN("points length %d", (int)P.size());
 
-        // Build lower hull,计算几何中的凸集问题
+        // Build lower hull,
         for (int i = 0; i < n; i++) {
 
             while (k >= 2 && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),

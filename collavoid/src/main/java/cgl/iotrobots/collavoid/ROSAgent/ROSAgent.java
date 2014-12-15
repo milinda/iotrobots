@@ -789,7 +789,7 @@ public class ROSAgent {
             }
                     return;
         }
-        System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
+        //System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
             ChannelBuffer data = msg.getData().copy();
             while (data.readableBytes() > 0) {
                 double[] pt = new double[msg.getFields().size()];
