@@ -84,7 +84,6 @@ public class SLAMTopology {
     }
 
     private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
-        StreamComponents components = streamTopologyBuilder.buildComponents();
 
         // first create a rabbitmq Spout
         ErrorReporter reporter = new ErrorReporter() {
@@ -151,7 +150,7 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations();
+            return new StaticDestinations(true);
         }
     }
 
@@ -178,16 +177,33 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations();
+            return new StaticDestinations(false);
         }
     }
 
     private static class StaticDestinations implements DestinationChanger {
         private DestinationChangeListener dstListener;
 
+        private boolean sender;
+
+        private StaticDestinations(boolean sender) {
+            this.sender = sender;
+        }
+
         @Override
         public void start() {
-            DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", null, null, null);
+            StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+            StreamComponents components = streamTopologyBuilder.buildComponents();
+            Map conf = components.getConf();
+            String url = (String) conf.get(Constants.RABBITMQ_URL);
+            DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", url, "test", "test");
+            configuration.setGrouped(true);
+            if (!sender) {
+                configuration.addProperty("queueName", "laser_scan");
+            } else {
+                configuration.addProperty("queueName", "map");
+            }
+            configuration.addProperty("exchange", "simbard");
             dstListener.addDestination("rabbitmq", configuration);
         }
 
