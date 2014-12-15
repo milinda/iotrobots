@@ -40,7 +40,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     /** Assignment are broad cast, so will create a broadcast receiver */
     private RabbitMQReceiver assignmentReceiver;
 
-    /** Partciles are sent directly, so we will create a direct receiver */
+    /** Particles are sent directly, so we will create a direct receiver */
     private RabbitMQReceiver particleReceiver;
 
     private RabbitMQReceiver particleValueReceiver;
@@ -92,6 +92,19 @@ public class ScanMatchBolt extends BaseRichBolt {
         } catch (Exception e) {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
+        }
+
+        // set the initial particles
+        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
+        int taskId = topologyContext.getThisTaskIndex();
+        int noOfParticles = cfg.getNoOfParticles() / totalTasks;
+        int remainder = cfg.getNoOfParticles() % totalTasks;
+        if (remainder <= taskId) {
+            noOfParticles += 1;
+        }
+        List<Integer> activeParticles = gfsp.getActiveParticles();
+        for (int i = 0; i < noOfParticles; i++) {
+            activeParticles.add(i + taskId);
         }
     }
 
