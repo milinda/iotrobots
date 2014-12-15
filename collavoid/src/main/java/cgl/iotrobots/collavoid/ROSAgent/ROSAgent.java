@@ -556,7 +556,7 @@ public class ROSAgent {
             j++;
         }
         //maximum two times of the footpint radius
-        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j - 1).getPoint()));
+        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j - 1).getX(), points.get(j - 1).getY()));
         //ROS_ERROR("Loc Uncertainty = %f", cur_loc_unc_radius_);
         radius = footprint_radius_ + cur_loc_unc_radius_;
     }
@@ -618,7 +618,7 @@ public class ROSAgent {
         List<Vector2> localization_footprint = new ArrayList<Vector2>();
         List<Vector2> own_footprint = new ArrayList<Vector2>();
         for (int i = 0; i < convex_hull.size(); i++) {
-            localization_footprint.add(convex_hull.get(i).getPoint());
+            localization_footprint.add(new Vector2(convex_hull.get(i).getX(), convex_hull.get(i).getY()));
         }
 
         for (int i = 0; i < footprint_original_msg_.getPolygon().getPoints().size(); i++) {
@@ -788,7 +788,7 @@ public class ROSAgent {
             }
                     return;
         }
-        System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
+        //System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
             ChannelBuffer data = msg.getData().copy();
             while (data.readableBytes() > 0) {
                 double[] pt = new double[msg.getFields().size()];

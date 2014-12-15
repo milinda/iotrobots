@@ -55,7 +55,7 @@ public class Planner {
 
     //test
     long planner_delay =0;
-    String fileName="/home/hjh/Dropbox/";
+    String fileName = "/home/hjh/Dropbox/git/performance/";
 
     public Planner(TransformListener tfl, int id) {
         ROSAgentNode agentNode=new ROSAgentNode("planner_robot"+id);
@@ -158,7 +158,7 @@ public class Planner {
             protected void loop() throws InterruptedException {
 
                 if (flagAllReady) {
-                    if (node.getCurrentTime().toSeconds() - lastPublished.toSeconds() > ctr_period) {
+                    //if (node.getCurrentTime().toSeconds() - lastPublished.toSeconds() > ctr_period/2) {
 
                             startTime=System.nanoTime();
 
@@ -173,19 +173,17 @@ public class Planner {
                             pub_period=(System.nanoTime()-last_pub)/1000000000.0;
                             last_pub=System.nanoTime();
                             time=time+pub_period;
-//                            appendData(time,
-//                                    localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getX(),
-//                                    localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getY(),
-//                                    localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getZ(),
-//                                    pub_period,
-//                                    consumingTime);
-
-
+                        appendData(time,
+                                localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getX(),
+                                localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getY(),
+                                localPlanner.me.getBaseOdom().getPose().getPose().getPosition().getZ(),
+                                pub_period,
+                                consumingTime);
                         }
                         lastPublished=node.getCurrentTime();
-                    }else {
+                    //}else {
                         Thread.sleep(10);
-                    }
+                    //}
                 }
 
             }

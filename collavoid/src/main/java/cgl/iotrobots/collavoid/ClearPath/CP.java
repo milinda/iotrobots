@@ -247,17 +247,24 @@ public class CP {
         }
     }
 
-    public static List<ConvexHullPoint> minkowskiSumConvexHull(final List<ConvexHullPoint> p1, final List<ConvexHullPoint> p2) {
-        List<ConvexHullPoint> result = new ArrayList<ConvexHullPoint>();
+    public static List<Vector2> minkowskiSumConvexHull(final List<Vector2> polygon1, final List<Vector2> polygon2) {
+        List<Vector2> result = new ArrayList<Vector2>();
+        List<ConvexHullPoint> convex_hull = new ArrayList<ConvexHullPoint>();
 
-        for (int i = 0; i < p1.size(); i++) {
-            for (int j = 0; j < p2.size(); j++) {
+        for (int i = 0; i < polygon1.size(); i++) {
+            for (int j = 0; j < polygon2.size(); j++) {
                 ConvexHullPoint p=new ConvexHullPoint();
-                p.setPoint(p1.get(i).getX() + p2.get(j).getX(), p1.get(i).getY() + p2.get(j).getY());
-                result.add(p);
+                p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
+                convex_hull.add(p);
             }
+
+        }
+        convex_hull = convexHull(convex_hull, false);
+        for (int i = 0; i < convex_hull.size(); i++) {
+            result.add(new Vector2(convex_hull.get(i).getX(), convex_hull.get(i).getY()));
         }
         return result;
+
     }
 
     // Returns a list of points on the convex hull in counter-clockwise order.
@@ -278,20 +285,29 @@ public class CP {
 
         //    ROS_WARN("points length %d", (int)P.size());
 
-        // Build lower hull,计算几何中的凸集问题
+        // Build lower hull,
         for (int i = 0; i < n; i++) {
 
-            while (k >= 2 && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
-                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
+            while (k >= 2 && Vector2.det(
+                    result.get(k - 2).getX() - result.get(k - 1).getX(),
+                    result.get(k - 2).getY() - result.get(k - 1).getY(),
+                    P.get(i).getX() - result.get(k - 1).getX(),
+                    P.get(i).getY() - result.get(k - 1).getY()
+            ) <= 0) k--;
             result.set(k++,P.get(i));
         }
 
         // Build upper hull
         for (int i = n-2, t = k+1; i >= 0; i--) {
-            while (k >= t && Vector2.det(Vector2.minus(result.get(k-2).getPoint(), result.get(k-1).getPoint()),
-                    Vector2.minus(P.get(i).getPoint(),result.get(k-1).getPoint())) <= 0) k--;
+            while (k >= t && Vector2.det(
+                    result.get(k - 2).getX() - result.get(k - 1).getX(),
+                    result.get(k - 2).getY() - result.get(k - 1).getY(),
+                    P.get(i).getX() - result.get(k - 1).getX(),
+                    P.get(i).getY() - result.get(k - 1).getY()
+            ) <= 0) k--;
             result.set(k++, P.get(i));
         }
+
 
         //resize list
         int i=0;
@@ -305,10 +321,10 @@ public class CP {
         return result;
     }
 
-    static double cross(final ConvexHullPoint o, final ConvexHullPoint A, final ConvexHullPoint B){
-        return (A.getPoint().getX()- o.getPoint().getX()) * (B.getPoint().getY() - o.getPoint().getY())
-                -(A.getPoint().getY() - o.getPoint().getY()) * (B.getPoint().getX() - o.getPoint().getX());
-    }
+//    static double cross(final ConvexHullPoint o, final ConvexHullPoint A, final ConvexHullPoint B){
+//        return (A.getPoint().getX()- o.getPoint().getX()) * (B.getPoint().getY() - o.getPoint().getY())
+//                -(A.getPoint().getY() - o.getPoint().getY()) * (B.getPoint().getX() - o.getPoint().getX());
+//    }
 
     public static VO createObstacleVO(Vector2 position1, double radius1, final List<Vector2> footprint1, Vector2 obst1, Vector2 obst2){
         VO result=new VO();

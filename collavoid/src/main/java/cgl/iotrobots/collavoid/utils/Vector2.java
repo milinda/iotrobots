@@ -106,10 +106,20 @@ public class Vector2 {
         return x1*y2-y1*x2;
     }
 
+    public static double absSqr(double x, double y) {
+        double x1 = x * x;
+        double y1 = y * y;
+        return x1 + y1;
+    }
+
     public static double absSqr(Vector2 p1) {
         double x = p1.getX() * p1.getX();
         double y = p1.getY() * p1.getY();
         return x + y;
+    }
+
+    public static double abs(double x, double y) {
+        return Math.sqrt(absSqr(x, y));
     }
 
     public static double abs(Vector2 p1) {

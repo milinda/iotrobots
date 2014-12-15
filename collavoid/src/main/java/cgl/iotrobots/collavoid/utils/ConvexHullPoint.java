@@ -6,13 +6,17 @@ public class ConvexHullPoint {
     private double x;
     private double y;
     private double weight;
-    private int index;
-    private int orig_index;
+    private int index = 0;
+    private int orig_index = 0;
 
 
     public void setPoint(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public void setPoint(Vector2 v) {
+        setPoint(v.getX(), v.getY());
     }
 
     public void setWeight(double w){
@@ -25,10 +29,6 @@ public class ConvexHullPoint {
 
     public void setOrig_index(int orig_index) {
         this.orig_index = orig_index;
-    }
-
-    public Vector2 getPoint(){
-        return new Vector2(x, y);
     }
 
     public double getY() {

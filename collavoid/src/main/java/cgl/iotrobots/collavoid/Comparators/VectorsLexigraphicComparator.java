@@ -12,9 +12,9 @@ public class VectorsLexigraphicComparator implements Comparator<ConvexHullPoint>
             return -1;
         }
 
-        if(c1.getPoint().getX()<c2.getPoint().getX()||(c1.getPoint().getX()==c2.getPoint().getX()&&c1.getPoint().getY()<c2.getPoint().getY())){
+        if (c1.getX() < c2.getX() || (c1.getX() == c2.getX() && c1.getY() < c2.getY())) {
             return -1;
-        }else if(c1.getPoint().getX()==c2.getPoint().getX()&&c1.getPoint().getY()==c2.getPoint().getY()){
+        } else if (c1.getX() == c2.getX() && c1.getY() == c2.getY()) {
             return 0;
         }else{
             return 1;

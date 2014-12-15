@@ -25,7 +25,7 @@ import java.util.*;
 
 
 public class MainSimulator {
-    static final int robotNb = 2;
+    static final int robotNb = 4;
     static final double posRadius = 4;
 
     /**
@@ -171,7 +171,7 @@ public class MainSimulator {
 //                            cmdQueue.offer(velcmd);
 //                        }
                     }
-                },4);
+                });
             }
 
             if (ctlCmdSubscriber==null){
