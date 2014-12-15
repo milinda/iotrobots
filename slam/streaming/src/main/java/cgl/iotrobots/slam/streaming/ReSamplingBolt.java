@@ -132,19 +132,16 @@ public class ReSamplingBolt extends BaseRichBolt {
 
             byte []b = Utils.serialize(kryo, pv);
             Message message = new Message(b, new HashMap<String, Object>());
-            int taskId = getTaskForParticle(i, assignments.getAssignments());
+            // we assume there is a direct mapping between particles in the resampler and the indexes
+            ParticleAssignment assignment = assignments.getAssignments().get(i);
             try {
-                valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + taskId);
+                valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
             } catch (Exception e) {
                 LOG.error("Failed to send the message");
             }
         }
 
         reading = null;
-    }
-
-    private int getTaskForParticle(int particleIndex, List<ParticleAssignment> assignments) {
-        return 0;
     }
 
     @Override

@@ -212,55 +212,45 @@ public class DistributedReSampler {
         linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
         angularDistance += Math.abs(move.theta);
 
-        // if the robot jumps throw a warning
-        if (linearDistance > distanceThresholdCheck) {
-            LOG.error("The robot jumped too much");
-        }
-
         odoPose = relPose;
-        boolean processed = false;
-
         // process a scan only if the robot has traveled a given distance or a certain amount of time has elapsed
-        if (count == 0
-                || linearDistance >= linearThresholdDistance
-                || angularDistance >= angularThresholdDistance
-                || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
-            last_update_time_ = reading.getTime();
 
-            //this is for converting the reading in a scan-matcher feedable form
-            if (reading.size() != beams) {
-                throw new IllegalStateException("reading should contain " + beams + " beams");
-            }
-            double[] plainReading = new double[beams];
-            for (int i = 0; i < beams; i++) {
-                plainReading[i] = reading.get(i);
-            }
+        // here there is no need to check weather we need to perform the calculation.
+        // If we are at this point we need to do the calculation
+        last_update_time_ = reading.getTime();
 
-            RangeReading readingCopy =
-                    new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
-                            (RangeSensor) reading.getSensor(),
-                            reading.getTime());
-
-            if (count > 0) {
-                updateTreeWeights(false);
-                resample(plainReading, adaptParticles, readingCopy);
-            }
-            updateTreeWeights(false);
-
-            lastPartPose = odoPose; //update the past pose for the next iteration
-            linearDistance = 0;
-            angularDistance = 0;
-            count++;
-            processed = true;
-
-            //keep ready for the next step
-            for (Particle it : particles) {
-                it.previousPose = it.pose;
-            }
-
+        //this is for converting the reading in a scan-matcher feedable form
+        if (reading.size() != beams) {
+            throw new IllegalStateException("reading should contain " + beams + " beams");
         }
+        double[] plainReading = new double[beams];
+        for (int i = 0; i < beams; i++) {
+            plainReading[i] = reading.get(i);
+        }
+
+        RangeReading readingCopy =
+                new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
+                        (RangeSensor) reading.getSensor(),
+                        reading.getTime());
+
+        if (count > 0) {
+            updateTreeWeights(false);
+            resample(plainReading, adaptParticles, readingCopy);
+        }
+        updateTreeWeights(false);
+
+        lastPartPose = odoPose; //update the past pose for the next iteration
+        linearDistance = 0;
+        angularDistance = 0;
+        count++;
+
+        //keep ready for the next step
+        for (Particle it : particles) {
+            it.previousPose = it.pose;
+        }
+
         readingCount++;
-        return processed;
+        return true;
     }
 
     public void resetTree() {
