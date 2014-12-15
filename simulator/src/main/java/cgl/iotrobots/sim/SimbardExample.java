@@ -11,6 +11,7 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.util.ArrayList;
+import java.util.List;
 
 public class SimbardExample {
     public static final int SENSORS = 180;
@@ -29,15 +30,12 @@ public class SimbardExample {
             // Add camera
             camera = RobotFactory.addCameraSensor(this);
             // Add sonars
-//            sonars = RobotFactory.addSonarBeltSensor(this, 16);
-
             double agentHeight = this.getHeight();
             double agentRadius = this.getRadius();
             sonars = new RangeSensorBelt((float) agentRadius,
                     0f, 100.0f, SENSORS, RangeSensorBelt.TYPE_SONAR,0);
             sonars.setUpdatePerSecond(1000);
 
-            //sonarBelt.setName("sonars");
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
 
@@ -49,16 +47,17 @@ public class SimbardExample {
             gfsAlgorithm.gsp_ = new GridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
-            scanI.angle_increment = ANGLE / SENSORS;
-            scanI.angle_max = ANGLE ;
-            scanI.angle_min = 0;
-            scanI.ranges = new ArrayList<Double>();
+            scanI.setAngle_increment(ANGLE / SENSORS);
+            scanI.setAngle_max(ANGLE);
+            scanI.setAngle_min(0);
+            List<Double> ranges  = new ArrayList<Double>();
             for (int i = 0; i < SENSORS; i++) {
-                scanI.ranges.add(100.0);
+                ranges.add(100.0);
             }
-            scanI.range_min = 0;
-            scanI.rangeMax = 100;
-            scanI.timestamp = System.currentTimeMillis();
+            scanI.setRanges(ranges);
+            scanI.setRange_min(0);
+            scanI.setRangeMax(100);
+            scanI.setTimestamp(System.currentTimeMillis());
 
             gfsAlgorithm.initMapper(scanI);
         }
@@ -73,8 +72,8 @@ public class SimbardExample {
 
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
-
-            gfsAlgorithm.laserScan(laserScan, new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             // progress at 0.5 m/s
             if (getCounter() % 50 == 0) {
@@ -106,26 +105,23 @@ public class SimbardExample {
             int n = sonars.getNumSensors();
 
             LaserScan laserScan = new LaserScan();
-            laserScan.angle_max = ANGLE;
-            laserScan.angle_min = 0;
-            laserScan.rangeMax = 100;
-            laserScan.range_min = 0;
-            laserScan.angle_increment = ANGLE/ SENSORS;
+            laserScan.setAngle_max(ANGLE);
+            laserScan.setAngle_min(0);
+            laserScan.setRangeMax(100);
+            laserScan.setRange_min(0);
+            laserScan.setAngle_increment(ANGLE/ SENSORS);
 
             int angle = 0;
+            List<Double> ranges  = new ArrayList<Double>();
             for (int i = angle; i < n + angle; i++) {
                 if (sonars.hasHit(i % n)) {
-                    // System.out.println(sonars.getMeasurement(i));
-                    //System.out.format("%f,", sonars.getMeasurement(i % n));
-                    laserScan.ranges.add(sonars.getMeasurement(i % n));
+                    ranges.add(sonars.getMeasurement(i % n));
                 } else {
-                    laserScan.ranges.add(0.0);
-                    //System.out.format("%f,", 0.0);
+                    ranges.add(0.0);
                 }
             }
-//            System.out.format("\n");
-            laserScan.timestamp = System.currentTimeMillis();
-
+            laserScan.setRanges(ranges);
+            laserScan.setTimestamp(System.currentTimeMillis());
             return laserScan;
         }
     }
