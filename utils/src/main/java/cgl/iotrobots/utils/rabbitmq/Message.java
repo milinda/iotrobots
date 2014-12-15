@@ -1,14 +1,14 @@
-package cgl.iotrobots.sim.rabbitmq;
+package cgl.iotrobots.utils.rabbitmq;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MessageContext {
+public class Message {
     byte []body = null;
 
     private Map<String, Object> properties = new HashMap<String, Object>();
 
-    public MessageContext(byte[] body, Map<String, Object> properties) {
+    public Message(byte[] body, Map<String, Object> properties) {
         this.body = body;
         this.properties = properties;
     }

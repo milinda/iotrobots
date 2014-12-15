@@ -12,7 +12,7 @@ import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
-import cgl.iotrobots.slam.streaming.rabbitmq.*;
+import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
@@ -261,7 +261,8 @@ public class ScanMatchBolt extends BaseRichBolt {
                 if (gfsp.getActiveParticles().contains(assignment.getPreviousIndex())) {
                     Particle p = gfsp.getParticles().get(previousIndex);
                     // create a new ParticleMaps
-                    ParticleMaps particleMaps = new ParticleMaps(p.getMap(), p.getNode(), assignment.getNewIndex(), assignment.getNewTask());
+                    ParticleMaps particleMaps = new ParticleMaps(p.getMap(), p.getNode(),
+                            assignment.getNewIndex(), assignment.getNewTask());
 
                     byte []b = Utils.serialize(kryo, particleMaps);
                     Message message = new Message(b, new HashMap<String, Object>());
@@ -271,7 +272,8 @@ public class ScanMatchBolt extends BaseRichBolt {
                         LOG.error("Failed to send the new particle map");
                     }
                 } else {
-                    LOG.error("The particle {} is not in this bolt's active list, something is wrong", assignment.getPreviousIndex());
+                    LOG.error("The particle {} is not in this bolt's active list, something is wrong",
+                            assignment.getPreviousIndex());
                 }
             }
         }

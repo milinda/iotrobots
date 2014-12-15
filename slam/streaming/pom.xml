@@ -53,5 +53,10 @@
             <artifactId>kryo</artifactId>
             <version>3.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>iotrobots</groupId>
+            <artifactId>iotrobots-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>
