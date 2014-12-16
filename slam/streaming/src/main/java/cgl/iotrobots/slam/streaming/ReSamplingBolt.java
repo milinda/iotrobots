@@ -63,7 +63,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
-            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE);
+            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             this.assignmentSender.open();
 
             this.valueSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);

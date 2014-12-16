@@ -86,7 +86,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             this.particleReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             this.particleValueReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
-            this.sender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE);
+            this.sender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             this.sender.open();
 
             this.assignmentReceiver.listen(new ParticleAssignmentHandler());

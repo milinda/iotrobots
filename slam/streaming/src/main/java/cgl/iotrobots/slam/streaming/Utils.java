@@ -19,7 +19,8 @@ public class Utils {
      */
     public static byte[] serialize(Kryo kryo, Object object) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        Output output = new Output();
+        Output output = new Output(byteArrayOutputStream);
+//        output.setOutputStream(byteArrayOutputStream);
         kryo.writeObject(output, object);
         output.flush();
         return byteArrayOutputStream.toByteArray();

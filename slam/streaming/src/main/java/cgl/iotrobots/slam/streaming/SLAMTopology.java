@@ -200,9 +200,12 @@ public class SLAMTopology {
             configuration.setGrouped(true);
             if (!sender) {
                 configuration.addProperty("queueName", "laser_scan");
+                configuration.addProperty("routingKey", "laser_scan");
             } else {
                 configuration.addProperty("queueName", "map");
+                configuration.addProperty("routingKey", "map");
             }
+
             configuration.addProperty("exchange", "simbard");
             dstListener.addDestination("rabbitmq", configuration);
         }
