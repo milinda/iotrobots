@@ -104,12 +104,12 @@ public class ScanMatchBolt extends BaseRichBolt {
         int taskId = topologyContext.getThisTaskIndex();
         int noOfParticles = cfg.getNoOfParticles() / totalTasks;
         int remainder = cfg.getNoOfParticles() % totalTasks;
-        if (remainder <= taskId) {
+        if (remainder > 0 && remainder <= taskId) {
             noOfParticles += 1;
         }
         List<Integer> activeParticles = gfsp.getActiveParticles();
         for (int i = 0; i < noOfParticles; i++) {
-            activeParticles.add(i + taskId);
+            activeParticles.add(i + taskId * noOfParticles);
         }
     }
 
@@ -219,7 +219,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                             for (ParticleMaps existingPm : particleMapses) {
                                 addMaps(existingPm);
                             }
-
+                            // after handling the temp values, we'll clear the buffer
                             particleMapses.clear();
                         }
                         // now go through the assignments and send them to the bolts directly

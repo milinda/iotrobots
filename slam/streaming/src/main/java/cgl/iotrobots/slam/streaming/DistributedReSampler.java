@@ -234,10 +234,10 @@ public class DistributedReSampler {
                         (RangeSensor) reading.getSensor(),
                         reading.getTime());
 
-        if (count > 0) {
+//        if (count > 0) {
             updateTreeWeights(false);
             resample(plainReading, adaptParticles, readingCopy);
-        }
+//        }
         updateTreeWeights(false);
 
         lastPartPose = odoPose; //update the past pose for the next iteration
@@ -346,7 +346,7 @@ public class DistributedReSampler {
 
         if (neff < resampleThreshold * particles.size()) {
             UniformResampler resampler = new UniformResampler();
-            List<Integer> indexes = resampler.resampleIndexes(weights, adaptSize);
+            indexes = resampler.resampleIndexes(weights, adaptSize);
 
             //begin building tree
             List<Particle> temp = new ArrayList<Particle>();
