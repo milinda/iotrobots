@@ -30,6 +30,10 @@ public class ROSAgentNode {
             return GraphName.of("agent");
         }
 
+        @Override
+        public void onShutdown(Node node) {
+            node.shutdown();
+        }
     }
 
     public ROSAgentNode(String nodeName) {

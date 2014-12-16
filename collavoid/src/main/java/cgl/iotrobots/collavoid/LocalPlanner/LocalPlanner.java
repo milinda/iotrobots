@@ -2,6 +2,7 @@ package cgl.iotrobots.collavoid.LocalPlanner;
 
 import cgl.iotrobots.collavoid.ROSAgent.ROSAgent;
 import cgl.iotrobots.collavoid.utils.Angles;
+import cgl.iotrobots.collavoid.utils.Parameters;
 import cgl.iotrobots.collavoid.utils.Vector2;
 import costmap_2d.VoxelGrid;
 import geometry_msgs.*;
@@ -87,19 +88,15 @@ public class LocalPlanner {
     private static Vector3 angular = messageFactory.newFromType(Vector3._TYPE);//for temporary assign use
     private static Logger logger;
 
-    // time consuming test
-    long vel_cal_delay_max;
-
 
     /*---------------methods begin-----------------*/
 
     //must pass connectednode,tf will be initialized from the caller, see rosjava_tf TfViz
     public LocalPlanner(ConnectedNode connectedNode, TransformListener tf) {
-        this.node = connectedNode;
-        this.params = this.node.getParameterTree();
+        node = connectedNode;
         tf_ = tf;
 
-        id = node.getName().toString().replace("/planner_","");
+        id = node.getName().toString().replace("/planner_", "");
         initialized_ = false;
         costmap_ros_ = null;
         current_waypoint_ = 0;
@@ -113,19 +110,7 @@ public class LocalPlanner {
     //implement the interface of nav_core::BaseLocalPlanner Class in original ROS
     private void initialize() {
         if (!initialized_) {
-            logger = Logger.getLogger(node.getName().toString());
-            base_frame_ = params.getString("/base_frame", id + "_base");
-            global_frame_ = params.getString("/global_frame", "map");
-
-            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity", 0.01);
-            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_", 0.01);
-
-            //base local planner params
-            yaw_goal_tolerance_ = params.getDouble("/yaw_goal_tolerance", 0.05);
-            xy_goal_tolerance_ = params.getDouble("/xy_goal_tolerance", 0.10);
-            latch_xy_goal_tolerance_ = params.getBoolean("/latch_xy_goal_tolerance", false);
-            ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
-
+            getParams(false);
             /*----------spawn agent node---------*/
 
             this.me = new ROSAgent(this.node, tf_);
@@ -157,7 +142,7 @@ public class LocalPlanner {
             //dsrv_->setCallback(cb);
 
             //wait for the agent to initialize
-            while (!me.initialized_){
+            while (!me.initialized_) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -170,6 +155,34 @@ public class LocalPlanner {
             node.getLog().info("************************Local Planner" + node.getName() + " has already been initialized, you can't call it twice, doing nothing");
         }
 
+    }
+
+    // get parameters
+    void getParams(boolean useROSParamService) {
+        logger = Logger.getLogger(node.getName().toString());
+
+        if (useROSParamService) {
+            // use parameter services
+            params = node.getParameterTree();
+            base_frame_ = params.getString("/base_frame", id + "_base");
+            global_frame_ = params.getString("/global_frame", "map");
+            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity", 0.01);
+            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_", 0.01);
+            yaw_goal_tolerance_ = params.getDouble("/yaw_goal_tolerance", 0.05);
+            xy_goal_tolerance_ = params.getDouble("/xy_goal_tolerance", 0.10);
+            latch_xy_goal_tolerance_ = params.getBoolean("/latch_xy_goal_tolerance", false);
+            ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
+        } else {
+            //load parameters locally
+            base_frame_ = id + Parameters.BASE_FRAME_SUFFIX;
+            global_frame_ = Parameters.GLOBAL_FRAME;
+            rot_stopped_velocity_ = Parameters.ROT_STOPPED_VELOCITY;
+            trans_stopped_velocity_ = Parameters.TRANS_STOPPED_VELOCITY;
+            yaw_goal_tolerance_ = Parameters.YAW_GOAL_TOLERANCE;
+            xy_goal_tolerance_ = Parameters.XY_GOAL_TOLERANCE;
+            latch_xy_goal_tolerance_ = Parameters.LATCH_XY_GOAL_TOLERANCE;
+            ignore_goal_yaw_ = Parameters.IGNORE_GOAL_YAW;
+        }
     }
 
     /*Add obstacles from map, not used*/
@@ -192,8 +205,8 @@ public class LocalPlanner {
         me.obstacle_lock_.lock();
         try {
             me.obstacle_points_.clear();
-            for (int i = 0; i < points.size(); i++) {
-                me.obstacle_points_.add(points.get(i));
+            for (Vector2 pt : points) {
+                me.obstacle_points_.add(pt);
             }
         } finally {
             me.obstacle_lock_.unlock();
@@ -242,14 +255,14 @@ public class LocalPlanner {
         global_plan_ = orig_global_plan;
         current_waypoint_ = 0;
         xy_tolerance_latch_ = false;
-        //get the global plan in our frame, comment for test
+        //get the global plan in our frame
         if (!transformGlobalPlan(true, global_plan_, global_frame_, base_frame_, transformed_plan_)) {
             this.node.getLog().warn("Could not transform the global plan to the frame of the controller");
             return false;
         }
 
-        me.msgPublisher.publishPlan(global_plan_,base_frame_, g_plan_pub_);
-        me.msgPublisher.publishPlan(transformed_plan_,base_frame_, l_plan_pub_);
+//        me.msgPublisher.publishPlan(global_plan_,base_frame_, g_plan_pub_);
+//        me.msgPublisher.publishPlan(transformed_plan_,base_frame_, l_plan_pub_);
         return true;
     }
 
@@ -325,7 +338,7 @@ public class LocalPlanner {
 
             //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
             //just rotate in place
-            if (latch_xy_goal_tolerance_)//test rotate in place??
+            if (latch_xy_goal_tolerance_)
                 xy_tolerance_latch_ = true;
 
             //check to see if the goal orientation has been reached
@@ -370,8 +383,8 @@ public class LocalPlanner {
 
             //publish an empty plan because we've reached our goal position
             transformed_plan_.clear();
-            me.msgPublisher.publishPlan(transformed_plan_, id, g_plan_pub_);
-            me.msgPublisher.publishPlan(transformed_plan_, id, l_plan_pub_);
+//            me.msgPublisher.publishPlan(transformed_plan_, id, g_plan_pub_);
+//            me.msgPublisher.publishPlan(transformed_plan_, id, l_plan_pub_);
             //we don't actually want to run the controller when we're just rotating to goal
             return true;
         }
@@ -409,14 +422,8 @@ public class LocalPlanner {
             pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
         }
 
-        //time consuming test
-        long startTime=System.nanoTime();
         me.computeNewVelocity(pref_vel_vect, cmd_vel);
-        long consumingTime=System.nanoTime()-startTime;
-        if (vel_cal_delay_max <consumingTime){
-            vel_cal_delay_max =consumingTime;
-            System.out.println("agent "+id+" velocity computing max duration: "+(double) vel_cal_delay_max /1000000000+"s");
-        }
+
 
         if (Math.abs(cmd_vel.getAngular().getZ()) < me.min_vel_th_)
             cmd_vel.getAngular().setZ(0);
@@ -445,8 +452,8 @@ public class LocalPlanner {
             } else {
                 //reached goal
                 transformed_plan_.clear();
-                me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
-                me.msgPublisher.publishPlan( transformed_plan_,id, l_plan_pub_);
+//                me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
+//                me.msgPublisher.publishPlan( transformed_plan_,id, l_plan_pub_);
                 return false;
             }
         } else {
@@ -462,8 +469,8 @@ public class LocalPlanner {
         pos.setHeader(global_pose.getHeader());
         local_plan.add(pos);
         local_plan.add(transformed_plan_.get(current_waypoint_));
-        me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
-        me.msgPublisher.publishPlan( local_plan,id, l_plan_pub_);
+//        me.msgPublisher.publishPlan(transformed_plan_,id, g_plan_pub_);
+//        me.msgPublisher.publishPlan( local_plan,id, l_plan_pub_);
 
         return true;
     }
@@ -571,8 +578,8 @@ public class LocalPlanner {
             me.me_lock_.lock();
             try {
                 robot_pose.setPosition(me.getBaseOdom().getPose().getPose().getPosition());
-                if (me.getLastSeen()==null)
-                    t=node.getCurrentTime();
+                if (me.getLastSeen() == null)
+                    t = node.getCurrentTime();
                 else
                     t = me.getLastSeen();
             } finally {
@@ -609,9 +616,8 @@ public class LocalPlanner {
                 }
             }
 
-        }else
-        {
-            t=node.getCurrentTime();
+        } else {
+            t = node.getCurrentTime();
         }
 
         PoseStamped tf_pose;

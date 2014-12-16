@@ -121,4 +121,5 @@ public class utilsSim {
         double noise = r.nextGaussian() * Math.sqrt(variance) + mean;
         return noise;
     }
+
 }
