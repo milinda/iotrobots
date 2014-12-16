@@ -1,22 +1,34 @@
 package cgl.iotrobots.slam.core.app;
 
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class LaserScan {
-    public long timestamp;
+    protected long timestamp;
 
-    public double rangeMax;
+    protected double rangeMax;
 
-    public double range_min;
+    protected double range_min;
 
-    public double angle_min;
+    protected double angle_min;
 
-    public double angle_max;
+    protected double angle_max;
 
-    public double angle_increment;
+    protected double angle_increment;
 
-    public List<Double> ranges = new ArrayList<Double>();
+    protected List<Double> ranges = new ArrayList<Double>();
+
+    private DoubleOrientedPoint pose;
+
+    public DoubleOrientedPoint getPose() {
+        return pose;
+    }
+
+    public void setPose(DoubleOrientedPoint pose) {
+        this.pose = pose;
+    }
 
     public long getTimestamp() {
         return timestamp;

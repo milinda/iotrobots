@@ -48,4 +48,12 @@ public class DoublePoint {
         double y = p1.y * p2.y;
         return x + y;
     }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
 }

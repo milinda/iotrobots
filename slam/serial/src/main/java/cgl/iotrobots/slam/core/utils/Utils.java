@@ -9,26 +9,26 @@ public class Utils {
 
     public static Double[] getDoubles(LaserScan scan, double gspLaserAngleIncrement) {
         // GMapping wants an array of doubles...
-        Double[] ranges_double = new Double[scan.ranges.size()];
+        Double[] ranges_double = new Double[scan.getRanges().size()];
         // If the angle increment is negative, we have to invert the order of the readings.
         if (gspLaserAngleIncrement < 0) {
             LOG.debug("Inverting scan");
-            int num_ranges = scan.ranges.size();
+            int num_ranges = scan.getRanges().size();
             for (int i = 0; i < num_ranges; i++) {
                 // Must filter out short readings, because the mapper won't
-                if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = scan.rangeMax;
+                if (scan.getRanges().get(i) < scan.getRange_min()) {
+                    ranges_double[i] = scan.getRangeMax();
                 } else {
-                    ranges_double[i] = scan.ranges.get(num_ranges - i - 1);
+                    ranges_double[i] = scan.getRanges().get(num_ranges - i - 1);
                 }
             }
         } else {
-            for (int i = 0; i < scan.ranges.size(); i++) {
+            for (int i = 0; i < scan.getRanges().size(); i++) {
                 // Must filter out short readings, because the mapper won't
-                if (scan.ranges.get(i) < scan.range_min) {
-                    ranges_double[i] = scan.rangeMax;
+                if (scan.getRanges().get(i) < scan.getRange_min()) {
+                    ranges_double[i] = scan.getRangeMax();
                 } else {
-                    ranges_double[i] = scan.ranges.get(i);
+                    ranges_double[i] = scan.getRanges().get(i);
                 }
             }
         }

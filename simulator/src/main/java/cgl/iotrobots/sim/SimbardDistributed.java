@@ -1,9 +1,15 @@
 package cgl.iotrobots.sim;
 
-import cgl.iotrobots.slam.core.app.LaserScan;
+import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
+import cgl.iotrobots.slam.core.app.GFSMap;
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.streaming.Constants;
+import cgl.iotrobots.slam.streaming.Utils;
+import cgl.iotrobots.utils.rabbitmq.*;
+import com.esotericsoftware.kryo.Kryo;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -11,9 +17,12 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class SimbardExample {
+
+public class SimbardDistributed {
     public static final int SENSORS = 180;
 
     public static final double ANGLE = 2 * Math.PI;
@@ -24,9 +33,21 @@ public class SimbardExample {
         GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
         CameraSensor camera;
+        RabbitMQSender sender;
+        RabbitMQReceiver receiver;
+        Kryo kryo = new Kryo();
 
         public Robot(Vector3d position, String name) {
             super(position, name);
+
+            try {
+                sender = new RabbitMQSender("amqp://localhost:5672", "simbard");
+                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard");
+                sender.open();
+                receiver.listen(new MapReceiver());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             // Add camera
             camera = RobotFactory.addCameraSensor(this);
             // Add sonars
@@ -63,7 +84,6 @@ public class SimbardExample {
         }
 
         boolean forward = false;
-        double prevX = 0;
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
             System.out.println("\n\n");
@@ -73,15 +93,22 @@ public class SimbardExample {
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
-            gfsAlgorithm.laserScan(laserScan);
-            prevX = point3D.x;
+
+            byte []body = Utils.serialize(kryo, laserScan);
+            Map<String, Object> props = new HashMap<String, Object>();
+            props.put("time", System.currentTimeMillis());
+            props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
+
+            Message message = new Message(body, props);
+            try {
+                sender.send(message, "test.test.laser_scan");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             // progress at 0.5 m/s
             if (getCounter() % 50 == 0) {
-                if (forward) {
-                    forward = false;
-                } else {
-                    forward = true;
-                }
+                forward = !forward;
             }
 
             if (forward) {
@@ -89,16 +116,21 @@ public class SimbardExample {
             } else {
                 setTranslationalVelocity(-5);
             }
-            // frequently change orientation
-//            if ((getCounter() % 100) == 0)
-//                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
+        }
 
-            mapUI.setMap(gfsAlgorithm.getMap());
+        private class MapReceiver implements MessageHandler {
+            @Override
+            public Map<String, String> getProperties() {
+                Map<String, String> props = new HashMap<String, String>();
+                props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.map");
+                return props;
+            }
 
-            // print front sonar every 100 frames
-//            if (getCounter() % 100 == 0)
-//                System.out
-//                        .println("Sonar num 0  = " + sonars.getMeasurement(0));
+            @Override
+            public void onMessage(Message message) {
+                GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
+                mapUI.setMap(map);
+            }
         }
 
         private LaserScan getLaserScan() {
@@ -125,8 +157,6 @@ public class SimbardExample {
             return laserScan;
         }
     }
-
-
 
     /** Describe the environement */
     static public class MyEnv extends EnvironmentDescription {
@@ -171,5 +201,4 @@ public class SimbardExample {
         Simbad frame = new Simbad(new MyEnv(), false);
         mapUI = new MapUI();
     }
-
 }

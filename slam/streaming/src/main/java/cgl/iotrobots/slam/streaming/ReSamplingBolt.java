@@ -5,20 +5,24 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.GFSConfiguration;
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
+import cgl.iotrobots.slam.core.sensor.Sensor;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
-import cgl.iotrobots.slam.streaming.rabbitmq.Message;
-import cgl.iotrobots.slam.streaming.rabbitmq.RabbitMQSender;
+import cgl.iotrobots.utils.rabbitmq.Message;
+import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
+import cgl.sensorstream.core.StreamComponents;
+import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +38,7 @@ public class ReSamplingBolt extends BaseRichBolt {
     private TopologyContext topologyContext;
 
     /** we will collect the values until we get all of them */
-    private List<ParticleValue> particleValueses = new ArrayList<ParticleValue>();
+    private ParticleValue []particleValueses;
 
     /** This is the reading message we will get */
     private RangeReading reading;
@@ -44,20 +48,27 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     private RabbitMQSender valueSender;
 
-    private String url = "amqp://localhost:";
+    private String url = "amqp://localhost:5672";
 
     private Kryo kryo;
 
+    private int receivedParticles = 0;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        reSampler = new DistributedReSampler();
-
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
         this.kryo = new Kryo();
-
+        // read the configuration of the scanmatcher from topology.xml
+        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+        StreamComponents components = streamTopologyBuilder.buildComponents();
+        // use the configuration to create the resampler
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        reSampler = ProcessorFactory.createReSampler(cfg);
+        particleValueses = new ParticleValue[reSampler.getParticles().size()];
+        this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
-            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE);
+            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             this.assignmentSender.open();
 
             this.valueSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
@@ -69,25 +80,49 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
+        outputCollector.ack(tuple);
+
+        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE);
         ParticleValue value;
+
         if (val != null && (val instanceof ParticleValue)) {
             value = (ParticleValue) val;
-            particleValueses.add(value.getIndex(), value);
+            LOG.debug("Received particle with index {}", value.getIndex());
+            particleValueses[value.getIndex()] = value;
+            receivedParticles++;
         } else {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+            throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
 
         val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
-        if (val != null && !(val instanceof RangeReading)) {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+        if (val != null && !(val instanceof LaserScan)) {
+            throw new IllegalArgumentException("The laser scan should be of type LaserScan");
         }
-        reading = (RangeReading) val;
+        LaserScan scan = (LaserScan) val;
+        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
+        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
+                scan.getRanges().size(),
+                Math.abs(scan.getAngle_increment()),
+                new DoubleOrientedPoint(0, 0, 0),
+                0.0,
+                scan.getRangeMax());
 
+        reading = new RangeReading(scan.getRanges().size(),
+                ranges_double,
+                sensor,
+                scan.getTimestamp());
+        reading.setPose(scan.getPose());
+        Map<String, Sensor> smap = new HashMap<String, Sensor>();
+        smap.put(sensor.getName(), sensor);
+        reSampler.setSensorMap(smap);
+
+        LOG.debug("receivedParticles {}", receivedParticles);
         // this bolt will wait until all the particle values are obtained
-        if (particleValueses.size() < reSampler.getNoParticles() || reading == null) {
+        if (receivedParticles < reSampler.getNoParticles() || reading == null) {
             return;
         }
+        // reset the counter
+        receivedParticles = 0;
 
         // now distribute the particle Valueses to the bolts
 
@@ -107,36 +142,43 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
 
         // do the resampling
-        reSampler.processScan(reading, 0);
+        boolean hasReSampled = reSampler.processScan(reading, 0);
         // now distribute the resampled particleValueses
         List<Integer> particles = reSampler.getIndexes();
 
-        // first we will distribute the new assignments
-        // this will distribute the current maps
-        ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
-        distributeAssignments(assignments);
+        // we will distribute only if we have reSampled
+        if (hasReSampled) {
+            // first we will distribute the new assignments
+            // this will distribute the current maps
+            LOG.info("ReSampled, distributing assignments");
+            ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
+            assignments.setReSampled(true);
+            distributeAssignments(assignments);
 
-        // distribute the new particle values according to
-        for (int i = 0; i < reSampler.getParticles().size(); i++) {
-            Particle p = reSampler.getParticles().get(i);
-            ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
-                    p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
+            // distribute the new particle values according to
+            for (int i = 0; i < reSampler.getParticles().size(); i++) {
+                Particle p = reSampler.getParticles().get(i);
+                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
+                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
 
-            byte []b = Utils.serialize(kryo, pv);
-            Message message = new Message(b, new HashMap<String, Object>());
-            int taskId = getTaskForParticle(i, assignments.getAssignments());
-            try {
-                valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + taskId);
-            } catch (Exception e) {
-                LOG.error("Failed to send the message");
+                byte[] b = Utils.serialize(kryo, pv);
+                Message message = new Message(b, new HashMap<String, Object>());
+                // we assume there is a direct mapping between particles in the resampler and the indexes
+                ParticleAssignment assignment = assignments.getAssignments().get(i);
+                try {
+                    valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
+                } catch (Exception e) {
+                    LOG.error("Failed to send the message");
+                }
             }
+        } else {
+            LOG.info("NOT ReSampled, distributing assignments");
+            ParticleAssignments assignments = new ParticleAssignments();
+            assignments.setReSampled(false);
+            distributeAssignments(assignments);
         }
 
         reading = null;
-    }
-
-    private int getTaskForParticle(int particleIndex, List<ParticleAssignment> assignments) {
-        return 0;
     }
 
     @Override
@@ -153,7 +195,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         Message message = new Message(b, new HashMap<String, Object>());
         try {
-            assignmentSender.send(message, "all");
+            assignmentSender.send(message, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
         } catch (Exception e) {
             LOG.error("Failed to send the message", e);
         }
@@ -175,7 +217,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             cost[i] = new double[noOfParticles];
             for (int j = 0; j < noOfParticles; j++) {
                 int index = indexes.get(j);
-                ParticleValue pv = particleValueses.get(index);
+                ParticleValue pv = particleValueses[index];
                 // now see weather this particle is from this worker
                 int particleTaskIndex = pv.getTaskId();
                 int thrueTaskIndex = j % noOfParticles;
@@ -200,7 +242,7 @@ public class ReSamplingBolt extends BaseRichBolt {
                     thrueTaskIndex = j % noOfParticles;
                 }
             }
-            ParticleValue pv = particleValueses.get(particle);
+            ParticleValue pv = particleValueses[particle];
             ParticleAssignment assignment = new ParticleAssignment(particle, i,
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);

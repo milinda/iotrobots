@@ -1,1 +1,1 @@
-simulator must add vm option -Djava.library.path=libPath
+simulator may need to add vm option -Djava.library.path=libPath

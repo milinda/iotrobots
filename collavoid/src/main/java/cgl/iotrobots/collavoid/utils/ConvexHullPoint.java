@@ -3,14 +3,37 @@ package cgl.iotrobots.collavoid.utils;
 
 public class ConvexHullPoint {
 
-    private Vector2 point;
+    private double x;
+    private double y;
     private double weight;
-    private int index;
-    private int orig_index;
+    private int index = 0;
+    private int orig_index = 0;
 
+    public ConvexHullPoint() {
+        x = 0;
+        y = 0;
+        weight = 0;
+    }
 
-    public void setPoint(Vector2 v){
-        this.point=new Vector2(v);
+    public ConvexHullPoint(double x, double y) {
+        this.x = x;
+        this.y = y;
+        weight = 0;
+    }
+
+    public ConvexHullPoint(double x, double y, double w) {
+        this.x = x;
+        this.y = y;
+        weight = w;
+    }
+
+    public void setPoint(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public void setPoint(Vector2 v) {
+        setPoint(v.getX(), v.getY());
     }
 
     public void setWeight(double w){
@@ -25,8 +48,12 @@ public class ConvexHullPoint {
         this.orig_index = orig_index;
     }
 
-    public Vector2 getPoint(){
-        return new Vector2(this.point);
+    public double getY() {
+        return y;
+    }
+
+    public double getX() {
+        return x;
     }
 
     public double getWeight() {

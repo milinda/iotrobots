@@ -47,4 +47,79 @@ public class TNode {
     public TNode(TNode t) {
 
     }
+
+    public TNode() {
+    }
+
+    public DoubleOrientedPoint getPose() {
+        return pose;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public double getAccWeight() {
+        return accWeight;
+    }
+
+    public double getGweight() {
+        return gweight;
+    }
+
+    public TNode getParent() {
+        return parent;
+    }
+
+    public RangeReading getReading() {
+        return reading;
+    }
+
+    public int getChilds() {
+        return childs;
+    }
+
+    public int getVisitCounter() {
+        return visitCounter;
+    }
+
+    public boolean isFlag() {
+        return flag;
+    }
+
+    public void setPose(DoubleOrientedPoint pose) {
+        this.pose = pose;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    public void setAccWeight(double accWeight) {
+        this.accWeight = accWeight;
+    }
+
+    public void setGweight(double gweight) {
+        this.gweight = gweight;
+    }
+
+    public void setParent(TNode parent) {
+        this.parent = parent;
+    }
+
+    public void setReading(RangeReading reading) {
+        this.reading = reading;
+    }
+
+    public void setChilds(int childs) {
+        this.childs = childs;
+    }
+
+    public void setVisitCounter(int visitCounter) {
+        this.visitCounter = visitCounter;
+    }
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
+    }
 }
