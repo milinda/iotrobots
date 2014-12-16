@@ -386,31 +386,32 @@ public class DistributedReSampler {
             LOG.debug("Deleting old particles...");
             particles.clear();
             LOG.debug("Copying Particles and  Registering  scans...");
-            for (Particle it : temp) {
-                it.setWeight(0);
-                matcher.invalidateActiveArea();
-                matcher.registerScan(it.map, it.pose, plainReading);
-                particles.add(it);
-            }
+//            for (Particle it : temp) {
+//                it.setWeight(0);
+//                matcher.invalidateActiveArea();
+//                matcher.registerScan(it.map, it.pose, plainReading);
+//                particles.add(it);
+//            }
             hasResampled = true;
-        } else {
-            int index = 0;
-            LOG.debug("Registering Scans:");
-            Iterator<TNode> node_it = oldGeneration.iterator();
-            for (Particle it : particles) {
-                //create a new node in the particle tree and add it to the old tree
-                TNode node = null;
-                node = new TNode(it.pose, 0.0, node_it.next(), 0);
-
-                node.reading = reading;
-                it.node = node;
-
-                matcher.invalidateActiveArea();
-                matcher.registerScan(it.map, it.pose, plainReading);
-                it.previousIndex = index;
-                index++;
-            }
         }
+//        else {
+//            int index = 0;
+//            LOG.debug("Registering Scans:");
+//            Iterator<TNode> node_it = oldGeneration.iterator();
+//            for (Particle it : particles) {
+//                //create a new node in the particle tree and add it to the old tree
+//                TNode node = null;
+//                node = new TNode(it.pose, 0.0, node_it.next(), 0);
+//
+//                node.reading = reading;
+//                it.node = node;
+//
+//                matcher.invalidateActiveArea();
+//                matcher.registerScan(it.map, it.pose, plainReading);
+//                it.previousIndex = index;
+//                index++;
+//            }
+//        }
         return hasResampled;
     }
 

@@ -84,8 +84,10 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE);
         ParticleValue value;
+
         if (val != null && (val instanceof ParticleValue)) {
             value = (ParticleValue) val;
+            LOG.info("Received particle with index {}", value.getIndex());
             particleValueses[value.getIndex()] = value;
             receivedParticles++;
         } else {
@@ -114,6 +116,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         smap.put(sensor.getName(), sensor);
         reSampler.setSensorMap(smap);
 
+        LOG.info("receivedParticles {}", receivedParticles);
         // this bolt will wait until all the particle values are obtained
         if (receivedParticles < reSampler.getNoParticles() || reading == null) {
             return;

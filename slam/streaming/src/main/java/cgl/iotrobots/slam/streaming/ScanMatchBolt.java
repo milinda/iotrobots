@@ -50,7 +50,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private RabbitMQReceiver particleValueReceiver;
 
-    private RabbitMQSender sender;
+    private RabbitMQSender particleSender;
 
     private String url = "amqp://localhost:5672";
 
@@ -85,11 +85,15 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
+            // we use broadcast to receive assignments
             this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
+            // we use direct exchange to receive particle maps
             this.particleReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
+            // we use direct to receive particle values
             this.particleValueReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
-            this.sender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
-            this.sender.open();
+            // we use direct to send the new particle maps
+            this.particleSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
+            this.particleSender.open();
 
             this.assignmentReceiver.listen(new ParticleAssignmentHandler());
             this.particleReceiver.listen(new MapHandler());
@@ -170,7 +174,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<Integer> activeParticles = gfsp.getActiveParticles();
         List<Particle> particles = gfsp.getParticles();
 
-        LOG.info("Changing state to WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES");
+        LOG.info("execute: changing state to WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES");
         state = MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES;
 
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
@@ -190,7 +194,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             outputCollector.emit(emit);
         }
         // clear the active particles list
-        activeParticles.clear();
+//        activeParticles.clear();
     }
 
     /**
@@ -211,8 +215,9 @@ public class ScanMatchBolt extends BaseRichBolt {
     private class MapHandler implements MessageHandler {
         @Override
         public Map<String, String> getProperties() {
+            int taskId = topologyContext.getThisTaskIndex();
             Map<String, String> props = new HashMap<String, String>();
-            props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + taskId);
 
             return props;
         }
@@ -222,6 +227,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             byte []body = message.getBody();
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
+                    LOG.info("Received particle map");
                     ParticleMaps pm = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
                     // first we need to determine the expected new maps for this particle
                     if (assignments != null) {
@@ -280,6 +286,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             byte []body = message.getBody();
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
+                    LOG.info("Received particle assignment");
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryo, body, ParticleAssignments.class);
                     // we are going to keep the assignemtns so that we can check the receiving particles
                     ScanMatchBolt.this.assignments = assignments;
@@ -287,6 +294,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     // if we have resampled ditributed the assignments
                     if (assignments.isReSampled()) {
                         // now go through the assignments and send them to the bolts directly
+                        gfsp.getActiveParticles().clear();
                         computeExpectedParticles(assignments);
                         distributeAssignments(assignments);
                     } else {
@@ -337,7 +345,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     byte []b = Utils.serialize(kryo, particleMaps);
                     Message message = new Message(b, new HashMap<String, Object>());
                     try {
-                        sender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + assignment.getNewTask());
+                        particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + assignment.getNewTask());
                     } catch (Exception e) {
                         LOG.error("Failed to send the new particle map");
                     }
@@ -365,6 +373,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             byte []body = message.getBody();
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
+                    LOG.info("Received particle value");
                     ParticleValue pm = (ParticleValue) Utils.deSerialize(kryo, body, ParticleValue.class);
                     // first we need to determine the expected new maps for this particle
                     if (assignments != null) {
@@ -425,6 +434,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         p.setGweight(value.getGweight());
         p.setPreviousPose(value.getPreviousPose());
 
+        gfsp.getActiveParticles().add(newIndex);
         // add the new particle index
         if (!gfsp.getActiveParticles().contains(newIndex)) {
             gfsp.getActiveParticles().add(newIndex);
