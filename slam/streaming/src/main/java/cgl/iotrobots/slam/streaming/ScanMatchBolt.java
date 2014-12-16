@@ -193,8 +193,6 @@ public class ScanMatchBolt extends BaseRichBolt {
             emit.add(time);
             outputCollector.emit(emit);
         }
-        // clear the active particles list
-//        activeParticles.clear();
     }
 
     /**
@@ -277,13 +275,14 @@ public class ScanMatchBolt extends BaseRichBolt {
         public Map<String, String> getProperties() {
             int taskId = topologyContext.getThisTaskIndex();
             Map<String, String> props = new HashMap<String, String>();
-            props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + taskId);
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
             return props;
         }
 
         @Override
         public void onMessage(Message message) {
             byte []body = message.getBody();
+            LOG.info("Received particle assignment *****");
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
                     LOG.info("Received particle assignment");
@@ -472,5 +471,12 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticles--;
+    }
+
+    @Override
+    public void cleanup() {
+        super.cleanup();
+
+        LOG.info("Shutting down the bolt");
     }
 }

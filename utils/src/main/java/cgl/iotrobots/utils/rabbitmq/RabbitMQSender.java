@@ -96,7 +96,7 @@ public class RabbitMQSender {
             if (!topic) {
                 channel.exchangeDeclare(exchangeName, "direct", false);
             } else {
-                channel.exchangeDeclare(exchangeName, "fanout", false);
+                channel.exchangeDeclare(exchangeName, "topic", false);
             }
         } catch (Exception e) {
             reset();

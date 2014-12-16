@@ -87,7 +87,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         if (val != null && (val instanceof ParticleValue)) {
             value = (ParticleValue) val;
-            LOG.info("Received particle with index {}", value.getIndex());
+            LOG.debug("Received particle with index {}", value.getIndex());
             particleValueses[value.getIndex()] = value;
             receivedParticles++;
         } else {
@@ -116,7 +116,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         smap.put(sensor.getName(), sensor);
         reSampler.setSensorMap(smap);
 
-        LOG.info("receivedParticles {}", receivedParticles);
+        LOG.debug("receivedParticles {}", receivedParticles);
         // this bolt will wait until all the particle values are obtained
         if (receivedParticles < reSampler.getNoParticles() || reading == null) {
             return;
@@ -150,8 +150,9 @@ public class ReSamplingBolt extends BaseRichBolt {
         if (hasReSampled) {
             // first we will distribute the new assignments
             // this will distribute the current maps
+            LOG.info("ReSampled, distributing assignments");
             ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
-            assignments.setReSampled(hasReSampled);
+            assignments.setReSampled(true);
             distributeAssignments(assignments);
 
             // distribute the new particle values according to
@@ -171,6 +172,7 @@ public class ReSamplingBolt extends BaseRichBolt {
                 }
             }
         } else {
+            LOG.info("NOT ReSampled, distributing assignments");
             ParticleAssignments assignments = new ParticleAssignments();
             assignments.setReSampled(false);
             distributeAssignments(assignments);
@@ -193,7 +195,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         Message message = new Message(b, new HashMap<String, Object>());
         try {
-            assignmentSender.send(message, "all");
+            assignmentSender.send(message, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
         } catch (Exception e) {
             LOG.error("Failed to send the message", e);
         }
