@@ -247,7 +247,8 @@ public class DistributedScanMatcher {
                 // updateTreeWeights(false);
                 // resample(plainReading, adaptParticles, readingCopy);
             } else {
-                for (Particle it : particles) {
+                for (int index : activeParticles) {
+                    Particle it = particles.get(index);
                     matcher.invalidateActiveArea();
                     matcher.computeActiveArea(it.map, it.pose, plainReading);
                     matcher.registerScan(it.map, it.pose, plainReading);
@@ -264,8 +265,6 @@ public class DistributedScanMatcher {
             angularDistance = 0;
             count++;
             processed = true;
-
-            // now send the particles to others
 
             //keep ready for the next step
             for (Particle it : particles) {
@@ -304,8 +303,37 @@ public class DistributedScanMatcher {
         return sumScore;
     }
 
-    public void processAfterReSampling() {
+    public void processAfterReSampling(double []plainReading) {
+        for (int i : activeParticles) {
+            Particle it = particles.get(i);
+            matcher.invalidateActiveArea();
+            matcher.registerScan(it.map, it.pose, plainReading);
+            particles.add(it);
+        }
+    }
 
+    public void postProcessingWithoutReSampling(double []plainReading, RangeReading reading) {
+        List<TNode> oldGeneration = new ArrayList<TNode>();
+        for (Particle m_particle : particles) {
+            oldGeneration.add(m_particle.node);
+        }
+        int index = 0;
+        LOG.debug("Registering Scans:");
+        Iterator<TNode> node_it = oldGeneration.iterator();
+        for (int i : activeParticles) {
+            Particle it = particles.get(i);
+            //create a new node in the particle tree and add it to the old tree
+            TNode node = null;
+            node = new TNode(it.pose, 0.0, node_it.next(), 0);
+
+            node.reading = reading;
+            it.node = node;
+
+            matcher.invalidateActiveArea();
+            matcher.registerScan(it.map, it.pose, plainReading);
+            it.previousIndex = index;
+            index++;
+        }
     }
 
     /**

@@ -73,6 +73,8 @@ public class GFSAlgorithm {
     String map_frame_;
     String odom_frame_;
 
+    private MapUpdater mapUpdater;
+
     public static void main(String[] args) {
         GFSAlgorithm GFSAlgorithm = new GFSAlgorithm();
         GFSAlgorithm.init();
@@ -99,11 +101,9 @@ public class GFSAlgorithm {
             for (int j = 0; j < 1000; j ++) {
                 scan.ranges.add(10.0);
             }
-            // scan.ranges.add(10.0);
-            // scan.ranges.add(10.0);
             scan.range_min = 0;
             scan.rangeMax = 100;
-            GFSAlgorithm.laserScan(scan, null);
+            GFSAlgorithm.laserScan(scan);
         }
     }
 
@@ -143,7 +143,6 @@ public class GFSAlgorithm {
         lasamplestep_ = 0.005;
     }
 
-    private MapUpdater mapUpdater;
 
     public boolean initMapper(LaserScan scan) {
         mapUpdater = new MapUpdater(maxRange_, maxUrange_, xmin_, ymin_, xmax_, ymax_, delta_, occ_thresh_);
@@ -217,7 +216,7 @@ public class GFSAlgorithm {
     double totalScanTime = 0;
     int count = 0;
 
-    public void laserScan(LaserScan scan, DoubleOrientedPoint pose) {
+    public void laserScan(LaserScan scan) {
         long t0 =  System.currentTimeMillis();
         laser_count_++;
         if ((laser_count_ % throttle_scans_) != 0)
@@ -232,24 +231,24 @@ public class GFSAlgorithm {
             got_first_scan_ = true;
         }
 
-
-        DoubleOrientedPoint odom_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+        DoubleOrientedPoint pose = scan.getPose();
+        DoubleOrientedPoint odomPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         if (pose != null) {
-            odom_pose = pose;
+            odomPose = pose;
         }
-        if (addScan(scan, odom_pose)) {
+
+        if (addScan(scan)) {
             System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
             DoubleOrientedPoint mpose = gsp_.getParticles().get(gsp_.getBestParticleIndex()).pose;
             LOG.debug("new best pose: %.3f %.3f %.3f", mpose.x, mpose.y, mpose.theta);
-            LOG.debug("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
-            LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
+            LOG.debug("odom pose: %.3f %.3f %.3f", odomPose.x, odomPose.y, odomPose.theta);
+            LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odomPose.x, mpose.y - odomPose.y, mpose.theta - odomPose.theta);
 
             long t1 = System.currentTimeMillis();
             if (!got_map_ || (scan.timestamp - last_map_update) > map_update_interval_) {
                 updateMap(scan);
-                last_map_update = scan.timestamp;
                 LOG.debug("Updated the map");
             } else {
                 updateMap(scan);
@@ -263,8 +262,10 @@ public class GFSAlgorithm {
         System.out.println("Average: " + totalScanTime / count);
     }
 
-    public boolean addScan(LaserScan scan, DoubleOrientedPoint gmap_pose) {
-        if (getOdomPose(gmap_pose, scan.timestamp) == null) {
+    public boolean addScan(LaserScan scan) {
+        DoubleOrientedPoint pose = scan.getPose();
+
+        if (getOdomPose(pose, scan.timestamp) == null) {
             System.out.println("False 1");
             return false;
         }
@@ -280,17 +281,10 @@ public class GFSAlgorithm {
                 ranges_double,
                 gsp_laser_,
                 scan.timestamp);
-        reading.setPose(gmap_pose);
-
-//        for (int i = 0; i < ranges_double.length; i++) {
-//            System.out.format("%f, ", ranges_double[i]);
-//        }
-//        System.out.format("\n");
+        reading.setPose(pose);
 
         return gsp_.processScan(reading, 0);
     }
-
-//    public OutMap map_ = new OutMap();
 
     public GFSMap getMap() {
         return this.mapUpdater.getMap();
@@ -300,9 +294,7 @@ public class GFSAlgorithm {
         return gmap_pose;
     }
 
-
     public void updateMap(LaserScan scan) {
-//        ScanMatcher matcher = new ScanMatcher();
         double[] laser_angles = new double[scan.ranges.size()];
         double theta = angle_min_;
         for (int i = 0; i < scan.ranges.size(); i++) {

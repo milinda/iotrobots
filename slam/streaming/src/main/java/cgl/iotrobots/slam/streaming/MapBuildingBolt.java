@@ -25,9 +25,9 @@ public class MapBuildingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        GFSMap map = mapUpdater.updateMap(null, null, null);
+        //GFSMap map = mapUpdater.updateMap(null, null, null);
 
-
+        this.outputCollector.ack(tuple);
     }
 
     @Override

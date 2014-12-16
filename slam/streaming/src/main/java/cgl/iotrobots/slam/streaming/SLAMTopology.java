@@ -18,7 +18,6 @@ import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import cgl.sensorstream.core.rabbitmq.DefaultRabbitMQMessageBuilder;
-import cgl.sensorstream.core.rabbitmq.RabbitMQBoltConfigurator;
 import com.ss.commons.*;
 import com.ss.rabbitmq.ErrorReporter;
 import com.ss.rabbitmq.RabbitMQSpout;
@@ -54,7 +53,7 @@ public class SLAMTopology {
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildAllInOneTopology(builder, streamTopologyBuilder);
+            buildTestTopology(builder, streamTopologyBuilder);
         }
 
         Config conf = new Config();
@@ -85,7 +84,6 @@ public class SLAMTopology {
     }
 
     private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
-        StreamComponents components = streamTopologyBuilder.buildComponents();
 
         // first create a rabbitmq Spout
         ErrorReporter reporter = new ErrorReporter() {
@@ -104,7 +102,7 @@ public class SLAMTopology {
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
         builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
-        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.RE_SAMPLE_BOLT);
+        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
         builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
     }
 
@@ -152,7 +150,7 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations();
+            return new StaticDestinations(true);
         }
     }
 
@@ -164,7 +162,7 @@ public class SLAMTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields(Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD, Constants.Fields.LASER_SCAN_TUPLE));
+            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_TUPLE, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
         }
 
         @Override
@@ -179,16 +177,36 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations();
+            return new StaticDestinations(false);
         }
     }
 
     private static class StaticDestinations implements DestinationChanger {
         private DestinationChangeListener dstListener;
 
+        private boolean sender;
+
+        private StaticDestinations(boolean sender) {
+            this.sender = sender;
+        }
+
         @Override
         public void start() {
-            DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", null, null, null);
+            StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
+            StreamComponents components = streamTopologyBuilder.buildComponents();
+            Map conf = components.getConf();
+            String url = (String) conf.get(Constants.RABBITMQ_URL);
+            DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", url, "test", "test");
+            configuration.setGrouped(true);
+            if (!sender) {
+                configuration.addProperty("queueName", "laser_scan");
+                configuration.addProperty("routingKey", "laser_scan");
+            } else {
+                configuration.addProperty("queueName", "map");
+                configuration.addProperty("routingKey", "map");
+            }
+
+            configuration.addProperty("exchange", "simbard");
             dstListener.addDestination("rabbitmq", configuration);
         }
 

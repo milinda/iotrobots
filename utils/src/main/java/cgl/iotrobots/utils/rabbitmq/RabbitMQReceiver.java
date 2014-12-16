@@ -1,4 +1,4 @@
-package cgl.iotrobots.slam.streaming.rabbitmq;
+package cgl.iotrobots.utils.rabbitmq;
 
 import com.rabbitmq.client.*;
 import org.slf4j.Logger;
@@ -16,6 +16,7 @@ public class RabbitMQReceiver {
     private Connection connection;
     private Channel channel;
     private Map<String, QueueDetails> queueDetailsMap = new HashMap<String, QueueDetails>();
+    private boolean topic;
 
     public RabbitMQReceiver(String brokerUrl, String exchangeName) throws Exception {
         this.exchangeName = exchangeName;
@@ -26,6 +27,7 @@ public class RabbitMQReceiver {
             channel = connection.createChannel();
 
             channel.exchangeDeclare(exchangeName, "direct", false);
+            this.topic = false;
         } catch (Exception e) {
             String msg = "could not open channel for exchange " + exchangeName;
             LOG.error(msg);
@@ -43,11 +45,12 @@ public class RabbitMQReceiver {
             if (!topic) {
                 channel.exchangeDeclare(exchangeName, "direct", false);
             } else {
-                channel.exchangeDeclare(exchangeName, "fanout", false);
+                channel.exchangeDeclare(exchangeName, "topic", false);
             }
+            this.topic = topic;
         } catch (Exception e) {
             String msg = "could not open channel for exchange " + exchangeName;
-            LOG.error(msg);
+            LOG.error(msg, e);
             throw new Exception(msg, e);
         }
     }
@@ -93,10 +96,12 @@ public class RabbitMQReceiver {
                         }
 
                         Message message = new Message(body, props);
-                        channel.basicAck(deliveryTag, false);
+                        if (!topic) {
+                            channel.basicAck(deliveryTag, false);
+                        }
                         handler.onMessage(message);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        LOG.error("Failed to process the message", e);
                     }
                 }
             });
@@ -105,7 +110,7 @@ public class RabbitMQReceiver {
             return id;
         } catch (Exception e) {
             String msg = "could not open channel for exchange " + exchangeName;
-            LOG.error(msg);
+            LOG.error(msg, e);
             throw new Exception(msg, e);
         }
     }

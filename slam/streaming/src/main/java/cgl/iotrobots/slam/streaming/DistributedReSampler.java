@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.streaming;
 
+import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
@@ -14,12 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class DistributedReSampler {
-    private static Logger LOG = LoggerFactory.getLogger(DistributedScanMatcher.class);
+    private static Logger LOG = LoggerFactory.getLogger(DistributedReSampler.class);
 
     public static final double distanceThresholdCheck = 20;
 
@@ -162,8 +162,43 @@ public class DistributedReSampler {
         matcher.setLaserParameters(beams, angles, rangeSensor.getPose());
     }
 
+    public void init(int size, double xmin, double ymin,
+                     double xmax, double ymax, double delta,
+                     DoubleOrientedPoint initialPose) {
+        this.xmin = xmin;
+        this.ymin = ymin;
+        this.xmax = xmax;
+        this.ymax = ymax;
+        this.delta = delta;
+
+        LOG.info(" -xmin " + this.xmin + " -xmax " + this.xmax + " -ymin " + this.ymin
+                + " -ymax " + this.ymax + " -delta " + this.delta + " -particles " + size);
+
+        particles.clear();
+
+        for (int i = 0; i < size; i++) {
+            GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            Particle p = new Particle(lmap);
+
+            p.pose = new DoubleOrientedPoint(initialPose);
+            p.previousPose = initialPose;
+            p.setWeight(0);
+            p.previousIndex = 0;
+            particles.add(p);
+            // we use the root directly
+            p.node = new TNode(initialPose, 0, null, 0);
+        }
+
+        neff = (double) size;
+        count = 0;
+        readingCount = 0;
+        linearDistance = angularDistance = 0;
+        this.noParticles = size;
+    }
+
     public boolean processScan(RangeReading reading, int adaptParticles) {
         DoubleOrientedPoint relPose = reading.getPose();
+        boolean hasRsSampled = false;
         if (count == 0) {
             lastPartPose = odoPose = relPose;
         }
@@ -178,55 +213,45 @@ public class DistributedReSampler {
         linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
         angularDistance += Math.abs(move.theta);
 
-        // if the robot jumps throw a warning
-        if (linearDistance > distanceThresholdCheck) {
-            LOG.error("The robot jumped too much");
-        }
-
         odoPose = relPose;
-        boolean processed = false;
-
         // process a scan only if the robot has traveled a given distance or a certain amount of time has elapsed
-        if (count == 0
-                || linearDistance >= linearThresholdDistance
-                || angularDistance >= angularThresholdDistance
-                || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
-            last_update_time_ = reading.getTime();
 
-            //this is for converting the reading in a scan-matcher feedable form
-            if (reading.size() != beams) {
-                throw new IllegalStateException("reading should contain " + beams + " beams");
-            }
-            double[] plainReading = new double[beams];
-            for (int i = 0; i < beams; i++) {
-                plainReading[i] = reading.get(i);
-            }
+        // here there is no need to check weather we need to perform the calculation.
+        // If we are at this point we need to do the calculation
+        last_update_time_ = reading.getTime();
 
-            RangeReading readingCopy =
-                    new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
-                            (RangeSensor) reading.getSensor(),
-                            reading.getTime());
-
-            if (count > 0) {
-                updateTreeWeights(false);
-                resample(plainReading, adaptParticles, readingCopy);
-            }
-            updateTreeWeights(false);
-
-            lastPartPose = odoPose; //update the past pose for the next iteration
-            linearDistance = 0;
-            angularDistance = 0;
-            count++;
-            processed = true;
-
-            //keep ready for the next step
-            for (Particle it : particles) {
-                it.previousPose = it.pose;
-            }
-
+        //this is for converting the reading in a scan-matcher feedable form
+        if (reading.size() != beams) {
+            throw new IllegalStateException("reading should contain " + beams + " beams");
         }
+        double[] plainReading = new double[beams];
+        for (int i = 0; i < beams; i++) {
+            plainReading[i] = reading.get(i);
+        }
+
+        RangeReading readingCopy =
+                new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
+                        (RangeSensor) reading.getSensor(),
+                        reading.getTime());
+
+        if (count > 0) {
+            updateTreeWeights(false);
+            hasRsSampled = resample(plainReading, adaptParticles, readingCopy);
+        }
+        updateTreeWeights(false);
+
+        lastPartPose = odoPose; //update the past pose for the next iteration
+        linearDistance = 0;
+        angularDistance = 0;
+        count++;
+
+        //keep ready for the next step
+        for (Particle it : particles) {
+            it.previousPose = it.pose;
+        }
+
         readingCount++;
-        return processed;
+        return hasRsSampled;
     }
 
     public void resetTree() {
@@ -321,7 +346,7 @@ public class DistributedReSampler {
 
         if (neff < resampleThreshold * particles.size()) {
             UniformResampler resampler = new UniformResampler();
-            List<Integer> indexes = resampler.resampleIndexes(weights, adaptSize);
+            indexes = resampler.resampleIndexes(weights, adaptSize);
 
             //begin building tree
             List<Particle> temp = new ArrayList<Particle>();
@@ -360,31 +385,32 @@ public class DistributedReSampler {
             LOG.debug("Deleting old particles...");
             particles.clear();
             LOG.debug("Copying Particles and  Registering  scans...");
-            for (Particle it : temp) {
-                it.setWeight(0);
-                matcher.invalidateActiveArea();
-                matcher.registerScan(it.map, it.pose, plainReading);
-                particles.add(it);
-            }
+//            for (Particle it : temp) {
+//                it.setWeight(0);
+//                matcher.invalidateActiveArea();
+//                matcher.registerScan(it.map, it.pose, plainReading);
+//                particles.add(it);
+//            }
             hasResampled = true;
-        } else {
-            int index = 0;
-            LOG.debug("Registering Scans:");
-            Iterator<TNode> node_it = oldGeneration.iterator();
-            for (Particle it : particles) {
-                //create a new node in the particle tree and add it to the old tree
-                TNode node = null;
-                node = new TNode(it.pose, 0.0, node_it.next(), 0);
-
-                node.reading = reading;
-                it.node = node;
-
-                matcher.invalidateActiveArea();
-                matcher.registerScan(it.map, it.pose, plainReading);
-                it.previousIndex = index;
-                index++;
-            }
         }
+//        else {
+//            int index = 0;
+//            LOG.debug("Registering Scans:");
+//            Iterator<TNode> node_it = oldGeneration.iterator();
+//            for (Particle it : particles) {
+//                //create a new node in the particle tree and add it to the old tree
+//                TNode node = null;
+//                node = new TNode(it.pose, 0.0, node_it.next(), 0);
+//
+//                node.reading = reading;
+//                it.node = node;
+//
+//                matcher.invalidateActiveArea();
+//                matcher.registerScan(it.map, it.pose, plainReading);
+//                it.previousIndex = index;
+//                index++;
+//            }
+//        }
         return hasResampled;
     }
 

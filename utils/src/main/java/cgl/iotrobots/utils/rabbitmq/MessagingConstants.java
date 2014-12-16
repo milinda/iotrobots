@@ -1,4 +1,4 @@
-package cgl.iotrobots.slam.streaming.rabbitmq;
+package cgl.iotrobots.utils.rabbitmq;
 
 public class MessagingConstants {
     public static final String RABBIT_ROUTING_KEY = "routingKey";

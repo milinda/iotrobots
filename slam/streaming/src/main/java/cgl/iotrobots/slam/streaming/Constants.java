@@ -8,6 +8,7 @@ public abstract class Constants {
     // configurations
     public static final String MAP_UPDATE_INTERVAL = "map_update_interval";
     public static final String MAXURANGE = "maxUrange";
+    public static final String MAX_RANGE = "maxRange";
     public static final String SIGMA = "sigma";
     public static final String KERNELSIZE = "kernelSize";
     public static final String LSTEP = "lstep";
@@ -34,13 +35,14 @@ public abstract class Constants {
     public static final String LLSAMPLESTEP = "llsamplestep";
     public static final String LASAMPLERANGE = "lasamplerange";
     public static final String LASAMPLESTEP = "lasamplestep";
+    public static final String RABBITMQ_URL = "rabbitmq_url";
+    public static final String OCC_THRESH = "occ_threshold";
 
     public abstract class Fields {
         public static final String TIME_FIELD = "time";
         public static final String LASER_SCAN_TUPLE = "laser_scan";
         public static final String PARTICLE_VALUE = "particle_value";
         public static final String SENSOR_ID_FIELD = "sensorID";
-        public static final String PARTICLE_VALUE_FIELD = "particleValue";
     }
 
     public abstract class Messages {

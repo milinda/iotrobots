@@ -1,4 +1,4 @@
-package cgl.iotrobots.slam.streaming.rabbitmq;
+package cgl.iotrobots.utils.rabbitmq;
 
 import java.util.Map;
 
