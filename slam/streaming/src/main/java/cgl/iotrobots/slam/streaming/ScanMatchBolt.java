@@ -226,7 +226,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         addMaps(pm);
 
                         // we have received all the particles we need to do the processing after resampling
-                        if (expectingParticles == 0) {
+                        if (expectingParticles == 0 && expectingParticleValues == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
                             gfsp.processAfterReSampling();
                             state = MatchState.WAITING_FOR_READING;
@@ -271,8 +271,19 @@ public class ScanMatchBolt extends BaseRichBolt {
                     // we are going to keep the assignemtns so that we can check the receiving particles
                     ScanMatchBolt.this.assignments = assignments;
 
-                    // now go through the assignments and send them to the bolts directly
-                    distributeAssignments(assignments);
+                    // if we have resampled ditributed the assignments
+                    if (assignments.isReSampled()) {
+                        // now go through the assignments and send them to the bolts directly
+                        computeExpectedParticles(assignments);
+                        distributeAssignments(assignments);
+                    } else {
+                        expectingParticles = 0;
+                        expectingParticleValues = 0;
+                        state = MatchState.COMPUTING_NEW_PARTICLES;
+                        // we need to do the post processing we need for the particles
+                        gfsp.postProcessingWithoutReSampling();
+                        state = MatchState.WAITING_FOR_READING;
+                    }
                 } catch (Exception e) {
                     LOG.error("Failed to deserialize assignment", e);
                 }
@@ -354,7 +365,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         addParticle(pm);
 
                         // we have received all the particles we need to do the processing after resampling
-                        if (expectingParticleValues == 0) {
+                        if (expectingParticleValues == 0 && expectingParticles == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
                             gfsp.processAfterReSampling();
                             state = MatchState.WAITING_FOR_READING;

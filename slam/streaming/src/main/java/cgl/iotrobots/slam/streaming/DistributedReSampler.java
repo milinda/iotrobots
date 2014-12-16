@@ -199,6 +199,7 @@ public class DistributedReSampler {
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
         DoubleOrientedPoint relPose = reading.getPose();
+        boolean hasRsSampled = false;
         if (count == 0) {
             lastPartPose = odoPose = relPose;
         }
@@ -234,10 +235,10 @@ public class DistributedReSampler {
                         (RangeSensor) reading.getSensor(),
                         reading.getTime());
 
-//        if (count > 0) {
+        if (count > 0) {
             updateTreeWeights(false);
-            resample(plainReading, adaptParticles, readingCopy);
-//        }
+            hasRsSampled = resample(plainReading, adaptParticles, readingCopy);
+        }
         updateTreeWeights(false);
 
         lastPartPose = odoPose; //update the past pose for the next iteration
@@ -251,7 +252,7 @@ public class DistributedReSampler {
         }
 
         readingCount++;
-        return true;
+        return hasRsSampled;
     }
 
     public void resetTree() {

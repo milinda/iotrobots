@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParticleAssignments {
-    List<ParticleAssignment> assignments = new ArrayList<ParticleAssignment>();
+    private List<ParticleAssignment> assignments = new ArrayList<ParticleAssignment>();
+
+    /** If the resampler doesn't re sample there will be no assignments */
+    private boolean reSampled = false;
 
     public ParticleAssignments() {
     }
@@ -19,5 +22,13 @@ public class ParticleAssignments {
 
     public void addAssignment(ParticleAssignment assignment) {
         assignments.add(assignment);
+    }
+
+    public boolean isReSampled() {
+        return reSampled;
+    }
+
+    public void setReSampled(boolean reSampled) {
+        this.reSampled = reSampled;
     }
 }

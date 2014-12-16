@@ -139,30 +139,38 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
 
         // do the resampling
-        reSampler.processScan(reading, 0);
+        boolean hasReSampled = reSampler.processScan(reading, 0);
         // now distribute the resampled particleValueses
         List<Integer> particles = reSampler.getIndexes();
 
-        // first we will distribute the new assignments
-        // this will distribute the current maps
-        ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
-        distributeAssignments(assignments);
+        // we will distribute only if we have reSampled
+        if (hasReSampled) {
+            // first we will distribute the new assignments
+            // this will distribute the current maps
+            ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
+            assignments.setReSampled(hasReSampled);
+            distributeAssignments(assignments);
 
-        // distribute the new particle values according to
-        for (int i = 0; i < reSampler.getParticles().size(); i++) {
-            Particle p = reSampler.getParticles().get(i);
-            ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
-                    p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
+            // distribute the new particle values according to
+            for (int i = 0; i < reSampler.getParticles().size(); i++) {
+                Particle p = reSampler.getParticles().get(i);
+                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
+                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
 
-            byte []b = Utils.serialize(kryo, pv);
-            Message message = new Message(b, new HashMap<String, Object>());
-            // we assume there is a direct mapping between particles in the resampler and the indexes
-            ParticleAssignment assignment = assignments.getAssignments().get(i);
-            try {
-                valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
-            } catch (Exception e) {
-                LOG.error("Failed to send the message");
+                byte[] b = Utils.serialize(kryo, pv);
+                Message message = new Message(b, new HashMap<String, Object>());
+                // we assume there is a direct mapping between particles in the resampler and the indexes
+                ParticleAssignment assignment = assignments.getAssignments().get(i);
+                try {
+                    valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
+                } catch (Exception e) {
+                    LOG.error("Failed to send the message");
+                }
             }
+        } else {
+            ParticleAssignments assignments = new ParticleAssignments();
+            assignments.setReSampled(false);
+            distributeAssignments(assignments);
         }
 
         reading = null;

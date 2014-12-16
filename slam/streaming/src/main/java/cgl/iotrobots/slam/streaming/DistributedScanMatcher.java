@@ -308,6 +308,10 @@ public class DistributedScanMatcher {
 
     }
 
+    public void postProcessingWithoutReSampling() {
+
+    }
+
     /**
      * Just scan match every single particle.
      * If the scan matching fails, the particle gets a default likelihood.
