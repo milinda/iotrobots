@@ -113,6 +113,9 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
+    double[] plainReading;
+    RangeReading rangeReading;
+
     @Override
     public void execute(Tuple tuple) {
         if (state != MatchState.WAITING_FOR_READING) {
@@ -150,7 +153,14 @@ public class ScanMatchBolt extends BaseRichBolt {
         smap.put(sensor.getName(), sensor);
         gfsp.setSensorMap(smap);
 
+        rangeReading = reading;
+        plainReading = new double[gfsp.beams];
+        for (int i = 0; i < gfsp.beams; i++) {
+            plainReading[i] = reading.get(i);
+        }
+
         // now we will start the computation
+        LOG.info("Changing state to COMPUTING_INIT_READINGS");
         state = MatchState.COMPUTING_INIT_READINGS;
         if (!gfsp.processScan(reading, 0)) {
             return;
@@ -160,6 +170,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<Integer> activeParticles = gfsp.getActiveParticles();
         List<Particle> particles = gfsp.getParticles();
 
+        LOG.info("Changing state to WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES");
         state = MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES;
 
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
@@ -228,8 +239,10 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // we have received all the particles we need to do the processing after resampling
                         if (expectingParticles == 0 && expectingParticleValues == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
-                            gfsp.processAfterReSampling();
+                            LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
+                            gfsp.processAfterReSampling(plainReading);
                             state = MatchState.WAITING_FOR_READING;
+                            LOG.info("Changing state to WAITING_FOR_READING");
                         }
                     } else {
                         // because we haven't received the assignments yet, we will keep the values temporaly in this list
@@ -279,9 +292,11 @@ public class ScanMatchBolt extends BaseRichBolt {
                     } else {
                         expectingParticles = 0;
                         expectingParticleValues = 0;
+                        LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
                         state = MatchState.COMPUTING_NEW_PARTICLES;
                         // we need to do the post processing we need for the particles
-                        gfsp.postProcessingWithoutReSampling();
+                        gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
+                        LOG.info("Changing state to WAITING_FOR_READING");
                         state = MatchState.WAITING_FOR_READING;
                     }
                 } catch (Exception e) {
@@ -367,8 +382,10 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // we have received all the particles we need to do the processing after resampling
                         if (expectingParticleValues == 0 && expectingParticles == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
-                            gfsp.processAfterReSampling();
+                            LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
+                            gfsp.processAfterReSampling(plainReading);
                             state = MatchState.WAITING_FOR_READING;
+                            LOG.info("Changing state to WAITING_FOR_READING");
                         }
                     } else {
                         // because we haven't received the assignments yet, we will keep the values temporaly in this list
