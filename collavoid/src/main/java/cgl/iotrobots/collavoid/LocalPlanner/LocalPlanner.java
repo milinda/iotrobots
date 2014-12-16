@@ -2,6 +2,7 @@ package cgl.iotrobots.collavoid.LocalPlanner;
 
 import cgl.iotrobots.collavoid.ROSAgent.ROSAgent;
 import cgl.iotrobots.collavoid.utils.Angles;
+import cgl.iotrobots.collavoid.utils.Parameters;
 import cgl.iotrobots.collavoid.utils.Vector2;
 import costmap_2d.VoxelGrid;
 import geometry_msgs.*;
@@ -92,11 +93,10 @@ public class LocalPlanner {
 
     //must pass connectednode,tf will be initialized from the caller, see rosjava_tf TfViz
     public LocalPlanner(ConnectedNode connectedNode, TransformListener tf) {
-        this.node = connectedNode;
-        this.params = this.node.getParameterTree();
+        node = connectedNode;
         tf_ = tf;
 
-        id = node.getName().toString().replace("/planner_","");
+        id = node.getName().toString().replace("/planner_", "");
         initialized_ = false;
         costmap_ros_ = null;
         current_waypoint_ = 0;
@@ -110,19 +110,7 @@ public class LocalPlanner {
     //implement the interface of nav_core::BaseLocalPlanner Class in original ROS
     private void initialize() {
         if (!initialized_) {
-            logger = Logger.getLogger(node.getName().toString());
-            base_frame_ = params.getString("/base_frame", id + "_base");
-            global_frame_ = params.getString("/global_frame", "map");
-
-            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity", 0.01);
-            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_", 0.01);
-
-            //base local planner params
-            yaw_goal_tolerance_ = params.getDouble("/yaw_goal_tolerance", 0.05);
-            xy_goal_tolerance_ = params.getDouble("/xy_goal_tolerance", 0.10);
-            latch_xy_goal_tolerance_ = params.getBoolean("/latch_xy_goal_tolerance", false);
-            ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
-
+            getParams(false);
             /*----------spawn agent node---------*/
 
             this.me = new ROSAgent(this.node, tf_);
@@ -154,7 +142,7 @@ public class LocalPlanner {
             //dsrv_->setCallback(cb);
 
             //wait for the agent to initialize
-            while (!me.initialized_){
+            while (!me.initialized_) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -167,6 +155,34 @@ public class LocalPlanner {
             node.getLog().info("************************Local Planner" + node.getName() + " has already been initialized, you can't call it twice, doing nothing");
         }
 
+    }
+
+    // get parameters
+    void getParams(boolean useROSParamService) {
+        logger = Logger.getLogger(node.getName().toString());
+
+        if (useROSParamService) {
+            // use parameter services
+            params = node.getParameterTree();
+            base_frame_ = params.getString("/base_frame", id + "_base");
+            global_frame_ = params.getString("/global_frame", "map");
+            rot_stopped_velocity_ = params.getDouble("/rot_stopped_velocity", 0.01);
+            trans_stopped_velocity_ = params.getDouble("/trans_stopped_velocity_", 0.01);
+            yaw_goal_tolerance_ = params.getDouble("/yaw_goal_tolerance", 0.05);
+            xy_goal_tolerance_ = params.getDouble("/xy_goal_tolerance", 0.10);
+            latch_xy_goal_tolerance_ = params.getBoolean("/latch_xy_goal_tolerance", false);
+            ignore_goal_yaw_ = params.getBoolean("/ignore_goal_yaw", false);
+        } else {
+            //load parameters locally
+            base_frame_ = id + Parameters.BASE_FRAME_SUFFIX;
+            global_frame_ = Parameters.GLOBAL_FRAME;
+            rot_stopped_velocity_ = Parameters.ROT_STOPPED_VELOCITY;
+            trans_stopped_velocity_ = Parameters.TRANS_STOPPED_VELOCITY;
+            yaw_goal_tolerance_ = Parameters.YAW_GOAL_TOLERANCE;
+            xy_goal_tolerance_ = Parameters.XY_GOAL_TOLERANCE;
+            latch_xy_goal_tolerance_ = Parameters.LATCH_XY_GOAL_TOLERANCE;
+            ignore_goal_yaw_ = Parameters.IGNORE_GOAL_YAW;
+        }
     }
 
     /*Add obstacles from map, not used*/
@@ -562,8 +578,8 @@ public class LocalPlanner {
             me.me_lock_.lock();
             try {
                 robot_pose.setPosition(me.getBaseOdom().getPose().getPose().getPosition());
-                if (me.getLastSeen()==null)
-                    t=node.getCurrentTime();
+                if (me.getLastSeen() == null)
+                    t = node.getCurrentTime();
                 else
                     t = me.getLastSeen();
             } finally {
@@ -600,9 +616,8 @@ public class LocalPlanner {
                 }
             }
 
-        }else
-        {
-            t=node.getCurrentTime();
+        } else {
+            t = node.getCurrentTime();
         }
 
         PoseStamped tf_pose;

@@ -111,6 +111,7 @@ public class MainSimulator {
             // initialize node
             AgentNode agentNode = new AgentNode(this.getName());
             node = agentNode.getNode();
+            // publish robot numbers to setup planner numbers
             params=node.getParameterTree();
             params.set("robotNb",robotNb);
             params.set("posRadius",posRadius);
@@ -143,14 +144,13 @@ public class MainSimulator {
 
             //initialize velocity command subscriber
 
-//            cmdQueue=new ArrayDeque<List<Double>>(6);
+
             if (velocitySubscriber == null) {
                 velocitySubscriber = node.newSubscriber(this.getName() + "/cmd_vel", Twist._TYPE);
                 velocitySubscriber.addMessageListener(new MessageListener<Twist>() {
                     @Override
                     public void onNewMessage(Twist msg) {
                         double v, w;
-//                        double vl_,vr_;
                         //in ros coordinate
                         Vector3d vel = new Vector3d(msg.getLinear().getX(), msg.getLinear().getY(), msg.getLinear().getZ());
                         //no need to transform the coordinate
@@ -158,13 +158,6 @@ public class MainSimulator {
                         w = msg.getAngular().getZ();
                         vl =  v - w * wheelDistance / 2;
                         vr =  v + w * wheelDistance / 2;
-//                        List<Double> velcmd=new ArrayList<Double>(2);
-//                        velcmd.add(vl_);
-//                        velcmd.add(vr_);
-//                        if (!cmdQueue.offer(velcmd)){
-//                            cmdQueue.poll();
-//                            cmdQueue.offer(velcmd);
-//                        }
                     }
                 });
             }
@@ -194,33 +187,12 @@ public class MainSimulator {
             this.rotateY(orientation);
             vl=0;
             vr=0;
-//            vel_cmd=new ArrayList<Double>(2);
-//            vel_cmd.clear();
-//            vel_cmd.add(0.0);
-//            vel_cmd.add(0.0);
         }
 
         /**
          * This method is call cyclically (20 times per second)  by the simulator engine.
          */
         public void performBehavior() {
-//            double vl=vel_cmd.get(0)/2;
-//            double vr=vel_cmd.get(1)/2;
-//            vel_cmd=cmdQueue.poll();
-//
-//            if (vel_cmd==null){
-//                if(Math.sqrt(vl*vl+vr*vr)<0.005)
-//                    kinematic.setWheelsVelocity(0,0);
-//                else
-//                    kinematic.setWheelsVelocity(vl, vr);
-//                vel_cmd=new ArrayList<Double>(2);
-//                vel_cmd.add(vl);
-//                vel_cmd.add(vr);
-//            }else
-//            {
-//                kinematic.setWheelsVelocity(vel_cmd.get(0),vel_cmd.get(1));
-//                System.out.println(vel_cmd.get(0));
-//            }
 
             if (ctlCmd.equals("pause"))
                 kinematic.setWheelsVelocity(0,0);
@@ -369,7 +341,8 @@ public class MainSimulator {
             Wall w4 = new Wall(new Vector3d(0, 0, -9), 19, 2, this);
             add(w4);
 
-            Box b1 = new Box(new Vector3d(0, 0, 0), new Vector3f((float)0.2, 1, 3),this);
+// there are bugs in avoid obstacles
+//            Box b1 = new Box(new Vector3d(0, 0, 0), new Vector3f((float)0.2, 1, 3),this);
 //            add(b1);
 //            Vector3d pose1 = new Vector3d(posRadius * Math.cos(Math.PI/3), 0, -posRadius * Math.sin(Math.PI/3));
 //            add(new Robot(pose1, Math.PI + Math.PI/3, "robot0"));
@@ -388,7 +361,6 @@ public class MainSimulator {
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
-
 
     }
 

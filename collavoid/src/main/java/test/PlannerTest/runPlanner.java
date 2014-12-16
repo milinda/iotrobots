@@ -5,7 +5,6 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

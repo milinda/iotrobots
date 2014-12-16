@@ -228,7 +228,6 @@ public class ROSAgent {
     //initialize node
     public void initNode(ConnectedNode connectedNode, TransformListener tf) {
         node = connectedNode;
-        params = node.getParameterTree();
         tf_ = tf;
         id_ = new String(connectedNode.getName().toString().replace("/planner_", ""));
 
@@ -251,87 +250,153 @@ public class ROSAgent {
 
     //get parameters from the server
     public void agentInit() {
-        use_obstacles_ = params.getBoolean("/use_obstacles", true);
-        controlled = params.getBoolean("/controlled", true);
+        initParameters(false);
+        initPubSub(node);
+        initialized_ = true;
+    }
 
-        base_frame_ = params.getString("/base_frame", id_ + "_base");//get rid of the / character
-        global_frame_ = params.getString("/global_frame", "map");
-        standalone_ = params.getBoolean("/standalone", false);
-        controlled = params.getBoolean("/controlled", true);
+    void initParameters(boolean useROSService) {
+        double controller_frequency = -1;
+        GraphName controller_frequency_param_name;
+        if (useROSService) {
+            params = node.getParameterTree();
+            use_obstacles_ = params.getBoolean("/use_obstacles", true);
+            controlled = params.getBoolean("/controlled", true);
 
-        //acceleration limits load from params_turtle.yaml
-        acc_lim_x_ = params.getDouble("/acc_lim_x");
-        acc_lim_y_ = params.getDouble("/acc_lim_y");
-        acc_lim_th_ = params.getDouble("/acc_lim_th");
+            base_frame_ = params.getString("/base_frame", id_.replace("/", "") + "_base");//get rid of the / character
+            global_frame_ = params.getString("/global_frame", "map");
 
-        //holo_robot
-        holo_robot_ = params.getBoolean("/holo_robot");
+            //acceleration limits load from params_turtle.yaml
+            acc_lim_x_ = params.getDouble("/acc_lim_x");
+            acc_lim_y_ = params.getDouble("/acc_lim_y");
+            acc_lim_th_ = params.getDouble("/acc_lim_th");
 
-        if (!holo_robot_)
-            wheel_base_ = params.getDouble("/wheel_base");
-        else
-            wheel_base_ = 0.0;
+            //holo_robot
+            holo_robot_ = params.getBoolean("/holo_robot");
+            if (!holo_robot_)
+                wheel_base_ = params.getDouble("/wheel_base");
+            else
+                wheel_base_ = 0.0;
 
-        //min max speeds
-        max_vel_with_obstacles_ = params.getDouble("/max_vel_with_obstacles");
 
-        max_vel_x_ = params.getDouble("/max_vel_x");
-        min_vel_x_ = params.getDouble("/min_vel_x");
-        max_vel_y_ = params.getDouble("/max_vel_y");
-        min_vel_y_ = params.getDouble("/min_vel_y");
-        max_vel_th_ = params.getDouble("/max_vel_th");
-        min_vel_th_ = params.getDouble("/min_vel_th");
-        min_vel_th_inplace_ = params.getDouble("/min_vel_th_inplace");
+            //min max speeds
+            max_vel_with_obstacles_ = params.getDouble("/max_vel_with_obstacles");
 
-        //set radius
-        footprint_radius_ = params.getDouble("/footprint_radius");
+            max_vel_x_ = params.getDouble("/max_vel_x");
+            min_vel_x_ = params.getDouble("/min_vel_x");
+            max_vel_y_ = params.getDouble("/max_vel_y");
+            min_vel_y_ = params.getDouble("/min_vel_y");
+            max_vel_th_ = params.getDouble("/max_vel_th");
+            min_vel_th_ = params.getDouble("/min_vel_th");
+            min_vel_th_inplace_ = params.getDouble("/min_vel_th_inplace");
+
+            //set radius
+            footprint_radius_ = params.getDouble("/footprint_radius");
+
+            //sim period
+            controller_frequency_param_name = params.search("/controller_frequency");
+            if (controller_frequency_param_name != null)
+                controller_frequency = params.getDouble(controller_frequency_param_name, 20.0);
+
+
+            //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
+            //non holo robot parameters
+            time_to_holo_ = params.getDouble("/time_to_holo", 0.4);
+            minErrorHolo = params.getDouble("/min_error_holo", 0.01);
+            maxErrorHolo = params.getDouble("/max_error_holo", 0.15);
+            //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
+            //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
+
+            //parameters for convex footprint which considers localization uncertainty
+            eps_ = params.getDouble("/eps", 0.1);
+            orca = params.getBoolean("/orca");
+            convex = params.getBoolean("/convex");
+            //params.getBoolean( "clearpath", &clearpath); not used as we only use clear path method
+            useTruancation = params.getBoolean("/use_truncation");
+
+            //num_samples = getParamDef(private_nh, "num_samples", 400); not used
+            voType = params.getInteger("/type_vo", 0); //HRVO
+
+            truncTime = params.getDouble("/trunc_time", 5.0);
+            //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
+
+            //visualization publish frequency
+            publishPositionsPeriod = 1.0 / params.getDouble("/publish_positions_frequency", 10.0);
+            //position share publish frequency
+            publishMePeriod = 1.0 / params.getDouble("/publish_me_frequency", 10.0);
+
+        } else {
+            //load parameters locally
+            use_obstacles_ = Parameters.USE_OBSTACLES;
+            controlled = Parameters.CONTROLLED;
+
+            base_frame_ = id_.replace("/", "") + Parameters.BASE_FRAME_SUFFIX;//get rid of the / character
+            global_frame_ = Parameters.GLOBAL_FRAME;
+
+            //acceleration limits load from params_turtle.yaml
+            acc_lim_x_ = Parameters.ACC_LIM_X;
+            acc_lim_y_ = Parameters.ACC_LIM_Y;
+            acc_lim_th_ = Parameters.ACC_LIM_TH;
+
+            //holo_robot
+            holo_robot_ = Parameters.HOLO_ROBOT;
+            if (!holo_robot_)
+                wheel_base_ = Parameters.WHEEL_BASE;
+            else
+                wheel_base_ = 0.0;
+
+            //min max speeds
+            max_vel_with_obstacles_ = Parameters.MAX_VEL_WITH_OBSTACLES;
+            max_vel_x_ = Parameters.MAX_VEL_X;
+            min_vel_x_ = Parameters.MIN_VEL_X;
+            max_vel_y_ = Parameters.MAX_VEL_Y;
+            min_vel_y_ = Parameters.MIN_VEL_Y;
+            max_vel_th_ = Parameters.MAX_VEL_TH;
+            min_vel_th_ = Parameters.MIN_VEL_TH;
+            min_vel_th_inplace_ = Parameters.MIN_VEL_TH_INPLACE;
+
+            //set radius
+            footprint_radius_ = Parameters.FOOTPRINT_RADIUS;
+
+            //sim period
+            controller_frequency = Parameters.CONTROLLER_FREQUENCY;
+
+            //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
+            //non holo robot parameters
+            time_to_holo_ = Parameters.TIME_TO_HOLO;
+            minErrorHolo = Parameters.MIN_ERROR_HOLO;
+            maxErrorHolo = Parameters.MAX_ERROR_HOLO;
+            //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
+            //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
+
+            //parameters for convex footprint which considers localization uncertainty
+            eps_ = Parameters.EPS;
+            orca = Parameters.ORCA;
+            convex = Parameters.CONVEX;
+            //params.getBoolean( "clearpath", &clearpath); not used as we only use clear path method
+            useTruancation = Parameters.USE_TRUNCATION;
+
+            //num_samples = getParamDef(private_nh, "num_samples", 400); not used
+            voType = Parameters.TYPE_VO; //HRVO
+
+            truncTime = Parameters.TRUNC_TIME;
+            //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
+
+            //visualization publish frequency
+            publishPositionsPeriod = 1.0 / Parameters.PUBLISH_POSITIONS_FREQUENCY;
+            //position share publish frequency
+            publishMePeriod = 1.0 / Parameters.PUBLISH_ME_FREQUENCY;
+        }
+
         radius = footprint_radius_ + cur_loc_unc_radius_;
 
-        //sim period
-        GraphName controller_frequency_param_name;
-        controller_frequency_param_name = params.search("/controller_frequency");
-        double sim_period_;
-        if (controller_frequency_param_name == null) {
-            sim_period_ = 0.05;
+        if (controller_frequency <= 0) {
+            node.getLog().warn("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
+            simPeriod = 0.05;
         } else {
-            double controller_frequency = 0;
-            controller_frequency = params.getDouble(controller_frequency_param_name, 20.0);
-
-            if (controller_frequency > 0) {
-                sim_period_ = 1.0 / controller_frequency;
-            } else {
-                node.getLog().warn("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
-                sim_period_ = 0.05;
-            }
+            simPeriod = 1.0 / controller_frequency;
         }
-        node.getLog().info("Sim period is set to " + String.format("%1$.2f", sim_period_));
-        simPeriod = sim_period_;
-
-        //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
-        //non holo robot parameters
-        time_to_holo_ = params.getDouble("/time_to_holo", 0.4);
-        minErrorHolo = params.getDouble("/min_error_holo", 0.01);
-        maxErrorHolo = params.getDouble("/max_error_holo", 0.15);
-        //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
-        //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
-
-        //parameters for convex footprint which considers localization uncertainty
-        eps_ = params.getDouble("/eps", 0.1);
-        orca = params.getBoolean("/orca");
-        convex = params.getBoolean("/convex");
-        //params.getBoolean( "clearpath", &clearpath); not used as we only use clear path method
-        useTruancation = params.getBoolean("/use_truncation");
-
-        //num_samples = getParamDef(private_nh, "num_samples", 400); not used
-        voType = params.getInteger("/type_vo", 0); //HRVO
-
-        truncTime = params.getDouble("/trunc_time", 5.0);
-        //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
-
-        //visualization publish frequency
-        publishPositionsPeriod = 1.0 / params.getDouble("/publish_positions_frequency", 10.0);
-        //position share publish frequency
-        publishMePeriod = 1.0 / params.getDouble("/publish_me_frequency", 10.0);
+        node.getLog().info("Sim period is set to " + String.format("%1$.2f", simPeriod));
 
         //set Footprint, get footprint from the costmap while costmap subscibe to
         //footprint topic, currently not uesed
@@ -366,23 +431,12 @@ public class ROSAgent {
             footprint.getPolygon().setPoints(points);
             setFootprint(footprint);
         }
-
-        initPubSub(node);
-        initialized_ = true;
     }
 
 
     public void initPubSub(final ConnectedNode newnode) {
         //---------------test area
         ctlCmdPub = node.newPublisher("/ctl_cmd", std_msgs.String._TYPE);
-
-
-        if (standalone_) {
-            node = newnode;
-            params = node.getParameterTree();
-            use_obstacles_ = params.getBoolean("move_base/use_obstacles", true);
-            controlled = params.getBoolean("move_base/controlled", true);
-        }
 
         //Publishers, most for visualization purpose
         neighbors_pub_ = node.newPublisher(id_ + "/v_neighbors", MarkerArray._TYPE);

@@ -1,11 +1,13 @@
 import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
 import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
+import cgl.iotrobots.collavoid.utils.Parameters;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
 import org.apache.commons.logging.Log;
+import org.ros.RosCore;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
@@ -16,22 +18,26 @@ import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
+import utils.SimParams;
 
 import javax.media.j3d.Transform3D;
+import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class MainSimulatorWithPlanner {
-
+    static final int robotNb = SimParams.ROBOT_NB;
+    static final double posRadius = SimParams.POSE_RADIUS;
     /**
      * Describe the robot
      */
     static public class Robot extends Agent {
+
+        // id
+        int id;
 
         //orientation
         double orientation;
@@ -87,18 +93,27 @@ public class MainSimulatorWithPlanner {
         Point3d previousPosition=null;
 
 
+        public Robot(Vector3d position, double ori, int id) {
+            super(position, "robot" + id);
+            this.id = id;
+            //set color
+            float colorvalue = (float) this.id / robotNb;
+            setColor(new Color3f(0, colorvalue, 0));
 
-        public Robot(Vector3d position, double ori, String name) {
             // initialize position and orientation
-            super(position, name);
-            this.radius=(float)0.17;
+            this.radius = (float) Parameters.FOOTPRINT_RADIUS;// loaded from agent parameters
             orientation = ori;
             //use differential model
             kinematic = RobotFactory.setDifferentialDriveKinematicModel(this);
             wheelDistance = this.getRadius();
             // Add camera
             //camera = RobotFactory.addCameraSensor(this);
-            laserScan = new LaserScan(this.radius,57.0/180*Math.PI, 100,1.2, 3.5,20);
+            laserScan = new LaserScan(this.radius,
+                    SimParams.SCAN_ANGLE_RANGE / 180 * Math.PI,
+                    SimParams.SCAN_SENSOR_NB,
+                    SimParams.SCAN_MIN_RANGE,
+                    SimParams.SCAN_MAX_RANGE,
+                    SimParams.SCAN_UPDATE_FREQ);
             sensors = laserScan.getSensor();
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame
@@ -198,7 +213,7 @@ public class MainSimulatorWithPlanner {
                 laserScan.getLaserscanPointCloud2(pc2,this);
                 laserscanPublisher.publish(pc2);
             }
-            //test publish localization pose array
+            //test, publish localization pose array
             if (getCounter()%2==0){
                 Point3d cor = new Point3d();
                 this.getCoords(cor);
@@ -218,13 +233,13 @@ public class MainSimulatorWithPlanner {
                 odometryPublisher.publish(odomMsg);
 
                 // delay some time to set the planner
-            if (getCounter()%20==0&&!plannerSet){
+                if (!plannerSet && getCounter() % 20 == 0) {
                 plannerSet=true;
                 if (!localPlanner.setPlan(globalPlan))
                     node.getLog().error("Set global plan error!");
             }
 
-                //control frequency is 10hz
+                //control frequency is 20hz
                 if (localPlanner.computeVelocityCommands(cmd_vel));
                 velocityPublisher.publish(cmd_vel);
             }
@@ -341,6 +356,7 @@ public class MainSimulatorWithPlanner {
             tfr.mul(tfrPI);
             tfr.get(oriGoal);
 
+            // transform coordinates
             start = utilsSim.toROSCoordinate(start);
             goal = utilsSim.toROSCoordinate(goal);
             utilsSim.toROSCoordinate(oriGoal);
@@ -379,9 +395,6 @@ public class MainSimulatorWithPlanner {
      */
     static public class MyEnv extends EnvironmentDescription {
         public MyEnv() {
-            final int robotNb = 2;
-            final double posRadius = 5;
-
             light1IsOn = true;
             light2IsOn = false;
 
@@ -396,7 +409,7 @@ public class MainSimulatorWithPlanner {
             Wall w4 = new Wall(new Vector3d(0, 0, -9), 19, 2, this);
             add(w4);
 
-            Box b1 = new Box(new Vector3d(0, 0, 0), new Vector3f((float)0.2, 1, 3),this);
+//            Box b1 = new Box(new Vector3d(0, 0, 0), new Vector3f((float)0.2, 1, 3),this);
 //            add(b1);
 //            Vector3d pose1 = new Vector3d(posRadius * Math.cos(Math.PI/3), 0, -posRadius * Math.sin(Math.PI/3));
 //            add(new Robot(pose1, Math.PI + Math.PI/3, "robot0"));
@@ -405,12 +418,15 @@ public class MainSimulatorWithPlanner {
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
                 Vector3d pose = new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
-                add(new Robot(pose, Math.PI + i * step, "robot" + i));
+                add(new Robot(pose, Math.PI + i * step, i));
             }
         }
     }
 
     public static void main(String[] args) {
+        doShutDownWork();
+        // run roscore
+        RosConnect(); // not working
         // request antialising
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
@@ -418,4 +434,24 @@ public class MainSimulatorWithPlanner {
 
     }
 
+    static RosCore rosCore;
+
+    public static void RosConnect() {
+        rosCore = RosCore.newPublic();
+        rosCore.start();
+
+        try {
+            rosCore.awaitStart();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void doShutDownWork() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                rosCore.shutdown();
+            }
+        });
+    }
 } 
