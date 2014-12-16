@@ -194,6 +194,7 @@ public class DistributedReSampler {
         count = 0;
         readingCount = 0;
         linearDistance = angularDistance = 0;
+        this.noParticles = size;
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {

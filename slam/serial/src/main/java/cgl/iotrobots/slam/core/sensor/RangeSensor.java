@@ -10,6 +10,9 @@ public class RangeSensor extends Sensor {
     List<Beam> m_beams = new ArrayList<Beam>();
     boolean newFormat;
 
+    public RangeSensor() {
+    }
+
     public RangeSensor(String name, int beams_num, double res, DoubleOrientedPoint position, double span, double maxrange) {
         super(name);
         this.m_pose = position;
@@ -49,5 +52,29 @@ public class RangeSensor extends Sensor {
 
     public DoubleOrientedPoint getPose() {
         return m_pose;
+    }
+
+    public DoubleOrientedPoint getM_pose() {
+        return m_pose;
+    }
+
+    public List<Beam> getM_beams() {
+        return m_beams;
+    }
+
+    public boolean isNewFormat() {
+        return newFormat;
+    }
+
+    public void setM_pose(DoubleOrientedPoint m_pose) {
+        this.m_pose = m_pose;
+    }
+
+    public void setM_beams(List<Beam> m_beams) {
+        this.m_beams = m_beams;
+    }
+
+    public void setNewFormat(boolean newFormat) {
+        this.newFormat = newFormat;
     }
 }

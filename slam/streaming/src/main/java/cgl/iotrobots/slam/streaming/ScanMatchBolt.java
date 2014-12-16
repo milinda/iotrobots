@@ -5,11 +5,13 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
+import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
+import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
@@ -119,15 +121,18 @@ public class ScanMatchBolt extends BaseRichBolt {
             return;
         }
         outputCollector.ack(tuple);
+        Object time = tuple.getValueByField("time");
+        Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
         Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
-        RangeReading reading;
-        if (!(val instanceof LaserScan)) {
+        if (!(val instanceof byte [])) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
+        LaserScan scan = (LaserScan) Utils.deSerialize(kryo, (byte [])val, LaserScan.class);
+        RangeReading reading;
+
 
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-        LaserScan scan = (LaserScan) val;
         Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
         RangeSensor sensor = new RangeSensor("ROBOTLASER1",
                 scan.getRanges().size(),
@@ -141,10 +146,15 @@ public class ScanMatchBolt extends BaseRichBolt {
                 sensor,
                 scan.getTimestamp());
         reading.setPose(scan.getPose());
+        Map<String, Sensor> smap = new HashMap<String, Sensor>();
+        smap.put(sensor.getName(), sensor);
+        gfsp.setSensorMap(smap);
 
         // now we will start the computation
         state = MatchState.COMPUTING_INIT_READINGS;
-        gfsp.processScan(reading, 0);
+        if (!gfsp.processScan(reading, 0)) {
+            return;
+        }
 
         // now distribute the particles to the bolts
         List<Integer> activeParticles = gfsp.getActiveParticles();
@@ -163,6 +173,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                     particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
             List<Object> emit = new ArrayList<Object>();
             emit.add(particleValue);
+            emit.add(scan);
+            emit.add(sensorId);
+            emit.add(time);
             outputCollector.emit(emit);
         }
         // clear the active particles list
@@ -175,9 +188,10 @@ public class ScanMatchBolt extends BaseRichBolt {
      */
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new backtype.storm.tuple.Fields(Constants.Fields.SENSOR_ID_FIELD,
-                Constants.Fields.TIME_FIELD,
-                Constants.Fields.PARTICLE_VALUE));
+        outputFieldsDeclarer.declare(new backtype.storm.tuple.Fields(Constants.Fields.PARTICLE_VALUE,
+                Constants.Fields.LASER_SCAN_TUPLE,
+                Constants.Fields.SENSOR_ID_FIELD,
+                Constants.Fields.TIME_FIELD));
     }
 
     /** We are going to keep the particles maps until we get an assignment */

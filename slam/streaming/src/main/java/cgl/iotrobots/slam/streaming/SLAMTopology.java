@@ -162,7 +162,7 @@ public class SLAMTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields(Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD, Constants.Fields.LASER_SCAN_TUPLE));
+            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_TUPLE, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
         }
 
         @Override

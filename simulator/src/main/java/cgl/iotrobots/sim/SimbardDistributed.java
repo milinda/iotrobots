@@ -1,5 +1,6 @@
 package cgl.iotrobots.sim;
 
+import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
@@ -94,7 +95,11 @@ public class SimbardDistributed {
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
 
             byte []body = Utils.serialize(kryo, laserScan);
-            Message message = new Message(body, new HashMap<String, Object>());
+            Map<String, Object> props = new HashMap<String, Object>();
+            props.put("time", System.currentTimeMillis());
+            props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
+
+            Message message = new Message(body, props);
             try {
                 sender.send(message, "test.test.laser_scan");
             } catch (Exception e) {

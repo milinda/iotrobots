@@ -7,6 +7,9 @@ public class DoubleOrientedPoint {
 
     public double y;
 
+    public DoubleOrientedPoint() {
+    }
+
     public DoubleOrientedPoint(double x, double y) {
         this(x, y, 0.0);
     }
@@ -88,5 +91,29 @@ public class DoubleOrientedPoint {
         temp = Double.doubleToLongBits(y);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
+    }
+
+    public double getTheta() {
+        return theta;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setTheta(double theta) {
+        this.theta = theta;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
     }
 }

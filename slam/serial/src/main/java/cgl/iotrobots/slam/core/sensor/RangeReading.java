@@ -7,7 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RangeReading extends SensorReading {
-    private DoubleOrientedPoint m_pose;
+    private DoubleOrientedPoint pose;
+
+    public RangeReading() {
+    }
 
     public RangeReading(RangeSensor m_sensor, double m_time) {
         super(m_sensor, m_time);
@@ -22,11 +25,11 @@ public class RangeReading extends SensorReading {
     }
 
     public DoubleOrientedPoint getPose() {
-        return m_pose;
+        return pose;
     }
 
     public void setPose(DoubleOrientedPoint pose) {
-        this.m_pose = pose;
+        this.pose = pose;
     }
 
     public int activeBeams(double density) {

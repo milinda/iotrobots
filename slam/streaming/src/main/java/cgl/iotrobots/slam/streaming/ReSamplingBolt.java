@@ -6,8 +6,12 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.GFSConfiguration;
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
+import cgl.iotrobots.slam.core.sensor.Sensor;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
@@ -19,7 +23,6 @@ import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +38,7 @@ public class ReSamplingBolt extends BaseRichBolt {
     private TopologyContext topologyContext;
 
     /** we will collect the values until we get all of them */
-    private List<ParticleValue> particleValueses = new ArrayList<ParticleValue>();
+    private ParticleValue []particleValueses;
 
     /** This is the reading message we will get */
     private RangeReading reading;
@@ -49,6 +52,8 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     private Kryo kryo;
 
+    private int receivedParticles = 0;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.topologyContext = topologyContext;
@@ -60,7 +65,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // use the configuration to create the resampler
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
         reSampler = ProcessorFactory.createReSampler(cfg);
-
+        particleValueses = new ParticleValue[reSampler.getParticles().size()];
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
@@ -77,25 +82,44 @@ public class ReSamplingBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         outputCollector.ack(tuple);
 
-        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
+        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE);
         ParticleValue value;
         if (val != null && (val instanceof ParticleValue)) {
             value = (ParticleValue) val;
-            particleValueses.add(value.getIndex(), value);
+            particleValueses[value.getIndex()] = value;
+            receivedParticles++;
         } else {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+            throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
 
         val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
-        if (val != null && !(val instanceof RangeReading)) {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+        if (val != null && !(val instanceof LaserScan)) {
+            throw new IllegalArgumentException("The laser scan should be of type LaserScan");
         }
-        reading = (RangeReading) val;
+        LaserScan scan = (LaserScan) val;
+        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
+        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
+                scan.getRanges().size(),
+                Math.abs(scan.getAngle_increment()),
+                new DoubleOrientedPoint(0, 0, 0),
+                0.0,
+                scan.getRangeMax());
+
+        reading = new RangeReading(scan.getRanges().size(),
+                ranges_double,
+                sensor,
+                scan.getTimestamp());
+        reading.setPose(scan.getPose());
+        Map<String, Sensor> smap = new HashMap<String, Sensor>();
+        smap.put(sensor.getName(), sensor);
+        reSampler.setSensorMap(smap);
 
         // this bolt will wait until all the particle values are obtained
-        if (particleValueses.size() < reSampler.getNoParticles() || reading == null) {
+        if (receivedParticles < reSampler.getNoParticles() || reading == null) {
             return;
         }
+        // reset the counter
+        receivedParticles = 0;
 
         // now distribute the particle Valueses to the bolts
 
@@ -180,7 +204,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             cost[i] = new double[noOfParticles];
             for (int j = 0; j < noOfParticles; j++) {
                 int index = indexes.get(j);
-                ParticleValue pv = particleValueses.get(index);
+                ParticleValue pv = particleValueses[index];
                 // now see weather this particle is from this worker
                 int particleTaskIndex = pv.getTaskId();
                 int thrueTaskIndex = j % noOfParticles;
@@ -205,7 +229,7 @@ public class ReSamplingBolt extends BaseRichBolt {
                     thrueTaskIndex = j % noOfParticles;
                 }
             }
-            ParticleValue pv = particleValueses.get(particle);
+            ParticleValue pv = particleValueses[particle];
             ParticleAssignment assignment = new ParticleAssignment(particle, i,
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);
