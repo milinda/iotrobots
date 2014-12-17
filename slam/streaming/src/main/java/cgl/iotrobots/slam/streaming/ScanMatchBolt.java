@@ -268,7 +268,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         particleMapses.add(pm);
                     }
                 } catch (Exception e) {
-                    LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
+                    LOG.error("taskId {}: Failed to deserialize map", taskId, e);
                 }
             } else {
                 LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
@@ -314,20 +314,24 @@ public class ScanMatchBolt extends BaseRichBolt {
                 try {
                     LOG.info("taskId {}: Received particle assignment", taskId);
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryo, body, ParticleAssignments.class);
-                    // we are going to keep the assignemtns so that we can check the receiving particles
-                    ScanMatchBolt.this.assignments = assignments;
+
 
                     // if we have resampled ditributed the assignments
                     if (assignments.isReSampled()) {
                         // now go through the assignments and send them to the bolts directly
-                        gfsp.getActiveParticles().clear();
                         computeExpectedParticles(assignments);
                         distributeAssignments(assignments);
+                        gfsp.getActiveParticles().clear();
+                        // we are going to keep the assignemtns so that we can check the receiving particles
+                        ScanMatchBolt.this.assignments = assignments;
                     } else {
+                        // we are going to keep the assignemtns so that we can check the receiving particles
+                        ScanMatchBolt.this.assignments = assignments;
                         expectingParticles = 0;
                         expectingParticleValues = 0;
                         LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
                         state = MatchState.COMPUTING_NEW_PARTICLES;
+
                         // we need to do the post processing we need for the particles
                         gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
                         emitParticleForMap();
@@ -366,7 +370,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 if (gfsp.getActiveParticles().contains(assignment.getPreviousIndex())) {
                     Particle p = gfsp.getParticles().get(previousIndex);
                     // create a new ParticleMaps
-                    ParticleMaps particleMaps = new ParticleMaps(p.getMap(), p.getNode(),
+                    ParticleMaps particleMaps = new ParticleMaps(p.getMap(),
                             assignment.getNewIndex(), assignment.getNewTask());
 
                     byte []b = Utils.serialize(kryo, particleMaps);
@@ -491,7 +495,6 @@ public class ScanMatchBolt extends BaseRichBolt {
         int newIndex = particleMaps.getIndex();
         Particle p = gfsp.getParticles().get(newIndex);
 
-        p.setNode(particleMaps.getNode());
         p.setMap(particleMaps.getMap());
 
         // add the new particle index

@@ -33,7 +33,7 @@ public class Particle {
     public Particle(Particle p, boolean withMap) {
         if (withMap) {
             map = p.map;
-            map.m_storage = new HierarchicalArray2D(p.map.m_storage);
+            map.storage = new HierarchicalArray2D(p.map.storage);
         }
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);
@@ -46,7 +46,7 @@ public class Particle {
 
     public Particle(Particle p) {
         map = p.map;
-        map.m_storage = new HierarchicalArray2D(p.map.m_storage);
+        map.storage = new HierarchicalArray2D(p.map.storage);
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);
         weight = p.weight;

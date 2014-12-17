@@ -6,8 +6,6 @@ import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 public class ParticleMaps {
     private GMap map;
 
-    private TNode node;
-
     private int index;
 
     private int task;
@@ -15,9 +13,8 @@ public class ParticleMaps {
     public ParticleMaps() {
     }
 
-    public ParticleMaps(GMap map, TNode node, int index, int task) {
+    public ParticleMaps(GMap map, int index, int task) {
         this.map = map;
-        this.node = node;
         this.index = index;
         this.task = task;
     }
@@ -26,16 +23,8 @@ public class ParticleMaps {
         return map;
     }
 
-    public TNode getNode() {
-        return node;
-    }
-
     public void setMap(GMap map) {
         this.map = map;
-    }
-
-    public void setNode(TNode node) {
-        this.node = node;
     }
 
     public int getIndex() {

@@ -7,11 +7,13 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.app.Position;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
+import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
@@ -116,6 +118,10 @@ public class SLAMTopology {
         config.registerSerialization(TNode.class);
         config.registerSerialization(DoubleOrientedPoint.class);
         config.registerSerialization(Particle.class);
+        config.registerSerialization(PointAccumulator.class);
+        config.registerSerialization(HierarchicalArray2D.class);
+        config.registerSerialization(Array2D.class);
+        config.registerSerialization(Position.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

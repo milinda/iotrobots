@@ -56,5 +56,29 @@ public class PointAccumulator {
     public double doubleValue() {
         return visits > 0 ? (double)n*SIGHT_INC/(double)visits:-1;
     }
+
+    public DoublePoint getAcc() {
+        return acc;
+    }
+
+    public int getN() {
+        return n;
+    }
+
+    public int getVisits() {
+        return visits;
+    }
+
+    public void setAcc(DoublePoint acc) {
+        this.acc = acc;
+    }
+
+    public void setN(int n) {
+        this.n = n;
+    }
+
+    public void setVisits(int visits) {
+        this.visits = visits;
+    }
 }
 
