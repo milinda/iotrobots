@@ -4,6 +4,9 @@ public class IntPoint {
     public int x;
     public int y;
 
+    public IntPoint() {
+    }
+
     public IntPoint(IntPoint p) {
         this.x = p.x;
         this.y = p.y;

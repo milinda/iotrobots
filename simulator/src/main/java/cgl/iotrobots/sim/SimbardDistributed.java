@@ -41,8 +41,8 @@ public class SimbardDistributed {
             super(position, name);
 
             try {
-                sender = new RabbitMQSender("amqp://localhost:5672", "simbard");
-                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard");
+                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
+                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
                 sender.open();
                 receiver.listen(new MapReceiver());
             } catch (Exception e) {
