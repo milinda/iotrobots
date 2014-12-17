@@ -1,10 +1,8 @@
+import cgl.iotrobots.collavoid.utils.Parameters;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
-import org.apache.commons.logging.Log;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
@@ -15,18 +13,17 @@ import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
-import std_msgs.*;
+import utils.SimParams;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
-import java.lang.String;
-import java.nio.ByteOrder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainSimulator {
-    static final int robotNb = 2;
-    static final double posRadius = 4;
+    static final int robotNb = SimParams.ROBOT_NB;
+    static final double posRadius = SimParams.POSE_RADIUS;
 
     /**
      * Describe the robot
@@ -91,14 +88,19 @@ public class MainSimulator {
             // initialize position and orientation
             super(position, "robot"+id);
             this.id=id;
-            this.radius=(float)0.17;
+            this.radius = (float) Parameters.FOOTPRINT_RADIUS;// loaded from agent parameters
             orientation = ori;
             //use differential model
             kinematic = RobotFactory.setDifferentialDriveKinematicModel(this);
             wheelDistance = this.getRadius();
             // Add camera
             //camera = RobotFactory.addCameraSensor(this);
-            laserScan = new LaserScan(this.radius,57.0/180*Math.PI, 100,1.2,3.5,20);
+            laserScan = new LaserScan(this.radius,
+                    SimParams.SCAN_ANGLE_RANGE / 180 * Math.PI,
+                    SimParams.SCAN_SENSOR_NB,
+                    SimParams.SCAN_MIN_RANGE,
+                    SimParams.SCAN_MAX_RANGE,
+                    SimParams.SCAN_UPDATE_FREQ);
             sensors = laserScan.getSensor();
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame
@@ -116,6 +118,7 @@ public class MainSimulator {
             // initialize node
             AgentNode agentNode = new AgentNode(this.getName());
             node = agentNode.getNode();
+            // publish robot numbers to setup planner numbers
             params=node.getParameterTree();
             params.set("robotNb",robotNb);
             params.set("posRadius",posRadius);
@@ -148,14 +151,13 @@ public class MainSimulator {
 
             //initialize velocity command subscriber
 
-//            cmdQueue=new ArrayDeque<List<Double>>(6);
+
             if (velocitySubscriber == null) {
                 velocitySubscriber = node.newSubscriber(this.getName() + "/cmd_vel", Twist._TYPE);
                 velocitySubscriber.addMessageListener(new MessageListener<Twist>() {
                     @Override
                     public void onNewMessage(Twist msg) {
                         double v, w;
-//                        double vl_,vr_;
                         //in ros coordinate
                         Vector3d vel = new Vector3d(msg.getLinear().getX(), msg.getLinear().getY(), msg.getLinear().getZ());
                         //no need to transform the coordinate
@@ -163,20 +165,13 @@ public class MainSimulator {
                         w = msg.getAngular().getZ();
                         vl =  v - w * wheelDistance / 2;
                         vr =  v + w * wheelDistance / 2;
-//                        List<Double> velcmd=new ArrayList<Double>(2);
-//                        velcmd.add(vl_);
-//                        velcmd.add(vr_);
-//                        if (!cmdQueue.offer(velcmd)){
-//                            cmdQueue.poll();
-//                            cmdQueue.offer(velcmd);
-//                        }
                     }
-                },4);
+                });
             }
 
             if (ctlCmdSubscriber==null){
                 ctlCmdSubscriber=node.newSubscriber("/ctl_cmd", std_msgs.String._TYPE);
-                ctlCmd=new String();
+                ctlCmd = "";
                 ctlCmdSubscriber.addMessageListener(new MessageListener<std_msgs.String>() {
                     @Override
                     public void onNewMessage(std_msgs.String string) {
@@ -199,33 +194,12 @@ public class MainSimulator {
             this.rotateY(orientation);
             vl=0;
             vr=0;
-//            vel_cmd=new ArrayList<Double>(2);
-//            vel_cmd.clear();
-//            vel_cmd.add(0.0);
-//            vel_cmd.add(0.0);
         }
 
         /**
          * This method is call cyclically (20 times per second)  by the simulator engine.
          */
         public void performBehavior() {
-//            double vl=vel_cmd.get(0)/2;
-//            double vr=vel_cmd.get(1)/2;
-//            vel_cmd=cmdQueue.poll();
-//
-//            if (vel_cmd==null){
-//                if(Math.sqrt(vl*vl+vr*vr)<0.005)
-//                    kinematic.setWheelsVelocity(0,0);
-//                else
-//                    kinematic.setWheelsVelocity(vl, vr);
-//                vel_cmd=new ArrayList<Double>(2);
-//                vel_cmd.add(vl);
-//                vel_cmd.add(vr);
-//            }else
-//            {
-//                kinematic.setWheelsVelocity(vel_cmd.get(0),vel_cmd.get(1));
-//                System.out.println(vel_cmd.get(0));
-//            }
 
             if (ctlCmd.equals("pause"))
                 kinematic.setWheelsVelocity(0,0);
@@ -293,7 +267,7 @@ public class MainSimulator {
             String childFrame = robotFrame;
             String parentFrame = odomFrame;
 
-            Transform3D tf = new Transform3D();
+            Transform3D tf;
             Vector3d tft3d = new Vector3d();
             Quat4d tfrq = new Quat4d();
 
@@ -374,7 +348,8 @@ public class MainSimulator {
             Wall w4 = new Wall(new Vector3d(0, 0, -9), 19, 2, this);
             add(w4);
 
-            Box b1 = new Box(new Vector3d(0, 0, 0), new Vector3f((float)0.2, 1, 3),this);
+// there are bugs in avoid obstacles
+//            Box b1 = new Box(new Vector3d(0, 0, 0), new Vector3f((float)0.2, 1, 3),this);
 //            add(b1);
 //            Vector3d pose1 = new Vector3d(posRadius * Math.cos(Math.PI/3), 0, -posRadius * Math.sin(Math.PI/3));
 //            add(new Robot(pose1, Math.PI + Math.PI/3, "robot0"));

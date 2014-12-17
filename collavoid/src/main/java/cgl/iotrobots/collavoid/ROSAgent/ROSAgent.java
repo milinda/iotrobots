@@ -9,7 +9,7 @@ import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.utils.*;
 
 import static cgl.iotrobots.collavoid.ClearPath.CP.convexHull;
-import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSum;
+import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSumConvexHull;
 import static cgl.iotrobots.collavoid.NHORCA.NHORCA.calcVstar;
 import static cgl.iotrobots.collavoid.utils.utils.*;
 
@@ -29,7 +29,6 @@ import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
-import std_msgs.*;
 import visualization_msgs.MarkerArray;
 import visualization_msgs.Marker;
 
@@ -68,7 +67,6 @@ public class ROSAgent {
     public Vector2 velocity;
     public Vector2 newVelocity;
     private double radius;
-    //public List<Point<Double>> footPrint_rotated;
     public List<Vector2> footPrint_rotated;
 
     //allowed error for non-holonomic robot
@@ -152,6 +150,7 @@ public class ROSAgent {
 
     //COLLVOID
     public List<Vector2> minkowski_footprint_;
+    //public FootPrint minkowski_footprint_;
     public List<PoseWeighted> pose_array_weighted_;
 
     //lock
@@ -163,7 +162,7 @@ public class ROSAgent {
     //subscribers and publishers
     public Publisher lines_pub_, neighbors_pub_, polygon_pub_, vo_pub_, me_pub_, samples_pub_, speed_pub_, position_share_pub_, obstacles_pub_;
     public Subscriber amcl_posearray_sub_, position_share_sub_, odom_sub_, laser_scan_sub_, laser_notifier;
-    public MsgPublisher msgPublisher;
+    //public MsgPublisher msgPublisher;
 
 
     //utils
@@ -199,7 +198,9 @@ public class ROSAgent {
         lastTimeMePublished = new Time(); //for position share
         lastTimePositionsPublished = new Time();//for visualization in rviz
 
+
         minkowski_footprint_ = new ArrayList<Vector2>();
+        //minkowski_footprint_=new FootPrint();
         originalFootPrintLines = new ArrayList<LinePair>();
         obstacle_points_ = new ArrayList<Vector2>();
         pose_array_weighted_ = new ArrayList<PoseWeighted>();
@@ -207,7 +208,7 @@ public class ROSAgent {
         obstacles_from_laser_ = new ArrayList<Obstacle>();
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
-        samples=new ArrayList<VelocitySample>();
+        samples = new ArrayList<VelocitySample>();
         initNode(connectedNode, tf);
     }
 
@@ -220,15 +221,15 @@ public class ROSAgent {
         position = new Position();
 
         minkowski_footprint_ = new ArrayList<Vector2>();
+        //minkowski_footprint_=new FootPrint();
         last_seen_ = new Time();
     }
 
     //initialize node
     public void initNode(ConnectedNode connectedNode, TransformListener tf) {
         node = connectedNode;
-        params = node.getParameterTree();
         tf_ = tf;
-        id_ = new String(connectedNode.getName().toString().replace("/planner_",""));
+        id_ = new String(connectedNode.getName().toString().replace("/planner_", ""));
 
         //waiting for time
         while (true) {
@@ -243,93 +244,159 @@ public class ROSAgent {
             }
         }
 
-        msgPublisher = new MsgPublisher(node);
+        //msgPublisher = new MsgPublisher(node);
         agentInit();
     }
 
     //get parameters from the server
     public void agentInit() {
-        use_obstacles_ = params.getBoolean("/use_obstacles", true);
-        controlled = params.getBoolean("/controlled", true);
+        initParameters(false);
+        initPubSub(node);
+        initialized_ = true;
+    }
 
-        base_frame_ = params.getString("/base_frame", id_ + "_base");//get rid of the / character
-        global_frame_ = params.getString("/global_frame", "map");
-        standalone_ = params.getBoolean("/standalone", false);
-        controlled = params.getBoolean("/controlled", true);
+    void initParameters(boolean useROSService) {
+        double controller_frequency = -1;
+        GraphName controller_frequency_param_name;
+        if (useROSService) {
+            params = node.getParameterTree();
+            use_obstacles_ = params.getBoolean("/use_obstacles", true);
+            controlled = params.getBoolean("/controlled", true);
 
-        //acceleration limits load from params_turtle.yaml
-        acc_lim_x_ = params.getDouble("/acc_lim_x");
-        acc_lim_y_ = params.getDouble("/acc_lim_y");
-        acc_lim_th_ = params.getDouble("/acc_lim_th");
+            base_frame_ = params.getString("/base_frame", id_.replace("/", "") + "_base");//get rid of the / character
+            global_frame_ = params.getString("/global_frame", "map");
 
-        //holo_robot
-        holo_robot_ = params.getBoolean("/holo_robot");
+            //acceleration limits load from params_turtle.yaml
+            acc_lim_x_ = params.getDouble("/acc_lim_x");
+            acc_lim_y_ = params.getDouble("/acc_lim_y");
+            acc_lim_th_ = params.getDouble("/acc_lim_th");
 
-        if (!holo_robot_)
-            wheel_base_ = params.getDouble("/wheel_base");
-        else
-            wheel_base_ = 0.0;
+            //holo_robot
+            holo_robot_ = params.getBoolean("/holo_robot");
+            if (!holo_robot_)
+                wheel_base_ = params.getDouble("/wheel_base");
+            else
+                wheel_base_ = 0.0;
 
-        //min max speeds
-        max_vel_with_obstacles_ = params.getDouble("/max_vel_with_obstacles");
 
-        max_vel_x_ = params.getDouble("/max_vel_x");
-        min_vel_x_ = params.getDouble("/min_vel_x");
-        max_vel_y_ = params.getDouble("/max_vel_y");
-        min_vel_y_ = params.getDouble("/min_vel_y");
-        max_vel_th_ = params.getDouble("/max_vel_th");
-        min_vel_th_ = params.getDouble("/min_vel_th");
-        min_vel_th_inplace_ = params.getDouble("/min_vel_th_inplace");
+            //min max speeds
+            max_vel_with_obstacles_ = params.getDouble("/max_vel_with_obstacles");
 
-        //set radius
-        footprint_radius_ = params.getDouble("/footprint_radius");
+            max_vel_x_ = params.getDouble("/max_vel_x");
+            min_vel_x_ = params.getDouble("/min_vel_x");
+            max_vel_y_ = params.getDouble("/max_vel_y");
+            min_vel_y_ = params.getDouble("/min_vel_y");
+            max_vel_th_ = params.getDouble("/max_vel_th");
+            min_vel_th_ = params.getDouble("/min_vel_th");
+            min_vel_th_inplace_ = params.getDouble("/min_vel_th_inplace");
+
+            //set radius
+            footprint_radius_ = params.getDouble("/footprint_radius");
+
+            //sim period
+            controller_frequency_param_name = params.search("/controller_frequency");
+            if (controller_frequency_param_name != null)
+                controller_frequency = params.getDouble(controller_frequency_param_name, 20.0);
+
+
+            //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
+            //non holo robot parameters
+            time_to_holo_ = params.getDouble("/time_to_holo", 0.4);
+            minErrorHolo = params.getDouble("/min_error_holo", 0.01);
+            maxErrorHolo = params.getDouble("/max_error_holo", 0.15);
+            //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
+            //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
+
+            //parameters for convex footprint which considers localization uncertainty
+            eps_ = params.getDouble("/eps", 0.1);
+            orca = params.getBoolean("/orca");
+            convex = params.getBoolean("/convex");
+            //params.getBoolean( "clearpath", &clearpath); not used as we only use clear path method
+            useTruancation = params.getBoolean("/use_truncation");
+
+            //num_samples = getParamDef(private_nh, "num_samples", 400); not used
+            voType = params.getInteger("/type_vo", 0); //HRVO
+
+            truncTime = params.getDouble("/trunc_time", 5.0);
+            //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
+
+            //visualization publish frequency
+            publishPositionsPeriod = 1.0 / params.getDouble("/publish_positions_frequency", 10.0);
+            //position share publish frequency
+            publishMePeriod = 1.0 / params.getDouble("/publish_me_frequency", 10.0);
+
+        } else {
+            //load parameters locally
+            use_obstacles_ = Parameters.USE_OBSTACLES;
+            controlled = Parameters.CONTROLLED;
+
+            base_frame_ = id_.replace("/", "") + Parameters.BASE_FRAME_SUFFIX;//get rid of the / character
+            global_frame_ = Parameters.GLOBAL_FRAME;
+
+            //acceleration limits load from params_turtle.yaml
+            acc_lim_x_ = Parameters.ACC_LIM_X;
+            acc_lim_y_ = Parameters.ACC_LIM_Y;
+            acc_lim_th_ = Parameters.ACC_LIM_TH;
+
+            //holo_robot
+            holo_robot_ = Parameters.HOLO_ROBOT;
+            if (!holo_robot_)
+                wheel_base_ = Parameters.WHEEL_BASE;
+            else
+                wheel_base_ = 0.0;
+
+            //min max speeds
+            max_vel_with_obstacles_ = Parameters.MAX_VEL_WITH_OBSTACLES;
+            max_vel_x_ = Parameters.MAX_VEL_X;
+            min_vel_x_ = Parameters.MIN_VEL_X;
+            max_vel_y_ = Parameters.MAX_VEL_Y;
+            min_vel_y_ = Parameters.MIN_VEL_Y;
+            max_vel_th_ = Parameters.MAX_VEL_TH;
+            min_vel_th_ = Parameters.MIN_VEL_TH;
+            min_vel_th_inplace_ = Parameters.MIN_VEL_TH_INPLACE;
+
+            //set radius
+            footprint_radius_ = Parameters.FOOTPRINT_RADIUS;
+
+            //sim period
+            controller_frequency = Parameters.CONTROLLER_FREQUENCY;
+
+            //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
+            //non holo robot parameters
+            time_to_holo_ = Parameters.TIME_TO_HOLO;
+            minErrorHolo = Parameters.MIN_ERROR_HOLO;
+            maxErrorHolo = Parameters.MAX_ERROR_HOLO;
+            //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
+            //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
+
+            //parameters for convex footprint which considers localization uncertainty
+            eps_ = Parameters.EPS;
+            orca = Parameters.ORCA;
+            convex = Parameters.CONVEX;
+            //params.getBoolean( "clearpath", &clearpath); not used as we only use clear path method
+            useTruancation = Parameters.USE_TRUNCATION;
+
+            //num_samples = getParamDef(private_nh, "num_samples", 400); not used
+            voType = Parameters.TYPE_VO; //HRVO
+
+            truncTime = Parameters.TRUNC_TIME;
+            //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
+
+            //visualization publish frequency
+            publishPositionsPeriod = 1.0 / Parameters.PUBLISH_POSITIONS_FREQUENCY;
+            //position share publish frequency
+            publishMePeriod = 1.0 / Parameters.PUBLISH_ME_FREQUENCY;
+        }
+
         radius = footprint_radius_ + cur_loc_unc_radius_;
 
-        //sim period
-        GraphName controller_frequency_param_name;
-        controller_frequency_param_name = params.search("/controller_frequency");
-        double sim_period_;
-        if (controller_frequency_param_name == null) {
-            sim_period_ = 0.05;
+        if (controller_frequency <= 0) {
+            node.getLog().warn("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
+            simPeriod = 0.05;
         } else {
-            double controller_frequency = 0;
-            controller_frequency = params.getDouble(controller_frequency_param_name, 20.0);
-
-            if (controller_frequency > 0) {
-                sim_period_ = 1.0 / controller_frequency;
-            } else {
-                node.getLog().warn("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
-                sim_period_ = 0.05;
-            }
+            simPeriod = 1.0 / controller_frequency;
         }
-        node.getLog().info("Sim period is set to " + String.format("%1$.2f", sim_period_));
-        simPeriod = sim_period_;
-
-        //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
-        //non holo robot parameters
-        time_to_holo_ = params.getDouble("/time_to_holo", 0.4);
-        minErrorHolo = params.getDouble("/min_error_holo", 0.01);
-        maxErrorHolo = params.getDouble("/max_error_holo", 0.15);
-        //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
-        //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
-
-        //parameters for convex footprint which considers localization uncertainty
-        eps_ = params.getDouble("/eps", 0.1);
-        orca = params.getBoolean("/orca");
-        convex = params.getBoolean("/convex");
-        //params.getBoolean( "clearpath", &clearpath); not used as we only use clear path method
-        useTruancation = params.getBoolean("/use_truncation");
-
-        //num_samples = getParamDef(private_nh, "num_samples", 400); not used
-        voType = params.getInteger("/type_vo", 0); //HRVO
-
-        truncTime = params.getDouble("/trunc_time", 5.0);
-        //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
-
-        //visualization publish frequency
-        publishPositionsPeriod = 1.0 / params.getDouble("/publish_positions_frequency", 10.0);
-        //position share publish frequency
-        publishMePeriod = 1.0 / params.getDouble("/publish_me_frequency", 10.0);
+        node.getLog().info("Sim period is set to " + String.format("%1$.2f", simPeriod));
 
         //set Footprint, get footprint from the costmap while costmap subscibe to
         //footprint topic, currently not uesed
@@ -364,23 +431,12 @@ public class ROSAgent {
             footprint.getPolygon().setPoints(points);
             setFootprint(footprint);
         }
-
-        initPubSub(node);
-        initialized_ = true;
     }
 
 
     public void initPubSub(final ConnectedNode newnode) {
         //---------------test area
-        ctlCmdPub=node.newPublisher("/ctl_cmd",std_msgs.String._TYPE);
-
-
-        if (standalone_) {
-            node = newnode;
-            params = node.getParameterTree();
-            use_obstacles_ = params.getBoolean("move_base/use_obstacles", true);
-            controlled = params.getBoolean("move_base/controlled", true);
-        }
+        ctlCmdPub = node.newPublisher("/ctl_cmd", std_msgs.String._TYPE);
 
         //Publishers, most for visualization purpose
         neighbors_pub_ = node.newPublisher(id_ + "/v_neighbors", MarkerArray._TYPE);
@@ -402,7 +458,7 @@ public class ROSAgent {
             public void onNewMessage(pose_twist_covariance_msgs msg) {
                 positionShareCallback(msg);
             }
-        },10);
+        }, 10);
 
         /*TODO: Need particle cloud and the weights of the particles to calculate localization uncertainty,
           TODO: but currently just particle cloud.*/
@@ -433,7 +489,7 @@ public class ROSAgent {
                 baseScanCallback(msg, dur);
 
             }
-        },10);
+        }, 10);
 
 //        laser_notifier->registerCallback(boost::bind(&ROSAgent::baseScanCallback, this, _1));
 //        laser_notifier->setTolerance(ros::Duration(0.1));
@@ -442,6 +498,36 @@ public class ROSAgent {
 
     }
 
+    //   test array new footprint
+//    void PoseArrayTestCallback(PoseArray msg) {
+//        // in robot base frame do not need transform
+//        double x, y;
+//        FootPrint localization_footprint=new FootPrint();
+//        FootPrint own_footprint=new FootPrint();
+//
+//        for (int i = 0; i < msg.getPoses().size(); i++) {
+//            x = msg.getPoses().get(i).getPosition().getX();
+//            y = msg.getPoses().get(i).getPosition().getY();
+//            Vector2 p = new Vector2(x, y);
+//            if (p.getLength() > 0.1)
+//                continue;
+//            localization_footprint.addPoint(x,y);
+//        }
+//
+//        //for testing replaced the algorithm computeNewMinkowskiFootprint
+//        for (int i = 0; i < footprint_original_msg_.getPolygon().getPoints().size(); i++) {
+//            Point32 p = footprint_original_msg_.getPolygon().getPoints().get(i);
+//            own_footprint.addPoint(p.getX(), p.getY());
+//            //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
+//        }
+//        minkowski_footprint_ = minkowskiSumConvexHull(localization_footprint, own_footprint);
+//        //publish footprint
+//        PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
+//        polygon_pub_.publish(msg_pub);
+//
+//    }
+
+    // original test case
     void PoseArrayTestCallback(PoseArray msg) {
         // in robot base frame do not need transform
         double x, y;
@@ -462,7 +548,7 @@ public class ROSAgent {
             own_footprint.add(new Vector2(p.getX(), p.getY()));
             //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
         }
-        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+        minkowski_footprint_ = minkowskiSumConvexHull(localization_footprint, own_footprint);
         //publish footprint
         PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
         polygon_pub_.publish(msg_pub);
@@ -524,69 +610,69 @@ public class ROSAgent {
             j++;
         }
         //maximum two times of the footpint radius
-        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j - 1).getPoint()));
+        cur_loc_unc_radius_ = Math.min(footprint_radius_ * 2.0, Vector2.abs(points.get(j - 1).getX(), points.get(j - 1).getY()));
         //ROS_ERROR("Loc Uncertainty = %f", cur_loc_unc_radius_);
         radius = footprint_radius_ + cur_loc_unc_radius_;
     }
 
     // MinkowskiFootprint considering localization uncertainty
     void computeNewMinkowskiFootprint() {
-        boolean done = false;
-        List<ConvexHullPoint> convex_hull = new ArrayList<ConvexHullPoint>();
-        List<ConvexHullPoint> points = new ArrayList<ConvexHullPoint>();
-        points.clear();
+        ConvexHullPoint[] convex_hull = new ConvexHullPoint[0];
+        ConvexHullPoint[] points = new ConvexHullPoint[pose_array_weighted_.size()];
 
         for (int i = 0; i < pose_array_weighted_.size(); i++) {
             ConvexHullPoint p = new ConvexHullPoint();
             double x = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getX();
             double y = pose_array_weighted_.get(i).getPoseStamped().getPose().getPosition().getY();
-            p.setPoint(new Vector2(x, y));
+            p.setPoint(x, y);
             p.setWeight(pose_array_weighted_.get(i).getW());
             p.setIndex(i);
             p.setOrig_index(i);
-            points.add(p);
+            points[i] = p;
         }
-        Collections.sort(points, new VectorsLexigraphicComparator());
-        for (int i = 0; i < points.size(); i++) {
-            points.get(i).setIndex(i);
+        Arrays.sort(points, new VectorsLexigraphicComparator());
+        for (int i = 0; i < points.length; i++) {
+            points[i].setIndex(i);
         }
 
         double total_sum = 0;
 
         int[] skip_list;
-        while (!done && points.size() >= 3) {
+        while (points.length >= 3) {
             double sum = 0;
-            convex_hull.clear();
             convex_hull = convexHull(points, true);
 
-            skip_list = new int[convex_hull.size()];
-            for (int j = 0; j < convex_hull.size() - 1; j++) {
-                skip_list[j] = convex_hull.get(j).getIndex();
-                sum += convex_hull.get(j).getWeight();
+            skip_list = new int[convex_hull.length];
+            for (int j = 0; j < convex_hull.length - 1; j++) {
+                skip_list[j] = convex_hull[j].getIndex();
+                sum += convex_hull[j].getWeight();
             }
             total_sum += sum;
 
             //ROS_WARN("SUM = %f (%f), num Particles = %d, eps = %f", sum, total_sum, (int) points.size(), eps_);
 
             if (total_sum >= eps_) {
-                done = true;
                 break;
             }
 
             Arrays.sort(skip_list);
-            for (int i = skip_list.length - 1; i >= 0; i--) {
-                points.remove(skip_list[i]);
-            }
+            ConvexHullPoint[] pointsTmp = new ConvexHullPoint[points.length - skip_list.length];
+            int l = 0, k = 0;
+            for (int j = 0; j < points.length; j++) {
+                if (j != skip_list[l++]) {
+                    ConvexHullPoint pt = new ConvexHullPoint(points[j].getX(), points[j].getY());
+                    pt.setIndex(k);
+                    pointsTmp[k++] = pt;
+                }
 
-            for (int i = 0; i < points.size(); i++) {
-                points.get(i).setIndex(i);
             }
+            points = pointsTmp;
         }
 
         List<Vector2> localization_footprint = new ArrayList<Vector2>();
         List<Vector2> own_footprint = new ArrayList<Vector2>();
-        for (int i = 0; i < convex_hull.size(); i++) {
-            localization_footprint.add(convex_hull.get(i).getPoint());
+        for (int i = 0; i < convex_hull.length; i++) {
+            localization_footprint.add(new Vector2(convex_hull[i].getX(), convex_hull[i].getY()));
         }
 
         for (int i = 0; i < footprint_original_msg_.getPolygon().getPoints().size(); i++) {
@@ -594,7 +680,7 @@ public class ROSAgent {
             own_footprint.add(new Vector2(p.getX(), p.getY()));
             //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
         }
-        minkowski_footprint_ = minkowskiSum(localization_footprint, own_footprint);
+        minkowski_footprint_ = minkowskiSumConvexHull(localization_footprint, own_footprint);
         //publish footprint
         PolygonStamped msg_pub = createFootprintMsgFromVector2(minkowski_footprint_);
         // for visualization
@@ -657,12 +743,12 @@ public class ROSAgent {
 
             if ((node.getCurrentTime().toSeconds() - lastTimePositionsPublished.toSeconds()) > publishPositionsPeriod) {
                 lastTimePositionsPublished = node.getCurrentTime();
-                msgPublisher.publishNeighborPositions(ROSAgentNeighbors, global_frame_, base_frame_, neighbors_pub_);// for visualization
+                //msgPublisher.publishNeighborPositions(ROSAgentNeighbors, global_frame_, base_frame_, neighbors_pub_);// for visualization
                 //in case odometry call back is not called at the beginning
                 if (last_seen_ == null) {
                     last_seen_ = node.getCurrentTime();
                 }
-                msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);//for visualize in rviz
+                //msgPublisher.publishMePosition(this, global_frame_, base_frame_, me_pub_);//for visualize in rviz
             }
         } finally {
             neighbors_lock_.unlock();
@@ -675,12 +761,7 @@ public class ROSAgent {
             double x = minkowski_footprint.getPolygon().getPoints().get(i).getX();
             double y = minkowski_footprint.getPolygon().getPoints().get(i).getY();
             minkowski_footprint_.add(new Vector2(x, y));
-//            System.out.println(i+":"+minkowski_footprint.getPolygon().getPoints().get(i).getX());
-//            System.out.println(i+":"+minkowski_footprint.getPolygon().getPoints().get(i).getY());
         }
-//        for (Iterator<Point32> it = minkowski_footprint.getPolygon().getPoints().iterator(); it.hasNext(); ) {
-//            this.minkowski_footprint_.add(new Vector2(it.next().getX(), it.next().getY()));
-//        }
 
     }
 
@@ -699,7 +780,7 @@ public class ROSAgent {
 //                node.getLog().error("Can not transform twist to base frame: " + msg.getHeader().getFrameId() + "->" + base_frame_);
 //                return;
 //            }
-            twist.getLinear().setX(Vector2.abs(new Vector2(msg.getTwist().getTwist().getLinear().getX(),msg.getTwist().getTwist().getLinear().getY())));
+            twist.getLinear().setX(Vector2.abs(new Vector2(msg.getTwist().getTwist().getLinear().getX(), msg.getTwist().getTwist().getLinear().getY())));
             twist.getAngular().setZ(msg.getTwist().getTwist().getAngular().getZ());
 
             base_odom_.getTwist().setTwist(twist);// base frame
@@ -749,21 +830,24 @@ public class ROSAgent {
 
         if (msg.getWidth() * msg.getHeight() == 0) {
             obstacle_lock_.lock();
-            try{
-                obstacles_from_laser_.clear();}finally {
+            try {
+                obstacles_from_laser_.clear();
+            } finally {
                 obstacle_lock_.unlock();
             }
-                    return;
+            return;
         }
-            ChannelBuffer data = msg.getData().copy();
-            while (data.readableBytes() > 0) {
-                double[] pt = new double[msg.getFields().size()];
-                for (int k = 0; k < msg.getFields().size(); k++) {
-                    pt[k] = data.readFloat();
-                }
-                point3ds.add(new Point3d(pt));
+        //System.out.println("received scan at x: "+base_odom_.getPose().getPose().getPosition().getX());
+
+        ChannelBuffer data = msg.getData().copy();
+        while (data.readableBytes() > 0) {
+            double[] pt = new double[msg.getFields().size()];
+            for (int k = 0; k < msg.getFields().size(); k++) {
+                pt[k] = data.readFloat();
             }
-            //no need to transform rviz will transform automatically
+            point3ds.add(new Point3d(pt));
+        }
+        //no need to transform rviz will transform automatically
 //            if (!tf_.transformPoint3ds(global_frame_, base_frame_, point3ds, msg.getHeader().getStamp().totalNsecs(), dur_m)) {
 //                node.getLog().error("Can not transform cloud points: " + base_frame_ + "->" + global_frame_);
 //                return;
@@ -778,7 +862,7 @@ public class ROSAgent {
             Vector2 start;
             for (int i = 0; i < point3ds.size(); i++) {
                 start = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
-                while (pointInNeighbor(start) && i < point3ds.size()-1) {
+                while (pointInNeighbor(start) && i < point3ds.size() - 1) {
                     i++;
                     start = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                 }
@@ -798,7 +882,7 @@ public class ROSAgent {
                         break;
                     }
                     next = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
-                    while (pointInNeighbor(next) && i < point3ds.size()-1) {
+                    while (pointInNeighbor(next) && i < point3ds.size() - 1) {
                         i++;
                         next = new Vector2(point3ds.get(i).getX(), point3ds.get(i).getY());
                     }
@@ -847,13 +931,13 @@ public class ROSAgent {
         }
 
         //tell its original frame
-        msgPublisher.publishObstacleLines(obstacles_from_laser_, global_frame_, base_frame_, obstacles_pub_);
+        //msgPublisher.publishObstacleLines(obstacles_from_laser_, global_frame_, base_frame_, obstacles_pub_);
     }
 
     boolean pointInNeighbor(Vector2 point) {
         double dist;
         for (int i = 0; i < ROSAgentNeighbors.size(); i++) {
-            dist=Vector2.abs(Vector2.minus(point, ROSAgentNeighbors.get(i).position.getPos()));
+            dist = Vector2.abs(Vector2.minus(point, ROSAgentNeighbors.get(i).position.getPos()));
             if (dist <= ROSAgentNeighbors.get(i).radius) {
                 return true;
             }
@@ -1096,7 +1180,7 @@ public class ROSAgent {
                             if (orca) {// currently set to false
                                 createObstacleLine(own_footprint, obst.getBegin(), obst.getEnd());
                             } else {//called from CP
-                                VO obstacle_vo = CP.createObstacleVO(position.getPos(), footprint_radius_,footPrint_rotated, obst.getBegin(), obst.getEnd());
+                                VO obstacle_vo = CP.createObstacleVO(position.getPos(), footprint_radius_, footPrint_rotated, obst.getBegin(), obst.getEnd());
                                 voAgents.add(obstacle_vo);
                             }
                         }
@@ -1160,7 +1244,7 @@ public class ROSAgent {
             Vector<Vector2> obst = new Vector<Vector2>();
             obst.add(Vector2.minus(obst1, position_obst));
             obst.add(Vector2.minus(obst2, position_obst));
-            List<Vector2> mink_sum = minkowskiSum(own_footprint, obst);
+            List<Vector2> mink_sum = minkowskiSumConvexHull(own_footprint, obst);
 
             Vector2 min = new Vector2();
             Vector2 max = new Vector2();
@@ -1251,10 +1335,10 @@ public class ROSAgent {
             neighbors_lock_.unlock();
         }
         //for visualization
-        msgPublisher.publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
-        msgPublisher.publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
-        msgPublisher.publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
-        msgPublisher.publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
+//        msgPublisher.publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
+//        msgPublisher.publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
+//        msgPublisher.publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
+//        msgPublisher.publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
 
 
     }

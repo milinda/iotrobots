@@ -24,6 +24,10 @@ public class AgentNode {
             return GraphName.of("agent");
         }
 
+        @Override
+        public void onShutdown(Node node) {
+            node.shutdown();
+        }
     }
 
     public AgentNode(String nodeName) {
