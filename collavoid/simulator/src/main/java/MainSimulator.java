@@ -1,3 +1,4 @@
+import cgl.iotrobots.collavoid.utils.Parameters;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.Twist;
@@ -12,6 +13,7 @@ import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
+import utils.SimParams;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
@@ -20,8 +22,8 @@ import java.util.List;
 
 
 public class MainSimulator {
-    static final int robotNb = 3;
-    static final double posRadius = 4;
+    static final int robotNb = SimParams.ROBOT_NB;
+    static final double posRadius = SimParams.POSE_RADIUS;
 
     /**
      * Describe the robot
@@ -86,14 +88,19 @@ public class MainSimulator {
             // initialize position and orientation
             super(position, "robot"+id);
             this.id=id;
-            this.radius=(float)0.17;
+            this.radius = (float) Parameters.FOOTPRINT_RADIUS;// loaded from agent parameters
             orientation = ori;
             //use differential model
             kinematic = RobotFactory.setDifferentialDriveKinematicModel(this);
             wheelDistance = this.getRadius();
             // Add camera
             //camera = RobotFactory.addCameraSensor(this);
-            laserScan = new LaserScan(this.radius, 57.0 / 180 * Math.PI, 100, 0, 3.5, 20);
+            laserScan = new LaserScan(this.radius,
+                    SimParams.SCAN_ANGLE_RANGE / 180 * Math.PI,
+                    SimParams.SCAN_SENSOR_NB,
+                    SimParams.SCAN_MIN_RANGE,
+                    SimParams.SCAN_MAX_RANGE,
+                    SimParams.SCAN_UPDATE_FREQ);
             sensors = laserScan.getSensor();
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame

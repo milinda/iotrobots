@@ -6,7 +6,7 @@ public class SimParams {
     //robot parameters
     //robot number, in meter
     public static final int ROBOT_NB = 4;
-    //robot radius
+    //robot radius, not used, use footprint radius from ROSAgent instead.
     public static final double ROBOT_RADIUS = 0.17;
     //robot position radius, robot are evenly distributed around a circle and
     // heading toward the center

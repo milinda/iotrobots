@@ -10,7 +10,7 @@ import java.util.List;
 
 
 public class runPlanner {
-    static int robotNb = 2;
+    static int robotNb;
     static List<Planner> planners = new ArrayList<Planner>();
     static ConnectedNode node;
     static ParameterTree params;
