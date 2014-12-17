@@ -144,7 +144,7 @@ public class SLAMTopology {
             return new DestinationSelector() {
                 @Override
                 public String select(Tuple tuple) {
-                    return null;
+                    return "test";
                 }
             };
         }
@@ -209,6 +209,7 @@ public class SLAMTopology {
 
             configuration.addProperty("exchange", "simbard");
             dstListener.addDestination("rabbitmq", configuration);
+            dstListener.addPathToDestination("rabbitmq", "test");
         }
 
         @Override

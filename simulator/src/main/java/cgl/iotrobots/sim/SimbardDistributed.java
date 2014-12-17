@@ -123,6 +123,7 @@ public class SimbardDistributed {
             public Map<String, String> getProperties() {
                 Map<String, String> props = new HashMap<String, String>();
                 props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.map");
+                props.put(MessagingConstants.RABBIT_QUEUE, "test.test.map");
                 return props;
             }
 
