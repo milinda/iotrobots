@@ -9,7 +9,6 @@ import nav_msgs.Odometry;
 import nav_msgs.Path;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
-import org.ros.rosjava.tf.pubsub.TransformListener;
 
 import java.util.List;
 

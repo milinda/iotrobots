@@ -5,7 +5,6 @@ import cgl.iotrobots.collavoid.utils.Line;
 import cgl.iotrobots.collavoid.utils.Vector2;
 
 import java.util.List;
-import java.util.Vector;
 
 import static cgl.iotrobots.collavoid.utils.utils.sign;
 

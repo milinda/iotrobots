@@ -1,8 +1,6 @@
 package cgl.iotrobots.collavoid.utils;
 
 
-import geometry_msgs.Point;
-
 public class Position {
 
     private Vector2 pos=new Vector2();

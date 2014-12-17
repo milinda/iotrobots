@@ -150,8 +150,6 @@ public class MainSimulator {
             }
 
             //initialize velocity command subscriber
-
-
             if (velocitySubscriber == null) {
                 velocitySubscriber = node.newSubscriber(this.getName() + "/cmd_vel", Twist._TYPE);
                 velocitySubscriber.addMessageListener(new MessageListener<Twist>() {

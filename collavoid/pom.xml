@@ -15,14 +15,26 @@
     <modules>
         <module>simulator</module>
         <module>rosjava_tf_core</module>
+        <module>planners</module>
+        <module>sensors</module>
     </modules>
 
     <artifactId>collavoid</artifactId>
 
 
-    <!--properties>
-        <main.basedir>${project.basedir}</main.basedir>
-    </properties-->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 
     <dependencies>
@@ -88,14 +100,6 @@
             <groupId>iotrobots</groupId>
             <artifactId>rosjava_tf_core</artifactId>
             <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>collavoid_msgs</groupId>
-            <artifactId>collavoid_msgs</artifactId>
-            <scope>system</scope>
-            <version>0.0.0</version>
-            <systemPath>${project.basedir}/lib/collavoid_msgs-0.0.0.jar</systemPath>
         </dependency>
 
     </dependencies>

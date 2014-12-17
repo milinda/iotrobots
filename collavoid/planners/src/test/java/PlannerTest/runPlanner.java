@@ -1,4 +1,4 @@
-package test.PlannerTest;
+package PlannerTest;
 
 import cgl.iotrobots.collavoid.utils.ROSAgentNode;
 import org.ros.node.ConnectedNode;

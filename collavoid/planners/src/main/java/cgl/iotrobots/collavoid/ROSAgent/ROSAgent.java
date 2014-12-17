@@ -1,16 +1,15 @@
 package cgl.iotrobots.collavoid.ROSAgent;
 
-import cgl.iotrobots.collavoid.ClearPath.CP;
-import cgl.iotrobots.collavoid.Comparators.ConvexHullPointsPositionComparator;
-import cgl.iotrobots.collavoid.Comparators.NeighborDistComparator;
 import cgl.iotrobots.collavoid.Comparators.VectorsLexigraphicComparator;
 import cgl.iotrobots.collavoid.LocalPlanner.LPutils;
 import cgl.iotrobots.collavoid.NHORCA.NHORCA;
 import cgl.iotrobots.collavoid.utils.*;
+import cgl.iotrobots.collavoid.ClearPath.CP;
+import cgl.iotrobots.collavoid.Comparators.ConvexHullPointsPositionComparator;
+import cgl.iotrobots.collavoid.Comparators.NeighborDistComparator;
 
 import static cgl.iotrobots.collavoid.ClearPath.CP.convexHull;
 import static cgl.iotrobots.collavoid.ClearPath.CP.minkowskiSumConvexHull;
-import static cgl.iotrobots.collavoid.NHORCA.NHORCA.calcVstar;
 import static cgl.iotrobots.collavoid.utils.utils.*;
 
 import collavoid_msgs.pose_twist_covariance_msgs;
@@ -1007,7 +1006,7 @@ public class ROSAgent {
                 double vstar;
 
                 if (Math.abs(dif_ang) > EPSILON.EPSILON)
-                    vstar = calcVstar(vel, dif_ang);//get nonholomonic velocity
+                    vstar = NHORCA.calcVstar(vel, dif_ang);//get nonholomonic velocity
                 else
                     vstar = max_vel_x_;
 

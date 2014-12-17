@@ -1,5 +1,6 @@
 package cgl.iotrobots.collavoid.ROSAgent;
 
+import cgl.iotrobots.collavoid.LocalPlanner.LPutils;
 import cgl.iotrobots.collavoid.utils.*;
 import geometry_msgs.Point;
 import geometry_msgs.PoseStamped;
@@ -10,8 +11,6 @@ import visualization_msgs.Marker;
 import visualization_msgs.MarkerArray;
 
 import java.util.List;
-
-import static cgl.iotrobots.collavoid.LocalPlanner.LPutils.getYaw;
 
 public class MsgPublisher {
     private ConnectedNode MsgPublisherNode;
@@ -305,7 +304,7 @@ public class MsgPublisher {
 
         double yaw, x_dif, y_dif, th_dif, time_dif;
         time_dif = MsgPublisherNode.getCurrentTime().toSeconds() - agent.getLastSeen().toSeconds();
-        yaw = getYaw(agent.getBaseOdom().getPose().getPose().getOrientation());
+        yaw = LPutils.getYaw(agent.getBaseOdom().getPose().getPose().getOrientation());
         //ROS_ERROR("time_dif %f", time_dif);
         //time_dif = 0.0;
         //forward projection?

@@ -10,9 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static cgl.iotrobots.collavoid.utils.utils.leftOf;
-import static cgl.iotrobots.collavoid.utils.utils.rightOf;
-
 public class CP {
 
     public static final int RAYRAY = 0;
@@ -65,7 +62,7 @@ public class CP {
                 isOutsideVOs = false;
 
                 VelocitySample leg_projection = new VelocitySample();
-                if (leftOf(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRelativePosition(), pref_vel)) { //left of centerline, project on left leg
+                if (utils.leftOf(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRelativePosition(), pref_vel)) { //left of centerline, project on left leg
                     leg_projection.setVelocity(intersectTwoLines(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(),
                             pref_vel, new Vector2(truncated_vos.get(i).getLeftLegDir().getY(), -truncated_vos.get(i).getLeftLegDir().getX())));
                 } else { //project on right leg
@@ -191,7 +188,7 @@ public class CP {
 
     static boolean isWithinAdditionalConstraints(final List<Line> additional_constraints, final Vector2 point) {
         for (int i = 0; i < additional_constraints.size(); i++) {
-            if (rightOf(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(), point)) {
+            if (utils.rightOf(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(), point)) {
                 return false;
             }
         }
@@ -200,10 +197,10 @@ public class CP {
 
 
     static boolean isInsideVO(VO vo, Vector2 point, boolean use_truncation) {
-        boolean trunc = leftOf(vo.getTruncLeft(), Vector2.minus(vo.getTruncRight(), vo.getTruncLeft()), point);
+        boolean trunc = utils.leftOf(vo.getTruncLeft(), Vector2.minus(vo.getTruncRight(), vo.getTruncLeft()), point);
         if (Vector2.abs(Vector2.minus(vo.getTruncLeft(), vo.getTruncRight())) < EPSILON.EPSILON)
             trunc = true;
-        return rightOf(vo.getPoint(), vo.getLeftLegDir(), point) && leftOf(vo.getPoint(), vo.getRightLegDir(), point) && (!use_truncation || trunc);
+        return utils.rightOf(vo.getPoint(), vo.getLeftLegDir(), point) && utils.leftOf(vo.getPoint(), vo.getRightLegDir(), point) && (!use_truncation || trunc);
     }
 
     static void addRayVelocitySamples(List<VelocitySample> samples, final Vector2 pref_vel, Vector2 point1, Vector2 dir1, Vector2 point2, Vector2 dir2, double max_speed, int TYPE) {
@@ -337,7 +334,7 @@ public class CP {
 
         for (int i = 0; i < mink_sum.size(); i++) {
             double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
-            if (rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
+            if (utils.rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
                 if (-angle < min_ang) {
                     min_right = Vector2.plus(rel_position, mink_sum.get(i));
                     min_ang = -angle;
@@ -450,7 +447,7 @@ public class CP {
             return result;
         }
 
-        if (leftOf(new Vector2(0.0, 0.0), result.getRelativePosition(), rel_velocity)) { //left of centerline
+        if (utils.leftOf(new Vector2(0.0, 0.0), result.getRelativePosition(), rel_velocity)) { //left of centerline
             result.setPoint(intersectTwoLines(result.getPoint(), result.getLeftLegDir(), vel2, result.getRightLegDir())); // TODO add uncertainty
         } else { //right of centerline
             result.setPoint(intersectTwoLines(vel2, result.getLeftLegDir(), result.getPoint(), result.getRightLegDir())); // TODO add uncertainty
@@ -470,7 +467,7 @@ public class CP {
             return result;
         }
 
-        if (leftOf(new Vector2(0.0, 0.0), rel_position, rel_velocity)) { //left of centerline
+        if (utils.leftOf(new Vector2(0.0, 0.0), rel_position, rel_velocity)) { //left of centerline
             result.setPoint(intersectTwoLines(result.getPoint(), result.getLeftLegDir(), vel2, result.getRightLegDir())); // TODO add uncertainty
         } else { //right of centerline
             result.setPoint(intersectTwoLines(vel2, result.getLeftLegDir(), result.getPoint(), result.getRightLegDir())); // TODO add uncertainty
@@ -509,7 +506,7 @@ public class CP {
 
         for (int i = 0; i < mink_sum.size(); i++) {
             double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
-            if (rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
+            if (utils.rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
                 if (-angle < min_ang) {
                     min_right = Vector2.plus(rel_position, mink_sum.get(i));
                     min_ang = -angle;

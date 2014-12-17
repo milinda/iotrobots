@@ -2,8 +2,6 @@ package cgl.iotrobots.collavoid.utils;
 
 import geometry_msgs.Point32;
 
-import java.util.Objects;
-
 
 public class Vector2 {
     private double x;

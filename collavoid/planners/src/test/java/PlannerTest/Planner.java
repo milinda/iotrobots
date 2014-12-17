@@ -1,4 +1,4 @@
-package test.PlannerTest;
+package PlannerTest;
 
 import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
 import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
