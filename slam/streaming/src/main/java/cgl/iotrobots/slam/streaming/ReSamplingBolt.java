@@ -82,7 +82,7 @@ public class ReSamplingBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         outputCollector.ack(tuple);
 
-        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE);
+        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         ParticleValue value;
 
         if (val != null && (val instanceof ParticleValue)) {
@@ -94,7 +94,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
 
-        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
+        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (val != null && !(val instanceof LaserScan)) {
             throw new IllegalArgumentException("The laser scan should be of type LaserScan");
         }

@@ -98,11 +98,13 @@ public class DistributedScanMatcher {
     public int getBestParticleIndex() {
         int bi = 0;
         double bw = -Double.MAX_VALUE;
-        for (int i = 0; i < particles.size(); i++)
-            if (bw < particles.get(i).weightSum) {
-                bw = particles.get(i).weightSum;
-                bi = i;
+        for (int i = 0; i < activeParticles.size(); i++) {
+            int particleIndex = activeParticles.get(i);
+            if (bw < particles.get(particleIndex).weightSum) {
+                bw = particles.get(particleIndex).weightSum;
+                bi = particleIndex;
             }
+        }
         return bi;
     }
 

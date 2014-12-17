@@ -101,8 +101,8 @@ public class SLAMTopology {
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
         builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
-        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
-        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
+        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
+        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
     }
 
@@ -115,6 +115,7 @@ public class SLAMTopology {
         config.registerSerialization(HierarchicalArray2D.class);
         config.registerSerialization(TNode.class);
         config.registerSerialization(DoubleOrientedPoint.class);
+        config.registerSerialization(Particle.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {
@@ -162,7 +163,7 @@ public class SLAMTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_TUPLE, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
+            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_FIELD, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
         }
 
         @Override

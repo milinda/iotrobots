@@ -4,6 +4,7 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.GFSConfiguration;
@@ -119,6 +120,9 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     double[] plainReading;
     RangeReading rangeReading;
+    LaserScan scan;
+    Object time;
+    Object sensorId;
 
     @Override
     public void execute(Tuple tuple) {
@@ -128,14 +132,14 @@ public class ScanMatchBolt extends BaseRichBolt {
             return;
         }
         outputCollector.ack(tuple);
-        Object time = tuple.getValueByField("time");
-        Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
+        time = tuple.getValueByField("time");
+        sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
-        Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_TUPLE);
+        Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (!(val instanceof byte [])) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
-        LaserScan scan = (LaserScan) Utils.deSerialize(kryo, (byte [])val, LaserScan.class);
+        scan = (LaserScan) Utils.deSerialize(kryo, (byte [])val, LaserScan.class);
         RangeReading reading;
 
 
@@ -191,7 +195,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             emit.add(scan);
             emit.add(sensorId);
             emit.add(time);
-            outputCollector.emit(emit);
+            outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
         }
     }
 
@@ -201,8 +205,14 @@ public class ScanMatchBolt extends BaseRichBolt {
      */
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new backtype.storm.tuple.Fields(Constants.Fields.PARTICLE_VALUE,
-                Constants.Fields.LASER_SCAN_TUPLE,
+        outputFieldsDeclarer.declareStream(Constants.Fields.PARTICLE_STREAM, new Fields(Constants.Fields.PARTICLE_VALUE_FIELD,
+                Constants.Fields.LASER_SCAN_FIELD,
+                Constants.Fields.SENSOR_ID_FIELD,
+                Constants.Fields.TIME_FIELD));
+
+        outputFieldsDeclarer.declareStream(Constants.Fields.MAP_STREAM, new Fields(
+                Constants.Fields.PARTICLE_FIELD,
+                Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD));
     }
@@ -245,6 +255,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
                             LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
                             gfsp.processAfterReSampling(plainReading);
+
+                            emitParticleForMap();
+
                             state = MatchState.WAITING_FOR_READING;
                             LOG.info("Changing state to WAITING_FOR_READING");
                         }
@@ -259,6 +272,18 @@ public class ScanMatchBolt extends BaseRichBolt {
                 LOG.error("Received message when we are in an unexpected state {}", state);
             }
         }
+    }
+
+    private void emitParticleForMap() {
+        int particle = gfsp.getBestParticleIndex();
+        Particle best = gfsp.getParticles().get(particle);
+        List<Object> emit = new ArrayList<Object>();
+        emit.add(best);
+        emit.add(scan);
+        emit.add(sensorId);
+        emit.add(time);
+
+        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
     }
 
     private boolean assignmentExists(int task, int index, List<ParticleAssignment> assignmentList) {
@@ -303,6 +328,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         state = MatchState.COMPUTING_NEW_PARTICLES;
                         // we need to do the post processing we need for the particles
                         gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
+                        emitParticleForMap();
                         LOG.info("Changing state to WAITING_FOR_READING");
                         state = MatchState.WAITING_FOR_READING;
                     }
@@ -392,6 +418,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
                             LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
                             gfsp.processAfterReSampling(plainReading);
+                            emitParticleForMap();
                             state = MatchState.WAITING_FOR_READING;
                             LOG.info("Changing state to WAITING_FOR_READING");
                         }
