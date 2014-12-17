@@ -134,6 +134,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             p.setWeight(pv.getWeight());
             p.setGweight(pv.getGweight());
             p.setPose(pv.getPose());
+            p.setPreviousPose(pv.getPreviousPose());
             p.setNode(pv.getNode());
             p.setPreviousIndex(pv.previousIndex);
             p.setWeightSum(pv.weightSum);

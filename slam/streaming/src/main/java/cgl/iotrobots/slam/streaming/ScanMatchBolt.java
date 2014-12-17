@@ -131,8 +131,9 @@ public class ScanMatchBolt extends BaseRichBolt {
             outputCollector.ack(tuple);
             return;
         }
+        int taskId = topologyContext.getThisTaskIndex();
         outputCollector.ack(tuple);
-        time = tuple.getValueByField("time");
+        time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
         Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
@@ -168,7 +169,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         // now we will start the computation
-        LOG.info("Changing state to COMPUTING_INIT_READINGS");
+        LOG.info("taskId {}: Changing state to COMPUTING_INIT_READINGS", taskId);
         state = MatchState.COMPUTING_INIT_READINGS;
         if (!gfsp.processScan(reading, 0)) {
             return;
@@ -178,7 +179,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<Integer> activeParticles = gfsp.getActiveParticles();
         List<Particle> particles = gfsp.getParticles();
 
-        LOG.info("execute: changing state to WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES");
+        LOG.info("taskId {}: execute: changing state to WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES", taskId);
         state = MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES;
 
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
@@ -186,7 +187,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         for (int index : activeParticles) {
             Particle particle = particles.get(index);
 
-            int taskId = topologyContext.getThisTaskIndex();
+
             ParticleValue particleValue = new ParticleValue(taskId, index, totalTasks, particle.pose,
                     particle.previousPose, particle.weight,
                     particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
@@ -232,10 +233,11 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         @Override
         public void onMessage(Message message) {
+            int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
-                    LOG.info("Received particle map");
+                    LOG.info("taskId {}: Received particle map", taskId);
                     ParticleMaps pm = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
                     // first we need to determine the expected new maps for this particle
                     if (assignments != null) {
@@ -253,23 +255,23 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // we have received all the particles we need to do the processing after resampling
                         if (expectingParticles == 0 && expectingParticleValues == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
-                            LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
+                            LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
                             gfsp.processAfterReSampling(plainReading);
 
                             emitParticleForMap();
 
                             state = MatchState.WAITING_FOR_READING;
-                            LOG.info("Changing state to WAITING_FOR_READING");
+                            LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
                         }
                     } else {
                         // because we haven't received the assignments yet, we will keep the values temporaly in this list
                         particleMapses.add(pm);
                     }
                 } catch (Exception e) {
-                    LOG.error("Failed to deserialize assignment", e);
+                    LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
                 }
             } else {
-                LOG.error("Received message when we are in an unexpected state {}", state);
+                LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
             }
         }
     }
@@ -306,11 +308,11 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         @Override
         public void onMessage(Message message) {
+            int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
-            LOG.info("Received particle assignment *****");
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
-                    LOG.info("Received particle assignment");
+                    LOG.info("taskId {}: Received particle assignment", taskId);
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryo, body, ParticleAssignments.class);
                     // we are going to keep the assignemtns so that we can check the receiving particles
                     ScanMatchBolt.this.assignments = assignments;
@@ -324,16 +326,16 @@ public class ScanMatchBolt extends BaseRichBolt {
                     } else {
                         expectingParticles = 0;
                         expectingParticleValues = 0;
-                        LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
+                        LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
                         state = MatchState.COMPUTING_NEW_PARTICLES;
                         // we need to do the post processing we need for the particles
                         gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
                         emitParticleForMap();
-                        LOG.info("Changing state to WAITING_FOR_READING");
+                        LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
                         state = MatchState.WAITING_FOR_READING;
                     }
                 } catch (Exception e) {
-                    LOG.error("Failed to deserialize assignment", e);
+                    LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
                 }
             } else {
                 LOG.error("Received message when we are in an unexpected state {}", state);
@@ -372,10 +374,10 @@ public class ScanMatchBolt extends BaseRichBolt {
                     try {
                         particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + assignment.getNewTask());
                     } catch (Exception e) {
-                        LOG.error("Failed to send the new particle map");
+                        LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
                     }
                 } else {
-                    LOG.error("The particle {} is not in this bolt's active list, something is wrong",
+                    LOG.error("taskId {}: The particle {} is not in this bolt's active list, something is wrong", taskId,
                             assignment.getPreviousIndex());
                 }
             }
@@ -395,10 +397,11 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         @Override
         public void onMessage(Message message) {
+            int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS_AND_NEW_PARTICLES) {
                 try {
-                    LOG.info("Received particle value");
+                    LOG.info("taskId {}: Received particle value", taskId);
                     ParticleValue pm = (ParticleValue) Utils.deSerialize(kryo, body, ParticleValue.class);
                     // first we need to determine the expected new maps for this particle
                     if (assignments != null) {
@@ -416,21 +419,21 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // we have received all the particles we need to do the processing after resampling
                         if (expectingParticleValues == 0 && expectingParticles == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
-                            LOG.info("Changing state to COMPUTING_NEW_PARTICLES");
+                            LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
                             gfsp.processAfterReSampling(plainReading);
                             emitParticleForMap();
                             state = MatchState.WAITING_FOR_READING;
-                            LOG.info("Changing state to WAITING_FOR_READING");
+                            LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
                         }
                     } else {
                         // because we haven't received the assignments yet, we will keep the values temporaly in this list
                         particleValues.add(pm);
                     }
                 } catch (Exception e) {
-                    LOG.error("Failed to deserialize assignment", e);
+                    LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
                 }
             } else {
-                LOG.error("Received message when we are in an unexpected state {}", state);
+                LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
             }
         }
     }
@@ -445,7 +448,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         boolean found = assignmentExists(value.getTaskId(), value.getIndex(), assignmentList);
 
         if (!found) {
-            String msg = "We got a particle that doesn't belong here";
+            String msg = "taskId " + taskId + ": We got a particle that doesn't belong here";
             LOG.error(msg);
             throw new RuntimeException(msg);
         }
@@ -480,7 +483,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         boolean found = assignmentExists(particleMaps.getTask(), particleMaps.getIndex(), assignmentList);
 
         if (!found) {
-            String msg = "We got a particle that doesn't belong here";
+            String msg = "taskId " + taskId + ": We got a particle that doesn't belong here";
             LOG.error(msg);
             throw new RuntimeException(msg);
         }

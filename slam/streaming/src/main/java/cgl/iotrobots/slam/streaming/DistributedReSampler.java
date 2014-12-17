@@ -362,7 +362,8 @@ public class DistributedReSampler {
                 if (j == indexes.get(i)) {
                     j++;
                 }
-                Particle p = new Particle(particles.get(indexes.get(i)));
+                // we don't have the map
+                Particle p = new Particle(particles.get(indexes.get(i)), false);
 
                 TNode node ;
                 TNode oldNode = oldGeneration.get(indexes.get(i));
