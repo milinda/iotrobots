@@ -21,6 +21,8 @@ public class GMap {
         worldSizeX = mapSizeX * delta;
         worldSizeY = mapSizeY * delta;
         this.delta = delta;
+        this.mapSizeX = mapSizeX;
+        this.mapSizeY = mapSizeY;
         center = new DoublePoint(0.5 * worldSizeX, 0.5 * worldSizeY);
         sizeX2 = this.mapSizeX >> 1;
         sizeY2 = this.mapSizeY >> 1;
