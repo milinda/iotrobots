@@ -4,7 +4,7 @@ import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 
 public class ParticleMaps {
-    private GMap map;
+    private TransferMap map;
 
     private int index;
 
@@ -13,17 +13,17 @@ public class ParticleMaps {
     public ParticleMaps() {
     }
 
-    public ParticleMaps(GMap map, int index, int task) {
+    public ParticleMaps(TransferMap map, int index, int task) {
         this.map = map;
         this.index = index;
         this.task = task;
     }
 
-    public GMap getMap() {
+    public TransferMap getMap() {
         return map;
     }
 
-    public void setMap(GMap map) {
+    public void setMap(TransferMap map) {
         this.map = map;
     }
 

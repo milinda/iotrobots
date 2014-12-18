@@ -9,15 +9,20 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.LaserScan;
+import cgl.iotrobots.slam.core.app.Position;
+import cgl.iotrobots.slam.core.grid.Array2D;
+import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+import cgl.iotrobots.slam.core.gridfastsalm.TNode;
+import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
-import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
-import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
-import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
+import cgl.iotrobots.slam.core.utils.IntPoint;
+import cgl.iotrobots.slam.streaming.msgs.*;
 import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
@@ -25,10 +30,7 @@ import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This bolt is responsible for calculating for the assigned particles,
@@ -77,6 +79,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
         this.kryo = new Kryo();
+        this.kryo.register(Object[][].class);
+        registerClasses(kryo);
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
         StreamComponents components = streamTopologyBuilder.buildComponents();
@@ -198,6 +202,26 @@ public class ScanMatchBolt extends BaseRichBolt {
             emit.add(time);
             outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
         }
+    }
+
+    private void registerClasses(Kryo kryo) {
+        kryo.register(DoublePoint.class);
+        kryo.register(IntPoint.class);
+        kryo.register(Particle.class);
+        kryo.register(GMap.class);
+        kryo.register(Array2D.class);
+        kryo.register(HierarchicalArray2D.class);
+        kryo.register(TNode.class);
+        kryo.register(DoubleOrientedPoint.class);
+        kryo.register(Particle.class);
+        kryo.register(PointAccumulator.class);
+        kryo.register(HierarchicalArray2D.class);
+        kryo.register(Array2D.class);
+        kryo.register(Position.class);
+        kryo.register(Object[][].class);
+        kryo.register(TransferMap.class);
+        kryo.register(ParticleMaps.class);
+        kryo.register(MapCell.class);
     }
 
     /**
@@ -370,7 +394,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 if (gfsp.getActiveParticles().contains(assignment.getPreviousIndex())) {
                     Particle p = gfsp.getParticles().get(previousIndex);
                     // create a new ParticleMaps
-                    ParticleMaps particleMaps = new ParticleMaps(p.getMap(),
+                    ParticleMaps particleMaps = new ParticleMaps(Utils.createTransferMap(p.getMap()),
                             assignment.getNewIndex(), assignment.getNewTask());
 
                     byte []b = Utils.serialize(kryo, particleMaps);
@@ -495,7 +519,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         int newIndex = particleMaps.getIndex();
         Particle p = gfsp.getParticles().get(newIndex);
 
-        p.setMap(particleMaps.getMap());
+        p.setMap(Utils.createGMap(particleMaps.getMap()));
 
         // add the new particle index
         if (!gfsp.getActiveParticles().contains(newIndex)) {
@@ -512,4 +536,6 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         LOG.info("Shutting down the bolt");
     }
+
+
 }

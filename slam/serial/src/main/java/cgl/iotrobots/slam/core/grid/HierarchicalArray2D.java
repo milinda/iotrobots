@@ -50,7 +50,7 @@ public class HierarchicalArray2D {
         return patchIndexes(p.x, p.y);
     }
 
-    Set<IntPoint> getActiveArea() {
+    public Set<IntPoint> getActiveArea() {
         return activeArea;
     }
 

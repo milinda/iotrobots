@@ -4,7 +4,7 @@ import cgl.iotrobots.slam.core.utils.IntPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Array2D {
+public class Array2D <T> {
     private static Logger LOG = LoggerFactory.getLogger(Array2D.class);
 
     public int xsize, ysize;
