@@ -236,7 +236,8 @@ public class ScanMatchBolt extends BaseRichBolt {
                 Constants.Fields.TIME_FIELD));
 
         outputFieldsDeclarer.declareStream(Constants.Fields.MAP_STREAM, new Fields(
-                Constants.Fields.PARTICLE_FIELD,
+                Constants.Fields.PARTICLE_VALUE_FIELD,
+                Constants.Fields.PARTICLE_MAP_FIELD,
                 Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD));
@@ -304,7 +305,14 @@ public class ScanMatchBolt extends BaseRichBolt {
         int particle = gfsp.getBestParticleIndex();
         Particle best = gfsp.getParticles().get(particle);
         List<Object> emit = new ArrayList<Object>();
-        emit.add(best);
+
+        ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
+                best.previousPose, best.weight,
+                best.weightSum, best.gweight, best.previousIndex, best.node);
+        TransferMap map = Utils.createTransferMap(best.getMap());
+
+        emit.add(particleValue);
+        emit.add(map);
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);
@@ -484,12 +492,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         int newIndex = value.getIndex();
         Particle p = gfsp.getParticles().get(newIndex);
 
-        p.setPose(value.getPose());
-        p.setWeightSum(value.getWeightSum());
-        p.setWeight(value.getWeight());
-        p.setPreviousIndex(value.getPreviousIndex());
-        p.setGweight(value.getGweight());
-        p.setPreviousPose(value.getPreviousPose());
+        // populate particle using particle values
+        Utils.createParticle(value, p);
 
         gfsp.getActiveParticles().add(newIndex);
         // add the new particle index
@@ -500,6 +504,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         // we have received one particle
         expectingParticleValues--;
     }
+
+
 
     /**
      * Add a new partcle maps and node tree to the particle

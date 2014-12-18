@@ -1,9 +1,11 @@
 package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.iotrobots.slam.streaming.msgs.MapCell;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.msgs.TransferMap;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -81,5 +83,14 @@ public class Utils {
 
     public static MapCell createMapCell(PointAccumulator acc, int x, int y) {
         return new MapCell(x, y, acc.getAcc(), acc.getN(), acc.getVisits());
+    }
+
+    public static void createParticle(ParticleValue value, Particle p) {
+        p.setPose(value.getPose());
+        p.setWeightSum(value.getWeightSum());
+        p.setWeight(value.getWeight());
+        p.setPreviousIndex(value.getPreviousIndex());
+        p.setGweight(value.getGweight());
+        p.setPreviousPose(value.getPreviousPose());
     }
 }
