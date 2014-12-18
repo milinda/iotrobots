@@ -29,6 +29,13 @@
             <artifactId>jgrapht-ext</artifactId>
             <version>0.9.0</version>
         </dependency>
+        <dependency>
+            <groupId>java3d</groupId>
+            <artifactId>vecmath</artifactId>
+            <scope>system</scope>
+            <version>1.5.2</version>
+            <systemPath>${project.basedir}/lib/vecmath-1.5.2.jar</systemPath>
+        </dependency>
     </dependencies>
 
 </project>

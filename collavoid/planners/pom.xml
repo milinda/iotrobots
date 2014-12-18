@@ -13,6 +13,7 @@
     <artifactId>planners</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>planners</name>
+
     <dependencies>
         <dependency>
             <groupId>collavoid_msgs</groupId>

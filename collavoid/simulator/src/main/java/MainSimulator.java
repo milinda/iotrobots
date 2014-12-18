@@ -364,6 +364,7 @@ public class MainSimulator {
     public static void main(String[] args) {
         // request antialising
         System.setProperty("j3d.implicitAntialiasing", "true");
+        System.out.println(System.getProperty("java.library.path"));
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
 
