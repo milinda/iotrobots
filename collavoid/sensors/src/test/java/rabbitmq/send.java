@@ -20,8 +20,6 @@ public class send {
 
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         String message = "Hello World!";
-        int i = 0;
-        while (i++ < 1000)
             channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
         System.out.println(" [x] Sent '" + message + "'");
 
