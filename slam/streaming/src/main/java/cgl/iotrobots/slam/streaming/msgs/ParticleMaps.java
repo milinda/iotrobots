@@ -1,8 +1,5 @@
 package cgl.iotrobots.slam.streaming.msgs;
 
-import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.gridfastsalm.TNode;
-
 public class ParticleMaps {
     private TransferMap map;
 

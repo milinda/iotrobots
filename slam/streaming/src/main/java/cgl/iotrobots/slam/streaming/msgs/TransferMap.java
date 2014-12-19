@@ -21,7 +21,7 @@ public class TransferMap {
     private int sizeX2, sizeY2;
 
     // hierachical array properties
-    // Set<IntPoint> activeArea = new HashSet<IntPoint>();
+    Set<IntPoint> activeArea = new HashSet<IntPoint>();
     int patchMagnitude = 0;
     int patchSize;
 
@@ -120,9 +120,9 @@ public class TransferMap {
         this.sizeY2 = sizeY2;
     }
 
-//    public Set<IntPoint> getActiveArea() {
-//        return activeArea;
-//    }
+    public Set<IntPoint> getActiveArea() {
+        return activeArea;
+    }
 
     public int getPatchMagnitude() {
         return patchMagnitude;
@@ -132,9 +132,9 @@ public class TransferMap {
         return patchSize;
     }
 
-//    public void setActiveArea(Set<IntPoint> activeArea) {
-//        this.activeArea = activeArea;
-//    }
+    public void setActiveArea(Set<IntPoint> activeArea) {
+        this.activeArea = activeArea;
+    }
 
     public void setPatchMagnitude(int patchMagnitude) {
         this.patchMagnitude = patchMagnitude;

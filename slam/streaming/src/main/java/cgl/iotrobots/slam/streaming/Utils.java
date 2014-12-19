@@ -58,7 +58,7 @@ public class Utils {
             }
         }
 
-//        transferMap.setActiveArea(map.getStorage().getActiveArea());
+        transferMap.setActiveArea(map.getStorage().getActiveArea());
         return transferMap;
     }
 
@@ -72,9 +72,9 @@ public class Utils {
             accumulator.setVisits(cell.getVisits());
         }
 
-//        if (tMap.getActiveArea() != null) {
-//            gMap.getStorage().setActiveArea(tMap.getActiveArea());
-//        }
+        if (tMap.getActiveArea() != null) {
+            gMap.getStorage().setActiveArea(tMap.getActiveArea());
+        }
 
         return gMap;
     }

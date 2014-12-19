@@ -318,7 +318,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 return true;
             }
         }
-        return false;
+        return true;
     }
 
     private class ParticleAssignmentHandler implements MessageHandler {
