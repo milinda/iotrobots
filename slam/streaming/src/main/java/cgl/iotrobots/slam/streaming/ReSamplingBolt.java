@@ -88,8 +88,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         if (val != null && (val instanceof ParticleValue)) {
             value = (ParticleValue) val;
             LOG.debug("Received particle with index {}", value.getIndex());
-            particleValueses[value.getIndex()] = value;
-            receivedParticles++;
+            addParticleValue(value);
         } else {
             throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
@@ -187,6 +186,11 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     }
 
+    protected void addParticleValue(ParticleValue value) {
+        particleValueses[value.getIndex()] = value;
+        receivedParticles++;
+    }
+
     /**
      * We will broadcast this message using a topic. Every ScanMatching bolt will receive this message
      * @param assignments the particle assignments
@@ -208,10 +212,13 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @param indexes the re sampled indexes
      * @return an assignment of particles
      */
-    private ParticleAssignments createAssignments(List<Integer> indexes) {
+    protected ParticleAssignments createAssignments(List<Integer> indexes) {
+        for (int i : indexes) {
+            System.out.format("%d ", i);
+        }
+        System.out.format("\n");
         // create a matrix of size noOfParticles x noOfparticles
         int noOfParticles = reSampler.getNoParticles();
-
         // assume taskIndexes are going from 0
         double [][]cost = new double[noOfParticles][noOfParticles];
         for (int i = 0; i < noOfParticles; i++) {
@@ -221,29 +228,43 @@ public class ReSamplingBolt extends BaseRichBolt {
                 ParticleValue pv = particleValueses[index];
                 // now see weather this particle is from this worker
                 int particleTaskIndex = pv.getTaskId();
-                int thrueTaskIndex = j % noOfParticles;
+                int thrueTaskIndex = i % pv.getTotalTasks();
                 if (particleTaskIndex == thrueTaskIndex) {
-                    cost[i][j] = 1;
-                } else {
                     cost[i][j] = 0;
+                } else {
+                    cost[i][j] = 1;
                 }
             }
+        }
+
+        for (int i = 0; i < cost.length; i++) {
+            for (int j = 0; j < cost[i].length; j++) {
+                System.out.format("%f ", cost[i][j]);
+            }
+            System.out.format("\n");
         }
 
         HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
         int []assignments = algorithm.execute();
         ParticleAssignments particleAssignments = new ParticleAssignments();
 
+        for (int i : assignments) {
+            System.out.format("%d ", i);
+        }
+        System.out.println();
+
         // go through the particle indexs and try to find their new assignments
         for (int i = 0; i < indexes.size(); i++) {
             int particle = indexes.get(i);
             int thrueTaskIndex = -1;
+            ParticleValue pv = particleValueses[particle];
             for (int j = 0; j < assignments.length; j++) {
                 if (assignments[j] == i) {
-                    thrueTaskIndex = j % noOfParticles;
+                    thrueTaskIndex = j % pv.getTotalTasks();
+                    break;
                 }
             }
-            ParticleValue pv = particleValueses[particle];
+
             ParticleAssignment assignment = new ParticleAssignment(particle, i,
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);
