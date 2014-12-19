@@ -1,5 +1,4 @@
-import cgl.iotrobots.collavoid.commons.Header_;
-import cgl.iotrobots.collavoid.commons.Odometry_;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 
 import java.io.IOException;
 

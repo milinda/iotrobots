@@ -15,10 +15,12 @@
     <modules>
         <module>simulator</module>
         <module>rosjava_tf_core</module>
-        <module>planners</module>
+        <module>rosplanners</module>
         <module>sensors</module>
-        <module>ROSAgent</module>
+        <module>controller</module>
         <module>commons</module>
+        <module>planners</module>
+        <module>planners</module>
     </modules>
 
     <artifactId>collavoid</artifactId>
