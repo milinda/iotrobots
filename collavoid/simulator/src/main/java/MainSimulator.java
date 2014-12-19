@@ -17,6 +17,7 @@ import cgl.iotrobots.collavoid.controller.SimParams;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import java.util.List;
 public class MainSimulator {
     static final int robotNb = SimParams.ROBOT_NB;
     static final double posRadius = SimParams.POSE_RADIUS;
+    static List<Robot> robots = new ArrayList<Robot>();
 
     /**
      * Describe the robot
@@ -32,6 +34,9 @@ public class MainSimulator {
 
         //id
         int id;
+
+        //for shutdown
+        AgentNode agentNode;
 
         //orientation
         double orientation;
@@ -116,7 +121,7 @@ public class MainSimulator {
 
         public void initPubSub() {
             // initialize node
-            AgentNode agentNode = new AgentNode(this.getName());
+            agentNode = new AgentNode(this.getName());
             node = agentNode.getNode();
             // publish robot numbers to setup planner numbers
             params=node.getParameterTree();
@@ -322,6 +327,10 @@ public class MainSimulator {
             poseArray.setPoses(pa);
         }
 
+        public void shutDown() {
+            agentNode.shutDown();
+        }
+
     }
 
 
@@ -353,10 +362,13 @@ public class MainSimulator {
 //            add(new Robot(pose1, Math.PI + Math.PI/3, "robot0"));
 
 //            add(new Arch(new Vector3d(3, 0, -3), this));
+            robots.clear();
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
                 Vector3d pose = new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
-                add(new Robot(pose, Math.PI + i * step, i));
+                Robot robot = new Robot(pose, Math.PI + i * step, i);
+                robots.add(robot);
+                add(robot);
             }
         }
     }
@@ -368,6 +380,14 @@ public class MainSimulator {
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
 
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                for (Robot robot : robots) {
+                    System.out.println("Shutting down " + robot.getName());
+                    robot.shutDown();
+                }
+            }
+        });
     }
 
 } 

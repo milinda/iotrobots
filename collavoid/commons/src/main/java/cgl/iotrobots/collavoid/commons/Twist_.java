@@ -1,5 +1,7 @@
 package cgl.iotrobots.collavoid.commons;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
@@ -20,6 +22,8 @@ public class Twist_ implements Serializable {
     }
 
     public Twist_() {
+        Angular = new Vector3d_(0, 0, 0);
+        Linear = new Vector3d_(0, 0, 0);
     }
 
     public void setAngular(Vector3d_ angular) {
@@ -57,6 +61,7 @@ public class Twist_ implements Serializable {
 
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         mapper.writeValue(outputStream, this);
         return outputStream.toByteArray();

@@ -1,5 +1,7 @@
-package rabbitmq;
+package test;
 
+import cgl.iotrobots.collavoid.commons.CommonUtils;
+import cgl.iotrobots.collavoid.commons.Odometry_;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -8,12 +10,12 @@ import com.rabbitmq.client.QueueingConsumer;
 /**
  * Created by hjh on 12/17/14.
  */
-public class Worker {
+public class Listener {
     private final static String EXCHANGE_NAME = "robot0rmq";
 
     public static void main(String[] argv)
             throws java.io.IOException,
-            java.lang.InterruptedException {
+            InterruptedException {
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
@@ -23,24 +25,17 @@ public class Worker {
         channel.exchangeDeclare(EXCHANGE_NAME, "direct", true);
         System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
         String queueName = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName, EXCHANGE_NAME, "particleRoutingKey");
+        channel.queueBind(queueName, EXCHANGE_NAME, "odometryRoutingKey");
 
         QueueingConsumer consumer = new QueueingConsumer(channel);
         channel.basicConsume(queueName, true, consumer);
 
         while (true) {
             QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-            String message = new String(delivery.getBody());
+            Odometry_ odometry_ = CommonUtils.JSONToOdometry_(delivery.getBody());
 
-            System.out.println(" [x] Received '" + message + "'");
-            doWork(message);
-            System.out.println(" [x] Done");
+            System.out.println(" [x] Received '" + odometry_.getChildFrameId() + "'");
         }
     }
 
-    private static void doWork(String task) throws InterruptedException {
-        for (char ch : task.toCharArray()) {
-            if (ch == '.') Thread.sleep(1000);
-        }
-    }
 }

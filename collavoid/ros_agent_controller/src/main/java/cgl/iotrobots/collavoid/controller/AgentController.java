@@ -6,6 +6,7 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -29,7 +30,7 @@ public class AgentController {
 
     private String nodeName;
 
-    private Map<String, String> RMQParams;
+    private Map<String, String> RMQParams = new HashMap<String, String>();
 
     public AgentController(String Name,
                            Address[] addresses,
@@ -46,7 +47,6 @@ public class AgentController {
     }
 
     public void start(NodeConfiguration configuration) {
-
         setChannel();
         agentROSNode = new AgentROSNode(nodeName, channel, RMQParams);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
@@ -88,19 +88,19 @@ public class AgentController {
     }
 
     public void stop() {
-        try {
-            if (channel != null) {
-                channel.close();
-            }
-            if (connection != null) {
-                connection.close();
-            }
+//        try {
+//            if (channel != null) {
+//                channel.close();
+//            }
+//            if (connection != null) {
+//                connection.close();
+//            }
             if (agentROSNode != null) {
                 nodeMainExecutor.shutdown();
             }
-        } catch (IOException e) {
-            System.out.println("Error closing the rabbit MQ connection" + e);
-        }
+//        } catch (IOException e) {
+//            System.out.println("Error closing the rabbit MQ connection" + e);
+//        }
     }
 
 }

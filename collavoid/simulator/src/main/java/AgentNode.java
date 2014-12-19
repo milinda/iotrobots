@@ -9,6 +9,7 @@ public class AgentNode {
 
     private PubSubNode pubSubNode;
     private ConnectedNode node;
+    private NodeMainExecutor executor;
 
     public class PubSubNode extends AbstractNodeMain {
         private boolean initialized = false;
@@ -34,7 +35,7 @@ public class AgentNode {
         String host = InetAddressFactory.newNonLoopback().getHostAddress()
                 .toString();
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(host);
-        final NodeMainExecutor executor = DefaultNodeMainExecutor.newDefault();
+        executor = DefaultNodeMainExecutor.newDefault();
         nodeConfiguration.setNodeName(nodeName);
 
         pubSubNode = new PubSubNode();
@@ -60,6 +61,16 @@ public class AgentNode {
             System.out.println("Error, node not initialized!");
             return null;
         }
+    }
+
+    public NodeMainExecutor getExecutor() {
+        return executor;
+
+    }
+
+    public void shutDown() {
+        executor.shutdown();
+
     }
 
 

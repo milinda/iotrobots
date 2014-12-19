@@ -1,5 +1,7 @@
 package cgl.iotrobots.collavoid.commons;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nav_msgs.Odometry;
 
@@ -16,6 +18,10 @@ public class Odometry_ implements Serializable {
     private Pose_ Pose;
 
     private Twist_ Twist;
+
+    public Odometry_() {
+
+    }
 
     public Odometry_(Odometry odometry) {
         Header = new Header_(odometry.getHeader().getFrameId(),
@@ -62,8 +68,25 @@ public class Odometry_ implements Serializable {
         ChildFrameId = childFrameId;
     }
 
+    public Header_ getHeader() {
+        return Header;
+    }
+
+    public Pose_ getPose() {
+        return Pose;
+    }
+
+    public String getChildFrameId() {
+        return ChildFrameId;
+    }
+
+    public Twist_ getTwist() {
+        return Twist;
+    }
+
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         mapper.writeValue(outputStream, this);
         return outputStream.toByteArray();

@@ -31,6 +31,8 @@ import java.util.List;
 public class MainSimulatorWithPlanner {
     static final int robotNb = SimParams.ROBOT_NB;
     static final double posRadius = SimParams.POSE_RADIUS;
+    static List<Robot> robots = new ArrayList<Robot>();
+
     /**
      * Describe the robot
      */
@@ -38,6 +40,8 @@ public class MainSimulatorWithPlanner {
 
         // id
         int id;
+
+        AgentNode agentNode;
 
         //orientation
         double orientation;
@@ -59,7 +63,7 @@ public class MainSimulatorWithPlanner {
         int odomSeq;
         //laser scan publisher
         Publisher<PointCloud2> laserscanPublisher = null;
-        PointCloud2 pc2,pctmp;
+        PointCloud2 pc2, pctmp;
         int pc2Seq;
         //velocity command publisher
         Publisher<Twist> velocityPublisher = null;
@@ -81,16 +85,16 @@ public class MainSimulatorWithPlanner {
         List<PoseStamped> globalPlan = null;
         Point3d start;
         Point3d goal;
-        Quat4d oriGoal,oriStart;
+        Quat4d oriGoal, oriStart;
         boolean plannerSet;
         //for synchronization
         Time time = new Time();
 
         //pose array publisher, currently for test
-        Publisher<PoseArray> poseArrayPublisher=null;
+        Publisher<PoseArray> poseArrayPublisher = null;
         PoseArray poseArray;
         int paSeq;
-        Point3d previousPosition=null;
+        Point3d previousPosition = null;
 
 
         public Robot(Vector3d position, double ori, int id) {
@@ -129,9 +133,9 @@ public class MainSimulatorWithPlanner {
 
         public void initPubSub() {
             // initialize node
-            AgentNode agentNode = new AgentNode(this.getName());
+            agentNode = new AgentNode(this.getName());
             node = agentNode.getNode();
-            Log log=node.getLog();
+            Log log = node.getLog();
             // initialize odometry publisher and message
             if (odometryPublisher == null) {
                 odometryPublisher = node.newPublisher(this.getName() + "/odometry", Odometry._TYPE);
@@ -145,7 +149,7 @@ public class MainSimulatorWithPlanner {
             if (laserscanPublisher == null) {
                 laserscanPublisher = node.newPublisher(this.getName() + "/scan/point_cloud2", PointCloud2._TYPE);
                 // initialize message
-                pctmp=laserscanPublisher.newMessage();
+                pctmp = laserscanPublisher.newMessage();
                 pc2 = laserscanPublisher.newMessage();
                 pc2.getHeader().setFrameId(robotFrame);
                 pc2Seq = 0;
@@ -155,11 +159,11 @@ public class MainSimulatorWithPlanner {
                 cmd_vel = velocityPublisher.newMessage();
             }
             //for test
-            if (poseArrayPublisher==null){
-                poseArrayPublisher=node.newPublisher(this.getName()+"/particlecloud",PoseArray._TYPE);
-                poseArray=node.getTopicMessageFactory().newFromType(PoseArray._TYPE);
+            if (poseArrayPublisher == null) {
+                poseArrayPublisher = node.newPublisher(this.getName() + "/particlecloud", PoseArray._TYPE);
+                poseArray = node.getTopicMessageFactory().newFromType(PoseArray._TYPE);
                 poseArray.getHeader().setFrameId(robotFrame);
-                paSeq=0;
+                paSeq = 0;
             }
 
             //initialize velocity command subscriber
@@ -174,10 +178,10 @@ public class MainSimulatorWithPlanner {
                         //no need to transform the coordinate
                         v = vel.length();
                         w = msg.getAngular().getZ();
-                        vl =  v - w * wheelDistance / 2;
-                        vr =  v + w * wheelDistance / 2;
+                        vl = v - w * wheelDistance / 2;
+                        vr = v + w * wheelDistance / 2;
                     }
-                },10);
+                }, 10);
             }
             if (tfl == null) {
                 tfl = new TransformListener(node);
@@ -206,22 +210,22 @@ public class MainSimulatorWithPlanner {
             //send transform
             sendTransform();
             //publish scan in frequency of 10Hz
-            if (getCounter() % 2== 0 ) {
+            if (getCounter() % 2 == 0) {
                 pc2.getHeader().setSeq(pc2Seq++);
                 pc2.getHeader().setStamp(time);
                 //publish valid laser scan in pointcloud2 format in global frame
-                laserScan.getLaserscanPointCloud2(pc2,this);
+                laserScan.getLaserscanPointCloud2(pc2, this);
                 laserscanPublisher.publish(pc2);
             }
             //test, publish localization pose array
-            if (getCounter()%2==0){
+            if (getCounter() % 2 == 0) {
                 Point3d cor = new Point3d();
                 this.getCoords(cor);
                 poseArray.getHeader().setStamp(time);
                 poseArray.getHeader().setSeq(paSeq++);
-                if (previousPosition==null||!cor.equals(previousPosition)){
-                    if (previousPosition==null)
-                        previousPosition=new Point3d();
+                if (previousPosition == null || !cor.equals(previousPosition)) {
+                    if (previousPosition == null)
+                        previousPosition = new Point3d();
                     this.getCoords(previousPosition);
                     setPoseArrayMsg();
                 }
@@ -234,13 +238,13 @@ public class MainSimulatorWithPlanner {
 
                 // delay some time to set the planner
                 if (!plannerSet && getCounter() % 20 == 0) {
-                plannerSet=true;
-                if (!localPlanner.setPlan(globalPlan))
-                    node.getLog().error("Set global plan error!");
-            }
+                    plannerSet = true;
+                    if (!localPlanner.setPlan(globalPlan))
+                        node.getLog().error("Set global plan error!");
+                }
 
                 //control frequency is 20hz
-                if (localPlanner.computeVelocityCommands(cmd_vel));
+                if (localPlanner.computeVelocityCommands(cmd_vel)) ;
                 velocityPublisher.publish(cmd_vel);
             }
         }
@@ -277,7 +281,7 @@ public class MainSimulatorWithPlanner {
             Vector3d tft3d = new Vector3d();
             Quat4d tfrq = new Quat4d();
 
-            tf=getTransform();
+            tf = getTransform();
             tf.get(tft3d);
             tf.get(tfrq);
 
@@ -299,7 +303,7 @@ public class MainSimulatorWithPlanner {
             );
         }
 
-        public Transform3D getTransform(){
+        public Transform3D getTransform() {
             Transform3D tf = new Transform3D();
             Vector3d tft3d = new Vector3d();
             Quat4d tfrq = new Quat4d();
@@ -311,15 +315,15 @@ public class MainSimulatorWithPlanner {
             return tf;
         }
 
-        public void setPoseArrayMsg(){
-            List<Pose> pa=new ArrayList<Pose>();
+        public void setPoseArrayMsg() {
+            List<Pose> pa = new ArrayList<Pose>();
             //get orientation
             Transform3D tfr = new Transform3D();
             this.getRotationTransform(tfr);
 
             Quat4d ori = new Quat4d();
-            Point3d pt= new Point3d();
-            for (int i = 0; i <50 ; i++) {
+            Point3d pt = new Point3d();
+            for (int i = 0; i < 50; i++) {
                 // in robot base frame
                 pt.setX(utilsSim.getGaussianNoise(0, this.radius / 10));
                 pt.setZ(utilsSim.getGaussianNoise(0, this.radius / 10));
@@ -330,7 +334,7 @@ public class MainSimulatorWithPlanner {
             poseArray.setPoses(pa);
         }
 
-        private void initPlanner(){
+        private void initPlanner() {
             if (globalPlan == null) {
                 globalPlan = new ArrayList<PoseStamped>();
             } else {
@@ -350,9 +354,9 @@ public class MainSimulatorWithPlanner {
             goal.set(-start.getX(), start.getY(), -start.getZ());
 
             oriStart = getOrientation();
-            oriGoal=new Quat4d();
+            oriGoal = new Quat4d();
             Transform3D tfr = new Transform3D(oriStart, new Vector3d(0, 0, 0), 1);
-            Transform3D tfrPI=new Transform3D(new Quat4d(0,1,0,0),new Vector3d(),1);
+            Transform3D tfrPI = new Transform3D(new Quat4d(0, 1, 0, 0), new Vector3d(), 1);
             tfr.mul(tfrPI);
             tfr.get(oriGoal);
 
@@ -383,11 +387,15 @@ public class MainSimulatorWithPlanner {
 
             globalPlanner.makePlan(startPose, goalPose, globalPlan);
 
-            plannerSet=false;
+            plannerSet = false;
+        }
+
+        public void shutDown() {
+            agentNode.shutDown();
+
         }
 
     }
-
 
 
     /**
@@ -415,10 +423,13 @@ public class MainSimulatorWithPlanner {
 //            add(new Robot(pose1, Math.PI + Math.PI/3, "robot0"));
 
 //            add(new Arch(new Vector3d(3, 0, -3), this));
+            robots.clear();
             double step = 2 * Math.PI / robotNb;
             for (int i = 0; i < robotNb; i++) {
                 Vector3d pose = new Vector3d(posRadius * Math.cos(i * step), 0, -posRadius * Math.sin(i * step));
-                add(new Robot(pose, Math.PI + i * step, i));
+                Robot robot = new Robot(pose, Math.PI + i * step, i);
+                robots.add(robot);
+                add(robot);
             }
         }
     }
@@ -450,7 +461,11 @@ public class MainSimulatorWithPlanner {
     private static void doShutDownWork() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                rosCore.shutdown();
+                for (Robot robot : robots) {
+                    System.out.println("Shutting down " + robot.getName());
+                    robot.shutDown();
+                }
+                    
             }
         });
     }

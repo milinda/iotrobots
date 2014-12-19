@@ -1,12 +1,13 @@
 package cgl.iotrobots.collavoid.commons;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.List;
 
 public class PointCloud2_ implements Serializable {
     private int With;
@@ -16,6 +17,11 @@ public class PointCloud2_ implements Serializable {
     private ChannelBuffer Data;
 
     private int Dimension;
+
+    public PointCloud2_() {
+
+
+    }
 
     public void setWith(int with) {
         With = with;
@@ -35,6 +41,7 @@ public class PointCloud2_ implements Serializable {
 
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         mapper.writeValue(outputStream, this);
         return outputStream.toByteArray();

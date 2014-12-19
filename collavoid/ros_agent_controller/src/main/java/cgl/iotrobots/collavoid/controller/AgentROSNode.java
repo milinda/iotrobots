@@ -78,15 +78,15 @@ public class AgentROSNode extends AbstractNodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
-
+        String robotNodeName = new String(nodeName).replace("rmq", "");
         final Publisher<Twist> velcmdPublisher =
-                connectedNode.newPublisher(nodeName + "/cmd_vel", Twist._TYPE);
+                connectedNode.newPublisher(robotNodeName + "/cmd_vel", Twist._TYPE);
         final Subscriber<Odometry> odometrySubscriber =
-                connectedNode.newSubscriber(nodeName + "/odometry", Odometry._TYPE);
+                connectedNode.newSubscriber(robotNodeName + "/odometry", Odometry._TYPE);
         final Subscriber<PointCloud2> laserScanSubscriber =
-                connectedNode.newSubscriber(nodeName + "/scan/point_cloud2", PointCloud2._TYPE);
+                connectedNode.newSubscriber(robotNodeName + "/scan/point_cloud2", PointCloud2._TYPE);
         final Subscriber<PoseArray> poseArraySubscriber =
-                connectedNode.newSubscriber(nodeName + "/particlecloud", PoseArray._TYPE);
+                connectedNode.newSubscriber(robotNodeName + "/particlecloud", PoseArray._TYPE);
 
         try {
             Thread.sleep(1000);
@@ -104,7 +104,7 @@ public class AgentROSNode extends AbstractNodeMain {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Twist_ velocity = CommonsUtils.JSONToTwist_(body);
+                            Twist_ velocity = CommonUtils.JSONToTwist_(body);
                             velQueue.offer(velocity);
                             channel.basicAck(deliveryTag, false);
                         }

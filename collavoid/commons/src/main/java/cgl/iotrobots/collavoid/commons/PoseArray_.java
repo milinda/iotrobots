@@ -1,5 +1,7 @@
 package cgl.iotrobots.collavoid.commons;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
@@ -8,7 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 
 public class PoseArray_ implements Serializable {
-    private Header_ Header;
+    private Header_ Header = new Header_();
 
     private List<Pose_> Poses;
 
@@ -43,6 +45,7 @@ public class PoseArray_ implements Serializable {
 
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         mapper.writeValue(outputStream, this);
         return outputStream.toByteArray();

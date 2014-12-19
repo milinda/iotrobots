@@ -1,5 +1,11 @@
 package cgl.iotrobots.collavoid.commons;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 
 public class Vector3d_ implements Serializable {
@@ -8,9 +14,6 @@ public class Vector3d_ implements Serializable {
     private double z;
 
     public Vector3d_() {
-        x = 0;
-        y = 0;
-        z = 0;
     }
 
     public Vector3d_(double x, double y, double z) {
@@ -50,5 +53,13 @@ public class Vector3d_ implements Serializable {
                 "," + y +
                 "," + z +
                 ')';
+    }
+
+    public byte[] toJSON() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        mapper.writeValue(outputStream, this);
+        return outputStream.toByteArray();
     }
 }
