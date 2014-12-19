@@ -1,9 +1,11 @@
 package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.iotrobots.slam.streaming.msgs.MapCell;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.msgs.TransferMap;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -53,8 +55,10 @@ public class Utils {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
                 IntPoint p = new IntPoint(x, y);
                 PointAccumulator pointAccumulator = (PointAccumulator) map.cell(p, false);
-                MapCell cell = createMapCell(pointAccumulator, x, y);
-                transferMap.addCell(cell);
+                if (pointAccumulator.getVisits() > 0) {
+                    MapCell cell = createMapCell(pointAccumulator, x, y);
+                    transferMap.addCell(cell);
+                }
             }
         }
 
@@ -63,7 +67,7 @@ public class Utils {
     }
 
     public static GMap createGMap(TransferMap tMap) {
-        GMap gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+        GMap gMap = new GMap(tMap.getCenter(), tMap.getMapSizeX(), tMap.getMapSizeY(), tMap.getDelta());
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
@@ -81,5 +85,14 @@ public class Utils {
 
     public static MapCell createMapCell(PointAccumulator acc, int x, int y) {
         return new MapCell(x, y, acc.getAcc(), acc.getN(), acc.getVisits());
+    }
+
+    public static void createParticle(ParticleValue value, Particle p) {
+        p.setPose(value.getPose());
+        p.setWeightSum(value.getWeightSum());
+        p.setWeight(value.getWeight());
+        p.setPreviousIndex(value.getPreviousIndex());
+        p.setGweight(value.getGweight());
+        p.setPreviousPose(value.getPreviousPose());
     }
 }

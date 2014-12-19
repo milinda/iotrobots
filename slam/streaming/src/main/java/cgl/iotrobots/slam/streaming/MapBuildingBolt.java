@@ -10,10 +10,13 @@ import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.MapUpdater;
+import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
+import cgl.iotrobots.slam.streaming.msgs.TransferMap;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
@@ -50,11 +53,17 @@ public class MapBuildingBolt extends BaseRichBolt {
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
-        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_FIELD);
-        if (!(val instanceof Particle)) {
+        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
+        if (!(val instanceof ParticleValue)) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
-        Particle particle = (Particle) val;
+        ParticleValue particleValue = (ParticleValue) val;
+
+        val = tuple.getValueByField(Constants.Fields.PARTICLE_MAP_FIELD);
+        if (!(val instanceof TransferMap)) {
+            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+        }
+        TransferMap transferMap = (TransferMap) val;
 
         val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (!(val instanceof LaserScan)) {
@@ -83,7 +92,13 @@ public class MapBuildingBolt extends BaseRichBolt {
         for (int i = 0; i < scan.getRanges().size(); i++) {
             plainReading[i] = reading.get(i);
         }
-        GFSMap map = mapUpdater.updateMap(particle, plainReading, new DoubleOrientedPoint(0, 0, 0));
+
+        Particle p = new Particle();
+        Utils.createParticle(particleValue, p);
+        GMap m = Utils.createGMap(transferMap);
+        p.setMap(m);
+
+        GFSMap map = mapUpdater.updateMap(p, plainReading, new DoubleOrientedPoint(0, 0, 0));
 
         this.outputCollector.ack(tuple);
 
