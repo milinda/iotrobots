@@ -213,10 +213,10 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @return an assignment of particles
      */
     protected ParticleAssignments createAssignments(List<Integer> indexes) {
-        for (int i : indexes) {
-            System.out.format("%d ", i);
-        }
-        System.out.format("\n");
+//        for (int i : indexes) {
+//            System.out.format("%d ", i);
+//        }
+//        System.out.format("\n");
         // create a matrix of size noOfParticles x noOfparticles
         int noOfParticles = reSampler.getNoParticles();
         // assume taskIndexes are going from 0
@@ -237,21 +237,21 @@ public class ReSamplingBolt extends BaseRichBolt {
             }
         }
 
-        for (int i = 0; i < cost.length; i++) {
-            for (int j = 0; j < cost[i].length; j++) {
-                System.out.format("%f ", cost[i][j]);
-            }
-            System.out.format("\n");
-        }
+//        for (int i = 0; i < cost.length; i++) {
+//            for (int j = 0; j < cost[i].length; j++) {
+//                System.out.format("%f ", cost[i][j]);
+//            }
+//            System.out.format("\n");
+//        }
 
         HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
         int []assignments = algorithm.execute();
         ParticleAssignments particleAssignments = new ParticleAssignments();
 
-        for (int i : assignments) {
-            System.out.format("%d ", i);
-        }
-        System.out.println();
+//        for (int i : assignments) {
+//            System.out.format("%d ", i);
+//        }
+//        System.out.println();
 
         // go through the particle indexs and try to find their new assignments
         for (int i = 0; i < indexes.size(); i++) {

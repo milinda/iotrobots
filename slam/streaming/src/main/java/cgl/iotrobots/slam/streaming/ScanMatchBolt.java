@@ -49,7 +49,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private RabbitMQReceiver assignmentReceiver;
 
     /** Particles are sent directly, so we will create a direct receiver */
-    private RabbitMQReceiver particleReceiver;
+    private RabbitMQReceiver particleMapReceiver;
 
     private RabbitMQReceiver particleValueReceiver;
 
@@ -93,7 +93,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             // we use broadcast to receive assignments
             this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             // we use direct exchange to receive particle maps
-            this.particleReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
+            this.particleMapReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             // we use direct to receive particle values
             this.particleValueReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             // we use direct to send the new particle maps
@@ -101,7 +101,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             this.particleSender.open();
 
             this.assignmentReceiver.listen(new ParticleAssignmentHandler());
-            this.particleReceiver.listen(new MapHandler());
+            this.particleMapReceiver.listen(new MapHandler());
             this.particleValueReceiver.listen(new ParticleValueHandler());
         } catch (Exception e) {
             LOG.error("failed to create the message assignmentReceiver", e);
@@ -504,7 +504,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticleValues--;
-        LOG.info("Expecting particle values {}", expectingParticleMaps);
+        LOG.info("taskId {}: Expecting particle values {}", taskId, expectingParticleMaps);
     }
 
 
