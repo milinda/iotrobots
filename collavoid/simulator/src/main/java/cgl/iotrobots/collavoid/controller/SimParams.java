@@ -1,4 +1,4 @@
-package utils;
+package cgl.iotrobots.collavoid.controller;
 
 public class SimParams {
     // For simulator

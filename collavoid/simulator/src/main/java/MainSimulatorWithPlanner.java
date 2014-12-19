@@ -18,7 +18,7 @@ import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
-import utils.SimParams;
+import cgl.iotrobots.collavoid.controller.SimParams;
 
 import javax.media.j3d.Transform3D;
 import javax.vecmath.Color3f;

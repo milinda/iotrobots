@@ -17,6 +17,8 @@
         <module>rosjava_tf_core</module>
         <module>planners</module>
         <module>sensors</module>
+        <module>ROSAgent</module>
+        <module>commons</module>
     </modules>
 
     <artifactId>collavoid</artifactId>
