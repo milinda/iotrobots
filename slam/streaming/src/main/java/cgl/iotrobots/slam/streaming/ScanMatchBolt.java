@@ -280,7 +280,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // we have received all the particles we need to do the processing after resampling
                         if (expectingParticleMaps == 0 && expectingParticleValues == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
-                            LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
+                            LOG.info("taskId {}: Map Handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
                             gfsp.processAfterReSampling(plainReading);
 
                             emitParticleForMap();
@@ -302,13 +302,16 @@ public class ScanMatchBolt extends BaseRichBolt {
     }
 
     private void emitParticleForMap() {
+        LOG.error("Emit for map");
         int particle = gfsp.getBestParticleIndex();
+        LOG.error("Emit for map, best particle");
         Particle best = gfsp.getParticles().get(particle);
         List<Object> emit = new ArrayList<Object>();
 
         ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
                 best.previousPose, best.weight,
                 best.weightSum, best.gweight, best.previousIndex, best.node);
+        LOG.error("Emit for map, transfermap");
         TransferMap map = Utils.createTransferMap(best.getMap());
 
         emit.add(particleValue);
@@ -316,7 +319,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);
-
+        LOG.error("Emit for map, collector");
         outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
     }
 
@@ -362,7 +365,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         ScanMatchBolt.this.assignments = assignments;
                         expectingParticleMaps = 0;
                         expectingParticleValues = 0;
-                        LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
+                        LOG.info("taskId {}: Assignment handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
                         state = MatchState.COMPUTING_NEW_PARTICLES;
 
                         // we need to do the post processing we need for the particles
@@ -461,7 +464,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // we have received all the particles we need to do the processing after resampling
                         if (expectingParticleValues == 0 && expectingParticleMaps == 0) {
                             state = MatchState.COMPUTING_NEW_PARTICLES;
-                            LOG.info("taskId {}: Changing state to COMPUTING_NEW_PARTICLES", taskId);
+                            LOG.info("taskId {}: Value handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
                             gfsp.processAfterReSampling(plainReading);
                             emitParticleForMap();
                             state = MatchState.WAITING_FOR_READING;
@@ -541,7 +544,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticleMaps--;
-        LOG.info("Expecting particle maps {}", expectingParticleMaps);
+        LOG.info("Expecting particle maps {}", taskId, expectingParticleMaps);
     }
 
     @Override

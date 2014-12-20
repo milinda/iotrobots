@@ -10,6 +10,8 @@ import cgl.iotrobots.slam.streaming.msgs.TransferMap;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +20,7 @@ import java.io.ByteArrayOutputStream;
  * Utilities
  */
 public class Utils {
+    private static Logger LOG = LoggerFactory.getLogger(Utils.class);
     /**
      * Serialize an object using kryo and return the bytes
      * @param kryo instance of kryo
@@ -49,7 +52,7 @@ public class Utils {
                 map.getMapSizeY(), map.getSizeX2(), map.getSizeY2(),
                 map.getStorage().getPatchMagnitude(),
                 map.getStorage().getPatchSize());
-
+        LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
         for (int x = 0; x < map.getMapSizeX(); x++) {
             for (int y = 0; y < map.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
