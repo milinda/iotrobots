@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>iotrobots</groupId>
+        <artifactId>collavoid</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>rosplanners</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>rosplanners</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>collavoid_msgs</groupId>
+            <artifactId>collavoid_msgs</artifactId>
+            <scope>system</scope>
+            <version>0.0.0</version>
+            <systemPath>${project.basedir}/lib/collavoid_msgs-0.0.0.jar</systemPath>
+        </dependency>
+        <!-->vecmath version 1.3.1 seems not working<-->
+        <dependency>
+            <groupId>java3d</groupId>
+            <artifactId>vecmath</artifactId>
+            <scope>system</scope>
+            <version>1.5.2</version>
+            <systemPath>${project.basedir}/lib/vecmath-1.5.2.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>java3d</groupId>
+            <artifactId>j3d-core</artifactId>
+            <version>1.3.1</version>
+        </dependency>
+    </dependencies>
+</project>
