@@ -68,7 +68,7 @@ public class RabbitMQReceiver {
             if (queueName == null) {
                 queueName = channel.queueDeclare().getQueue();
             } else {
-                channel.queueDeclare(queueName, false, false, true, null);
+                channel.queueDeclare(queueName, false, false, false, null);
             }
 
             if (consumerTag == null) {
