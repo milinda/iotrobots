@@ -20,7 +20,6 @@
         <module>controller</module>
         <module>commons</module>
         <module>planners</module>
-        <module>planners</module>
     </modules>
 
     <artifactId>collavoid</artifactId>
