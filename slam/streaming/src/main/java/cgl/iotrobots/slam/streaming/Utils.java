@@ -70,7 +70,7 @@ public class Utils {
     }
 
     public static GMap createGMap(TransferMap tMap) {
-        GMap gMap = new GMap(tMap.getCenter(), tMap.getMapSizeX(), tMap.getMapSizeY(), tMap.getDelta());
+        GMap gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
