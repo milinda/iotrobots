@@ -166,6 +166,7 @@ public class ReSamplingBolt extends BaseRichBolt {
                 // we assume there is a direct mapping between particles in the resampler and the indexes
                 ParticleAssignment assignment = assignments.getAssignments().get(i);
                 try {
+                    LOG.info("Sending particle value to: {}", assignment.getNewTask());
                     valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
                 } catch (Exception e) {
                     LOG.error("Failed to send the message");
@@ -200,7 +201,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         Message message = new Message(b, new HashMap<String, Object>());
         try {
-            assignmentSender.send(message, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
+            assignmentSender.send(message, "*");
         } catch (Exception e) {
             LOG.error("Failed to send the message", e);
         }

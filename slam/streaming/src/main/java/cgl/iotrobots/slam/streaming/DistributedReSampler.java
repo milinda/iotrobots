@@ -386,12 +386,12 @@ public class DistributedReSampler {
             LOG.debug("Deleting old particles...");
             particles.clear();
             LOG.debug("Copying Particles and  Registering  scans...");
-//            for (Particle it : temp) {
-//                it.setWeight(0);
+            for (Particle it : temp) {
+                it.setWeight(0);
 //                matcher.invalidateActiveArea();
 //                matcher.registerScan(it.map, it.pose, plainReading);
-//                particles.add(it);
-//            }
+                particles.add(it);
+            }
             hasResampled = true;
         }
 //        else {

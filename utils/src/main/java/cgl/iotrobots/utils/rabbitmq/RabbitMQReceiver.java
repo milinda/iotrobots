@@ -45,7 +45,7 @@ public class RabbitMQReceiver {
             if (!topic) {
                 channel.exchangeDeclare(exchangeName, "direct", false);
             } else {
-                channel.exchangeDeclare(exchangeName, "topic", false);
+                channel.exchangeDeclare(exchangeName, "fanout", false);
             }
             this.topic = topic;
         } catch (Exception e) {
@@ -96,7 +96,8 @@ public class RabbitMQReceiver {
                         }
 
                         Message message = new Message(body, props);
-                        if (!topic) {
+
+                        if (false) {
                             channel.basicAck(deliveryTag, false);
                         }
                         handler.onMessage(message);

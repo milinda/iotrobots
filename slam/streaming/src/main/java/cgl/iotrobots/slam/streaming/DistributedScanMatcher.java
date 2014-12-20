@@ -310,7 +310,7 @@ public class DistributedScanMatcher {
             Particle it = particles.get(i);
             matcher.invalidateActiveArea();
             matcher.registerScan(it.map, it.pose, plainReading);
-            particles.add(it);
+            // particles.add(it);
         }
     }
 

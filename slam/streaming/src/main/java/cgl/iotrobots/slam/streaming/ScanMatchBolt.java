@@ -251,8 +251,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         public Map<String, String> getProperties() {
             int taskId = topologyContext.getThisTaskIndex();
             Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_QUEUE, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + taskId);
             props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + taskId);
-
             return props;
         }
 
@@ -334,6 +334,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         public Map<String, String> getProperties() {
             int taskId = topologyContext.getThisTaskIndex();
             Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_QUEUE, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY + "_" + taskId);
             props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_ASSIGNMENT_ROUTING_KEY);
             return props;
         }
@@ -382,6 +383,9 @@ public class ScanMatchBolt extends BaseRichBolt {
     private void computeExpectedParticles(ParticleAssignments assignments) {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
         int taskId = topologyContext.getThisTaskIndex();
+        // we set them to 0 as a fallback method, these should be set to 0 automatically
+        expectingParticleValues = 0;
+        expectingParticleMaps = 0;
         for (int i = 0; i < assignmentList.size(); i++) {
             ParticleAssignment assignment = assignmentList.get(i);
             if (assignment.getNewTask() == taskId) {
@@ -428,6 +432,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         public Map<String, String> getProperties() {
             int taskId = topologyContext.getThisTaskIndex();
             Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_QUEUE, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + taskId);
             props.put(MessagingConstants.RABBIT_ROUTING_KEY, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + taskId);
             return props;
         }
@@ -496,7 +501,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         // populate particle using particle values
         Utils.createParticle(value, p);
 
-        gfsp.getActiveParticles().add(newIndex);
+        // gfsp.getActiveParticles().add(newIndex);
         // add the new particle index
         if (!gfsp.getActiveParticles().contains(newIndex)) {
             gfsp.getActiveParticles().add(newIndex);
