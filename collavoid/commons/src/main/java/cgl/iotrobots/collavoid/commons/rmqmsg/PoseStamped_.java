@@ -8,36 +8,36 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
-public class Header_ implements Serializable {
+/**
+ * Created by hjh on 12/20/14.
+ */
+public class PoseStamped_ implements Serializable {
+    private Header_ Header = new Header_();
 
-    private String FrameId = "";
+    private Pose_ Pose = new Pose_();
 
-    private long Stamp;
-
-    public Header_() {
+    public Header_ getHeader() {
+        return Header;
     }
 
-    public long getStamp() {
-        return Stamp;
+    public Pose_ getPose() {
+        return Pose;
     }
 
-    public String getFrameId() {
-        return FrameId;
+    public void setHeader(Header_ header) {
+        Header = header;
     }
 
-    public void setFrameId(String frameId) {
-        FrameId = frameId;
+    public void setPose(Pose_ pose) {
+        Pose = pose;
     }
 
-    public void setStamp(long stamp) {
-        Stamp = stamp;
-    }
+    public PoseStamped_ copy() {
+        PoseStamped_ poseStamped_ = new PoseStamped_();
+        poseStamped_.setHeader(Header.copy());
+        poseStamped_.setPose(Pose.copy());
+        return poseStamped_;
 
-    public Header_ copy() {
-        Header_ header_ = new Header_();
-        header_.setStamp(Stamp);
-        header_.setFrameId(FrameId);
-        return header_;
     }
 
     public byte[] toJSON() throws IOException {
@@ -47,5 +47,4 @@ public class Header_ implements Serializable {
         mapper.writeValue(outputStream, this);
         return outputStream.toByteArray();
     }
-
 }

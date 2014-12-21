@@ -77,7 +77,7 @@ public class Vector2 {
         this.y *= p1.getY();
     }
 
-    public static Vector2 mul(Vector2 v1, double s) {
+    public static Vector2 scale(Vector2 v1, double s) {
         return new Vector2(v1.x * s, v1.y * s);
     }
 

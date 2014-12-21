@@ -27,11 +27,18 @@ public class Pose_ implements Serializable {
     }
 
     public void setPosition(Vector3d_ position) {
-        Position = new Vector3d_(position);
+        Position = position;
     }
 
     public void setOrientation(Vector4d_ orientation) {
-        Orientation = new Vector4d_(orientation);
+        Orientation = orientation;
+    }
+
+    public Pose_ copy() {
+        Pose_ pose_ = new Pose_();
+        pose_.setPosition(Position.copy());
+        pose_.setOrientation(Orientation.copy());
+        return pose_;
     }
 
     public byte[] toJSON() throws IOException {

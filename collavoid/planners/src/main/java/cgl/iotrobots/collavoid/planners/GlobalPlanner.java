@@ -1,6 +1,7 @@
 package cgl.iotrobots.collavoid.planners;
 
 import cgl.iotrobots.collavoid.commons.rmqmsg.Header_;
+import cgl.iotrobots.collavoid.commons.rmqmsg.PoseStamped_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 
 // should decouple ros related types
@@ -18,25 +19,26 @@ public class GlobalPlanner {
 //    void initialize(String name, VoxelGrid costmap_ros){
 //    }
 
-    public boolean makePlan(final Pose_ start, final Pose_ goal, List<Pose_> plan) {
+    public boolean makePlan(final PoseStamped_ start, final PoseStamped_ goal, List<PoseStamped_> plan) {
         //start and goal are supposed not to change
 
         plan.clear();
         plan.add(start);
         double x, y, dir_x, dir_y;
-        dir_x = goal.getPosition().getX() - start.getPosition().getX();
-        dir_y = goal.getPosition().getY() - start.getPosition().getY();
+        dir_x = goal.getPose().getPosition().getX() - start.getPose().getPosition().getX();
+        dir_y = goal.getPose().getPosition().getY() - start.getPose().getPosition().getY();
         double length = Math.sqrt(dir_y * dir_y + dir_x * dir_x);
         dir_x /= length;
         dir_y /= length;
-        x = start.getPosition().getX() + 0.1 * dir_x;
-        y = start.getPosition().getY() + 0.1 * dir_y;
+        x = start.getPose().getPosition().getX() + 0.1 * dir_x;
+        y = start.getPose().getPosition().getY() + 0.1 * dir_y;
 
-        while (Math.abs(x - goal.getPosition().getX()) > 0.2 || Math.abs(y - goal.getPosition().getY()) > 0.2) {
-            Pose_ pose = new Pose_();
-            pose.getPosition().setX(x);
-            pose.getPosition().setY(y);
-            pose.setHeader(new Header_(goal.getHeader().getFrameId(), goal.getHeader().getStamp()));
+        while (Math.abs(x - goal.getPose().getPosition().getX()) > 0.2 || Math.abs(y - goal.getPose().getPosition().getY()) > 0.2) {
+            PoseStamped_ pose = new PoseStamped_();
+            pose.getPose().getPosition().setX(x);
+            pose.getPose().getPosition().setY(y);
+            pose.getHeader().setFrameId(goal.getHeader().getFrameId());
+            pose.getHeader().setStamp(goal.getHeader().getStamp());
             plan.add(pose);
             x += 0.1 * dir_x;
             y += 0.1 * dir_y;

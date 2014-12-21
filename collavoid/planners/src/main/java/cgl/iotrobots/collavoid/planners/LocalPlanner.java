@@ -3,11 +3,9 @@ package cgl.iotrobots.collavoid.planners;
 import cgl.iotrobots.collavoid.commons.planners.Methods;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
+import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import com.rabbitmq.client.Address;
+import geometry_msgs.Pose;
 //import costmap_2d.VoxelGrid;
 
 import java.util.ArrayList;
@@ -36,7 +34,7 @@ public class LocalPlanner {
 
     private String base_frame_; ///< @brief Used as the base frame of the robot
 
-    public List<Pose_> global_plan_, transformed_plan_;
+    public List<PoseStamped_> global_plan_, transformed_plan_;
 
     private static Logger logger;
 
@@ -55,7 +53,7 @@ public class LocalPlanner {
         initialized_ = false;
         current_waypoint_ = 0;
         skip_next_ = false;
-        transformed_plan_ = new ArrayList<Pose_>();
+        transformed_plan_ = new ArrayList<PoseStamped_>();
         initialize();
     }
 
@@ -100,18 +98,18 @@ public class LocalPlanner {
     }
 
     //implement interface setPlan
-    public boolean setPlan(final List<Pose_> orig_global_plan) {
+    public boolean setPlan(final List<PoseStamped_> orig_global_plan) {
         if (!initialized_) {
             logger.severe("This planner has not been initialized, please call initialize() before using this planner");
             return false;
         }
         //reset the global plan
-        global_plan_ = new ArrayList<Pose_>();
+        global_plan_ = new ArrayList<PoseStamped_>();
         global_plan_ = orig_global_plan;
         current_waypoint_ = 0;
         xy_tolerance_latch_ = false;
         //get the global plan, already in global frame no need to transform, need to fix
-        if (!transformGlobalPlan(true, global_plan_, global_frame_, base_frame_, transformed_plan_)) {
+        if (!transformGlobalPlan(true, global_plan_, transformed_plan_)) {
             logger.warning("Could not transform the global plan to the frame of the controller");
             return false;
         }
@@ -126,23 +124,22 @@ public class LocalPlanner {
         }
 
         //copy over the odometry information
-        Odometry_ base_odom = new Odometry_();
+        Odometry_ base_odom;
         me.me_lock_.lock();
         try {
-            base_odom = me.getBaseOdom();
+            base_odom = me.getBaseOdom().copy();
         } finally {
             me.me_lock_.unlock();
         }
 
-        Pose_ globalPose = base_odom.getPose();
         double distToGoal = Methods.getGoalPositionDistance(
-                globalPose,
-                global_plan_.get(global_plan_.size() - 1).getPosition().getX(),
-                global_plan_.get(global_plan_.size() - 1).getPosition().getY()
+                base_odom.getPose(),
+                global_plan_.get(global_plan_.size() - 1).getPose().getPosition().getX(),
+                global_plan_.get(global_plan_.size() - 1).getPose().getPosition().getY()
         );
 
-        double goal_th = Methods.getYaw(globalPose.getOrientation());
-        double distToGoalangle = Methods.getGoalOrientationAngleDifference(global_plan_.get(global_plan_.size() - 1), goal_th);
+        double goal_th = Methods.getYaw(base_odom.getPose().getOrientation());
+        double distToGoalangle = Methods.getGoalOrientationAngleDifference(global_plan_.get(global_plan_.size() - 1).getPose(), goal_th);
 
         if (distToGoal <= parameters.XY_GOAL_TOLERANCE && distToGoalangle <= parameters.YAW_GOAL_TOLERANCE)
             if (base_odom.getTwist().getLinear().length() < parameters.EPSILON && base_odom.getTwist().getAngular().length() < parameters.EPSILON)
@@ -159,31 +156,29 @@ public class LocalPlanner {
         }
 
         //get position and velocity,pose in global frame, velocity is in base frame
-        Pose_ global_pose = new Pose_();
+        PoseStamped_ global_pose = new PoseStamped_();
         global_pose.getHeader().setFrameId(global_frame_);
         global_pose.getHeader().setStamp(System.currentTimeMillis());
-        Twist_ base_vel = new Twist_();
+        Twist_ base_vel;
 
         //velocity is in base frame
         me.me_lock_.lock();
         try {
-            base_vel.setLinear(me.getBaseOdom().getTwist().getLinear());
-            base_vel.setAngular(me.getBaseOdom().getTwist().getAngular());
+            base_vel = me.getBaseOdom().getTwist().copy();
             //pose is in odometry or map frame
-            global_pose.setPosition(me.getBaseOdom().getPose().getPosition());
-            global_pose.setOrientation(me.getBaseOdom().getPose().getOrientation());
+            global_pose.setPose(me.getBaseOdom().getPose().copy());
         } finally {
             me.me_lock_.unlock();
         }
 
         Pose_ goal_point;
-        goal_point = global_plan_.get(global_plan_.size() - 1);
+        goal_point = global_plan_.get(global_plan_.size() - 1).getPose();
         double goal_x = goal_point.getPosition().getX();
         double goal_y = goal_point.getPosition().getY();
         double goal_th = Methods.getYaw(goal_point.getOrientation());
 
         //check to see if we've reached the goal position
-        if (xy_tolerance_latch_ || (Methods.getGoalPositionDistance(global_pose, goal_x, goal_y) <= xy_goal_tolerance_)) {
+        if (xy_tolerance_latch_ || (Methods.getGoalPositionDistance(global_pose.getPose(), goal_x, goal_y) <= xy_goal_tolerance_)) {
 
             //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
             //just rotate in place
@@ -191,7 +186,7 @@ public class LocalPlanner {
                 xy_tolerance_latch_ = true;
 
             //check to see if the goal orientation has been reached
-            double angle = Methods.getGoalOrientationAngleDifference(global_pose, goal_th);
+            double angle = Methods.getGoalOrientationAngleDifference(global_pose.getPose(), goal_th);
 
             //check to see if the goal orientation has been reached
             if (Math.abs(angle) <= yaw_goal_tolerance_) {
@@ -205,7 +200,7 @@ public class LocalPlanner {
                 Odometry_ base_odom = new Odometry_();
                 me.me_lock_.lock();
                 try {
-                    base_odom = me.getBaseOdom();
+                    base_odom = me.getBaseOdom().copy();
                 } finally {
                     me.me_lock_.unlock();
                 }
@@ -220,7 +215,7 @@ public class LocalPlanner {
                 else {
                     //set this so that we know its OK to be moving
                     rotating_to_goal_ = true;
-                    rotateToGoal(global_pose, base_vel, goal_th, cmd_vel);
+                    rotateToGoal(global_pose.getPose(), base_vel, goal_th, cmd_vel);
                 }
             }
 
@@ -232,25 +227,25 @@ public class LocalPlanner {
         Pose_ target_pose = new Pose_();
 
         if (!skip_next_) {
-            if (!transformGlobalPlan(false, global_plan_, global_frame_, base_frame_, transformed_plan_)) {
+            if (!transformGlobalPlan(false, global_plan_, transformed_plan_)) {
                 logger.warning("Could not transform the global plan to the frame of the controller");
                 return false;
             }
 
-            findBestWaypoint(target_pose, global_pose);
+            findBestWaypoint(target_pose, global_pose.getPose());
         }
 
         Twist_ pref_vel_twist = new Twist_();
 
-        pref_vel_twist.getLinear().setX(target_pose.getPosition().getX() - global_pose.getPosition().getX());
-        pref_vel_twist.getLinear().setY(target_pose.getPosition().getY() - global_pose.getPosition().getY());
+        pref_vel_twist.getLinear().setX(target_pose.getPosition().getX() - global_pose.getPose().getPosition().getX());
+        pref_vel_twist.getLinear().setY(target_pose.getPosition().getY() - global_pose.getPose().getPosition().getY());
 
         Vector2 pref_vel_vect = new Vector2(pref_vel_twist.getLinear().getX(), pref_vel_twist.getLinear().getY());
 
         if (Vector2.abs(pref_vel_vect) > me.max_vel_x_) {
-            pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.max_vel_x_);
+            pref_vel_vect = Vector2.scale(Vector2.normalize(pref_vel_vect), me.max_vel_x_);
         } else if (Vector2.abs(pref_vel_vect) < me.min_vel_x_) {
-            pref_vel_vect = Vector2.mul(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
+            pref_vel_vect = Vector2.scale(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
         }
 
         me.computeNewVelocity(pref_vel_vect, cmd_vel);
@@ -286,11 +281,8 @@ public class LocalPlanner {
         }
 
         // for visualization
-        List<Pose_> local_plan = new ArrayList<Pose_>();
-        Pose_ pos = new Pose_();
-
-        pos.setPose(global_pose);//global pose is in base frame???
-        local_plan.add(pos);
+        List<PoseStamped_> local_plan = new ArrayList<PoseStamped_>();
+        local_plan.add(global_pose.copy());
         local_plan.add(transformed_plan_.get(current_waypoint_));
 
         return true;
@@ -345,12 +337,12 @@ public class LocalPlanner {
     }
 
     // transform global plan
-    boolean transformGlobalPlan(boolean initialPlan, final List<Pose_> global_plan, final String global_frame, final String base_frame, List<Pose_> transformed_plan) {
+    boolean transformGlobalPlan(boolean initialPlan, final List<PoseStamped_> global_plan, List<PoseStamped_> transformed_plan) {
 
-        Pose_ plan_pose = new Pose_();
-
-        plan_pose.setPosition(global_plan.get(0).getPosition());
-        plan_pose.setHeader(global_plan.get(0).getHeader());
+//        PoseStamped_ plan_pose = new PoseStamped_();
+//
+//        plan_pose.getPose().setPosition(global_plan.get(0).getPose().getPosition());
+//        plan_pose.setHeader(global_plan.get(0).getHeader());
 
         transformed_plan.clear();
 
@@ -361,12 +353,12 @@ public class LocalPlanner {
 
         //currently global plan is in global frame do not need transform
         long t;
-        Pose_ robot_pose = new Pose_();
+        Pose_ robot_pose;
         int cur_waypoint = 0;
         if (!initialPlan) {
             me.me_lock_.lock();
             try {
-                robot_pose = me.getBaseOdom().getPose();
+                robot_pose = me.getBaseOdom().getPose().copy();
                 if (me.getLastSeen() == 0L)
                     t = System.currentTimeMillis();
                 else
@@ -381,11 +373,11 @@ public class LocalPlanner {
 
             double dist;
 
-            for (int i = 0; i < global_plan_.size(); i++) {
+            for (int i = 0; i < global_plan.size(); i++) {
                 dist = Methods.getGoalPositionDistance(
                         robot_pose,
-                        global_plan_.get(i).getPosition().getX(),
-                        global_plan_.get(i).getPosition().getY());
+                        global_plan.get(i).getPose().getPosition().getX(),
+                        global_plan.get(i).getPose().getPosition().getY());
 
                 if (dist < Math.sqrt(sq_dist)) {
                     sq_dist = dist * dist;
@@ -401,10 +393,10 @@ public class LocalPlanner {
 
         //now we'll transform until points are outside of our distance threshold
         while (i < global_plan.size()) {
-            Pose_ pose = new Pose_();
-            pose.setHeader(global_plan.get(i).getHeader());
+            PoseStamped_ pose = new PoseStamped_();
+            pose.setHeader(global_plan.get(i).getHeader().copy());
+            pose.setPose(global_plan.get(i).getPose().copy());
             pose.getHeader().setStamp(t);
-            pose.setPosition(global_plan.get(i).getPosition());
             transformed_plan.add(pose);
             ++i;
         }
@@ -416,11 +408,12 @@ public class LocalPlanner {
         current_waypoint_ = 0;
         double min_dist = Double.MAX_VALUE;
         for (int i = current_waypoint_; i < transformed_plan_.size(); i++) {
-            double dist = Methods.getGoalPositionDistance(global_pose, transformed_plan_.get(i).getPosition().getX(),
-                    transformed_plan_.get(i).getPosition().getY());
+            double dist = Methods.getGoalPositionDistance(global_pose,
+                    transformed_plan_.get(i).getPose().getPosition().getX(),
+                    transformed_plan_.get(i).getPose().getPosition().getY());
             if (dist < me.getRadius() || dist < min_dist) {
                 min_dist = dist;
-                target_pose.setPose(transformed_plan_.get(i));
+                target_pose.setPosition(transformed_plan_.get(i).getPose().getPosition());
                 current_waypoint_ = i;
             }
         }
@@ -429,25 +422,25 @@ public class LocalPlanner {
         if (current_waypoint_ == transformed_plan_.size() - 1) //I am at the end of the plan
             return;
 
-        double dif_x = transformed_plan_.get(current_waypoint_ + 1).getPosition().getX() - target_pose.getPosition().getX();
-        double dif_y = transformed_plan_.get(current_waypoint_ + 1).getPosition().getY() - target_pose.getPosition().getY();
+        double dif_x = transformed_plan_.get(current_waypoint_ + 1).getPose().getPosition().getX() - target_pose.getPosition().getX();
+        double dif_y = transformed_plan_.get(current_waypoint_ + 1).getPose().getPosition().getY() - target_pose.getPosition().getY();
 
         double plan_dir = Math.atan2(dif_y, dif_x);
         double dif_ang;
 
         for (int i = current_waypoint_ + 1; i < transformed_plan_.size(); i++) {
-            dif_x = transformed_plan_.get(i).getPosition().getX() - target_pose.getPosition().getX();
-            dif_y = transformed_plan_.get(i).getPosition().getY() - target_pose.getPosition().getY();
+            dif_x = transformed_plan_.get(i).getPose().getPosition().getX() - target_pose.getPosition().getX();
+            dif_y = transformed_plan_.get(i).getPose().getPosition().getY() - target_pose.getPosition().getY();
 
             dif_ang = Math.atan2(dif_y, dif_x);
 
             if (Math.abs(plan_dir - dif_ang) > 1.0 * yaw_goal_tolerance_) {
-                target_pose.setPose(transformed_plan_.get(i - 1));
+                target_pose.setPosition(transformed_plan_.get(i - 1).getPose().getPosition().copy());
                 current_waypoint_ = i - 1;
                 return;
             }
         }
-        target_pose.setPose(transformed_plan_.get(transformed_plan_.size() - 1));
+        target_pose.setPosition(transformed_plan_.get(transformed_plan_.size() - 1).getPose().getPosition().copy());
         current_waypoint_ = transformed_plan_.size() - 1;
     }
 

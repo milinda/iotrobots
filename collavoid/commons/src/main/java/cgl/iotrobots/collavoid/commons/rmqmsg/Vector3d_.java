@@ -56,6 +56,11 @@ public class Vector3d_ implements Serializable {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
+    public Vector3d_ copy() {
+        return new Vector3d_(x, y, z);
+
+    }
+
     @Override
     public String toString() {
         return "(" +

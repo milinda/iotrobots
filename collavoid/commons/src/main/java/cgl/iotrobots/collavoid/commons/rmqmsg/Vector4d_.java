@@ -63,6 +63,11 @@ public class Vector4d_ implements Serializable {
         return w;
     }
 
+    public Vector4d_ copy() {
+        return new Vector4d_(x, y, z, w);
+
+    }
+
     @Override
     public String toString() {
         return "(" +

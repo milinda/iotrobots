@@ -33,6 +33,12 @@ public class Twist_ implements Serializable {
         return Linear;
     }
 
+    public Twist_ copy() {
+        Twist_ twist_ = new Twist_();
+        twist_.setAngular(Angular.copy());
+        twist_.setLinear(Linear.copy());
+        return twist_;
+    }
 
     @Override
     public String toString() {

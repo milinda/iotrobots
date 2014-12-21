@@ -1,6 +1,6 @@
 package cgl.iotrobots.collavoid.planners;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.MsgContext;
+import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import com.rabbitmq.client.*;
 
 import java.io.IOException;
@@ -11,21 +11,17 @@ import java.util.concurrent.ExecutorService;
 
 public class RMQMsgManager {
 
-    private Channel channel;
+    private Channel channel, shareChannel;
 
-    private Connection connection;
+    private boolean autoAck = false;
 
     private Address[] addresses;
 
     private String url;
 
-    private ExecutorService executorService;
-
     private String exchangeName;
 
-    private Map<String, String> RMQParams = new MsgContext().RMQParams;
-
-    private Map<String, String> QueueNames = new HashMap<String, String>();
+    private Map<String, RMQContext> RMQContexts = new HashMap<String, RMQContext>();
 
     public RMQMsgManager(String Name,
                          Address[] addresses,
@@ -33,57 +29,61 @@ public class RMQMsgManager {
         this.exchangeName = Name;
         this.addresses = addresses;
         this.url = url;
-        RMQParams.put(MsgContext.KEY_EXCHAGE_NAME, Name);
+
+        RMQContexts.put(Constant.KEY_ODOMETRY, new RMQContext(exchangeName, Constant.KEY_ODOMETRY));
+        RMQContexts.put(Constant.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant.KEY_PARTICLE_CLOUD));
+        RMQContexts.put(Constant.KEY_SCAN, new RMQContext(exchangeName, Constant.KEY_SCAN));
+        RMQContexts.put(Constant.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant.KEY_VELOCITY_CMD));
+
+        RMQContexts.put(Constant.KEY_POSE_SHARE, new RMQContext(Constant.KEY_POSE_SHARE, ""));
+        RMQContexts.get(Constant.KEY_POSE_SHARE).EXCHANGE_TYPE = Constant.TYPE_EXCHANGE_FANOUT;
+
     }
 
-    public RMQMsgManager(String Name,
-                         ExecutorService executorService,
-                         Address[] addresses,
-                         String url) {
-        this.exchangeName = Name;
-        this.executorService = executorService;
-        this.addresses = addresses;
-        this.url = url;
-        RMQParams.put(MsgContext.KEY_EXCHAGE_NAME, Name);
+    public void start(Agent agent) {
+        channel = Methods.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_DIRECT);
+        shareChannel = Methods.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_FANOUT);
+        bindQueue();
+        bindCallBack(agent, RMQContexts);
     }
 
-    public void start() {
-        setKeyQueueNames();
-        setChannel();
-    }
-
-    private void setKeyQueueNames() {
-        QueueNames.clear();
-        QueueNames.keySet().add("OdometryMsg");
-        QueueNames.keySet().add("ScanMsg");
-        QueueNames.keySet().add("ParticleMsg");
-        QueueNames.keySet().add("VelocityCmdMsg");
-    }
-
-    private void setChannel() {
+    private void bindQueue() {
         try {
-            ConnectionFactory factory = new ConnectionFactory();
-            if (addresses == null) {
-                factory.setUri(url);
-                if (executorService != null) {
-                    connection = factory.newConnection(executorService);
-                } else {
-                    connection = factory.newConnection();
-                }
-            } else {
-                if (executorService != null) {
-                    connection = factory.newConnection(executorService, addresses);
-                } else {
-                    connection = factory.newConnection(addresses);
-                }
+            for (Map.Entry<String, RMQContext> e : RMQContexts.entrySet()) {
+                if (e.getKey().equals(Constant.KEY_POSE_SHARE))
+                    continue;
+                e.getValue().QUEUE_NAME = channel.queueDeclare().getQueue();
+                channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
+            RMQContexts.get(Constant.KEY_POSE_SHARE).QUEUE_NAME = shareChannel.queueDeclare().getQueue();
+            shareChannel.queueBind(
+                    RMQContexts.get(Constant.KEY_POSE_SHARE).QUEUE_NAME,
+                    RMQContexts.get(Constant.KEY_POSE_SHARE).EXCHANGE_NAME,
+                    RMQContexts.get(Constant.KEY_POSE_SHARE).ROUTING_KEY);
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-            channel = connection.createChannel();
-
-            if (exchangeName != null) {
-                channel.exchangeDeclare(exchangeName, "direct", true);
-            }
-
+    private void bindCallBack(Agent agent, Map<String, RMQContext> contexts) {
+        try {
+            String queueName = RMQContexts.get(Constant.KEY_ODOMETRY).QUEUE_NAME;
+            String routingKey = RMQContexts.get(Constant.KEY_ODOMETRY).ROUTING_KEY;
+            channel.basicConsume(queueName, autoAck, routingKey + "Tag",
+                    new DefaultConsumer(channel) {
+                        @Override
+                        public void handleDelivery(String consumerTag,
+                                                   Envelope envelope,
+                                                   AMQP.BasicProperties properties,
+                                                   byte[] body)
+                                throws IOException {
+                            long deliveryTag = envelope.getDeliveryTag();
+                            Odometry_ odometry_ = JsonConverter.JSONToOdometry_(body);
+                            velQueue.offer(velocity);
+                            channel.basicAck(deliveryTag, false);
+                        }
+                    });
         } catch (IOException e) {
             String msg = "Error consuming the message";
             throw new RuntimeException(msg, e);
@@ -91,33 +91,25 @@ public class RMQMsgManager {
             String msg = "Error connecting to broker";
             throw new RuntimeException(msg, e);
         }
+
     }
 
-    private void BindQueue() {
-        try {
-            for (Map.Entry e : RMQParams.entrySet()) {
-                if (e.getKey().equals(MsgContext.KEY_EXCHAGE_NAME))
-                    continue;
-                else if (e.getKey().equals(MsgContext.KEY_ROUTINGKEY_VELOCITY)) {
-                    velConQueueName = channel.queueDeclare().getQueue();
-                    channel.queueBind(velConQueueName, exchangeName, velRoutingKey);
-                } else {
+    public Channel getChannel() {
+        return channel;
+    }
 
-                    channel.queueBind(channel.queueDeclare().getQueue(), exchangeName, (String) e.getValue());
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Channel getShareChannel() {
+        return shareChannel;
+    }
+
+    public Map<String, RMQContext> getRMQContexts() {
+        return RMQContexts;
     }
 
     public void stop() {
         try {
             if (channel != null) {
                 channel.close();
-            }
-            if (connection != null) {
-                connection.close();
             }
         } catch (IOException e) {
             System.out.println("Error closing the rabbit MQ connection" + e);

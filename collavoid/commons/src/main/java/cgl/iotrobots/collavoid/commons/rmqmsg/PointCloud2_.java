@@ -22,9 +22,6 @@ public class PointCloud2_ implements Serializable {
 
     private int Dimension;
 
-    public PointCloud2_() {
-    }
-
     public Header_ getHeader() {
         return Header;
     }
@@ -63,6 +60,16 @@ public class PointCloud2_ implements Serializable {
 
     public void setData(ChannelBuffer data) {
         Data = data;
+    }
+
+    public PointCloud2_ copy() {
+        PointCloud2_ pointCloud2_ = new PointCloud2_();
+        pointCloud2_.setHeader(Header.copy());
+        pointCloud2_.setData(Data.copy());
+        pointCloud2_.setDimension(Dimension);
+        pointCloud2_.setHeight(Height);
+        pointCloud2_.setWith(With);
+        return pointCloud2_;
     }
 
     public byte[] toJSON() throws IOException {

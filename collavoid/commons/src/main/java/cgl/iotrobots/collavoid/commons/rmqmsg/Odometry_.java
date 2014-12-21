@@ -51,6 +51,15 @@ public class Odometry_ implements Serializable {
         return Twist;
     }
 
+    public Odometry_ copy() {
+        Odometry_ odometry_ = new Odometry_();
+        odometry_.setHeader(Header.copy());
+        odometry_.setChildFrameId(new String(ChildFrameId));
+        odometry_.setTwist(Twist.copy());
+        odometry_.setPose(Pose.copy());
+        return odometry_;
+    }
+
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);

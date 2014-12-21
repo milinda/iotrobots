@@ -67,7 +67,7 @@ public class Agent {
 
     //config
     public double publishPositionsPeriod;
-    public double publishMePeriod;
+    public long publishMePeriod;//position share,in milli second
 
     public double thresholdLastSeen;
     public int numSamples;
@@ -132,10 +132,13 @@ public class Agent {
     //utils
     private static Logger logger;
 
+    private RMQMsgManager rmqMsgManager;
+
     //-----------------------method begin-------------------------------//
     public Agent(String name,
                  Address[] addresses,
                  String url) {
+        Name = name;
         me_lock_ = new ReentrantLock();
         obstacle_lock_ = new ReentrantLock();
         neighbors_lock_ = new ReentrantLock();
@@ -160,7 +163,8 @@ public class Agent {
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
         samples = new ArrayList<VelocitySample>();
-        agentInit(name);
+        rmqMsgManager = new RMQMsgManager(name, addresses, url);
+        initParameters();
     }
 
     // for neighbor recording
@@ -173,17 +177,8 @@ public class Agent {
         footprint_minkowski = new ArrayList<Vector2>();
     }
 
-    //get parameters from the server
-    public void agentInit(String name) {
-        Name = name;
-        initParameters();
-        initPubSub(node);
-        initialized_ = true;
-    }
-
     void initParameters() {
         double controller_frequency = -1;
-        GraphName controller_frequency_param_name;
 
         //load parameters locally
         use_obstacles_ = Parameters.USE_OBSTACLES;
@@ -244,7 +239,7 @@ public class Agent {
         //visualization publish frequency
         publishPositionsPeriod = 1.0 / Parameters.PUBLISH_POSITIONS_FREQUENCY;
         //position share publish frequency
-        publishMePeriod = 1.0 / Parameters.PUBLISH_ME_FREQUENCY;
+        publishMePeriod = (long) (1.0 / Parameters.PUBLISH_ME_FREQUENCY * 1000);
 
         radius = footprint_radius_ + cur_loc_unc_radius_;
 
@@ -269,7 +264,7 @@ public class Agent {
             angle += step;
         }
         setFootprint(footprint_original);
-
+        initialized_ = true;
     }
 
 
@@ -1188,8 +1183,8 @@ public class Agent {
     }
 
     public Odometry_ getBaseOdom() {
-        return new Odometry_(base_odom_);
-    }
+        return base_odom_;
+    }   
 
     public long getLastSeen() {
         return last_seen_;
@@ -1203,9 +1198,30 @@ public class Agent {
         return Name;
     }
 
+    public long getPublishMePeriod() {
+        return publishMePeriod;
+    }
+
+    public long getLastTimeMePublished() {
+        return lastTimeMePublished;
+    }
+
+    public RMQMsgManager getRmqMsgManager() {
+        return rmqMsgManager;
+    }
+    
     /*+++++++++++++++++++++++++Get stuff end+++++++++++++++++++++++++*/
 
     /*++++++++++++++++++++++++Set stuff++++++++++++++++++++++++++*/
+
+    public void setLast_seen_(long last_seen_) {
+        this.last_seen_ = last_seen_;
+    }
+
+    public void setLastTimeMePublished(long lastTimeMePublished) {
+        this.lastTimeMePublished = lastTimeMePublished;
+    }
+
     // footprint(minkowski footprint) are all in robot frame
     public void setFootprint(List<Vector2> footprint) {
         if (footprint.size() < 2) {
