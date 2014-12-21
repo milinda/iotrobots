@@ -5,7 +5,11 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector4d_;
 
-public class Methods {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class Methods_Planners {
 
     // local planner related
     public static double getYaw(Vector4d_ q) {
@@ -61,7 +65,7 @@ public class Methods {
     // line related
     public static Vector2 projectPointOnLine(final Vector2 pointLine, final Vector2 dirLine, final Vector2 point) {
         double r = (Vector2.dotProduct(Vector2.minus(point, pointLine), dirLine)) / Vector2.absSqr(dirLine);
-        return Vector2.plus(pointLine, Vector2.mul(dirLine, r));
+        return Vector2.plus(pointLine, Vector2.scale(dirLine, r));
     }
 
     /*!
@@ -81,7 +85,7 @@ public class Methods {
         } else if (r > 1.0f) {
             return Vector2.absSqr(Vector2.minus(c, b));
         } else {
-            return Vector2.absSqr(Vector2.minus(c, Vector2.plus(a, Vector2.mul(Vector2.minus(b, a), r))));
+            return Vector2.absSqr(Vector2.minus(c, Vector2.plus(a, Vector2.scale(Vector2.minus(b, a), r))));
         }
     }
 
@@ -112,5 +116,66 @@ public class Methods {
 
     public static double sign(double x) {
         return x < 0.0 ? -1.0 : 1.0;
+    }
+
+    public static List<Vector2> minkowskiSumConvexHull(final List<Vector2> polygon1, final List<Vector2> polygon2) {
+        List<Vector2> result = new ArrayList<Vector2>();
+        ConvexHullPoint[] convex_hull = new ConvexHullPoint[polygon1.size() * polygon2.size()];
+
+        int n = 0;
+        for (int i = 0; i < polygon1.size(); i++) {
+            for (int j = 0; j < polygon2.size(); j++) {
+                ConvexHullPoint p = new ConvexHullPoint();
+                p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
+                convex_hull[n++] = p;
+            }
+        }
+        convex_hull = convexHull(convex_hull, false);
+        for (int i = 0; i < convex_hull.length; i++) {
+            result.add(new Vector2(convex_hull[i].getX(), convex_hull[i].getY()));
+        }
+        return result;
+    }
+
+    public static ConvexHullPoint[] convexHull(ConvexHullPoint[] P, boolean sorted) {
+        int n = P.length, k = 0;
+        ConvexHullPoint[] result = new ConvexHullPoint[2 * n];
+
+        // Sort points lexicographically
+        if (!sorted)
+            Arrays.sort(P, new Comparators.VectorsLexigraphicComparator());
+
+        //    ROS_WARN("points length %d", (int)P.size());
+
+        // Build lower hull,
+        for (int i = 0; i < n; i++) {
+            while (k >= 2 && Vector2.det(
+                    result[k - 2].getX() - result[k - 1].getX(),
+                    result[k - 2].getY() - result[k - 1].getY(),
+                    P[i].getX() - result[k - 1].getX(),
+                    P[i].getY() - result[k - 1].getY()
+            ) <= 0) k--;
+            ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
+            result[k++] = pt;
+        }
+
+        // Build upper hull
+        for (int i = n - 2, t = k + 1; i >= 0; i--) {
+            while (k >= t && Vector2.det(
+                    result[k - 2].getX() - result[k - 1].getX(),
+                    result[k - 2].getY() - result[k - 1].getY(),
+                    P[i].getX() - result[k - 1].getX(),
+                    P[i].getY() - result[k - 1].getY()
+            ) <= 0) k--;
+            ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
+            result[k++] = pt;
+        }
+
+
+        //resize list
+        ConvexHullPoint[] resultnew = new ConvexHullPoint[k];
+        System.arraycopy(result, 0, resultnew, 0, k);
+
+        return resultnew;
     }
 }

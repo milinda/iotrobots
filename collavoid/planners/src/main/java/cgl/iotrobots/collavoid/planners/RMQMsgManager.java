@@ -6,7 +6,6 @@ import com.rabbitmq.client.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 
 public class RMQMsgManager {
@@ -41,10 +40,10 @@ public class RMQMsgManager {
     }
 
     public void start(Agent agent) {
-        channel = Methods.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_DIRECT);
-        shareChannel = Methods.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_FANOUT);
+        channel = Methods_RMQ.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_DIRECT);
+        shareChannel = Methods_RMQ.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_FANOUT);
         bindQueue();
-        bindCallBack(agent, RMQContexts);
+        MsgCallBacks.bindCallBacks(agent, RMQContexts);
     }
 
     private void bindQueue() {
@@ -52,9 +51,11 @@ public class RMQMsgManager {
             for (Map.Entry<String, RMQContext> e : RMQContexts.entrySet()) {
                 if (e.getKey().equals(Constant.KEY_POSE_SHARE))
                     continue;
+                e.getValue().CHANNEL = channel;
                 e.getValue().QUEUE_NAME = channel.queueDeclare().getQueue();
                 channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
+            RMQContexts.get(Constant.KEY_POSE_SHARE).CHANNEL = shareChannel;
             RMQContexts.get(Constant.KEY_POSE_SHARE).QUEUE_NAME = shareChannel.queueDeclare().getQueue();
             shareChannel.queueBind(
                     RMQContexts.get(Constant.KEY_POSE_SHARE).QUEUE_NAME,
@@ -66,33 +67,7 @@ public class RMQMsgManager {
         }
     }
 
-    private void bindCallBack(Agent agent, Map<String, RMQContext> contexts) {
-        try {
-            String queueName = RMQContexts.get(Constant.KEY_ODOMETRY).QUEUE_NAME;
-            String routingKey = RMQContexts.get(Constant.KEY_ODOMETRY).ROUTING_KEY;
-            channel.basicConsume(queueName, autoAck, routingKey + "Tag",
-                    new DefaultConsumer(channel) {
-                        @Override
-                        public void handleDelivery(String consumerTag,
-                                                   Envelope envelope,
-                                                   AMQP.BasicProperties properties,
-                                                   byte[] body)
-                                throws IOException {
-                            long deliveryTag = envelope.getDeliveryTag();
-                            Odometry_ odometry_ = JsonConverter.JSONToOdometry_(body);
-                            velQueue.offer(velocity);
-                            channel.basicAck(deliveryTag, false);
-                        }
-                    });
-        } catch (IOException e) {
-            String msg = "Error consuming the message";
-            throw new RuntimeException(msg, e);
-        } catch (Exception e) {
-            String msg = "Error connecting to broker";
-            throw new RuntimeException(msg, e);
-        }
 
-    }
 
     public Channel getChannel() {
         return channel;

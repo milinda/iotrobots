@@ -1190,11 +1190,7 @@ public class Agent {
         return last_seen_;
     }
 
-    public boolean getIsHolo() {
-        return holo_robot_;
-    }
-
-    public String getId() {
+    public String getRobotId() {
         return Name;
     }
 
@@ -1209,10 +1205,89 @@ public class Agent {
     public RMQMsgManager getRmqMsgManager() {
         return rmqMsgManager;
     }
-    
-    /*+++++++++++++++++++++++++Get stuff end+++++++++++++++++++++++++*/
+
+    public String getBase_frame_() {
+        return base_frame_;
+    }
+
+    public boolean getHoloRobot() {
+        return holo_robot_;
+    }
+
+    public boolean getController() {
+        return controlled;
+    }
+
+    public Vector2 getHolo_velocity_() {
+        return holo_velocity_;
+    }
+
+    public double getCur_loc_unc_radius_() {
+        return cur_loc_unc_radius_;
+    }
+
+    public List<Vector2> getFootprint_minkowski() {
+        return footprint_minkowski;
+    }
+
+    public double getFootprint_radius_() {
+        return footprint_radius_;
+    }
+
+    public Position getPosition() {
+        return position;
+    }
+
+    public List<Agent> getAgentNeighbors() {
+        return AgentNeighbors;
+    }
+
+    public Lock getObstacle_lock_() {
+        return obstacle_lock_;
+    }
+
+    public Lock getConvex_lock_() {
+        return convex_lock_;
+    }
+
+    public Lock getMe_lock_() {
+        return me_lock_;
+    }
+
+    public Lock getNeighbors_lock_() {
+        return neighbors_lock_;
+    }
+
+    public List<Obstacle> getObstacles_from_laser_() {
+        return obstacles_from_laser_;
+    }
+
+    public List<Vector2> getFootprint_original() {
+        return footprint_original;
+    }
+/*+++++++++++++++++++++++++Get stuff end+++++++++++++++++++++++++*/
 
     /*++++++++++++++++++++++++Set stuff++++++++++++++++++++++++++*/
+
+    public void setHolo_robot_(boolean holo_robot_) {
+        this.holo_robot_ = holo_robot_;
+    }
+
+    public void setHolo_velocity_(Vector2 holo_velocity_) {
+        this.holo_velocity_ = holo_velocity_;
+    }
+
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+
+    public void setControlled(boolean controlled) {
+        this.controlled = controlled;
+    }
+
+    public void setFootprint_minkowski(List<Vector2> footprint_minkowski) {
+        this.footprint_minkowski = footprint_minkowski;
+    }
 
     public void setLast_seen_(long last_seen_) {
         this.last_seen_ = last_seen_;

@@ -1,11 +1,10 @@
 package cgl.iotrobots.collavoid.planners;
 
-import cgl.iotrobots.collavoid.commons.planners.Methods;
+import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import com.rabbitmq.client.Address;
-import geometry_msgs.Pose;
 //import costmap_2d.VoxelGrid;
 
 import java.util.ArrayList;
@@ -132,14 +131,14 @@ public class LocalPlanner {
             me.me_lock_.unlock();
         }
 
-        double distToGoal = Methods.getGoalPositionDistance(
+        double distToGoal = Methods_Planners.getGoalPositionDistance(
                 base_odom.getPose(),
                 global_plan_.get(global_plan_.size() - 1).getPose().getPosition().getX(),
                 global_plan_.get(global_plan_.size() - 1).getPose().getPosition().getY()
         );
 
-        double goal_th = Methods.getYaw(base_odom.getPose().getOrientation());
-        double distToGoalangle = Methods.getGoalOrientationAngleDifference(global_plan_.get(global_plan_.size() - 1).getPose(), goal_th);
+        double goal_th = Methods_Planners.getYaw(base_odom.getPose().getOrientation());
+        double distToGoalangle = Methods_Planners.getGoalOrientationAngleDifference(global_plan_.get(global_plan_.size() - 1).getPose(), goal_th);
 
         if (distToGoal <= parameters.XY_GOAL_TOLERANCE && distToGoalangle <= parameters.YAW_GOAL_TOLERANCE)
             if (base_odom.getTwist().getLinear().length() < parameters.EPSILON && base_odom.getTwist().getAngular().length() < parameters.EPSILON)
@@ -175,10 +174,10 @@ public class LocalPlanner {
         goal_point = global_plan_.get(global_plan_.size() - 1).getPose();
         double goal_x = goal_point.getPosition().getX();
         double goal_y = goal_point.getPosition().getY();
-        double goal_th = Methods.getYaw(goal_point.getOrientation());
+        double goal_th = Methods_Planners.getYaw(goal_point.getOrientation());
 
         //check to see if we've reached the goal position
-        if (xy_tolerance_latch_ || (Methods.getGoalPositionDistance(global_pose.getPose(), goal_x, goal_y) <= xy_goal_tolerance_)) {
+        if (xy_tolerance_latch_ || (Methods_Planners.getGoalPositionDistance(global_pose.getPose(), goal_x, goal_y) <= xy_goal_tolerance_)) {
 
             //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
             //just rotate in place
@@ -186,7 +185,7 @@ public class LocalPlanner {
                 xy_tolerance_latch_ = true;
 
             //check to see if the goal orientation has been reached
-            double angle = Methods.getGoalOrientationAngleDifference(global_pose.getPose(), goal_th);
+            double angle = Methods_Planners.getGoalOrientationAngleDifference(global_pose.getPose(), goal_th);
 
             //check to see if the goal orientation has been reached
             if (Math.abs(angle) <= yaw_goal_tolerance_) {
@@ -206,7 +205,7 @@ public class LocalPlanner {
                 }
 
                 //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
-                if (!rotating_to_goal_ && !Methods.stopped(base_odom, rot_stopped_velocity_, trans_stopped_velocity_)) {
+                if (!rotating_to_goal_ && !Methods_Planners.stopped(base_odom, rot_stopped_velocity_, trans_stopped_velocity_)) {
                     //ROS_DEBUG("Not stopped yet. base_odom: x=%6.4f,y=%6.4f,z=%6.4f", base_odom.twist.twist.linear.x,base_odom.twist.twist.linear.y,base_odom.twist.twist.angular.z);
                     stopWithAccLimits(base_vel, cmd_vel);
 
@@ -290,9 +289,9 @@ public class LocalPlanner {
 
 
     void stopWithAccLimits(final Twist_ robot_vel, Twist_ cmd_vel) {
-        double vx = Methods.sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - me.acc_lim_x_ * me.simPeriod));
-        double vy = Methods.sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - me.acc_lim_y_ * me.simPeriod));
-        double vth = Methods.sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - me.acc_lim_th_ * me.simPeriod));
+        double vx = Methods_Planners.sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - me.acc_lim_x_ * me.simPeriod));
+        double vy = Methods_Planners.sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - me.acc_lim_y_ * me.simPeriod));
+        double vth = Methods_Planners.sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - me.acc_lim_th_ * me.simPeriod));
 
         //ROS_DEBUG("Slowing down... using vx, vy, vth: %.2f, %.2f, %.2f", vx, vy, vth);
         cmd_vel.getLinear().setX(vx);
@@ -305,12 +304,12 @@ public class LocalPlanner {
         if (ignore_goal_yaw_) {
             cmd_vel.getAngular().setZ(0);
         }
-        double yaw = Methods.getYaw(global_pose.getOrientation());
+        double yaw = Methods_Planners.getYaw(global_pose.getOrientation());
         double vel_yaw = robot_vel.getAngular().getZ();
         cmd_vel.getLinear().setX(0);
         cmd_vel.getLinear().setY(0);
 
-        double ang_diff = Methods.shortest_angular_distance(yaw, goal_th);
+        double ang_diff = Methods_Planners.shortest_angular_distance(yaw, goal_th);
 
         double v_th_samp = ang_diff > 0.0 ?
                 Math.min(me.max_vel_th_, Math.max(me.min_vel_th_inplace_, ang_diff)) :
@@ -320,16 +319,16 @@ public class LocalPlanner {
         double max_acc_vel = Math.abs(vel_yaw) + me.acc_lim_th_ * me.simPeriod;
         double min_acc_vel = Math.abs(vel_yaw) - me.acc_lim_th_ * me.simPeriod;
 
-        v_th_samp = Methods.sign(v_th_samp) * Math.min(Math.max(Math.abs(v_th_samp), min_acc_vel), max_acc_vel);
+        v_th_samp = Methods_Planners.sign(v_th_samp) * Math.min(Math.max(Math.abs(v_th_samp), min_acc_vel), max_acc_vel);
 
         //we also want to make sure to send a velocity that allows us to stop when we reach the goal given our acceleration limits
         double max_speed_to_stop = Math.sqrt(2 * me.acc_lim_th_ * Math.abs(ang_diff));//how to get this???
 
-        v_th_samp = Methods.sign(v_th_samp) * Math.min(max_speed_to_stop, Math.abs(v_th_samp));
+        v_th_samp = Methods_Planners.sign(v_th_samp) * Math.min(max_speed_to_stop, Math.abs(v_th_samp));
         if (Math.abs(v_th_samp) <= 0.0 * me.min_vel_th_inplace_)//???????????
             v_th_samp = 0.0;
         else if (Math.abs(v_th_samp) < me.min_vel_th_inplace_)
-            v_th_samp = Methods.sign(v_th_samp) * Math.max(me.min_vel_th_inplace_, Math.abs(v_th_samp));
+            v_th_samp = Methods_Planners.sign(v_th_samp) * Math.max(me.min_vel_th_inplace_, Math.abs(v_th_samp));
 
         logger.fine("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
         cmd_vel.getAngular().setZ(v_th_samp);
@@ -374,7 +373,7 @@ public class LocalPlanner {
             double dist;
 
             for (int i = 0; i < global_plan.size(); i++) {
-                dist = Methods.getGoalPositionDistance(
+                dist = Methods_Planners.getGoalPositionDistance(
                         robot_pose,
                         global_plan.get(i).getPose().getPosition().getX(),
                         global_plan.get(i).getPose().getPosition().getY());
@@ -408,7 +407,7 @@ public class LocalPlanner {
         current_waypoint_ = 0;
         double min_dist = Double.MAX_VALUE;
         for (int i = current_waypoint_; i < transformed_plan_.size(); i++) {
-            double dist = Methods.getGoalPositionDistance(global_pose,
+            double dist = Methods_Planners.getGoalPositionDistance(global_pose,
                     transformed_plan_.get(i).getPose().getPosition().getX(),
                     transformed_plan_.get(i).getPose().getPosition().getY());
             if (dist < me.getRadius() || dist < min_dist) {

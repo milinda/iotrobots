@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * Created by hjh on 12/21/14.
  */
-public class Methods {
+public class Methods_RMQ {
 
     public static Connection getConnection(Address[] addresses,
                                            String url,

@@ -13,8 +13,8 @@ import java.io.Serializable;
 public class PointCloud2_ implements Serializable {
 
     private Header_ Header = new Header_();
-    
-    private int With;
+
+    private int Width;
 
     private int Height;
 
@@ -38,16 +38,16 @@ public class PointCloud2_ implements Serializable {
         return Height;
     }
 
-    public int getWith() {
-        return With;
+    public int getWidth() {
+        return Width;
     }
 
     public void setHeader(Header_ header) {
         Header = header;
     }
 
-    public void setWith(int with) {
-        With = with;
+    public void setWidth(int width) {
+        Width = width;
     }
 
     public void setHeight(int height) {
@@ -68,7 +68,7 @@ public class PointCloud2_ implements Serializable {
         pointCloud2_.setData(Data.copy());
         pointCloud2_.setDimension(Dimension);
         pointCloud2_.setHeight(Height);
-        pointCloud2_.setWith(With);
+        pointCloud2_.setWidth(Width);
         return pointCloud2_;
     }
 
