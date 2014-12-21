@@ -135,7 +135,7 @@ public class MapUpdater {
                 }
             }
         }
-        System.out.println("count " + count);
+        LOG.info("count " + count);
         got_map_ = true;
         return map;
     }

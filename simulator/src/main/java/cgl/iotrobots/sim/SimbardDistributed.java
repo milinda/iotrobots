@@ -12,10 +12,13 @@ import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
 import simbad.gui.Simbad;
 import simbad.sim.*;
+import simbad.sim.Box;
 
+import javax.swing.*;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -200,6 +203,23 @@ public class SimbardDistributed {
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
+
+        showOnScreen(1, frame);
         mapUI = new MapUI();
+//        showOnScreen(1, mapUI);
+    }
+
+    public static void showOnScreen( int screen, JFrame frame )
+    {
+        GraphicsEnvironment ge = GraphicsEnvironment
+                .getLocalGraphicsEnvironment();
+        GraphicsDevice[] gs = ge.getScreenDevices();
+        if (screen > -1 && screen < gs.length) {
+            gs[screen].setFullScreenWindow(frame);
+        } else if (gs.length > 0) {
+            gs[0].setFullScreenWindow(frame);
+        } else {
+            throw new RuntimeException("No Screens Found");
+        }
     }
 }

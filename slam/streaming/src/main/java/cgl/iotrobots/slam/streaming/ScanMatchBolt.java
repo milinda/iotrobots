@@ -136,7 +136,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             return;
         }
         int taskId = topologyContext.getThisTaskIndex();
-        outputCollector.ack(tuple);
+
         time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
@@ -188,6 +188,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
         // these will be used by the re sampler to re sample particles
+        LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
         for (int index : activeParticles) {
             Particle particle = particles.get(index);
 
@@ -202,6 +203,8 @@ public class ScanMatchBolt extends BaseRichBolt {
             emit.add(time);
             outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
         }
+
+        outputCollector.ack(tuple);
     }
 
     private void registerClasses(Kryo kryo) {
@@ -285,6 +288,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
                             emitParticleForMap();
 
+                            ScanMatchBolt.this.assignments = null;
                             state = MatchState.WAITING_FOR_READING;
                             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
                         }
@@ -357,7 +361,8 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // now go through the assignments and send them to the bolts directly
                         computeExpectedParticles(assignments);
                         distributeAssignments(assignments);
-                        gfsp.getActiveParticles().clear();
+                        LOG.info("taskId {}: Clearing active particles", taskId);
+                        gfsp.clearActiveParticles();
                         // we are going to keep the assignemtns so that we can check the receiving particles
                         ScanMatchBolt.this.assignments = assignments;
                     } else {
@@ -372,6 +377,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
                         emitParticleForMap();
                         LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
+                        ScanMatchBolt.this.assignments = null;
                         state = MatchState.WAITING_FOR_READING;
                     }
                 } catch (Exception e) {
@@ -467,6 +473,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                             LOG.info("taskId {}: Value handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
                             gfsp.processAfterReSampling(plainReading);
                             emitParticleForMap();
+                            ScanMatchBolt.this.assignments = null;
                             state = MatchState.WAITING_FOR_READING;
                             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
                         }
@@ -506,13 +513,11 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // gfsp.getActiveParticles().add(newIndex);
         // add the new particle index
-        if (!gfsp.getActiveParticles().contains(newIndex)) {
-            gfsp.getActiveParticles().add(newIndex);
-        }
+        gfsp.addActiveParticle(newIndex);
 
         // we have received one particle
         expectingParticleValues--;
-        LOG.info("taskId {}: Expecting particle values {}", taskId, expectingParticleMaps);
+        LOG.info("taskId {}: Expecting particle values {}", taskId, expectingParticleValues);
     }
 
 
@@ -538,9 +543,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         p.setMap(Utils.createGMap(particleMaps.getMap()));
 
         // add the new particle index
-        if (!gfsp.getActiveParticles().contains(newIndex)) {
-            gfsp.getActiveParticles().add(newIndex);
-        }
+        gfsp.addActiveParticle(newIndex);
 
         // we have received one particle
         expectingParticleMaps--;

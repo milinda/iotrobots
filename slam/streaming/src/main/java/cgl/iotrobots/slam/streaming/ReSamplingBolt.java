@@ -115,7 +115,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         smap.put(sensor.getName(), sensor);
         reSampler.setSensorMap(smap);
 
-        LOG.debug("receivedParticles {}", receivedParticles);
+        LOG.info("receivedParticles: {}, expecting particles:{}", receivedParticles, reSampler.getParticles().size());
         // this bolt will wait until all the particle values are obtained
         if (receivedParticles < reSampler.getNoParticles() || reading == null) {
             return;
@@ -197,6 +197,7 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @param assignments the particle assignments
      */
     private void distributeAssignments(ParticleAssignments assignments) {
+        LOG.info("Sending particle assignment");
         byte []b = Utils.serialize(kryo, assignments);
 
         Message message = new Message(b, new HashMap<String, Object>());
@@ -214,10 +215,10 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @return an assignment of particles
      */
     protected ParticleAssignments createAssignments(List<Integer> indexes) {
-//        for (int i : indexes) {
-//            System.out.format("%d ", i);
-//        }
-//        System.out.format("\n");
+        for (int i : indexes) {
+            System.out.format("%d ", i);
+        }
+        System.out.format("\n");
         // create a matrix of size noOfParticles x noOfparticles
         int noOfParticles = reSampler.getNoParticles();
         // assume taskIndexes are going from 0
@@ -238,21 +239,21 @@ public class ReSamplingBolt extends BaseRichBolt {
             }
         }
 
-//        for (int i = 0; i < cost.length; i++) {
-//            for (int j = 0; j < cost[i].length; j++) {
-//                System.out.format("%f ", cost[i][j]);
-//            }
-//            System.out.format("\n");
-//        }
+        for (int i = 0; i < cost.length; i++) {
+            for (int j = 0; j < cost[i].length; j++) {
+                System.out.format("%f ", cost[i][j]);
+            }
+            System.out.format("\n");
+        }
 
         HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
         int []assignments = algorithm.execute();
         ParticleAssignments particleAssignments = new ParticleAssignments();
 
-//        for (int i : assignments) {
-//            System.out.format("%d ", i);
-//        }
-//        System.out.println();
+        for (int i : assignments) {
+            System.out.format("%d ", i);
+        }
+        System.out.println();
 
         // go through the particle indexs and try to find their new assignments
         for (int i = 0; i < indexes.size(); i++) {
@@ -269,6 +270,11 @@ public class ReSamplingBolt extends BaseRichBolt {
             ParticleAssignment assignment = new ParticleAssignment(particle, i,
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);
+        }
+
+        for (ParticleAssignment assignment : particleAssignments.getAssignments()) {
+            System.out.format("pre task: %d prev i: %d new task: %d new i %d\n",
+                    assignment.getPreviousTask(), assignment.getPreviousIndex(), assignment.getNewTask(), assignment.getNewIndex());;
         }
 
         return particleAssignments;
