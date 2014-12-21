@@ -4,10 +4,6 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector4d_;
-import geometry_msgs.Pose;
-import geometry_msgs.Quaternion;
-import geometry_msgs.Vector3;
-import nav_msgs.Odometry;
 
 public class Methods {
 

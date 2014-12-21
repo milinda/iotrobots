@@ -10,21 +10,11 @@ import java.io.Serializable;
 
 public class Header_ implements Serializable {
 
-    private String FrameId;
+    private String FrameId = "";
 
     private long Stamp;
 
     public Header_() {
-    }
-
-    public Header_(Header_ hd) {
-        FrameId = new String(hd.getFrameId());
-        Stamp = hd.getStamp();
-    }
-    
-    public Header_(String frameId, long stamp) {
-        FrameId = frameId;
-        Stamp = stamp;
     }
 
     public long getStamp() {

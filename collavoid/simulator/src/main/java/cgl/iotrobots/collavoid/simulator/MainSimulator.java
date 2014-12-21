@@ -1,6 +1,6 @@
 package cgl.iotrobots.collavoid.simulator;
 
-import cgl.iotrobots.collavoid.utils.Parameters;
+import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.Twist;

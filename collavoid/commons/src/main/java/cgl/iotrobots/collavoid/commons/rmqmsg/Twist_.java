@@ -10,26 +10,11 @@ import java.io.Serializable;
 
 public class Twist_ implements Serializable {
 
-    private Header_ Header;
+    private Vector3d_ Angular = new Vector3d_();
 
-    private Vector3d_ Angular;
-
-    private Vector3d_ Linear;
-
-    public Twist_(Twist_ t) {
-        setHeader(t.getHeader());
-        setAngular(t.getAngular());
-        setLinear(t.getLinear());
-    }
-
-    public Twist_(Vector3d_ angular, Vector3d_ linear) {
-        Angular = new Vector3d_(angular);
-        Linear = new Vector3d_(linear);
-    }
+    private Vector3d_ Linear = new Vector3d_();
 
     public Twist_() {
-        Angular = new Vector3d_(0, 0, 0);
-        Linear = new Vector3d_(0, 0, 0);
     }
 
     public void setAngular(Vector3d_ angular) {
@@ -48,18 +33,6 @@ public class Twist_ implements Serializable {
         return Linear;
     }
 
-    public void setHeader(String frameId, long stamp) {
-        Header.setFrameId(frameId);
-        Header.setStamp(stamp);
-    }
-
-    public void setHeader(Header_ header) {
-        Header = new Header_(header);
-    }
-
-    public Header_ getHeader() {
-        return Header;
-    }
 
     @Override
     public String toString() {

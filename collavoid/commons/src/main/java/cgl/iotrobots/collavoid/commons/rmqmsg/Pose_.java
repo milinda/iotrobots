@@ -11,31 +11,11 @@ import java.io.Serializable;
 
 public class Pose_ implements Serializable {
 
-    private Header_ Header;
+    private Vector3d_ Position = new Vector3d_();
 
-    private Vector3d_ Position;
-
-    private Vector4d_ Orientation;
+    private Vector4d_ Orientation = new Vector4d_();
 
     public Pose_() {
-        Header = new Header_();
-        Position = new Vector3d_();
-        Orientation = new Vector4d_();
-    }
-
-    public Pose_(Pose_ pose) {
-        Header = new Header_(pose.getHeader());
-        Position = new Vector3d_(pose.getPosition());
-        Orientation = new Vector4d_(pose.getOrientation());
-    }
-
-    public Pose_(Vector3d_ pos, Vector4d_ ori) {
-        this.Position = new Vector3d_(pos);
-        this.Orientation = new Vector4d_(ori);
-    }
-
-    public Header_ getHeader() {
-        return Header;
     }
 
     public Vector3d_ getPosition() {
@@ -52,16 +32,6 @@ public class Pose_ implements Serializable {
 
     public void setOrientation(Vector4d_ orientation) {
         Orientation = new Vector4d_(orientation);
-    }
-
-    public void setHeader(Header_ header) {
-        Header = new Header_(header);
-    }
-
-    public void setPose(Pose_ pose) {
-        setOrientation(pose.getOrientation());
-        setPosition(pose.getPosition());
-        setHeader(pose.getHeader());
     }
 
     public byte[] toJSON() throws IOException {

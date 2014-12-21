@@ -11,7 +11,7 @@ import java.io.Serializable;
 
 public class Odometry_ implements Serializable {
 
-    private Header_ Header;
+    private Header_ Header = new Header_();
 
     private String ChildFrameId;
 
@@ -19,31 +19,8 @@ public class Odometry_ implements Serializable {
 
     private Twist_ Twist;
 
-    public Odometry_() {
-
-    }
-
-    public Odometry_(Odometry_ odom) {
-        setTwist(odom.getTwist());
-        setHeader(odom.getHeader());
-        setChildFrameId(odom.getChildFrameId());
-        setPose(odom.getPose());
-    }
-
-    public Odometry_(Pose_ pose, Twist_ twist) {
-        setPose(pose);
-        setTwist(twist);
-    }
-
-
     public void setHeader(Header_ header) {
-        Header = new Header_(header);
-        Twist.setHeader(header);
-    }
-
-    public void setHeader(String frameId, long stamp) {
-        Header.setFrameId(frameId);
-        Header.setStamp(stamp);
+        Header = header;
     }
 
     public void setChildFrameId(String childFrameId) {
@@ -51,11 +28,11 @@ public class Odometry_ implements Serializable {
     }
 
     public void setPose(Pose_ pose) {
-        Pose = new Pose_(pose);
+        Pose = pose;
     }
 
     public void setTwist(Twist_ twist) {
-        Twist = new Twist_(twist);
+        Twist = twist;
     }
 
     public Header_ getHeader() {

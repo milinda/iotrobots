@@ -1,12 +1,9 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-import org.ros.message.Time;
-
 
 public class Obstacle {
     private Vector2 begin;
     private Vector2 end;
-    private Time lastSeen;
 
     public Obstacle(Vector2 p1, Vector2 p2) {
         this.begin = new Vector2(p1.getX(), p1.getY());
@@ -24,10 +21,6 @@ public class Obstacle {
 
     public void setEnd(Vector2 v) {
         this.end = new Vector2(v);
-    }
-
-    public void setTime(Time t) {
-        lastSeen = new Time(t);
     }
 
     public Vector2 getBegin() {

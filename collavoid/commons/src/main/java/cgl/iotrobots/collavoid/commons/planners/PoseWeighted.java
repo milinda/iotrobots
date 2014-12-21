@@ -1,41 +1,28 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-import cgl.iotrobots.collavoid.ROSAgent.ROSAgent;
-import geometry_msgs.PoseStamped;
-
-;
-
+import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 
 public class PoseWeighted {
     private double w;
-    private PoseStamped poseStamped;
+    private Pose_ Pose;
 
-    public PoseWeighted(double w,PoseStamped pose){
-        this.setW(w);
-        this.setPoseStamped(pose);
+    public PoseWeighted() {
+        Pose = new Pose_();
     }
 
     public void setW(double w){
         this.w=w;
     }
 
-    public void setPoseStamped(PoseStamped pose){
-        this.poseStamped= ROSAgent.messageFactory.newFromType(PoseStamped._TYPE);
-        this.poseStamped.setPose(pose.getPose());
-        this.poseStamped.setHeader(pose.getHeader());
+    public void setPose(Pose_ pose) {
+        Pose = pose;
     }
 
     public double getW(){
         return this.w;
     }
 
-    public PoseStamped getPoseStamped() {
-        PoseStamped ps= ROSAgent.messageFactory.newFromType(PoseStamped._TYPE);
-        ps.setHeader(this.poseStamped.getHeader());
-        ps.setPose(this.poseStamped.getPose());
-        return ps;
+    public Pose_ getPose() {
+        return Pose;
     }
-//    public Pose getPose(){
-//        return this.poseStamped.getPose();
-//    }
 }

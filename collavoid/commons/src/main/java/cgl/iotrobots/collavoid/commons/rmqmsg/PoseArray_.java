@@ -7,19 +7,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PoseArray_ implements Serializable {
     private Header_ Header = new Header_();
 
-    private List<Pose_> Poses;
+    private List<Pose_> Poses = new ArrayList<Pose_>();
 
     public PoseArray_() {
 
-    }
-
-    public PoseArray_(List<Pose_> poses) {
-        this.Poses = poses;
     }
 
     public Header_ getHeader() {
@@ -32,11 +29,6 @@ public class PoseArray_ implements Serializable {
 
     public void setHeader(Header_ header) {
         Header = header;
-    }
-
-    public void setHeader(String frameId, long stamp) {
-        Header.setFrameId(frameId);
-        Header.setStamp(stamp);
     }
 
     public void setPoses(List<Pose_> poses) {

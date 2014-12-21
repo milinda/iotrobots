@@ -1,8 +1,5 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-import geometry_msgs.Point32;
-
-
 public class Vector2 {
     private double x;
     private double y;
@@ -150,11 +147,11 @@ public class Vector2 {
     }
 
     //convert pointcloud point32 datatype to Point2
-    public static Vector2 Point32ToVector2(Point32 p) {
-        double x = p.getX();
-        double y = p.getY();
-        return new Vector2(x, y);
-    }
+//    public static Vector2 Point32ToVector2(Point32 p) {
+//        double x = p.getX();
+//        double y = p.getY();
+//        return new Vector2(x, y);
+//    }
 
     public static Vector2 rotateVectorByAngle(Vector2 p, double ang) {
         double cos_a, sin_a, x, y;

@@ -4,12 +4,16 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
 public class PointCloud2_ implements Serializable {
+
+    private Header_ Header = new Header_();
+    
     private int With;
 
     private int Height;
@@ -19,8 +23,30 @@ public class PointCloud2_ implements Serializable {
     private int Dimension;
 
     public PointCloud2_() {
+    }
 
+    public Header_ getHeader() {
+        return Header;
+    }
 
+    public ChannelBuffer getData() {
+        return Data;
+    }
+
+    public int getDimension() {
+        return Dimension;
+    }
+
+    public int getHeight() {
+        return Height;
+    }
+
+    public int getWith() {
+        return With;
+    }
+
+    public void setHeader(Header_ header) {
+        Header = header;
     }
 
     public void setWith(int with) {

@@ -20,6 +20,13 @@
             <artifactId>commons</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
+            <version>${rabitmq.verion}</version>
+        </dependency>
+
     </dependencies>
 
 </project>

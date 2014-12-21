@@ -14,6 +14,7 @@ import org.ros.node.topic.Subscriber;
 import sensor_msgs.PointCloud2;
 import visualization_msgs.Marker;
 import visualization_msgs.MarkerArray;
+import com.rabbitmq.client.*;
 
 import javax.vecmath.Point3d;
 import java.util.*;
@@ -132,7 +133,9 @@ public class Agent {
     private static Logger logger;
 
     //-----------------------method begin-------------------------------//
-    public Agent(String name) {
+    public Agent(String name,
+                 Address[] addresses,
+                 String url) {
         me_lock_ = new ReentrantLock();
         obstacle_lock_ = new ReentrantLock();
         neighbors_lock_ = new ReentrantLock();
@@ -161,7 +164,7 @@ public class Agent {
     }
 
     // for neighbor recording
-    public Agent(String name, boolean neighbor) {
+    public Agent(String name) {
         Name = name;
         footprint_original = new ArrayList<Vector2>();
         base_odom_ = new Odometry_();
@@ -334,34 +337,6 @@ public class Agent {
 
     }
 
-    //   test array new footprint
-//    void PoseArrayTestCallback(PoseArray msg) {
-//        // in robot base frame do not need transform
-//        double x, y;
-//        FootPrint localization_footprint=new FootPrint();
-//        FootPrint own_footprint=new FootPrint();
-//
-//        for (int i = 0; i < msg.getPoses().size(); i++) {
-//            x = msg.getPoses().get(i).getPosition().getX();
-//            y = msg.getPoses().get(i).getPosition().getY();
-//            Vector2 p = new Vector2(x, y);
-//            if (p.getLength() > 0.1)
-//                continue;
-//            localization_footprint.addPoint(x,y);
-//        }
-//
-//        //for testing replaced the algorithm computeNewMinkowskiFootprint
-//        for (int i = 0; i < footprint_original_msg_.getPolygon().getPoints().size(); i++) {
-//            Point32 p = footprint_original_msg_.getPolygon().getPoints().get(i);
-//            own_footprint.addPoint(p.getX(), p.getY());
-//            //      ROS_WARN("footprint point p = (%f, %f) ", footprint_[i].x, footprint_[i].y);
-//        }
-//        footprint_minkowski = minkowskiSumConvexHull(localization_footprint, own_footprint);
-//        //publish footprint
-//        PolygonStamped msg_pub = createFootprintMsgFromVector2(footprint_minkowski);
-//        polygon_pub_.publish(msg_pub);
-//
-//    }
 
     // original test case
     void PoseArrayTestCallback(PoseArray msg) {

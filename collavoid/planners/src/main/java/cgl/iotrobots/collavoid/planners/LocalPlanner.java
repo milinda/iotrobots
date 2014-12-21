@@ -7,6 +7,7 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
+import com.rabbitmq.client.Address;
 //import costmap_2d.VoxelGrid;
 
 import java.util.ArrayList;
@@ -39,10 +40,18 @@ public class LocalPlanner {
 
     private static Logger logger;
 
+    private Address[] Addresses;
+
+    private String URL;
+
     /*---------------methods begin-----------------*/
 
-    public LocalPlanner(String name) {
+    public LocalPlanner(String name,
+                        Address[] addresses,
+                        String url) {
         AgentName = name;
+        Addresses = addresses;
+        URL = url;
         initialized_ = false;
         current_waypoint_ = 0;
         skip_next_ = false;
@@ -56,7 +65,7 @@ public class LocalPlanner {
             getParams();
             /*----------spawn agent node---------*/
 
-            this.me = new Agent();
+            this.me = new Agent(AgentName, Addresses, URL);
 
             //wait for the agent to initialize
             while (!me.initialized_) {
