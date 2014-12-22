@@ -62,7 +62,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private Kryo kryo;
 
-    private MatchState state = MatchState.WAITING_FOR_READING;
+    private volatile MatchState state = MatchState.WAITING_FOR_READING;
 
     private int expectingParticleMaps = 0;
     private int expectingParticleValues = 0;
@@ -275,21 +275,25 @@ public class ScanMatchBolt extends BaseRichBolt {
                 try {
                     // first we need to determine the expected new maps for this particle
                     // first check weather particleMapses not empty. If not empty handle those first
-                    processReceivedMaps();
-                    processReceivedValues();
+                    processReceivedMaps("map");
+                    processReceivedValues("map");
                     // now go through the assignments and send them to the bolts directly
-                    addMaps(pm);
+                    addMaps(pm, "map");
 
                     // we have received all the particles we need to do the processing after resampling
-                    postProcessingAfterReceiveAll(taskId);
+                    postProcessingAfterReceiveAll(taskId, "map");
                 } catch (Exception e) {
                     LOG.error("taskId {}: Failed to deserialize map", taskId, e);
                 }
             } else if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                 // because we haven't received the assignments yet, we will keep the values temporaly in this list
+                LOG.info("taskId {}: Adding map state {}", taskId, state);
                 lock.lock();
                 try {
                     particleMapses.add(pm);
+                    if (state != MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+                        postProcessingAfterReceiveAll(taskId, "adding map");
+                    }
                 } finally {
                     lock.unlock();
                 }
@@ -299,7 +303,20 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
-    private void postProcessingAfterReceiveAll(int taskId) {
+    private void postProcessingAfterReceiveAll(int taskId, String origin) {
+        if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+            lock.lock();
+            try {
+                LOG.info("taskId {}: {} Changing state to WAITING_FOR_NEW_PARTICLES", origin, taskId);
+                state = MatchState.WAITING_FOR_NEW_PARTICLES;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        processReceivedMaps(origin);
+        processReceivedValues(origin);
+
         if (expectingParticleMaps == 0 && expectingParticleValues == 0) {
             state = MatchState.COMPUTING_NEW_PARTICLES;
             LOG.info("taskId {}: Map Handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
@@ -310,19 +327,15 @@ public class ScanMatchBolt extends BaseRichBolt {
             this.assignments = null;
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
-        } else {
-            LOG.info("taskId {}: Map Handler Changing state to WAITING_FOR_NEW_PARTICLES", taskId);
-            state = MatchState.WAITING_FOR_NEW_PARTICLES;
         }
-
     }
 
-    private void processReceivedMaps() {
+    private void processReceivedMaps(String origin) {
         lock.lock();
         try {
             if (!particleMapses.isEmpty()) {
                 for (ParticleMaps existingPm : particleMapses) {
-                    addMaps(existingPm);
+                    addMaps(existingPm, origin);
                 }
                 // after handling the temp values, we'll clear the buffer
                 particleMapses.clear();
@@ -392,15 +405,15 @@ public class ScanMatchBolt extends BaseRichBolt {
 
                         // we are going to keep the assignemtns so that we can check the receiving particles
                         ScanMatchBolt.this.assignments = assignments;
-                        processReceivedValues();
-                        processReceivedMaps();
-                        postProcessingAfterReceiveAll(taskId);
+                        processReceivedValues("assign");
+                        processReceivedMaps("assign-maps");
+                        postProcessingAfterReceiveAll(taskId, "assign-all");
                     } else {
                         // we are going to keep the assignemtns so that we can check the receiving particles
                         ScanMatchBolt.this.assignments = assignments;
                         expectingParticleValues = 0;
                         expectingParticleMaps = 0;
-                        postProcessingAfterReceiveAll(taskId);
+                        postProcessingAfterReceiveAll(taskId, "assign");
                     }
                 } catch (Exception e) {
                     LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
@@ -478,13 +491,13 @@ public class ScanMatchBolt extends BaseRichBolt {
                 try {
                     // first we need to determine the expected new maps for this particle
                     // first check weather particleMapses not empty. If not empty handle those first
-                    processReceivedValues();
-                    processReceivedMaps();
+                    processReceivedValues("value");
+                    processReceivedMaps("value");
                     // now go through the assignments and send them to the bolts directly
-                    addParticle(pm);
+                    addParticle(pm, "value");
 
                     // we have received all the particles we need to do the processing after resampling
-                    postProcessingAfterReceiveAll(taskId);
+                    postProcessingAfterReceiveAll(taskId, "assign");
                 } catch (Exception e) {
                     LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
                 }
@@ -504,12 +517,12 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
-    private void processReceivedValues() {
+    private void processReceivedValues(String origin) {
         lock.lock();
         try {
             if (!particleValues.isEmpty()) {
                 for (ParticleValue existingPm : particleValues) {
-                    addParticle(existingPm);
+                    addParticle(existingPm, origin);
                 }
                 particleValues.clear();
             }
@@ -522,7 +535,7 @@ public class ScanMatchBolt extends BaseRichBolt {
      * The particle values calculated after the resampling
      * @param value values
      */
-    private void addParticle(ParticleValue value) {
+    private void addParticle(ParticleValue value, String origin) {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
         int taskId = topologyContext.getThisTaskIndex();
         boolean found = assignmentExists(value.getTaskId(), value.getIndex(), assignmentList);
@@ -545,7 +558,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticleValues--;
-        LOG.info("taskId {}: Expecting particle values {}", taskId, expectingParticleValues);
+        LOG.info("taskId {}: Expecting particle values {} origin {}", taskId, expectingParticleValues, origin);
     }
 
 
@@ -554,7 +567,7 @@ public class ScanMatchBolt extends BaseRichBolt {
      * Add a new partcle maps and node tree to the particle
      * @param particleMaps the map and node tree
      */
-    private void addMaps(ParticleMaps particleMaps) {
+    private void addMaps(ParticleMaps particleMaps, String origin) {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
         int taskId = topologyContext.getThisTaskIndex();
         boolean found = assignmentExists(particleMaps.getTask(), particleMaps.getIndex(), assignmentList);
@@ -575,7 +588,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticleMaps--;
-        LOG.info("taskId {}: Expecting particle maps {}", taskId, expectingParticleMaps);
+        LOG.info("taskId {}: Expecting particle maps {} origin {}", taskId, expectingParticleMaps, origin);
     }
 
     @Override
