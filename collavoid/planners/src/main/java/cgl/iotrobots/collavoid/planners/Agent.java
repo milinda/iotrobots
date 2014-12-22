@@ -95,7 +95,6 @@ public class Agent {
     public double footprint_radius_;
 
     //set automatically
-    public boolean initialized_;
     public boolean has_polygon_footprint_;
 
     public List<LinePair> footprint_original_lines;
@@ -115,7 +114,7 @@ public class Agent {
     public Lock me_lock_, obstacle_lock_, neighbors_lock_, convex_lock_;
 
     //utils
-    private static Logger logger;
+    private Logger logger;
 
     // message subscriber and publisher
     private RMQMsgManager rmqMsgManager;
@@ -130,7 +129,6 @@ public class Agent {
         neighbors_lock_ = new ReentrantLock();
         convex_lock_ = new ReentrantLock();
 
-        initialized_ = false;
         cur_allowed_error_ = 0;
         cur_loc_unc_radius_ = 0;
         min_dist_obst_ = Double.MAX_VALUE;
@@ -150,6 +148,8 @@ public class Agent {
         voAgents = new ArrayList<VO>();
         samples = new ArrayList<VelocitySample>();
         rmqMsgManager = new RMQMsgManager(name, addresses, url);
+
+        logger = Logger.getLogger(name + "Agent_Logger");
         initParameters();
     }
 
@@ -164,6 +164,7 @@ public class Agent {
     }
 
     void initParameters() {
+
         double controller_frequency = -1;
 
         //load parameters locally
@@ -250,7 +251,14 @@ public class Agent {
             angle += step;
         }
         setFootprintOrignial(footprint_original);
-        initialized_ = true;
+
+        try {
+            rmqMsgManager.start(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        logger.info("************************Agent " + Name + " is initialized!");
     }
 
     //called by local planner
@@ -422,7 +430,7 @@ public class Agent {
             for (int i = 0; i < AgentNeighbors.size(); i++) {
                 upDateAgentState(AgentNeighbors.get(i));
             }
-            AgentNeighbors.sort(new NeighborDistComparator(position.getPos()).getComparator());
+            AgentNeighbors.sort(new NeighborDistComparator(position.getPos().getX(), position.getPos().getY()));
         } finally {
             neighbors_lock_.unlock();
         }
@@ -690,6 +698,10 @@ public class Agent {
             }
             voAgents.add(new_agent_vo);
         }
+    }
+
+    public void stop() {
+        rmqMsgManager.stop();
     }
 
 

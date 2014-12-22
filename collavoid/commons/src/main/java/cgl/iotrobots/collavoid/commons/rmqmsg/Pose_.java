@@ -48,4 +48,11 @@ public class Pose_ implements Serializable {
         return outputStream.toByteArray();
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "Position=" + Position +
+                ", Orientation=" + Orientation +
+                '}';
+    }
 }

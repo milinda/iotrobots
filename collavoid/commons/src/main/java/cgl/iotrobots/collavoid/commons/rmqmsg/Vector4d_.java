@@ -70,8 +70,8 @@ public class Vector4d_ implements Serializable {
 
     @Override
     public String toString() {
-        return "(" +
-                "," + x +
+        return "("
+                + x +
                 "," + y +
                 "," + z +
                 "," + w +

@@ -1,17 +1,6 @@
 package cgl.iotrobots.collavoid.simulator;
 
 public class SimParams {
-    // For simulator
-
-    //robot parameters
-    //robot number, in meter
-    public static final int ROBOT_NB = 4;
-    //robot radius, not used, use footprint radius from ROSAgent instead.
-    public static final double ROBOT_RADIUS = 0.17;
-    //robot position radius, robot are evenly distributed around a circle and
-    // heading toward the center
-    public static final double POSE_RADIUS = 4;
-
     //sensor parameters
     // scanner angle range
     public static final double SCAN_ANGLE_RANGE = 57.0; //in degree

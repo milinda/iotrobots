@@ -23,8 +23,8 @@ import java.util.List;
 
 
 public class MainSimulator {
-    static final int robotNb = SimParams.ROBOT_NB;
-    static final double posRadius = SimParams.POSE_RADIUS;
+    static final int robotNb = Parameters.ROBOT_NUMBER;
+    static final double posRadius = Parameters.POSE_RADIUS;
     static List<Robot> robots = new ArrayList<Robot>();
 
     /**

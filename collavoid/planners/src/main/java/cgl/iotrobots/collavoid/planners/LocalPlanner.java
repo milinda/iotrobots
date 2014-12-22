@@ -27,7 +27,7 @@ public class LocalPlanner {
 
     int current_waypoint_;
 
-    public Agent me;
+    private Agent agent;
 
     private String global_frame_; ///< @brief The frame in which the controller will run
 
@@ -61,28 +61,14 @@ public class LocalPlanner {
         if (!initialized_) {
             getParams();
             /*----------spawn agent node---------*/
-
-            this.me = new Agent(AgentName, Addresses, URL);
-
-            //wait for the agent to initialize
-            while (!me.initialized_) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            this.agent = new Agent(AgentName, Addresses, URL);
             initialized_ = true;
-            logger.info("************************Local Planner" + AgentName + " is initialized!");
-        } else {
-            logger.info("************************Local Planner" + AgentName + " has already been initialized, you can't call it twice, doing nothing");
         }
-
     }
 
     // get parameters
     void getParams() {
-        logger = Logger.getLogger(AgentName + "_Logger");
+        logger = Logger.getLogger(AgentName + "Planner_Logger");
 
         //load parameters locally
         base_frame_ = AgentName + parameters.BASE_FRAME_SUFFIX;
@@ -124,11 +110,11 @@ public class LocalPlanner {
 
         //copy over the odometry information
         Odometry_ base_odom;
-        me.me_lock_.lock();
+        agent.me_lock_.lock();
         try {
-            base_odom = me.getBaseOdom().copy();
+            base_odom = agent.getBaseOdom().copy();
         } finally {
-            me.me_lock_.unlock();
+            agent.me_lock_.unlock();
         }
 
         double distToGoal = Methods_Planners.getGoalPositionDistance(
@@ -161,13 +147,13 @@ public class LocalPlanner {
         Twist_ base_vel;
 
         //velocity is in base frame
-        me.me_lock_.lock();
+        agent.me_lock_.lock();
         try {
-            base_vel = me.getBaseOdom().getTwist().copy();
+            base_vel = agent.getBaseOdom().getTwist().copy();
             //pose is in odometry or map frame
-            global_pose.setPose(me.getBaseOdom().getPose().copy());
+            global_pose.setPose(agent.getBaseOdom().getPose().copy());
         } finally {
-            me.me_lock_.unlock();
+            agent.me_lock_.unlock();
         }
 
         Pose_ goal_point;
@@ -197,11 +183,11 @@ public class LocalPlanner {
             } else {
                 //copy over the odometry information
                 Odometry_ base_odom = new Odometry_();
-                me.me_lock_.lock();
+                agent.me_lock_.lock();
                 try {
-                    base_odom = me.getBaseOdom().copy();
+                    base_odom = agent.getBaseOdom().copy();
                 } finally {
-                    me.me_lock_.unlock();
+                    agent.me_lock_.unlock();
                 }
 
                 //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
@@ -232,6 +218,7 @@ public class LocalPlanner {
             }
 
             findBestWaypoint(target_pose, global_pose.getPose());
+            System.out.println(target_pose);
         }
 
         Twist_ pref_vel_twist = new Twist_();
@@ -241,29 +228,29 @@ public class LocalPlanner {
 
         Vector2 pref_vel_vect = new Vector2(pref_vel_twist.getLinear().getX(), pref_vel_twist.getLinear().getY());
 
-        if (Vector2.abs(pref_vel_vect) > me.max_vel_x_) {
-            pref_vel_vect = Vector2.scale(Vector2.normalize(pref_vel_vect), me.max_vel_x_);
-        } else if (Vector2.abs(pref_vel_vect) < me.min_vel_x_) {
-            pref_vel_vect = Vector2.scale(Vector2.normalize(pref_vel_vect), me.min_vel_x_ * 1.2);
+        if (Vector2.abs(pref_vel_vect) > agent.max_vel_x_) {
+            pref_vel_vect = Vector2.scale(Vector2.normalize(pref_vel_vect), agent.max_vel_x_);
+        } else if (Vector2.abs(pref_vel_vect) < agent.min_vel_x_) {
+            pref_vel_vect = Vector2.scale(Vector2.normalize(pref_vel_vect), agent.min_vel_x_ * 1.2);
         }
 
-        me.computeNewVelocity(pref_vel_vect, cmd_vel);
+        agent.computeNewVelocity(pref_vel_vect, cmd_vel);
 
 
-        if (Math.abs(cmd_vel.getAngular().getZ()) < me.min_vel_th_)
+        if (Math.abs(cmd_vel.getAngular().getZ()) < agent.min_vel_th_)
             cmd_vel.getAngular().setZ(0);
 
-        if (Math.abs(cmd_vel.getLinear().getX()) < me.min_vel_x_)
+        if (Math.abs(cmd_vel.getLinear().getX()) < agent.min_vel_x_)
             cmd_vel.getLinear().setX(0);
 
-        if (Math.abs(cmd_vel.getLinear().getY()) < me.min_vel_y_)
+        if (Math.abs(cmd_vel.getLinear().getY()) < agent.min_vel_y_)
             cmd_vel.getLinear().setY(0);
 
 
         if (cmd_vel.getLinear().getX() == 0.0 && cmd_vel.getAngular().getZ() == 0.0 && cmd_vel.getLinear().getY() == 0.0) {
             logger.fine("Did not find a good vel, calculated best holonomic velocity was:"
-                    + me.velocity.getX() + ", "
-                    + me.velocity.getY() + ", cur wp "
+                    + agent.velocity.getX() + ", "
+                    + agent.velocity.getY() + ", cur wp "
                     + current_waypoint_ + " of "
                     + transformed_plan_.size()
                     + " trying next waypoint");
@@ -289,9 +276,9 @@ public class LocalPlanner {
 
 
     void stopWithAccLimits(final Twist_ robot_vel, Twist_ cmd_vel) {
-        double vx = Methods_Planners.sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - me.acc_lim_x_ * me.ControlPeriod));
-        double vy = Methods_Planners.sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - me.acc_lim_y_ * me.ControlPeriod));
-        double vth = Methods_Planners.sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - me.acc_lim_th_ * me.ControlPeriod));
+        double vx = Methods_Planners.sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - agent.acc_lim_x_ * agent.ControlPeriod));
+        double vy = Methods_Planners.sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - agent.acc_lim_y_ * agent.ControlPeriod));
+        double vth = Methods_Planners.sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - agent.acc_lim_th_ * agent.ControlPeriod));
 
         //ROS_DEBUG("Slowing down... using vx, vy, vth: %.2f, %.2f, %.2f", vx, vy, vth);
         cmd_vel.getLinear().setX(vx);
@@ -312,23 +299,23 @@ public class LocalPlanner {
         double ang_diff = Methods_Planners.shortest_angular_distance(yaw, goal_th);
 
         double v_th_samp = ang_diff > 0.0 ?
-                Math.min(me.max_vel_th_, Math.max(me.min_vel_th_inplace_, ang_diff)) :
-                Math.max(-1.0 * me.max_vel_th_, Math.min(-1.0 * me.min_vel_th_inplace_, ang_diff));
+                Math.min(agent.max_vel_th_, Math.max(agent.min_vel_th_inplace_, ang_diff)) :
+                Math.max(-1.0 * agent.max_vel_th_, Math.min(-1.0 * agent.min_vel_th_inplace_, ang_diff));
 
         //take the acceleration limits of the robot into account
-        double max_acc_vel = Math.abs(vel_yaw) + me.acc_lim_th_ * me.ControlPeriod;
-        double min_acc_vel = Math.abs(vel_yaw) - me.acc_lim_th_ * me.ControlPeriod;
+        double max_acc_vel = Math.abs(vel_yaw) + agent.acc_lim_th_ * agent.ControlPeriod;
+        double min_acc_vel = Math.abs(vel_yaw) - agent.acc_lim_th_ * agent.ControlPeriod;
 
         v_th_samp = Methods_Planners.sign(v_th_samp) * Math.min(Math.max(Math.abs(v_th_samp), min_acc_vel), max_acc_vel);
 
         //we also want to make sure to send a velocity that allows us to stop when we reach the goal given our acceleration limits
-        double max_speed_to_stop = Math.sqrt(2 * me.acc_lim_th_ * Math.abs(ang_diff));//how to get this???
+        double max_speed_to_stop = Math.sqrt(2 * agent.acc_lim_th_ * Math.abs(ang_diff));//how to get this???
 
         v_th_samp = Methods_Planners.sign(v_th_samp) * Math.min(max_speed_to_stop, Math.abs(v_th_samp));
-        if (Math.abs(v_th_samp) <= 0.0 * me.min_vel_th_inplace_)//???????????
+        if (Math.abs(v_th_samp) <= 0.0 * agent.min_vel_th_inplace_)//???????????
             v_th_samp = 0.0;
-        else if (Math.abs(v_th_samp) < me.min_vel_th_inplace_)
-            v_th_samp = Methods_Planners.sign(v_th_samp) * Math.max(me.min_vel_th_inplace_, Math.abs(v_th_samp));
+        else if (Math.abs(v_th_samp) < agent.min_vel_th_inplace_)
+            v_th_samp = Methods_Planners.sign(v_th_samp) * Math.max(agent.min_vel_th_inplace_, Math.abs(v_th_samp));
 
         logger.fine("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
         cmd_vel.getAngular().setZ(v_th_samp);
@@ -355,15 +342,15 @@ public class LocalPlanner {
         Pose_ robot_pose;
         int cur_waypoint = 0;
         if (!initialPlan) {
-            me.me_lock_.lock();
+            agent.me_lock_.lock();
             try {
-                robot_pose = me.getBaseOdom().getPose().copy();
-                if (me.getLastSeen() == 0L)
+                robot_pose = agent.getBaseOdom().getPose().copy();
+                if (agent.getLastSeen() == 0L)
                     t = System.currentTimeMillis();
                 else
-                    t = me.getLastSeen();
+                    t = agent.getLastSeen();
             } finally {
-                me.me_lock_.unlock();
+                agent.me_lock_.unlock();
             }
 
             //we'll keep points on the plan that are within the window that we're looking at
@@ -410,7 +397,7 @@ public class LocalPlanner {
             double dist = Methods_Planners.getGoalPositionDistance(global_pose,
                     transformed_plan_.get(i).getPose().getPosition().getX(),
                     transformed_plan_.get(i).getPose().getPosition().getY());
-            if (dist < me.getRadius() || dist < min_dist) {
+            if (dist < agent.getRadius() || dist < min_dist) {
                 min_dist = dist;
                 target_pose.setPosition(transformed_plan_.get(i).getPose().getPosition());
                 current_waypoint_ = i;
@@ -443,5 +430,17 @@ public class LocalPlanner {
         current_waypoint_ = transformed_plan_.size() - 1;
     }
 
+    public void stop() {
+        agent.stop();
+    }
+
+    /**
+     * ************************************get stuff*********************************************
+     */
+    public Agent getAgent() {
+        return agent;
+    }
+
+    /***************************************set stuff**********************************************/
 }
 

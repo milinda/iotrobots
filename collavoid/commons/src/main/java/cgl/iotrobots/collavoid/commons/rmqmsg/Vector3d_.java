@@ -28,6 +28,12 @@ public class Vector3d_ implements Serializable {
         this.z = z;
     }
 
+    public void scale(double s) {
+        x = x * s;
+        y = y * s;
+        z = z * s;
+    }
+
     public void setX(double x) {
         this.x = x;
     }
@@ -63,8 +69,8 @@ public class Vector3d_ implements Serializable {
 
     @Override
     public String toString() {
-        return "(" +
-                "," + x +
+        return "("
+                + x +
                 "," + y +
                 "," + z +
                 ')';

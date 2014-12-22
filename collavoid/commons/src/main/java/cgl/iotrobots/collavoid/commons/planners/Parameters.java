@@ -54,4 +54,12 @@ public class Parameters {
     // allowed error for position and heading
     public static double EPSILON = 0.001;
 
+    // For simulator
+    //robot number, in meter
+    public static int ROBOT_NUMBER = 1;
+    //robot position radius, robot are evenly distributed around a circle and
+    // heading toward the center
+    public static double POSE_RADIUS = 4;
+
+
 }

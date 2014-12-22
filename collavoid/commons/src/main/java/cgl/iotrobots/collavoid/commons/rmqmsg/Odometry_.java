@@ -12,11 +12,11 @@ public class Odometry_ implements Serializable {
 
     private Header_ Header = new Header_();
 
-    private String ChildFrameId;
+    private String ChildFrameId = "";
 
-    private Pose_ Pose;
+    private Pose_ Pose = new Pose_();
 
-    private Twist_ Twist;
+    private Twist_ Twist = new Twist_();
 
     public void setHeader(Header_ header) {
         Header = header;
@@ -67,4 +67,11 @@ public class Odometry_ implements Serializable {
         return outputStream.toByteArray();
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "Pose=" + Pose +
+                ", Twist=" + Twist +
+                '}';
+    }
 }

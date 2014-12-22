@@ -1,8 +1,9 @@
 package cgl.iotrobots.collavoid.simulator;
 
-import cgl.iotrobots.collavoid.GlobalPlanner.GlobalPlanner;
-import cgl.iotrobots.collavoid.LocalPlanner.LocalPlanner;
-import cgl.iotrobots.collavoid.utils.Parameters;
+
+import cgl.iotrobots.collavoid.commons.planners.Parameters;
+import cgl.iotrobots.collavoid.rosplanners.GlobalPlanner.GlobalPlanner;
+import cgl.iotrobots.collavoid.rosplanners.LocalPlanner.LocalPlanner;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.PoseStamped;
@@ -30,8 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainSimulatorWithPlanner {
-    static final int robotNb = SimParams.ROBOT_NB;
-    static final double posRadius = SimParams.POSE_RADIUS;
+    static final int robotNb = Parameters.ROBOT_NUMBER;
+    static final double posRadius = Parameters.POSE_RADIUS;
     static List<Robot> robots = new ArrayList<Robot>();
 
     /**

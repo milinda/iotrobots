@@ -90,7 +90,7 @@ public class Methods_RMQ {
     }
 
     public static void publishMsg(RMQContext context, byte[] body) {
-
+        if (context.CHANNEL.isOpen())
         try {
             context.CHANNEL.basicPublish(
                     context.EXCHANGE_NAME,

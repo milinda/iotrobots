@@ -9,6 +9,8 @@ import com.rabbitmq.client.Envelope;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +18,10 @@ import java.util.logging.Logger;
 
 public class MsgCallBacks {
 
-    private static Logger logger = Logger.getLogger("CallBackLogger");
+    private static Logger loggerCallback = Logger.getLogger("CallBack_Logger");
 
-    public static void bindCallBacks(final Agent agent, Map<String, RMQContext> contexts) throws Exception {
+    public static void bindCallBacks(final Agent agent, final Map<String, RMQContext> contexts) throws Exception {
+
         for (Map.Entry<String, RMQContext> e : contexts.entrySet()) {
             if (e.getKey().equals(Constant.KEY_ODOMETRY))
                 bindOdomCallback(agent, e.getValue());
@@ -29,6 +32,7 @@ public class MsgCallBacks {
             if (e.getKey().equals(Constant.KEY_POSE_SHARE))
                 bindPoseShareCallback(agent, e.getValue());
         }
+
     }
 
     private static void bindOdomCallback(final Agent agent, final RMQContext context) {
@@ -43,6 +47,7 @@ public class MsgCallBacks {
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
                             Odometry_ odometry_ = JsonConverter.JSONToOdometry_(body);
+                            System.out.println(odometry_);
                             odomCallback(agent, odometry_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -216,7 +221,7 @@ public class MsgCallBacks {
                     Agent new_robot = new Agent(cur_id);
                     new_robot.setHolo_robot_(msg.getHoloRobot());
                     neighbors.add(new_robot);
-                    logger.info(agent.getRobotId() + " added a new neighbor with AgentName " + cur_id + " and radius " + msg.getRadius());
+                    loggerCallback.info(agent.getRobotId() + " added a new neighbor with AgentName " + cur_id + " and radius " + msg.getRadius());
                 }
 
                 Agent lstagent = neighbors.get(i);
@@ -255,11 +260,16 @@ public class MsgCallBacks {
             return;
         }
 
-        ChannelBuffer data = msg.getData().copy();
-        while (data.readableBytes() > 0) {
-            double[] pt = new double[msg.getDimension()];
-            for (int k = 0; k < msg.getDimension(); k++) {
-                pt[k] = data.readFloat();
+        byte[] data = msg.getData();
+        byte[] dataFloat = new byte[4];
+        int dim = msg.getDimension();
+        int idx = 0;
+        while (idx * 4 < data.length) {
+            double[] pt = new double[dim];
+            for (int k = 0; k < dim; k++) {
+                System.arraycopy(data, idx++ * 4, dataFloat, 0, 4);
+                float f = ByteBuffer.wrap(dataFloat).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                pt[k] = f;
             }
             point3ds.add(new Vector3d_(pt[0], pt[1], pt[2]));
         }

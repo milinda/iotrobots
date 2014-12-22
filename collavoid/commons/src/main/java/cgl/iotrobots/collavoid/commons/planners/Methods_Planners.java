@@ -29,6 +29,13 @@ public class Methods_Planners {
         return Math.atan2(2.0 * (q0 * q1 + q3 * q2), q3 * q3 + q0 * q0 - q1 * q1 - q2 * q2);
     }
 
+    public static Vector4d_ getQuaternion(Vector3d_ vec, double theta) {
+        double w = Math.cos(normalize_angle(theta) / 2);
+        double s = Math.sqrt(1 - w * w) / vec.length();
+        vec.scale(s);
+        return new Vector4d_(vec.getX(), vec.getY(), vec.getZ(), w);
+    }
+
     public static double getGoalPositionDistance(Pose_ pose, double goalx, double goaly) {
         return Vector2.abs(new Vector2(pose.getPosition().getX() - goalx, pose.getPosition().getY() - goaly));
     }
@@ -51,6 +58,7 @@ public class Methods_Planners {
         return ((angle % (2.0 * Math.PI)) + 2.0 * Math.PI) % (2.0 * Math.PI);//why mod twice??
     }
 
+    // from -PI to PI
     public static double normalize_angle(double angle) {
         double a = normalize_angle_positive(angle);
         if (a > Math.PI)
