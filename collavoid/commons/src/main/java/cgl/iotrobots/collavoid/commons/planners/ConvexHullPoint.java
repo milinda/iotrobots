@@ -1,6 +1,5 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-
 public class ConvexHullPoint {
 
     private double x;

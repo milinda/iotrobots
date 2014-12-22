@@ -1,6 +1,5 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-
 public class Position {
 
     private Vector2 pos=new Vector2();

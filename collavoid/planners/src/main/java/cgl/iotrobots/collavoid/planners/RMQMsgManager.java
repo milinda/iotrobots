@@ -7,12 +7,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class RMQMsgManager {
 
     private Channel channel, shareChannel;
-
-    private boolean autoAck = false;
 
     private Address[] addresses;
 
@@ -39,9 +36,20 @@ public class RMQMsgManager {
 
     }
 
-    public void start(Agent agent) {
-        channel = Methods_RMQ.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_DIRECT);
-        shareChannel = Methods_RMQ.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_FANOUT);
+    public void start(Agent agent) throws Exception {
+        channel = Methods_RMQ.getChannel(
+                addresses,
+                url,
+                null,
+                exchangeName,
+                Constant.TYPE_EXCHANGE_DIRECT
+        );
+        shareChannel = Methods_RMQ.getChannel(
+                addresses, url,
+                null,
+                RMQContexts.get(Constant.KEY_POSE_SHARE).EXCHANGE_NAME,
+                Constant.TYPE_EXCHANGE_FANOUT
+        );
         bindQueue();
         MsgCallBacks.bindCallBacks(agent, RMQContexts);
     }
@@ -52,7 +60,7 @@ public class RMQMsgManager {
                 if (e.getKey().equals(Constant.KEY_POSE_SHARE))
                     continue;
                 e.getValue().CHANNEL = channel;
-                e.getValue().QUEUE_NAME = channel.queueDeclare().getQueue();
+                e.getValue().QUEUE_NAME = channel.queueDeclare().getQueue();// may need to set queue size
                 channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
             RMQContexts.get(Constant.KEY_POSE_SHARE).CHANNEL = shareChannel;
@@ -85,6 +93,9 @@ public class RMQMsgManager {
         try {
             if (channel != null) {
                 channel.close();
+            }
+            if (shareChannel != null) {
+                shareChannel.close();
             }
         } catch (IOException e) {
             System.out.println("Error closing the rabbit MQ connection" + e);

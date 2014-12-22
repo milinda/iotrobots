@@ -24,11 +24,6 @@
             <artifactId>amqp-client</artifactId>
             <version>${rabitmq.verion}</version>
         </dependency>
-        <dependency>
-            <groupId>iotrobots</groupId>
-            <artifactId>planners</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
 

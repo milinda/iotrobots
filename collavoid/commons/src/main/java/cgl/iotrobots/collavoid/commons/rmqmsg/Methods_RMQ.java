@@ -89,10 +89,10 @@ public class Methods_RMQ {
 
     }
 
-    public static void publishMsg(Channel channel, RMQContext context, byte[] body) {
+    public static void publishMsg(RMQContext context, byte[] body) {
 
         try {
-            channel.basicPublish(
+            context.CHANNEL.basicPublish(
                     context.EXCHANGE_NAME,
                     context.ROUTING_KEY,
                     null,

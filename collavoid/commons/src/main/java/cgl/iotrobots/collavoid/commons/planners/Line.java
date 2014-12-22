@@ -1,7 +1,5 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-
-
 public class Line {
     private Vector2 point;
     private Vector2 dir;

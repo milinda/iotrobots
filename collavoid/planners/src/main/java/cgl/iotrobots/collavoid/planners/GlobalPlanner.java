@@ -1,8 +1,6 @@
 package cgl.iotrobots.collavoid.planners;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.Header_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseStamped_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 
 // should decouple ros related types
 //import costmap_2d.VoxelGrid;

@@ -3,7 +3,6 @@ package cgl.iotrobots.collavoid.commons.rmqmsg;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import geometry_msgs.Pose;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

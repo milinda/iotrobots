@@ -18,7 +18,7 @@ public class MsgCallBacks {
 
     private static Logger logger = Logger.getLogger("CallBackLogger");
 
-    public static void bindCallBacks(final Agent agent, Map<String, RMQContext> contexts) throws IOException, Exception {
+    public static void bindCallBacks(final Agent agent, Map<String, RMQContext> contexts) throws Exception {
         for (Map.Entry<String, RMQContext> e : contexts.entrySet()) {
             if (e.getKey().equals(Constant.KEY_ODOMETRY))
                 bindOdomCallback(agent, e.getValue());
@@ -26,14 +26,9 @@ public class MsgCallBacks {
                 bindScanCallback(agent, e.getValue());
             if (e.getKey().equals(Constant.KEY_PARTICLE_CLOUD))
                 bindParticleCloudCallback(agent, e.getValue());
-            if (e.getKey().equals(Constant.KEY_VELOCITY_CMD))
-                bindOdomCallback(agent, e.getValue());
             if (e.getKey().equals(Constant.KEY_POSE_SHARE))
                 bindPoseShareCallback(agent, e.getValue());
-
         }
-
-
     }
 
     private static void bindOdomCallback(final Agent agent, final RMQContext context) {
@@ -126,7 +121,7 @@ public class MsgCallBacks {
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
                             PoseArray_ poseArray_ = JsonConverter.JSONToPoseArray_(body);
-                            particleCloudCallback(agent, poseArray_);
+                            particleCloudTestCallback(agent, poseArray_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
 
@@ -169,7 +164,6 @@ public class MsgCallBacks {
                 agent.setLastTimeMePublished(System.currentTimeMillis());
                 try {
                     Methods_RMQ.publishMsg(
-                            agent.getRmqMsgManager().getShareChannel(),
                             agent.getRmqMsgManager().getRMQContexts().get(Constant.KEY_POSE_SHARE),
                             getPoseShareMsg(agent).toJSON());
                 } catch (IOException e) {
@@ -200,7 +194,7 @@ public class MsgCallBacks {
             Vector3d_ vector3d_ = new Vector3d_(vector2.getX(), vector2.getY(), 0);
             footprint.add(vector3d_);
         }
-        poseShareMsg_.setFootPrint(footprint);
+        poseShareMsg_.setFootPrint_Minkowski(footprint);
         return poseShareMsg_;
     }
 
@@ -236,7 +230,7 @@ public class MsgCallBacks {
                 lstagent.setRadius(msg.getRadius());
                 lstagent.setControlled(msg.getControlled());
                 List<Vector2> footprint = new ArrayList<Vector2>();
-                for (Vector3d_ vector3d_ : msg.getFootPrint())
+                for (Vector3d_ vector3d_ : msg.getFootPrint_Minkowski())
                     footprint.add(new Vector2(vector3d_.getX(), vector3d_.getY()));
                 lstagent.setFootprint_minkowski(footprint);
                 lstagent.setLast_seen_(msg.getHeader().getStamp());
@@ -363,7 +357,8 @@ public class MsgCallBacks {
         return false;
     }
 
-    private static void particleCloudCallback(final Agent agent, final PoseArray_ msg) {
+    // for test
+    private static void particleCloudTestCallback(final Agent agent, final PoseArray_ msg) {
         // in robot base frame do not need transform
         double x, y;
         List<Vector2> localization_footprint = new ArrayList<Vector2>();

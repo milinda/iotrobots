@@ -28,7 +28,7 @@ public class PoseShareMsg_ implements Serializable {
 
     private Twist_ Twist = new Twist_();
 
-    private List<Vector3d_> FootPrint = new ArrayList<Vector3d_>();    // footprint minkowski
+    private List<Vector3d_> FootPrint_Minkowski = new ArrayList<Vector3d_>();    // footprint minkowski
 
     public Header_ getHeader() {
         return Header;
@@ -46,8 +46,8 @@ public class PoseShareMsg_ implements Serializable {
         return Controlled;
     }
 
-    public List<Vector3d_> getFootPrint() {
-        return FootPrint;
+    public List<Vector3d_> getFootPrint_Minkowski() {
+        return FootPrint_Minkowski;
     }
 
     public Pose_ getPose() {
@@ -82,8 +82,8 @@ public class PoseShareMsg_ implements Serializable {
         Controlled = controlled;
     }
 
-    public void setFootPrint(List<Vector3d_> footPrint) {
-        FootPrint = footPrint;
+    public void setFootPrint_Minkowski(List<Vector3d_> footPrint_Minkowski) {
+        FootPrint_Minkowski = footPrint_Minkowski;
     }
 
     public void setHolonomicVelocity(Vector3d_ holonomicVelocity) {

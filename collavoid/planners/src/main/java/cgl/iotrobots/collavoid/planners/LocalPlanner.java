@@ -289,9 +289,9 @@ public class LocalPlanner {
 
 
     void stopWithAccLimits(final Twist_ robot_vel, Twist_ cmd_vel) {
-        double vx = Methods_Planners.sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - me.acc_lim_x_ * me.simPeriod));
-        double vy = Methods_Planners.sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - me.acc_lim_y_ * me.simPeriod));
-        double vth = Methods_Planners.sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - me.acc_lim_th_ * me.simPeriod));
+        double vx = Methods_Planners.sign(robot_vel.getLinear().getX()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getX()) - me.acc_lim_x_ * me.ControlPeriod));
+        double vy = Methods_Planners.sign(robot_vel.getLinear().getY()) * Math.max(0.0, (Math.abs(robot_vel.getLinear().getY()) - me.acc_lim_y_ * me.ControlPeriod));
+        double vth = Methods_Planners.sign(robot_vel.getAngular().getZ()) * Math.max(0.0, (Math.abs(robot_vel.getAngular().getZ()) - me.acc_lim_th_ * me.ControlPeriod));
 
         //ROS_DEBUG("Slowing down... using vx, vy, vth: %.2f, %.2f, %.2f", vx, vy, vth);
         cmd_vel.getLinear().setX(vx);
@@ -316,8 +316,8 @@ public class LocalPlanner {
                 Math.max(-1.0 * me.max_vel_th_, Math.min(-1.0 * me.min_vel_th_inplace_, ang_diff));
 
         //take the acceleration limits of the robot into account
-        double max_acc_vel = Math.abs(vel_yaw) + me.acc_lim_th_ * me.simPeriod;
-        double min_acc_vel = Math.abs(vel_yaw) - me.acc_lim_th_ * me.simPeriod;
+        double max_acc_vel = Math.abs(vel_yaw) + me.acc_lim_th_ * me.ControlPeriod;
+        double min_acc_vel = Math.abs(vel_yaw) - me.acc_lim_th_ * me.ControlPeriod;
 
         v_th_samp = Methods_Planners.sign(v_th_samp) * Math.min(Math.max(Math.abs(v_th_samp), min_acc_vel), max_acc_vel);
 

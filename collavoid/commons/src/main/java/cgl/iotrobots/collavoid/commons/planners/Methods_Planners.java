@@ -11,6 +11,14 @@ import java.util.List;
 
 public class Methods_Planners {
 
+    public static List<Vector2> rotateFootprint(final List<Vector2> footprint, double angle) {
+        List<Vector2> result = new ArrayList<Vector2>();
+        for (int i = 0; i < footprint.size(); ++i) {
+            Vector2 rotated = Vector2.rotateVectorByAngle(footprint.get(i), angle);
+            result.add(rotated);
+        }
+        return result;
+    }
     // local planner related
     public static double getYaw(Vector4d_ q) {
         double q0 = q.getX();
