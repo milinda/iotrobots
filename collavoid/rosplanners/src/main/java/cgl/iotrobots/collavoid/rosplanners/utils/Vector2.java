@@ -174,4 +174,9 @@ public class Vector2 {
     public static double atan(Vector2 v) {
         return Math.atan2(v.getY(), v.getX());
     }
+
+    @Override
+    public String toString() {
+        return "(x:" + x + ", " + "y:" + y + ")";
+    }
 }

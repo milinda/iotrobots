@@ -149,12 +149,16 @@ public class LocalPlanner {
         //velocity is in base frame
         agent.me_lock_.lock();
         try {
-            base_vel = agent.getBaseOdom().getTwist().copy();
             //pose is in odometry or map frame
             global_pose.setPose(agent.getBaseOdom().getPose().copy());
+            base_vel = agent.getBaseOdom().getTwist().copy();
         } finally {
             agent.me_lock_.unlock();
         }
+
+        // wait for odometry msg
+        if (global_pose.getPose().getOrientation().length() < 0.5)
+            return false;
 
         Pose_ goal_point;
         goal_point = global_plan_.get(global_plan_.size() - 1).getPose();
@@ -216,9 +220,7 @@ public class LocalPlanner {
                 logger.warning("Could not transform the global plan to the frame of the controller");
                 return false;
             }
-
             findBestWaypoint(target_pose, global_pose.getPose());
-            System.out.println(target_pose);
         }
 
         Twist_ pref_vel_twist = new Twist_();
@@ -235,7 +237,6 @@ public class LocalPlanner {
         }
 
         agent.computeNewVelocity(pref_vel_vect, cmd_vel);
-
 
         if (Math.abs(cmd_vel.getAngular().getZ()) < agent.min_vel_th_)
             cmd_vel.getAngular().setZ(0);
@@ -420,7 +421,7 @@ public class LocalPlanner {
 
             dif_ang = Math.atan2(dif_y, dif_x);
 
-            if (Math.abs(plan_dir - dif_ang) > 1.0 * yaw_goal_tolerance_) {
+            if (Math.abs(Methods_Planners.normalize_angle(plan_dir - dif_ang)) > 1.0 * yaw_goal_tolerance_) {
                 target_pose.setPosition(transformed_plan_.get(i - 1).getPose().getPosition().copy());
                 current_waypoint_ = i - 1;
                 return;

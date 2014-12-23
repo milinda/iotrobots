@@ -56,7 +56,7 @@ public class Agent {
 
     //config
     public double publishPositionsPeriod;
-    public long publishMePeriod;//position share,in milli second
+    public double publishMePeriod;//position share,in seconds
 
     public double thresholdLastSeen;
     public int numSamples;
@@ -226,7 +226,7 @@ public class Agent {
         //visualization publish frequency
         publishPositionsPeriod = 1.0 / Parameters.PUBLISH_POSITIONS_FREQUENCY;
         //position share publish frequency
-        publishMePeriod = (long) (1.0 / Parameters.PUBLISH_ME_FREQUENCY * 1000);
+        publishMePeriod = 1.0 / Parameters.PUBLISH_ME_FREQUENCY;
 
         radius = footprint_radius_ + cur_loc_unc_radius_;
 
@@ -380,7 +380,11 @@ public class Agent {
     //update status of the agent according to its velocity
     void upDateAgentState(Agent agt) {
         double time_dif;
-        time_dif = System.currentTimeMillis() - agt.getLastSeen();
+        if (agt.getLastSeen() == 0)
+            time_dif = 0;
+        else
+            time_dif = System.currentTimeMillis() - agt.getLastSeen();
+        time_dif = time_dif / 1000.0;
 
         double yaw, x_dif, y_dif, th_dif, x, y, theta;
         Vector2 pt = new Vector2(0.0, 0.0);
@@ -480,6 +484,8 @@ public class Agent {
 
 
     void computeObstacles() {
+        if (obstacles_from_laser_.size() <= 0)
+            return;
         obstacle_lock_.lock();
         try {
             Vector<Vector2> own_footprint = new Vector<Vector2>();
@@ -650,7 +656,6 @@ public class Agent {
 
     void computeClearpathVelocity(Vector2 pref_velocity) {
         //account for nh error
-
         neighbors_lock_.lock();
         try {
             radius += cur_allowed_error_;
@@ -722,7 +727,7 @@ public class Agent {
         return Name;
     }
 
-    public long getPublishMePeriod() {
+    public double getPublishMePeriod() {
         return publishMePeriod;
     }
 

@@ -89,9 +89,9 @@ public class MainSimulator {
         Point3d previousPosition=null;
 
         public Robot(Vector3d position, double ori, int id) {
-
             // initialize position and orientation
             super(position, "robot"+id);
+
             this.id=id;
             this.radius = (float) Parameters.FOOTPRINT_RADIUS;// loaded from agent parameters
             orientation = ori;
@@ -142,7 +142,6 @@ public class MainSimulator {
                 // initialize message
                 pctmp=laserscanPublisher.newMessage();
                 pc2 = laserscanPublisher.newMessage();
-                pc2.getHeader().setFrameId(robotFrame);
                 pc2Seq = 0;
             }
 
@@ -194,6 +193,7 @@ public class MainSimulator {
         public void initBehavior() {
             float colorvalue=(float)this.id/robotNb;
             setColor(new Color3f(0,colorvalue,0));
+            this.resetPosition();
             this.rotateY(orientation);
             vl=0;
             vr=0;
@@ -376,7 +376,6 @@ public class MainSimulator {
     public static void main(String[] args) {
         // request antialising
         System.setProperty("j3d.implicitAntialiasing", "true");
-        System.out.println(System.getProperty("java.library.path"));
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
 

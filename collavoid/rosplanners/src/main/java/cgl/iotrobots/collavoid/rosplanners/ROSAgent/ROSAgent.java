@@ -1315,7 +1315,6 @@ public class ROSAgent {
 
     void computeClearpathVelocity(Vector2 pref_velocity) {
         //account for nh error
-
         neighbors_lock_.lock();
         try {
             radius += cur_allowed_error_;

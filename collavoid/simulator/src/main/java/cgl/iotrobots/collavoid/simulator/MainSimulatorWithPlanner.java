@@ -198,7 +198,12 @@ public class MainSimulatorWithPlanner {
          * This method is called by the simulator engine on reset.
          */
         public void initBehavior() {
+            float colorvalue = (float) this.id / robotNb;
+            setColor(new Color3f(0, colorvalue, 0));
+            this.resetPosition();
             this.rotateY(orientation);
+            vl = 0;
+            vr = 0;
             initPlanner();
         }
 

@@ -40,6 +40,11 @@ public class Header_ implements Serializable {
         return header_;
     }
 
+    @Override
+    public String toString() {
+        return "{FrameId:" + FrameId + "," + "Stamp:" + Stamp + "}";
+    }
+
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);

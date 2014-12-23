@@ -6,6 +6,7 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.QueueingConsumer;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.IOException;
@@ -47,7 +48,6 @@ public class MsgCallBacks {
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
                             Odometry_ odometry_ = JsonConverter.JSONToOdometry_(body);
-                            System.out.println(odometry_);
                             odomCallback(agent, odometry_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -165,7 +165,7 @@ public class MsgCallBacks {
 
             agent.setLast_seen_(msg.getHeader().getStamp());
 
-            if ((System.currentTimeMillis() - agent.getLastTimeMePublished()) > agent.getPublishMePeriod()) {
+            if ((System.currentTimeMillis() - agent.getLastTimeMePublished()) > agent.getPublishMePeriod() * 1000) {
                 agent.setLastTimeMePublished(System.currentTimeMillis());
                 try {
                     Methods_RMQ.publishMsg(
@@ -248,8 +248,6 @@ public class MsgCallBacks {
 
     // scans are published in global frame
     public static void scanCallback(final Agent agent, final PointCloud2_ msg) {
-        List<Vector3d_> point3ds = new ArrayList<Vector3d_>();
-
         if (msg.getWidth() * msg.getHeight() == 0) {
             agent.getObstacle_lock_().lock();
             try {
@@ -259,19 +257,20 @@ public class MsgCallBacks {
             }
             return;
         }
+        if (msg.getData().length % 3 != 0) {
+            loggerCallback.severe("Bad PointCloud2_ data!!");
+            return;
+        }
+        List<Vector3d_> point3ds = new ArrayList<Vector3d_>();
 
-        byte[] data = msg.getData();
-        byte[] dataFloat = new byte[4];
-        int dim = msg.getDimension();
+        double[] data = msg.getData();
+        int pn = data.length / 3;
         int idx = 0;
-        while (idx * 4 < data.length) {
-            double[] pt = new double[dim];
-            for (int k = 0; k < dim; k++) {
-                System.arraycopy(data, idx++ * 4, dataFloat, 0, 4);
-                float f = ByteBuffer.wrap(dataFloat).order(ByteOrder.LITTLE_ENDIAN).getFloat();
-                pt[k] = f;
-            }
-            point3ds.add(new Vector3d_(pt[0], pt[1], pt[2]));
+        int idx_;
+        while (idx < pn) {
+            idx_ = idx * 3;
+            point3ds.add(new Vector3d_(data[idx_], data[idx_ + 1], data[idx_ + 2]));
+            idx++;
         }
         //no need to transform rviz will transform automatically
 //            if (!tf_.transformPoint3ds(global_frame_, base_frame_, point3ds, msg.getHeader().getStamp().totalNsecs(), dur_m)) {

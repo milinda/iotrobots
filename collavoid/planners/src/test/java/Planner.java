@@ -66,15 +66,15 @@ public class Planner {
 
                 Twist_ cmd_vel = new Twist_();
                 while (running) {
-                    if (System.currentTimeMillis() - lastPublished > (long) ControlPeriod * 1000) {
+
+                    if (System.currentTimeMillis() - lastPublished > (long) (ControlPeriod * 1000)) {
                         lastPublished = System.currentTimeMillis();
                         if (localPlanner.computeVelocityCommands(cmd_vel)) {
-//                            try {
-//                                System.out.println(cmd_vel);
-//                                Methods_RMQ.publishMsg(velContext, cmd_vel.toJSON());
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
+                            try {
+                                Methods_RMQ.publishMsg(velContext, cmd_vel.toJSON());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                     try {

@@ -68,6 +68,11 @@ public class Vector4d_ implements Serializable {
 
     }
 
+    public double length() {
+        return Math.sqrt(x * x + y * y + z * z + w * w);
+
+    }
+
     @Override
     public String toString() {
         return "("

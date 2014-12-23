@@ -18,7 +18,7 @@ public class PointCloud2_ implements Serializable {
 
     private int Height;
 
-    private byte[] Data;
+    private double[] Data;
 
     private int Dimension;
 
@@ -26,7 +26,7 @@ public class PointCloud2_ implements Serializable {
         return Header;
     }
 
-    public byte[] getData() {
+    public double[] getData() {
         return Data;
     }
 
@@ -58,14 +58,14 @@ public class PointCloud2_ implements Serializable {
         Dimension = dimension;
     }
 
-    public void setData(byte[] data) {
+    public void setData(double[] data) {
         Data = data;
     }
 
     public PointCloud2_ copy() {
         PointCloud2_ pointCloud2_ = new PointCloud2_();
         pointCloud2_.setHeader(Header.copy());
-        byte[] data = new byte[Data.length];
+        double[] data = new double[Data.length];
         System.arraycopy(Data, 0, data, 0, Data.length);
         pointCloud2_.setData(data);
         pointCloud2_.setDimension(Dimension);

@@ -30,8 +30,11 @@ public class Methods_Planners {
     }
 
     public static Vector4d_ getQuaternion(Vector3d_ vec, double theta) {
-        double w = Math.cos(normalize_angle(theta) / 2);
+        double theta_normalized = normalize_angle(theta);
+        double w = Math.cos(normalize_angle(theta) / 2);        
         double s = Math.sqrt(1 - w * w) / vec.length();
+        if (theta_normalized < 0)
+            s = -s;
         vec.scale(s);
         return new Vector4d_(vec.getX(), vec.getY(), vec.getZ(), w);
     }
@@ -55,7 +58,7 @@ public class Methods_Planners {
 
     // angel related
     public static double normalize_angle_positive(double angle) {
-        return ((angle % (2.0 * Math.PI)) + 2.0 * Math.PI) % (2.0 * Math.PI);//why mod twice??
+        return ((angle % (2.0 * Math.PI)) + 2.0 * Math.PI) % (2.0 * Math.PI);
     }
 
     // from -PI to PI

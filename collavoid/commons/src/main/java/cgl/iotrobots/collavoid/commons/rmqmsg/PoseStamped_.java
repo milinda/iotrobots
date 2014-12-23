@@ -40,6 +40,11 @@ public class PoseStamped_ implements Serializable {
 
     }
 
+    @Override
+    public String toString() {
+        return Header.toString() + Pose.toString();
+    }
+
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
