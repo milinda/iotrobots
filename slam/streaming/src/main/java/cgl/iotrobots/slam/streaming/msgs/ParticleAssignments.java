@@ -9,7 +9,17 @@ public class ParticleAssignments {
     /** If the resampler doesn't re sample there will be no assignments */
     private boolean reSampled = false;
 
+    private int bestParticle;
+
     public ParticleAssignments() {
+    }
+
+    public int getBestParticle() {
+        return bestParticle;
+    }
+
+    public void setBestParticle(int bestParticle) {
+        this.bestParticle = bestParticle;
     }
 
     public List<ParticleAssignment> getAssignments() {

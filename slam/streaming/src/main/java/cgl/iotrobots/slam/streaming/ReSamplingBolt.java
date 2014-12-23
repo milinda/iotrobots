@@ -141,6 +141,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // now distribute the resampled particleValueses
         List<Integer> particles = reSampler.getIndexes();
 
+        int best = reSampler.getBestParticleIndex();
         // we will distribute only if we have reSampled
         if (hasReSampled) {
             // first we will distribute the new assignments
@@ -148,23 +149,26 @@ public class ReSamplingBolt extends BaseRichBolt {
             LOG.info("ReSampled, distributing assignments");
             ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
             assignments.setReSampled(true);
+            assignments.setBestParticle(best);
             distributeAssignments(assignments);
 
-            int best = reSampler.getBestParticleIndex();
             // distribute the new particle values according to
             for (int i = 0; i < reSampler.getParticles().size(); i++) {
                 Particle p = reSampler.getParticles().get(i);
 //                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
 //                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
                 ParticleValue pv = Utils.createParticleValue(p, -1, i, -1);
-                if (i == best) {
-                    pv.setBest(true);
-                }
+
                 byte[] b = Utils.serialize(kryo, pv);
                 Message message = new Message(b, new HashMap<String, Object>());
                 // we assume there is a direct mapping between particles in the resampler and the indexes
                 ParticleAssignment assignment = assignments.getAssignments().get(i);
                 try {
+                    if (i == best) {
+                        LOG.info("Best node index: {}, sending this to task: {}", i, assignment.getNewTask());
+                        pv.setBest(true);
+                    }
+
                     LOG.info("Sending particle value to: {}", assignment.getNewTask());
                     valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
                 } catch (Exception e) {
@@ -175,6 +179,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             LOG.info("NOT ReSampled, distributing assignments");
             ParticleAssignments assignments = new ParticleAssignments();
             assignments.setReSampled(false);
+            assignments.setBestParticle(best);
             distributeAssignments(assignments);
         }
 
