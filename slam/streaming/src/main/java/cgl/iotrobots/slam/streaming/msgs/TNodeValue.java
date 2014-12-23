@@ -1,65 +1,43 @@
-package cgl.iotrobots.slam.core.gridfastsalm;
+package cgl.iotrobots.slam.streaming.msgs;
 
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
-public class TNode {
+
+public class TNodeValue {
     /**The pose of the robot*/
-    public DoubleOrientedPoint pose;
+    private DoubleOrientedPoint pose;
 
     /**The weight of the particle*/
-    public double weight;
+    private double weight;
 
     /**The sum of all the particle weights in the previous part of the trajectory*/
-    public double accWeight;
+    private double accWeight;
 
-    public double gweight;
-
-    /**The parent*/
-    public TNode parent;
+    private double gweight;
 
     /**The range reading to which this node is associated*/
-    public RangeReading reading;
+    private RangeReading reading;
 
     /**The number of childs*/
-    public int childs;
+    private int childs;
 
     /**counter in visiting the node (internally used)*/
-    public int visitCounter;
+    private int visitCounter;
 
     /**visit flag (internally used)*/
-    public boolean flag;
+    private boolean flag;
 
-    public TNode(DoubleOrientedPoint p, double w, TNode n, int c) {
-        pose = p;
-        weight = w;
-        childs = c;
-        parent = n;
-        reading = null;
-        gweight = 0;
-        if (n != null) {
-            n.childs++;
-        }
-        flag = false;
-        accWeight = 0;
+    public TNodeValue() {
     }
 
-    public TNode(TNode t) {
-
-    }
-
-    public TNode() {
-    }
-
-    public TNode(DoubleOrientedPoint pose, double weight,
-                 double accWeight, double gweight,
-                 TNode parent, RangeReading reading,
-                 int childs, int visitCounter, boolean flag) {
+    public TNodeValue(DoubleOrientedPoint pose, double weight, double accWeight,
+                      double gweight, RangeReading reading,
+                      int childs, int visitCounter, boolean flag) {
         this.pose = pose;
         this.weight = weight;
         this.accWeight = accWeight;
         this.gweight = gweight;
-        this.parent = parent;
         this.reading = reading;
         this.childs = childs;
         this.visitCounter = visitCounter;
@@ -80,10 +58,6 @@ public class TNode {
 
     public double getGweight() {
         return gweight;
-    }
-
-    public TNode getParent() {
-        return parent;
     }
 
     public RangeReading getReading() {
@@ -116,10 +90,6 @@ public class TNode {
 
     public void setGweight(double gweight) {
         this.gweight = gweight;
-    }
-
-    public void setParent(TNode parent) {
-        this.parent = parent;
     }
 
     public void setReading(RangeReading reading) {

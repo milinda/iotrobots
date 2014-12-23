@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DistributedScanMatcher {
     private static Logger LOG = LoggerFactory.getLogger(DistributedScanMatcher.class);
@@ -64,6 +66,9 @@ public class DistributedScanMatcher {
 
     private List<Integer> activeParticles = new ArrayList<Integer>();
 
+    // this lock must not be here. For now we will use it
+    private Lock lock = new ReentrantLock();
+
     public DistributedScanMatcher() {
         period_ = 0.0;
         obsSigmaGain = 1;
@@ -95,14 +100,36 @@ public class DistributedScanMatcher {
         return particles;
     }
 
+    public void clearActiveParticles() {
+        lock.lock();
+        try {
+            activeParticles.clear();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void addActiveParticle(int index) {
+        lock.lock();
+        try {
+            if (!activeParticles.contains(index)) {
+                activeParticles.add(index);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public int getBestParticleIndex() {
         int bi = 0;
         double bw = -Double.MAX_VALUE;
-        for (int i = 0; i < particles.size(); i++)
-            if (bw < particles.get(i).weightSum) {
-                bw = particles.get(i).weightSum;
-                bi = i;
+        for (int i = 0; i < activeParticles.size(); i++) {
+            int particleIndex = activeParticles.get(i);
+            if (bw < particles.get(particleIndex).weightSum) {
+                bw = particles.get(particleIndex).weightSum;
+                bi = particleIndex;
             }
+        }
         return bi;
     }
 
@@ -304,11 +331,16 @@ public class DistributedScanMatcher {
     }
 
     public void processAfterReSampling(double []plainReading) {
-        for (int i : activeParticles) {
-            Particle it = particles.get(i);
-            matcher.invalidateActiveArea();
-            matcher.registerScan(it.map, it.pose, plainReading);
-            particles.add(it);
+        lock.lock();
+        try {
+            for (int i : activeParticles) {
+                Particle it = particles.get(i);
+                matcher.invalidateActiveArea();
+                matcher.registerScan(it.map, it.pose, plainReading);
+                // particles.add(it);
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -320,19 +352,24 @@ public class DistributedScanMatcher {
         int index = 0;
         LOG.debug("Registering Scans:");
         Iterator<TNode> node_it = oldGeneration.iterator();
-        for (int i : activeParticles) {
-            Particle it = particles.get(i);
-            //create a new node in the particle tree and add it to the old tree
-            TNode node = null;
-            node = new TNode(it.pose, 0.0, node_it.next(), 0);
+        lock.lock();
+        try {
+            for (int i : activeParticles) {
+                Particle it = particles.get(i);
+                //create a new node in the particle tree and add it to the old tree
+                TNode node = null;
+                node = new TNode(it.pose, 0.0, node_it.next(), 0);
 
-            node.reading = reading;
-            it.node = node;
+                node.reading = reading;
+                it.node = node;
 
-            matcher.invalidateActiveArea();
-            matcher.registerScan(it.map, it.pose, plainReading);
-            it.previousIndex = index;
-            index++;
+                matcher.invalidateActiveArea();
+                matcher.registerScan(it.map, it.pose, plainReading);
+                it.previousIndex = index;
+                index++;
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -343,9 +380,14 @@ public class DistributedScanMatcher {
     public void scanMatch(double[] plainReading) {
         // sample a new pose from each scan in the reference
         double sumScore = 0;
-        for (int index : activeParticles) {
-            Particle it = particles.get(index);
-            sumScore = scanMatchParticle(plainReading, sumScore, it);
+        lock.lock();
+        try {
+            for (int index : activeParticles) {
+                Particle it = particles.get(index);
+                sumScore = scanMatchParticle(plainReading, sumScore, it);
+            }
+        }finally {
+            lock.unlock();
         }
         LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
     }

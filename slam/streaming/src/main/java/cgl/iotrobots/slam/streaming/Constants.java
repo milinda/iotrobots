@@ -39,9 +39,13 @@ public abstract class Constants {
     public static final String OCC_THRESH = "occ_threshold";
 
     public abstract class Fields {
+        public static final String PARTICLE_STREAM = "particle";
+        public static final String MAP_STREAM = "map";
         public static final String TIME_FIELD = "time";
-        public static final String LASER_SCAN_TUPLE = "laser_scan";
-        public static final String PARTICLE_VALUE = "particle_value";
+        public static final String LASER_SCAN_FIELD = "laser_scan";
+        public static final String PARTICLE_MAP_FIELD = "map_tuple";
+        public static final String PARTICLE_VALUE_FIELD = "particle_value";
+        public static final String PARTICLE_FIELD = "particle";
         public static final String SENSOR_ID_FIELD = "sensorID";
     }
 

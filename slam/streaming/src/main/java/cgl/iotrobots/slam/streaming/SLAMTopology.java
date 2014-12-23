@@ -7,14 +7,19 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.app.Position;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
+import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
+import cgl.iotrobots.slam.streaming.msgs.MapCell;
+import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
+import cgl.iotrobots.slam.streaming.msgs.TransferMap;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import cgl.sensorstream.core.rabbitmq.DefaultRabbitMQMessageBuilder;
@@ -101,8 +106,8 @@ public class SLAMTopology {
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
         builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
-        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
-        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT);
+        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
+        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
     }
 
@@ -115,6 +120,15 @@ public class SLAMTopology {
         config.registerSerialization(HierarchicalArray2D.class);
         config.registerSerialization(TNode.class);
         config.registerSerialization(DoubleOrientedPoint.class);
+        config.registerSerialization(Particle.class);
+        config.registerSerialization(PointAccumulator.class);
+        config.registerSerialization(HierarchicalArray2D.class);
+        config.registerSerialization(Array2D.class);
+        config.registerSerialization(Position.class);
+        config.registerSerialization(Object[][].class);
+        config.registerSerialization(TransferMap.class);
+        config.registerSerialization(ParticleMaps.class);
+        config.registerSerialization(MapCell.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {
@@ -143,7 +157,7 @@ public class SLAMTopology {
             return new DestinationSelector() {
                 @Override
                 public String select(Tuple tuple) {
-                    return null;
+                    return "test";
                 }
             };
         }
@@ -162,7 +176,7 @@ public class SLAMTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_TUPLE, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
+            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_FIELD, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
         }
 
         @Override
@@ -201,13 +215,15 @@ public class SLAMTopology {
             if (!sender) {
                 configuration.addProperty("queueName", "laser_scan");
                 configuration.addProperty("routingKey", "laser_scan");
+                configuration.addProperty("exchange", "simbard_laser");
             } else {
                 configuration.addProperty("queueName", "map");
                 configuration.addProperty("routingKey", "map");
+                configuration.addProperty("exchange", "simbard_map");
             }
 
-            configuration.addProperty("exchange", "simbard");
             dstListener.addDestination("rabbitmq", configuration);
+            dstListener.addPathToDestination("rabbitmq", "test");
         }
 
         @Override

@@ -12,10 +12,13 @@ import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
 import simbad.gui.Simbad;
 import simbad.sim.*;
+import simbad.sim.Box;
 
+import javax.swing.*;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +44,8 @@ public class SimbardDistributed {
             super(position, name);
 
             try {
-                sender = new RabbitMQSender("amqp://localhost:5672", "simbard");
-                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard");
+                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
+                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
                 sender.open();
                 receiver.listen(new MapReceiver());
             } catch (Exception e) {
@@ -123,6 +126,7 @@ public class SimbardDistributed {
             public Map<String, String> getProperties() {
                 Map<String, String> props = new HashMap<String, String>();
                 props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.map");
+                props.put(MessagingConstants.RABBIT_QUEUE, "test.test.map");
                 return props;
             }
 
@@ -199,6 +203,23 @@ public class SimbardDistributed {
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
+
+        showOnScreen(1, frame);
         mapUI = new MapUI();
+//        showOnScreen(1, mapUI);
+    }
+
+    public static void showOnScreen( int screen, JFrame frame )
+    {
+        GraphicsEnvironment ge = GraphicsEnvironment
+                .getLocalGraphicsEnvironment();
+        GraphicsDevice[] gs = ge.getScreenDevices();
+        if (screen > -1 && screen < gs.length) {
+            gs[screen].setFullScreenWindow(frame);
+        } else if (gs.length > 0) {
+            gs[0].setFullScreenWindow(frame);
+        } else {
+            throw new RuntimeException("No Screens Found");
+        }
     }
 }

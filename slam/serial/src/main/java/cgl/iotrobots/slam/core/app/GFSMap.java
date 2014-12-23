@@ -17,17 +17,21 @@ public class GFSMap {
 
     public int data[];
 
-    public List<IntPoint> currentPos = Collections.synchronizedList(new ArrayList<IntPoint>());
+    public List<IntPoint> currentPos = new ArrayList<IntPoint>();
 
-    public class Position {
-        double x, y, z, w;
-    }
+
 
     Position origin = new Position();
 
     Position originOrientation = new Position();
 
     public GFSMap() {
+    }
+
+    public GFSMap(int width, int height, double resolution) {
+        this.width = width;
+        this.height = height;
+        this.resolution = resolution;
     }
 
     public GFSMap(int width, int height) {
@@ -39,5 +43,61 @@ public class GFSMap {
 
     public void resize(int size) {
         data = new int[size];
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public double getResolution() {
+        return resolution;
+    }
+
+    public int[] getData() {
+        return data;
+    }
+
+    public List<IntPoint> getCurrentPos() {
+        return currentPos;
+    }
+
+    public Position getOrigin() {
+        return origin;
+    }
+
+    public Position getOriginOrientation() {
+        return originOrientation;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public void setResolution(double resolution) {
+        this.resolution = resolution;
+    }
+
+    public void setData(int[] data) {
+        this.data = data;
+    }
+
+    public void setCurrentPos(List<IntPoint> currentPos) {
+        this.currentPos = currentPos;
+    }
+
+    public void setOrigin(Position origin) {
+        this.origin = origin;
+    }
+
+    public void setOriginOrientation(Position originOrientation) {
+        this.originOrientation = originOrientation;
     }
 }

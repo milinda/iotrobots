@@ -11,28 +11,31 @@ import java.util.Set;
  */
 public class HierarchicalArray2D {
     Array2D array2D;
-    Set<IntPoint> m_activeArea = new HashSet<IntPoint>();
-    int m_patchMagnitude = 0;
-    int m_patchSize;
+    Set<IntPoint> activeArea = new HashSet<IntPoint>();
+    int patchMagnitude = 0;
+    int patchSize;
+
+    public HierarchicalArray2D() {
+    }
 
     public HierarchicalArray2D(int xsize, int ysize, int patchMagnitude) {
         array2D = new Array2D((xsize >> patchMagnitude), (ysize >> patchMagnitude));
 
-        m_patchMagnitude = patchMagnitude;
-        m_patchSize = 1 << m_patchMagnitude;
+        this.patchMagnitude = patchMagnitude;
+        patchSize = 1 << this.patchMagnitude;
     }
 
     public HierarchicalArray2D(HierarchicalArray2D hg) {
-        array2D = new Array2D(hg.array2D.m_xsize >> hg.m_patchMagnitude, hg.array2D.m_ysize >> hg.m_patchMagnitude);
+        array2D = new Array2D(hg.array2D.xsize >> hg.patchMagnitude, hg.array2D.ysize >> hg.patchMagnitude);
         assign(hg);
     }
 
     public int getPatchSize() {
-        return m_patchMagnitude;
+        return patchMagnitude;
     }
 
     public int getPatchMagnitude() {
-        return m_patchMagnitude;
+        return patchMagnitude;
     }
 
     public Object cell(IntPoint p) {
@@ -47,29 +50,29 @@ public class HierarchicalArray2D {
         return patchIndexes(p.x, p.y);
     }
 
-    Set<IntPoint> getActiveArea() {
-        return m_activeArea;
+    public Set<IntPoint> getActiveArea() {
+        return activeArea;
     }
 
     public void assign(HierarchicalArray2D hg) {
-        array2D.m_xsize = hg.array2D.m_xsize;
-        array2D.m_ysize = hg.array2D.m_ysize;
-        array2D.m_cells = new Object[array2D.m_xsize][array2D.m_ysize];
+        array2D.xsize = hg.array2D.xsize;
+        array2D.ysize = hg.array2D.ysize;
+        array2D.cells = new Object[array2D.xsize][array2D.ysize];
 
-        for (int x = 0; x < array2D.m_xsize; x++) {
-            System.arraycopy(hg.array2D.m_cells[x], 0, array2D.m_cells[x], 0, array2D.m_ysize);
+        for (int x = 0; x < array2D.xsize; x++) {
+            System.arraycopy(hg.array2D.cells[x], 0, array2D.cells[x], 0, array2D.ysize);
         }
-        this.m_activeArea.clear();
-        this.m_patchMagnitude = hg.m_patchMagnitude;
-        this.m_patchSize = hg.m_patchSize;
+        this.activeArea.clear();
+        this.patchMagnitude = hg.patchMagnitude;
+        this.patchSize = hg.patchSize;
     }
 
     public int getXSize() {
-        return array2D.m_xsize;
+        return array2D.xsize;
     }
 
     public int getYSize() {
-        return array2D.m_ysize;
+        return array2D.ysize;
     }
 
     public void resize(int xmin, int ymin, int xmax, int ymax) {
@@ -79,18 +82,18 @@ public class HierarchicalArray2D {
 
         int dx = xmin < 0 ? 0 : xmin;
         int dy = ymin < 0 ? 0 : ymin;
-        int Dx = xmax < this.array2D.m_xsize ? xmax : this.array2D.m_xsize;
-        int Dy = ymax < this.array2D.m_ysize ? ymax : this.array2D.m_ysize;
+        int Dx = xmax < this.array2D.xsize ? xmax : this.array2D.xsize;
+        int Dy = ymax < this.array2D.ysize ? ymax : this.array2D.ysize;
         for (int x = dx; x < Dx; x++) {
-            System.arraycopy(this.array2D.m_cells[x], dy, newcells[x - xmin], dy - ymin, Dy - dy);
+            System.arraycopy(this.array2D.cells[x], dy, newcells[x - xmin], dy - ymin, Dy - dy);
         }
-        this.array2D.m_cells = newcells;
-        this.array2D.m_xsize = xsize;
-        this.array2D.m_ysize = ysize;
+        this.array2D.cells = newcells;
+        this.array2D.xsize = xsize;
+        this.array2D.ysize = ysize;
     }
 
     public void setActiveArea(Set<IntPoint> aa, boolean patchCoords) {
-        m_activeArea.clear();
+        activeArea.clear();
         for (IntPoint it : aa) {
             IntPoint p;
             if (patchCoords) {
@@ -98,19 +101,19 @@ public class HierarchicalArray2D {
             } else {
                 p = patchIndexes(it.x, it.y);
             }
-            m_activeArea.add(p);
+            activeArea.add(p);
         }
     }
 
     public IntPoint patchIndexes(int x, int y) {
         if (x >= 0 && y >= 0) {
-            return new IntPoint(x >> m_patchMagnitude, y >> m_patchMagnitude);
+            return new IntPoint(x >> patchMagnitude, y >> patchMagnitude);
         }
         return new IntPoint(-1, -1);
     }
 
     public Array2D createPatch(IntPoint p) {
-        return new Array2D(1 << m_patchMagnitude, 1 << m_patchMagnitude);
+        return new Array2D(1 << patchMagnitude, 1 << patchMagnitude);
     }
 
 
@@ -127,52 +130,72 @@ public class HierarchicalArray2D {
     }
 
     public void allocActiveArea() {
-        for (IntPoint it : m_activeArea) {
-            Array2D ptr = (Array2D) this.array2D.m_cells[it.x][it.y];
+        for (IntPoint it : activeArea) {
+            Array2D ptr = (Array2D) this.array2D.cells[it.x][it.y];
             Array2D patch = null;
             if (ptr == null) {
                 patch = createPatch(it);
-                for (int k = 0; k < patch.m_xsize; k++) {
-                    for (int l = 0; l < patch.m_ysize; l++) {
-                        patch.m_cells[k][l] = new PointAccumulator();
+                for (int k = 0; k < patch.xsize; k++) {
+                    for (int l = 0; l < patch.ysize; l++) {
+                        patch.cells[k][l] = new PointAccumulator();
                     }
                 }
             } else {
                 patch = createPatch(it);
-                for (int k = 0; k < patch.m_xsize; k++) {
-                    for (int l = 0; l < patch.m_ysize; l++) {
-                        patch.m_cells[k][l] = new PointAccumulator((PointAccumulator) ptr.m_cells[k][l]);
+                for (int k = 0; k < patch.xsize; k++) {
+                    for (int l = 0; l < patch.ysize; l++) {
+                        patch.cells[k][l] = new PointAccumulator((PointAccumulator) ptr.cells[k][l]);
                     }
                 }
             }
-            this.array2D.m_cells[it.x][it.y] = patch;
+            this.array2D.cells[it.x][it.y] = patch;
         }
     }
 
     public boolean isAllocated(int x, int y) {
         IntPoint c = patchIndexes(x, y);
-        Object val = array2D.m_cells[c.x][c.y];
+        Object val = array2D.cells[c.x][c.y];
         return (val != null);
     }
 
     public boolean isAllocated(IntPoint patchIndexes) {
-        Object val = array2D.m_cells[patchIndexes.x][patchIndexes.y];
+        Object val = array2D.cells[patchIndexes.x][patchIndexes.y];
         return (val != null);
     }
 
     public Object cell(int x, int y) {
         IntPoint c = patchIndexes(x, y);
         assert (array2D.isInside(c.x, c.y));
-        if (array2D.m_cells[c.x][c.y] == null) {
+        if (array2D.cells[c.x][c.y] == null) {
             Array2D patch = createPatch(new IntPoint(x, y));
-            for (int k = 0; k < patch.m_xsize; k++) {
-                for (int l = 0; l < patch.m_ysize; l++) {
-                    patch.m_cells[k][l] = new PointAccumulator();
+            for (int k = 0; k < patch.xsize; k++) {
+                for (int l = 0; l < patch.ysize; l++) {
+                    patch.cells[k][l] = new PointAccumulator();
                 }
             }
-            array2D.m_cells[c.x][c.y] = patch;
+            array2D.cells[c.x][c.y] = patch;
         }
-        Array2D ptr = (Array2D) this.array2D.m_cells[c.x][c.y];
-        return ptr.cell(new IntPoint(x - (c.x << m_patchMagnitude), y - (c.y << m_patchMagnitude)));
+        Array2D ptr = (Array2D) this.array2D.cells[c.x][c.y];
+        return ptr.cell(new IntPoint(x - (c.x << patchMagnitude), y - (c.y << patchMagnitude)));
+    }
+
+    public Array2D getArray2D() {
+        return array2D;
+    }
+
+    public void setArray2D(Array2D array2D) {
+        this.array2D = array2D;
+    }
+
+    public void setActiveArea(Set<IntPoint> activeArea) {
+        this.activeArea = activeArea;
+    }
+
+    public void setPatchMagnitude(int patchMagnitude) {
+        this.patchMagnitude = patchMagnitude;
+    }
+
+    public void setPatchSize(int patchSize) {
+        this.patchSize = patchSize;
     }
 }

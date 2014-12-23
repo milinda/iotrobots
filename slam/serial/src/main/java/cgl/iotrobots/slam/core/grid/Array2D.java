@@ -4,41 +4,44 @@ import cgl.iotrobots.slam.core.utils.IntPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Array2D {
-    private Logger LOG = LoggerFactory.getLogger(Array2D.class);
+public class Array2D <T> {
+    private static Logger LOG = LoggerFactory.getLogger(Array2D.class);
 
-    public int m_xsize, m_ysize;
-    public Object m_cells[][];
+    public int xsize, ysize;
+    public Object cells[][];
+
+    public Array2D() {
+    }
 
     public Array2D(int xsize, int ysize) {
-        m_xsize = xsize;
-        m_ysize = ysize;
-        if (m_xsize > 0 && m_ysize > 0) {
-            m_cells = new Object[m_xsize][m_ysize];
+        this.xsize = xsize;
+        this.ysize = ysize;
+        if (this.xsize > 0 && this.ysize > 0) {
+            cells = new Object[this.xsize][this.ysize];
 
         } else {
-            m_xsize = m_ysize = 0;
-            m_cells = null;
+            this.xsize = this.ysize = 0;
+            cells = null;
         }
-        LOG.debug("m_xsize= " + m_xsize + " m_ysize: " + m_ysize);
+        LOG.debug("xsize= " + this.xsize + " ysize: " + this.ysize);
     }
 
     public void assign(Array2D g) {
-        if (m_xsize != g.m_xsize || m_ysize != g.m_ysize) {
-            m_xsize = g.m_xsize;
-            m_ysize = g.m_ysize;
-            if (m_xsize > 0 && m_ysize > 0) {
-                m_cells = new Object[m_xsize][m_ysize];
+        if (xsize != g.xsize || ysize != g.ysize) {
+            xsize = g.xsize;
+            ysize = g.ysize;
+            if (xsize > 0 && ysize > 0) {
+                cells = new Object[xsize][ysize];
             } else {
-                m_xsize = m_ysize = 0;
-                m_cells = null;
+                xsize = ysize = 0;
+                cells = null;
             }
         }
-        for (int x = 0; x < m_xsize; x++) {
-            System.arraycopy(g.m_cells[x], 0, m_cells[x], 0, m_ysize);
+        for (int x = 0; x < xsize; x++) {
+            System.arraycopy(g.cells[x], 0, cells[x], 0, ysize);
         }
 
-        LOG.debug("m_xsize= " + m_xsize + " m_ysize: " + m_ysize);
+        LOG.debug("xsize= " + xsize + " ysize: " + ysize);
     }
 
     public Array2D(Array2D g) {
@@ -54,18 +57,18 @@ public class Array2D {
     }
 
     public int getXSize() {
-        return m_xsize;
+        return xsize;
     }
 
     public int getYSize() {
-        return m_ysize;
+        return ysize;
     }
 
     public void clear() {
-        LOG.debug("m_xsize= " + m_xsize + " m_ysize: " + m_ysize);
-        m_cells = null;
-        m_xsize = 0;
-        m_ysize = 0;
+        LOG.debug("xsize= " + xsize + " ysize: " + ysize);
+        cells = null;
+        xsize = 0;
+        ysize = 0;
     }
 
     public void resize(int xmin, int ymin, int xmax, int ymax) {
@@ -74,31 +77,55 @@ public class Array2D {
         Object[][] newcells = new Object[xsize][ysize];
         int dx = xmin < 0 ? 0 : xmin;
         int dy = ymin < 0 ? 0 : ymin;
-        int Dx = xmax < this.m_xsize ? xmax : this.m_xsize;
-        int Dy = ymax < this.m_ysize ? ymax : this.m_ysize;
+        int Dx = xmax < this.xsize ? xmax : this.xsize;
+        int Dy = ymax < this.ysize ? ymax : this.ysize;
         for (int x = dx; x < Dx; x++) {
-            System.arraycopy(this.m_cells[x], dy, newcells[x - xmin], dy - ymin, Dy - dy);
+            System.arraycopy(this.cells[x], dy, newcells[x - xmin], dy - ymin, Dy - dy);
         }
-        this.m_cells = newcells;
-        this.m_xsize = xsize;
-        this.m_ysize = ysize;
+        this.cells = newcells;
+        this.xsize = xsize;
+        this.ysize = ysize;
     }
 
     public boolean isInside(int x, int y) {
-        return x >= 0 && y >= 0 && x < m_xsize && y < m_ysize;
+        return x >= 0 && y >= 0 && x < xsize && y < ysize;
     }
 
     public boolean isInside(IntPoint p) {
-        return p.x >= 0 && p.y >= 0 && p.x < m_xsize && p.y < m_ysize;
+        return p.x >= 0 && p.y >= 0 && p.x < xsize && p.y < ysize;
     }
 
     public Object cell(IntPoint p) {
         assert (isInside(p.x, p.y));
-        return m_cells[p.x][p.y];
+        return cells[p.x][p.y];
     }
 
     public Object cell(int x, int y) {
         assert (isInside(x, y));
-        return m_cells[x][y];
+        return cells[x][y];
+    }
+
+    public int getXsize() {
+        return xsize;
+    }
+
+    public int getYsize() {
+        return ysize;
+    }
+
+    public Object[][] getCells() {
+        return cells;
+    }
+
+    public void setXsize(int xsize) {
+        this.xsize = xsize;
+    }
+
+    public void setYsize(int ysize) {
+        this.ysize = ysize;
+    }
+
+    public void setCells(Object[][] cells) {
+        this.cells = cells;
     }
 }
