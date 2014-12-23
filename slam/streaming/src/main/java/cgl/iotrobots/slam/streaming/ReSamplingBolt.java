@@ -150,12 +150,16 @@ public class ReSamplingBolt extends BaseRichBolt {
             assignments.setReSampled(true);
             distributeAssignments(assignments);
 
+            int best = reSampler.getBestParticleIndex();
             // distribute the new particle values according to
             for (int i = 0; i < reSampler.getParticles().size(); i++) {
                 Particle p = reSampler.getParticles().get(i);
 //                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
 //                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
                 ParticleValue pv = Utils.createParticleValue(p, -1, i, -1);
+                if (i == best) {
+                    pv.setBest(true);
+                }
                 byte[] b = Utils.serialize(kryo, pv);
                 Message message = new Message(b, new HashMap<String, Object>());
                 // we assume there is a direct mapping between particles in the resampler and the indexes

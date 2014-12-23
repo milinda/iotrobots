@@ -387,26 +387,32 @@ public class ScanMatchBolt extends BaseRichBolt {
     }
 
     private void emitParticleForMap() {
-        LOG.error("Emit for map");
-        int particle = gfsp.getBestParticleIndex();
-        LOG.error("Emit for map, best particle");
-        Particle best = gfsp.getParticles().get(particle);
-        List<Object> emit = new ArrayList<Object>();
+        LOG.info("Emit for map");
+        // tru tp see weather this bolt has the best particle
+        for (ParticleValue pv: particleValues) {
+            if (pv.isBest()) {
+                LOG.error("Emit for map, best particle");
+                Particle best = gfsp.getParticles().get(pv.getIndex());
+                List<Object> emit = new ArrayList<Object>();
 
+                ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
+                LOG.error("Emit for map, transfermap");
+                TransferMap map = Utils.createTransferMap(best.getMap());
+
+                emit.add(particleValue);
+                emit.add(map);
+                emit.add(scan);
+                emit.add(sensorId);
+                emit.add(time);
+                LOG.error("Emit for map, collector");
+                outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
+                return;
+            }
+        }
 //        ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
 //                best.previousPose, best.weight,
 //                best.weightSum, best.gweight, best.previousIndex, best.node);
-        ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
-        LOG.error("Emit for map, transfermap");
-        TransferMap map = Utils.createTransferMap(best.getMap());
 
-        emit.add(particleValue);
-        emit.add(map);
-        emit.add(scan);
-        emit.add(sensorId);
-        emit.add(time);
-        LOG.error("Emit for map, collector");
-        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
     }
 
     private boolean assignmentExists(int task, int index, List<ParticleAssignment> assignmentList) {
