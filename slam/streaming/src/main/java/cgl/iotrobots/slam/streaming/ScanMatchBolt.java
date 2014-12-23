@@ -313,6 +313,37 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
+    private void postProcessingAfterReceiveAll(int taskId, String origin, boolean resampled) {
+        if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+            lock.lock();
+            try {
+                LOG.info("taskId {}: {} Changing state to WAITING_FOR_NEW_PARTICLES", origin, taskId);
+                state = MatchState.WAITING_FOR_NEW_PARTICLES;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        processReceivedMaps(origin);
+        processReceivedValues(origin);
+
+        if (expectingParticleMaps == 0 && expectingParticleValues == 0) {
+            state = MatchState.COMPUTING_NEW_PARTICLES;
+            LOG.info("taskId {}: Map Handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
+            if (resampled) {
+                gfsp.processAfterReSampling(plainReading);
+            } else {
+                gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
+            }
+
+            emitParticleForMap();
+
+            this.assignments = null;
+            state = MatchState.WAITING_FOR_READING;
+            LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
+        }
+    }
+
     private void postProcessingAfterReceiveAll(int taskId, String origin) {
         if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
             lock.lock();
@@ -424,7 +455,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         ScanMatchBolt.this.assignments = assignments;
                         expectingParticleValues = 0;
                         expectingParticleMaps = 0;
-                        postProcessingAfterReceiveAll(taskId, "assign");
+                        postProcessingAfterReceiveAll(taskId, "assign", false);
                     }
                 } catch (Exception e) {
                     LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
