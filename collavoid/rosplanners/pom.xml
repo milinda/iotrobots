@@ -3,32 +3,26 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>collavoid</artifactId>
         <groupId>iotrobots</groupId>
+        <artifactId>collavoid</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>rosjava_tf_core</artifactId>
+    <artifactId>rosplanners</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>rosplanners</name>
 
     <dependencies>
         <dependency>
-            <groupId>org.ros.rosjava_messages</groupId>
-            <artifactId>tf2_msgs</artifactId>
-            <version>0.4.9</version>
+            <groupId>collavoid_msgs</groupId>
+            <artifactId>collavoid_msgs</artifactId>
+            <scope>system</scope>
+            <version>0.0.0</version>
+            <systemPath>${project.basedir}/lib/collavoid_msgs-0.0.0.jar</systemPath>
         </dependency>
-        <dependency>
-            <groupId>com.google.api.client</groupId>
-            <artifactId>google-api-client-repackaged-com-google-common-base</artifactId>
-            <version>1.2.3-alpha</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jgrapht</groupId>
-            <artifactId>jgrapht-ext</artifactId>
-            <version>0.9.0</version>
-        </dependency>
+        <!-->vecmath version 1.3.1 seems not working<-->
         <dependency>
             <groupId>java3d</groupId>
             <artifactId>vecmath</artifactId>
@@ -36,6 +30,10 @@
             <version>1.5.2</version>
             <systemPath>${project.basedir}/lib/vecmath-1.5.2.jar</systemPath>
         </dependency>
+        <dependency>
+            <groupId>java3d</groupId>
+            <artifactId>j3d-core</artifactId>
+            <version>1.3.1</version>
+        </dependency>
     </dependencies>
-
 </project>

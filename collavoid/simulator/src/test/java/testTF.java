@@ -31,7 +31,7 @@ public class testTF {
         //test random
 
 //        for (int i = 0; i <1000 ; i++) {
-//            System.out.println(utilsSim.getGaussianNoise(0,0.5));
+//            System.out.println(cgl.iotrobots.collavoid.simulator.utilsSim.getGaussianNoise(0,0.5));
 //        }
         Point3d pt=new Point3d(1,0,0);
         Point3d pt1=new Point3d();

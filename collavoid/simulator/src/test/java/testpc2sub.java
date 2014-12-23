@@ -1,13 +1,9 @@
+import cgl.iotrobots.collavoid.simulator.AgentNode;
 import org.ros.message.MessageListener;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
-import org.ros.rosjava.tf.pubsub.TransformListener;
 import sensor_msgs.PointCloud2;
-
-import javax.vecmath.Point3d;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by hjh on 12/1/14.
