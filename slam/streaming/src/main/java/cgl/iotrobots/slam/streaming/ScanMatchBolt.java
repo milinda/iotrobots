@@ -125,15 +125,35 @@ public class ScanMatchBolt extends BaseRichBolt {
         // set the initial particles
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
         int taskId = topologyContext.getThisTaskIndex();
-        int noOfParticles = cfg.getNoOfParticles() / totalTasks;
-        int remainder = cfg.getNoOfParticles() % totalTasks;
-        if (remainder > 0 && remainder <= taskId) {
-            noOfParticles += 1;
+        int noOfParticles = computeParticlesForTask(cfg, totalTasks, taskId);
+
+        int previousTotal = 0;
+        for (int i = 0; i < taskId; i++) {
+            previousTotal += computeParticlesForTask(cfg, totalTasks, i);
         }
+
         List<Integer> activeParticles = gfsp.getActiveParticles();
         for (int i = 0; i < noOfParticles; i++) {
-            activeParticles.add(i + taskId * noOfParticles);
+            activeParticles.add(i + previousTotal);
         }
+
+        LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
+    }
+
+    /**
+     * Given a task id compute the no of particles
+     * @param cfg configuration
+     * @param totalTasks total tasks
+     * @param taskId task id
+     * @return no of particles for this task
+     */
+    private int computeParticlesForTask(GFSConfiguration cfg, int totalTasks, int taskId) {
+        int noOfParticles = cfg.getNoOfParticles() / totalTasks;
+        int remainder = cfg.getNoOfParticles() % totalTasks;
+        if (remainder > 0 &&  remainder < (totalTasks - taskId)) {
+            noOfParticles += 1;
+        }
+        return noOfParticles;
     }
 
     double[] plainReading;

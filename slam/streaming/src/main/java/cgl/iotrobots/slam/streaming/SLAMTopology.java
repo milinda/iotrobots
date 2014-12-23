@@ -76,7 +76,7 @@ public class SLAMTopology {
             StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
             // deploy on a local cluster
-            conf.setMaxTaskParallelism(3);
+            conf.setMaxTaskParallelism(5);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("drone", conf, builder.createTopology());
             Thread.sleep(1000000);
@@ -105,7 +105,7 @@ public class SLAMTopology {
         MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 4).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
