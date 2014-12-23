@@ -59,6 +59,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
         this.kryo = new Kryo();
+        Utils.registerClasses(kryo);
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
         StreamComponents components = streamTopologyBuilder.buildComponents();
@@ -130,13 +131,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         reSampler.getParticles().clear();
         for (ParticleValue pv : particleValueses) {
             Particle p = new Particle();
-            p.setWeight(pv.getWeight());
-            p.setGweight(pv.getGweight());
-            p.setPose(pv.getPose());
-            p.setPreviousPose(pv.getPreviousPose());
-            p.setNode(pv.getNode());
-            p.setPreviousIndex(pv.previousIndex);
-            p.setWeightSum(pv.weightSum);
+            Utils.createParticle(pv, p);
 
             reSampler.getParticles().add(pv.getIndex(), p);
         }
@@ -158,9 +153,9 @@ public class ReSamplingBolt extends BaseRichBolt {
             // distribute the new particle values according to
             for (int i = 0; i < reSampler.getParticles().size(); i++) {
                 Particle p = reSampler.getParticles().get(i);
-                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
-                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
-
+//                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
+//                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
+                ParticleValue pv = Utils.createParticleValue(p, -1, i, -1);
                 byte[] b = Utils.serialize(kryo, pv);
                 Message message = new Message(b, new HashMap<String, Object>());
                 // we assume there is a direct mapping between particles in the resampler and the indexes

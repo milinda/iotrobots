@@ -3,34 +3,39 @@ package cgl.iotrobots.slam.streaming.msgs;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
+import java.util.List;
+
 /**
  * Particle without the map. This will be emited by the ScanMatchBolt,
  * The resampling bolt will use these values to choose the best particles.
  */
 public class ParticleValue {
     /** the task that sent the particle */
-    public int taskId;
+    private int taskId;
     /** The index of the particle */
-    public int index;
+    private int index;
     /** The pose of the robot */
-    public DoubleOrientedPoint pose;
+    private DoubleOrientedPoint pose;
 
     /** The pose of the robot at the previous time frame (used for computing thr odometry displacements) */
-    public DoubleOrientedPoint previousPose;
+    private DoubleOrientedPoint previousPose;
 
     /** The weight of the particle */
-    public double weight;
+    private double weight;
 
     /** The cumulative weight of the particle */
-    public double weightSum;
+    private double weightSum;
 
-    public double gweight;
+    private double gweight;
 
     /** The index of the previous particle in the trajectory tree */
-    public int previousIndex;
+    private int previousIndex;
 
     /** Entry to the trajectory tree */
-    public TNode node;
+//    private TNode node;
+
+    /** Node tree as a list */
+    private List<TNodeValue> nodes;
 
     private int totalTasks;
 
@@ -40,7 +45,7 @@ public class ParticleValue {
     public ParticleValue(int taskId, int index, int totalTasks, DoubleOrientedPoint pose,
                          DoubleOrientedPoint previousPose, double weight,
                          double weightSum, double gweight, int previousIndex,
-                         TNode node) {
+                         List<TNodeValue> node) {
         this.taskId = taskId;
         this.index = index;
         this.pose = pose;
@@ -49,7 +54,8 @@ public class ParticleValue {
         this.weightSum = weightSum;
         this.gweight = gweight;
         this.previousIndex = previousIndex;
-        this.node = node;
+//        this.node = node;
+        this.nodes = node;
         this.totalTasks = totalTasks;
     }
 
@@ -97,9 +103,9 @@ public class ParticleValue {
         return previousIndex;
     }
 
-    public TNode getNode() {
-        return node;
-    }
+//    public TNode getNode() {
+//        return node;
+//    }
 
     public void setIndex(int index) {
         this.index = index;
@@ -129,7 +135,15 @@ public class ParticleValue {
         this.previousIndex = previousIndex;
     }
 
-    public void setNode(TNode node) {
-        this.node = node;
+//    public void setNode(TNode node) {
+//        this.node = node;
+//    }
+
+    public List<TNodeValue> getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(List<TNodeValue> nodes) {
+        this.nodes = nodes;
     }
 }

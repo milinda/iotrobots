@@ -1,7 +1,5 @@
 package cgl.iotrobots.slam.streaming.msgs;
 
-import cgl.iotrobots.slam.core.grid.Array2D;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 

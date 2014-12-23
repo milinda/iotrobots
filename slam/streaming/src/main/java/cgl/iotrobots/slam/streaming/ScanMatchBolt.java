@@ -9,19 +9,11 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.LaserScan;
-import cgl.iotrobots.slam.core.app.Position;
-import cgl.iotrobots.slam.core.grid.Array2D;
-import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-import cgl.iotrobots.slam.core.gridfastsalm.TNode;
-import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.core.utils.DoublePoint;
-import cgl.iotrobots.slam.core.utils.IntPoint;
 import cgl.iotrobots.slam.streaming.msgs.*;
 import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
@@ -59,7 +51,15 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private String url = "amqp://localhost:5672";
 
-    private Kryo kryo;
+    private Kryo kryoPVReading;
+
+    private Kryo kryoMapReading;
+
+    private Kryo kryoMapWriting;
+
+    private Kryo kryoAssignReading;
+
+    private Kryo kryoLaserReading;
 
     private volatile MatchState state = MatchState.WAITING_FOR_READING;
 
@@ -83,9 +83,18 @@ public class ScanMatchBolt extends BaseRichBolt {
         gfsp = new DistributedScanMatcher();
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
-        this.kryo = new Kryo();
-        this.kryo.register(Object[][].class);
-        registerClasses(kryo);
+        this.kryoAssignReading = new Kryo();
+        this.kryoPVReading = new Kryo();
+        this.kryoMapWriting = new Kryo();
+        this.kryoMapReading = new Kryo();
+        this.kryoLaserReading = new Kryo();
+
+        Utils.registerClasses(kryoAssignReading);
+        Utils.registerClasses(kryoPVReading);
+        Utils.registerClasses(kryoMapWriting);
+        Utils.registerClasses(kryoMapReading);
+        Utils.registerClasses(kryoLaserReading);
+
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
         StreamComponents components = streamTopologyBuilder.buildComponents();
@@ -149,7 +158,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         if (!(val instanceof byte [])) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
-        scan = (LaserScan) Utils.deSerialize(kryo, (byte [])val, LaserScan.class);
+        scan = (LaserScan) Utils.deSerialize(kryoLaserReading, (byte [])val, LaserScan.class);
         RangeReading reading;
 
 
@@ -196,11 +205,11 @@ public class ScanMatchBolt extends BaseRichBolt {
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
         for (int index : activeParticles) {
             Particle particle = particles.get(index);
+//            ParticleValue particleValue = new ParticleValue(taskId, index, totalTasks, particle.pose,
+//                    particle.previousPose, particle.weight,
+//                    particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
+            ParticleValue particleValue = Utils.createParticleValue(particle, taskId, index, totalTasks);
 
-
-            ParticleValue particleValue = new ParticleValue(taskId, index, totalTasks, particle.pose,
-                    particle.previousPose, particle.weight,
-                    particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
             List<Object> emit = new ArrayList<Object>();
             emit.add(particleValue);
             emit.add(scan);
@@ -212,25 +221,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         outputCollector.ack(tuple);
     }
 
-    private void registerClasses(Kryo kryo) {
-        kryo.register(DoublePoint.class);
-        kryo.register(IntPoint.class);
-        kryo.register(Particle.class);
-        kryo.register(GMap.class);
-        kryo.register(Array2D.class);
-        kryo.register(HierarchicalArray2D.class);
-        kryo.register(TNode.class);
-        kryo.register(DoubleOrientedPoint.class);
-        kryo.register(Particle.class);
-        kryo.register(PointAccumulator.class);
-        kryo.register(HierarchicalArray2D.class);
-        kryo.register(Array2D.class);
-        kryo.register(Position.class);
-        kryo.register(Object[][].class);
-        kryo.register(TransferMap.class);
-        kryo.register(ParticleMaps.class);
-        kryo.register(MapCell.class);
-    }
+
 
     /**
      * We will output the sensorId, time and particle value
@@ -269,7 +260,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
             LOG.info("taskId {}: Received particle map", taskId);
-            ParticleMaps pm = (ParticleMaps) Utils.deSerialize(kryo, body, ParticleMaps.class);
+            ParticleMaps pm = (ParticleMaps) Utils.deSerialize(kryoMapReading, body, ParticleMaps.class);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
                 try {
                     // first we need to determine the expected new maps for this particle
@@ -351,9 +342,10 @@ public class ScanMatchBolt extends BaseRichBolt {
         Particle best = gfsp.getParticles().get(particle);
         List<Object> emit = new ArrayList<Object>();
 
-        ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
-                best.previousPose, best.weight,
-                best.weightSum, best.gweight, best.previousIndex, best.node);
+//        ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
+//                best.previousPose, best.weight,
+//                best.weightSum, best.gweight, best.previousIndex, best.node);
+        ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
         LOG.error("Emit for map, transfermap");
         TransferMap map = Utils.createTransferMap(best.getMap());
 
@@ -392,7 +384,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                 try {
                     LOG.info("taskId {}: Received particle assignment", taskId);
-                    ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryo, body, ParticleAssignments.class);
+                    ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
 
                     // if we have resampled ditributed the assignments
                     if (assignments.isReSampled()) {
@@ -452,7 +444,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     ParticleMaps particleMaps = new ParticleMaps(Utils.createTransferMap(p.getMap()),
                             assignment.getNewIndex(), assignment.getNewTask());
 
-                    byte []b = Utils.serialize(kryo, particleMaps);
+                    byte []b = Utils.serialize(kryoMapWriting, particleMaps);
                     Message message = new Message(b, new HashMap<String, Object>());
                     LOG.info("Sending particle map to {}", assignment.getNewTask());
                     try {
@@ -484,7 +476,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         public void onMessage(Message message) {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
-            ParticleValue pm = (ParticleValue) Utils.deSerialize(kryo, body, ParticleValue.class);
+            ParticleValue pm = (ParticleValue) Utils.deSerialize(kryoPVReading, body, ParticleValue.class);
             LOG.info("taskId {}: Received particle value", taskId);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
                 try {
