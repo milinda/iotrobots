@@ -221,6 +221,8 @@ public class LocalPlanner {
                 return false;
             }
             findBestWaypoint(target_pose, global_pose.getPose());
+        } else {
+            target_pose = transformed_plan_.get(current_waypoint_).getPose();
         }
 
         Twist_ pref_vel_twist = new Twist_();
@@ -326,11 +328,6 @@ public class LocalPlanner {
     // transform global plan
     boolean transformGlobalPlan(boolean initialPlan, final List<PoseStamped_> global_plan, List<PoseStamped_> transformed_plan) {
 
-//        PoseStamped_ plan_pose = new PoseStamped_();
-//
-//        plan_pose.getPose().setPosition(global_plan.get(0).getPose().getPosition());
-//        plan_pose.setHeader(global_plan.get(0).getHeader());
-
         transformed_plan.clear();
 
         if (!(global_plan.size() > 0)) {
@@ -338,7 +335,7 @@ public class LocalPlanner {
             return false;
         }
 
-        //currently global plan is in global frame do not need transform
+        //currently global plan is in global frame do not need transform, robot pose is also in global frame
         long t;
         Pose_ robot_pose;
         int cur_waypoint = 0;
@@ -378,7 +375,7 @@ public class LocalPlanner {
 
         int i = cur_waypoint;
 
-        //now we'll transform until points are outside of our distance threshold
+        // add rest way points
         while (i < global_plan.size()) {
             PoseStamped_ pose = new PoseStamped_();
             pose.setHeader(global_plan.get(i).getHeader().copy());

@@ -401,9 +401,9 @@ public class LocalPlanner {
             }
 
             findBestWaypoint(target_pose, global_pose);
+        } else {
+            target_pose = transformed_plan_.get(current_waypoint_);
         }
-        //TODO
-        /*tf::poseStampedMsgToTF(transformed_plan_[current_waypoint_], target_pose);*/
 
 
         Twist pref_vel_twist = messageFactory.newFromType(Twist._TYPE);
@@ -554,8 +554,6 @@ public class LocalPlanner {
         plan_pose.setHeader(global_plan.get(0).getHeader());
 
         transformed_plan.clear();
-
-        //TODO:exception handle
 
         if (!(global_plan.size() > 0)) {
             this.node.getLog().error("Recieved plan with zero length");
