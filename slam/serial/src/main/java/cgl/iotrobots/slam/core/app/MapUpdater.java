@@ -83,6 +83,7 @@ public class MapUpdater {
                 System.out.format("best pose: (%f %f %f) reading: (", n.pose.x, n.pose.y, n.pose.theta);
                 for (int i = 0; i < n.reading.size(); i++) {
                     readingArray[i] = n.reading.get(i);
+                    System.out.format("%f ", readingArray[i]);
                 }
                 System.out.format(")\n");
 

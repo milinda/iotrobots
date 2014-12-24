@@ -110,14 +110,14 @@ public class SimbardDistributed {
             }
 
             // progress at 0.5 m/s
-            if (getCounter() % 50 == 0) {
+            if (getCounter() % 500 == 0) {
                 forward = !forward;
             }
 
             if (forward) {
-                setTranslationalVelocity(5);
+                setTranslationalVelocity(.5);
             } else {
-                setTranslationalVelocity(-5);
+                setTranslationalVelocity(-.5);
             }
         }
 

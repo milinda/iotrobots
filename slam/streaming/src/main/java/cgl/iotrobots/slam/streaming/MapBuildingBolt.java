@@ -12,8 +12,6 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.MapUpdater;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.iotrobots.slam.streaming.msgs.TransferMap;
@@ -71,34 +69,22 @@ public class MapBuildingBolt extends BaseRichBolt {
         }
         LaserScan scan = (LaserScan) val;
 
-        RangeReading reading;
-        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
-        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
-                scan.getRanges().size(),
-                Math.abs(scan.getAngle_increment()),
-                new DoubleOrientedPoint(0, 0, 0),
-                0.0,
-                scan.getRangeMax());
-
-        reading = new RangeReading(scan.getRanges().size(),
-                ranges_double,
-                sensor,
-                scan.getTimestamp());
-
-        reading.setPose(scan.getPose());
-
-        double []plainReading = new double[scan.getRanges().size()];
-        for (int i = 0; i < scan.getRanges().size(); i++) {
-            plainReading[i] = reading.get(i);
-        }
-
         Particle p = new Particle();
         Utils.createParticle(particleValue, p);
         GMap m = Utils.createGMap(transferMap);
         p.setMap(m);
 
-        GFSMap map = mapUpdater.updateMap(p, plainReading, new DoubleOrientedPoint(0, 0, 0));
+        double[] laser_angles = new double[scan.getRanges().size()];
+        double theta = scan.getAngle_min();
+        for (int i = 0; i < scan.getRanges().size(); i++) {
+            if (scan.getAngle_increment() < 0)
+                laser_angles[scan.getRanges().size() - i - 1] = theta;
+            else
+                laser_angles[i] = theta;
+            theta += scan.getAngle_increment();
+        }
+
+        GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
 
         this.outputCollector.ack(tuple);
 

@@ -179,7 +179,12 @@ public class ScanMatchBolt extends BaseRichBolt {
         if (!(val instanceof byte [])) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
-        scan = (LaserScan) Utils.deSerialize(kryoLaserReading, (byte [])val, LaserScan.class);
+        lock.lock();
+        try {
+            scan = (LaserScan) Utils.deSerialize(kryoLaserReading, (byte[]) val, LaserScan.class);
+        } finally {
+            lock.unlock();
+        }
         RangeReading reading;
 
 

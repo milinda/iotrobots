@@ -7,6 +7,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.Position;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
@@ -129,6 +130,7 @@ public class SLAMTopology {
         config.registerSerialization(TransferMap.class);
         config.registerSerialization(ParticleMaps.class);
         config.registerSerialization(MapCell.class);
+        config.registerSerialization(LaserScan.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

@@ -1,5 +1,6 @@
 package cgl.iotrobots.slam.streaming;
 
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.Position;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
@@ -154,5 +155,6 @@ public class Utils {
         kryo.register(TNodeValue.class);
         kryo.register(ParticleAssignment.class);
         kryo.register(ParticleAssignments.class);
+        kryo.register(LaserScan.class);
     }
 }
