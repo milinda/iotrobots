@@ -162,7 +162,6 @@ public class ScanMatchBolt extends BaseRichBolt {
     Object time;
     Object sensorId;
     // flag to be set when this bolt is has the best particle
-    boolean hasTheBestParticle = false;
 
     @Override
     public void execute(Tuple tuple) {
@@ -341,11 +340,10 @@ public class ScanMatchBolt extends BaseRichBolt {
 
             // find the particle with the best index
             // find the particle with the best index
-            if (hasTheBestParticle) {
+            if (gfsp.getActiveParticles().contains(best)) {
                 emitParticleForMap(best);
             }
 
-            hasTheBestParticle = false;
             this.assignments = null;
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
@@ -372,11 +370,10 @@ public class ScanMatchBolt extends BaseRichBolt {
             gfsp.processAfterReSampling(plainReading);
 
             // find the particle with the best index
-            if (hasTheBestParticle) {
+            if (gfsp.getActiveParticles().contains(best)) {
                 emitParticleForMap(best);
             }
 
-            this.hasTheBestParticle = false;
             this.assignments = null;
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
@@ -607,10 +604,6 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // populate particle using particle values
         Utils.createParticle(value, p);
-
-        if (assignments.getBestParticle() == value.getIndex()) {
-            hasTheBestParticle = true;
-        }
 
         // gfsp.getActiveParticles().add(newIndex);
         // add the new particle index
