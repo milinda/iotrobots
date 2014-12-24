@@ -26,7 +26,7 @@ import java.util.Map;
 
 
 public class SimbardDistributed {
-    public static final int SENSORS = 4;
+    public static final int SENSORS = 360;
 
     public static final double ANGLE = 2 * Math.PI;
 
