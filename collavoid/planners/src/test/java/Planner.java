@@ -40,7 +40,7 @@ public class Planner {
     private void initialize() {
         ControlPeriod = localPlanner.getAgent().getControlPeriod();
         lastPublished = System.currentTimeMillis();
-        velContext = localPlanner.getAgent().getRmqMsgManager().getRMQContexts().get(Constant.KEY_VELOCITY_CMD);
+        velContext = localPlanner.getAgent().getRmqMsgManager().getRMQContexts().get(Constant_msg.KEY_VELOCITY_CMD);
     }
 
     public PoseStamped_ getStart() {

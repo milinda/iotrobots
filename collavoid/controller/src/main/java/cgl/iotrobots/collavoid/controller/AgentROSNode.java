@@ -76,8 +76,8 @@ public class AgentROSNode extends AbstractNodeMain {
         }
 
         try {
-            String queueName=Contexts.get(Constant.KEY_VELOCITY_CMD).QUEUE_NAME;
-            String routingKey=Contexts.get(Constant.KEY_VELOCITY_CMD).ROUTING_KEY;
+            String queueName = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).QUEUE_NAME;
+            String routingKey = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).ROUTING_KEY;
             channel.basicConsume(queueName, autoAck, routingKey + "Tag",
                     new DefaultConsumer(channel) {
                         @Override
@@ -122,8 +122,8 @@ public class AgentROSNode extends AbstractNodeMain {
             public void onNewMessage(Odometry odometry) {
                 try {
                                         channel.basicPublish(
-                            Contexts.get(Constant.KEY_ODOMETRY).EXCHANGE_NAME,
-                            Contexts.get(Constant.KEY_ODOMETRY).ROUTING_KEY,
+                                                Contexts.get(Constant_msg.KEY_ODOMETRY).EXCHANGE_NAME,
+                                                Contexts.get(Constant_msg.KEY_ODOMETRY).ROUTING_KEY,
                             null,
                             toOdometry_(odometry).toJSON());
                 } catch (IOException e) {
@@ -138,8 +138,8 @@ public class AgentROSNode extends AbstractNodeMain {
 
                 try {
                     channel.basicPublish(
-                            Contexts.get(Constant.KEY_SCAN).EXCHANGE_NAME,
-                            Contexts.get(Constant.KEY_SCAN).ROUTING_KEY,
+                            Contexts.get(Constant_msg.KEY_SCAN).EXCHANGE_NAME,
+                            Contexts.get(Constant_msg.KEY_SCAN).ROUTING_KEY,
                             null, 
                             toPointCloud2_(pointCloud2).toJSON());
                 } catch (IOException e) {
@@ -163,8 +163,8 @@ public class AgentROSNode extends AbstractNodeMain {
 
                 try {
                     channel.basicPublish(
-                            Contexts.get(Constant.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
-                            Contexts.get(Constant.KEY_PARTICLE_CLOUD).ROUTING_KEY,
+                            Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
+                            Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).ROUTING_KEY,
                             null, 
                             pa.toJSON());
                 } catch (IOException e) {

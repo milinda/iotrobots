@@ -6,12 +6,8 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.QueueingConsumer;
-import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +20,13 @@ public class MsgCallBacks {
     public static void bindCallBacks(final Agent agent, final Map<String, RMQContext> contexts) throws Exception {
 
         for (Map.Entry<String, RMQContext> e : contexts.entrySet()) {
-            if (e.getKey().equals(Constant.KEY_ODOMETRY))
+            if (e.getKey().equals(Constant_msg.KEY_ODOMETRY))
                 bindOdomCallback(agent, e.getValue());
-            if (e.getKey().equals(Constant.KEY_SCAN))
+            if (e.getKey().equals(Constant_msg.KEY_SCAN))
                 bindScanCallback(agent, e.getValue());
-            if (e.getKey().equals(Constant.KEY_PARTICLE_CLOUD))
+            if (e.getKey().equals(Constant_msg.KEY_PARTICLE_CLOUD))
                 bindParticleCloudCallback(agent, e.getValue());
-            if (e.getKey().equals(Constant.KEY_POSE_SHARE))
+            if (e.getKey().equals(Constant_msg.KEY_POSE_SHARE))
                 bindPoseShareCallback(agent, e.getValue());
         }
 
@@ -169,7 +165,7 @@ public class MsgCallBacks {
                 agent.setLastTimeMePublished(System.currentTimeMillis());
                 try {
                     Methods_RMQ.publishMsg(
-                            agent.getRmqMsgManager().getRMQContexts().get(Constant.KEY_POSE_SHARE),
+                            agent.getRmqMsgManager().getRMQContexts().get(Constant_msg.KEY_POSE_SHARE),
                             getPoseShareMsg(agent).toJSON());
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -190,10 +186,7 @@ public class MsgCallBacks {
         poseShareMsg_.setHoloRobot(agent.getHoloRobot());
         poseShareMsg_.setRadius(agent.getRadius() + agent.getCur_loc_unc_radius_());
         poseShareMsg_.setRobotId(agent.getRobotId());
-        poseShareMsg_.setHolonomicVelocity(new Vector3d_(
-                agent.getHolo_velocity_().getX(),
-                agent.getHolo_velocity_().getY(),
-                0));
+
         List<Vector3d_> footprint = new ArrayList<Vector3d_>();
         for (Vector2 vector2 : agent.getFootprint_minkowski()) {
             Vector3d_ vector3d_ = new Vector3d_(vector2.getX(), vector2.getY(), 0);
@@ -228,10 +221,6 @@ public class MsgCallBacks {
                 lstagent.getBaseOdom().setPose(msg.getPose());
                 lstagent.getBaseOdom().setTwist(msg.getTwist());
 
-                lstagent.setHolo_velocity_(new Vector2(
-                                msg.getHolonomicVelocity().getX(),
-                                msg.getHolonomicVelocity().getY())
-                );
                 lstagent.setRadius(msg.getRadius());
                 lstagent.setControlled(msg.getControlled());
                 List<Vector2> footprint = new ArrayList<Vector2>();
@@ -346,8 +335,10 @@ public class MsgCallBacks {
                     prev = new Vector2(next);
                     prev_ang = ang;
                 }
+                if (!start.equals(prev)) {
                 Obstacle obst = new Obstacle(start, prev);
                 agent.getObstacles_from_laser_().add(obst);
+                }
             }
         } finally {
             agent.getObstacle_lock_().unlock();
@@ -372,6 +363,7 @@ public class MsgCallBacks {
         double x, y;
         List<Vector2> localization_footprint = new ArrayList<Vector2>();
         List<Vector2> own_footprint = new ArrayList<Vector2>();
+        // select valid localization
         for (int i = 0; i < msg.getPoses().size(); i++) {
             x = msg.getPoses().get(i).getPosition().getX();
             y = msg.getPoses().get(i).getPosition().getY();

@@ -22,8 +22,6 @@ public class PoseShareMsg_ implements Serializable {
 
     private boolean Controlled;
 
-    private Vector3d_ HolonomicVelocity = new Vector3d_();
-
     private Pose_ Pose = new Pose_();
 
     private Twist_ Twist = new Twist_();
@@ -62,10 +60,6 @@ public class PoseShareMsg_ implements Serializable {
         return Twist;
     }
 
-    public Vector3d_ getHolonomicVelocity() {
-        return HolonomicVelocity;
-    }
-
     public void setHeader(Header_ header) {
         Header = header;
     }
@@ -84,10 +78,6 @@ public class PoseShareMsg_ implements Serializable {
 
     public void setFootPrint_Minkowski(List<Vector3d_> footPrint_Minkowski) {
         FootPrint_Minkowski = footPrint_Minkowski;
-    }
-
-    public void setHolonomicVelocity(Vector3d_ holonomicVelocity) {
-        HolonomicVelocity = holonomicVelocity;
     }
 
     public void setHoloRobot(boolean holoRobot) {

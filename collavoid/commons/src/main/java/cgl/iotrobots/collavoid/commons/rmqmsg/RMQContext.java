@@ -6,7 +6,7 @@ public class RMQContext {
     public String EXCHANGE_NAME = "";
     public String ROUTING_KEY = "";
     public String QUEUE_NAME = "";
-    public String EXCHANGE_TYPE = Constant.TYPE_EXCHANGE_DIRECT;
+    public String EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_DIRECT;
     public Channel CHANNEL = null;
 
     public RMQContext(String exchangeName, String msgName) {

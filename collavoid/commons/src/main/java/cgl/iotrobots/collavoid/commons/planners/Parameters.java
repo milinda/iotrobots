@@ -1,6 +1,6 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-public class Parameters {
+public abstract class Parameters {
     public static String BASE_FRAME_SUFFIX = "_base";
     public static String GLOBAL_FRAME = "map";
 

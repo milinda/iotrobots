@@ -1,12 +1,13 @@
-package cgl.iotrobots.collavoid.planners;
+package cgl.iotrobots.collavoid.commons.planners;
 
-import cgl.iotrobots.collavoid.commons.planners.*;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.Address;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -38,7 +39,8 @@ public class Agent {
     public Position position; //contains the heading information
     public Vector2 velocity;
     public Vector2 newVelocity;
-    private double radius;
+    public Vector2 prefVelociy;
+    public double radius;
     public List<Vector2> footPrint_rotated;
 
     //allowed error for non-holonomic robot
@@ -73,12 +75,12 @@ public class Agent {
 
     //ORCA stuff
     public double max_vel_with_obstacles_;
-    public Vector2 holo_velocity_;
+    //public Vector2 holo_velocity_;
 
     //Obstacles
     public List<Obstacle> obstacles_from_laser_;
 
-    public double min_dist_obst_;
+    public double min_dist;// for nh constraints
 
     //obstacles
     public boolean use_obstacles_;
@@ -116,14 +118,10 @@ public class Agent {
     //utils
     private Logger logger;
 
-    // message subscriber and publisher
-    private RMQMsgManager rmqMsgManager;
 
     //-----------------------method begin-------------------------------//
-    public Agent(String name,
-                 Address[] addresses,
-                 String url) {
-        Name = name;
+    public Agent() {
+        Name = "robot";
         me_lock_ = new ReentrantLock();
         obstacle_lock_ = new ReentrantLock();
         neighbors_lock_ = new ReentrantLock();
@@ -131,9 +129,8 @@ public class Agent {
 
         cur_allowed_error_ = 0;
         cur_loc_unc_radius_ = 0;// not used
-        min_dist_obst_ = Double.MAX_VALUE;
 
-        holo_velocity_ = new Vector2();
+        //holo_velocity_ = new Vector2();
 
         base_odom_ = new Odometry_();
 
@@ -147,9 +144,8 @@ public class Agent {
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
         samples = new ArrayList<VelocitySample>();
-        rmqMsgManager = new RMQMsgManager(name, addresses, url);
 
-        logger = Logger.getLogger(name + "Agent_Logger");
+        logger = Logger.getLogger(Name + "Agent_Logger");
         initParameters();
     }
 
@@ -158,7 +154,7 @@ public class Agent {
         Name = name;
         footprint_original = new ArrayList<Vector2>();
         base_odom_ = new Odometry_();
-        holo_velocity_ = new Vector2();
+        //holo_velocity_ = new Vector2();
         //set when update the agent state
         position = new Position();
         footprint_minkowski = new ArrayList<Vector2>();
@@ -253,12 +249,6 @@ public class Agent {
         }
         setFootprintOrignial(footprint_original);
 
-        try {
-            rmqMsgManager.start(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         logger.info("************************Agent " + Name + " is initialized!");
     }
 
@@ -270,6 +260,7 @@ public class Agent {
     public void computeNewVelocity(Vector2 pref_velocity, Twist_ cmd_vel) {
         me_lock_.lock();
         try {
+            prefVelociy = pref_velocity;
             //Forward project agents,update me status like position and so on
             upDateAgentState(this);
             updateAllNeighbors();
@@ -279,15 +270,7 @@ public class Agent {
             addOrcaLines.clear();
             voAgents.clear();
 
-            //get closest ROSAgent/obstacle
-            double min_dist_neigh = Double.MAX_VALUE;
-            if (AgentNeighbors.size() > 0)
-                //neighbors have already been sorted according to their dist to me
-                min_dist_neigh = Vector2.abs(Vector2.minus(AgentNeighbors.get(0).position.getPos(), position.getPos()));
-
-//            System.out.println("min neighbor: "+min dist neigh);
-//            System.out.println("obst_min: "+min dist obst_);
-            double min_dist = Math.min(min_dist_neigh, min_dist_obst_);
+            computeMinDistToAll();
 
             //incorporate NH constraints
             max_speed_x_ = max_vel_x_;//???????????????????????????
@@ -297,7 +280,7 @@ public class Agent {
             }
             //add acceleration constraints
 
-            NHORCA.addAccelerationConstraintsXY(
+            Methods_Planners.NHORCA.addAccelerationConstraintsXY(
                     max_vel_x_,
                     acc_lim_x_,
                     max_vel_y_,
@@ -335,7 +318,7 @@ public class Agent {
                 double vstar;
 
                 if (Math.abs(dif_ang) > Parameters.EPSILON)
-                    vstar = NHORCA.calcVstar(vel, dif_ang);//get nonholomonic velocity
+                    vstar = Methods_Planners.NHORCA.calcVstar(vel, dif_ang);//get nonholomonic velocity
                 else
                     vstar = max_vel_x_;
 
@@ -376,6 +359,31 @@ public class Agent {
         } finally {
             me_lock_.unlock();
         }
+    }
+
+    //get closest ROSAgent/obstacle
+    void computeMinDistToAll() {
+        double min_dist_neigh = Double.MAX_VALUE;
+        double min_dist_obstacle = Double.MAX_VALUE;
+        //neighbors have already been sorted according to their dist to me
+        if (AgentNeighbors.size() > 0)
+            min_dist_neigh = Vector2.abs(Vector2.minus(AgentNeighbors.get(0).position.getPos(), position.getPos()));
+
+        for (Obstacle obstacle : obstacles_from_laser_) {
+            double dist = Methods_Planners.distSqPointLineSegment(
+                    obstacle.getBegin(),
+                    obstacle.getEnd(),
+                    position.getPos());
+            obstacle.setDistToAgent(dist);
+            if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
+                if (dist < min_dist_obstacle) {
+                    min_dist_obstacle = dist;
+                }
+            }
+
+        }
+        min_dist = Math.min(min_dist_neigh, min_dist_obstacle);
+
     }
 
     //update status of the agent according to its velocity
@@ -435,7 +443,7 @@ public class Agent {
             for (int i = 0; i < AgentNeighbors.size(); i++) {
                 upDateAgentState(AgentNeighbors.get(i));
             }
-            AgentNeighbors.sort(new NeighborDistComparator(position.getPos().getX(), position.getPos().getY()));
+            AgentNeighbors.sort(new Comparators.NeighborDistComparator(position.getPos()));
         } finally {
             neighbors_lock_.unlock();
         }
@@ -464,14 +472,14 @@ public class Agent {
         double dif_ang = Methods_Planners.shortest_angular_distance(position.getHeading(), speed_ang);
         //calculate possible tracking holomonic robot speed range
         if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_error_ < 2.0 * min_error) {
-            double max_track_speed = NHORCA.calculateMaxTrackSpeedAngle(time_to_holo_, Math.PI / 2.0, cur_allowed_error_, max_vel_x_, max_vel_th_, v_max_ang);
+            double max_track_speed = Methods_Planners.NHORCA.calculateMaxTrackSpeedAngle(time_to_holo_, Math.PI / 2.0, cur_allowed_error_, max_vel_x_, max_vel_th_, v_max_ang);
             // tracking errors are not in velocity space!!!!!!!!!!!!!!
             if (max_track_speed <= 2 * min_error) {
                 max_track_speed = 2 * min_error;
             }
-            NHORCA.addMovementConstraintsDiffSimple(max_track_speed, position.getHeading(), addOrcaLines);
+            Methods_Planners.NHORCA.addMovementConstraintsDiffSimple(max_track_speed, position.getHeading(), addOrcaLines);
         } else {
-            NHORCA.addMovementConstraintsDiff(cur_allowed_error_, time_to_holo_, max_vel_x_, max_vel_th_, position.getHeading(), v_max_ang, addOrcaLines);
+            Methods_Planners.NHORCA.addMovementConstraintsDiff(cur_allowed_error_, time_to_holo_, max_vel_x_, max_vel_th_, position.getHeading(), v_max_ang, addOrcaLines);
         }
         max_speed_x_ = vMaxAng();
 
@@ -483,63 +491,39 @@ public class Agent {
         return max_vel_x_; //TODO: fixme
     }
 
-
+    // update min_dist_obst_ and obstacles_from_laser_
     void computeObstacles() {
         if (obstacles_from_laser_.size() <= 0)
             return;
         obstacle_lock_.lock();
         try {
-            Vector<Vector2> own_footprint = new Vector<Vector2>();
+            for (Obstacle obstacle : obstacles_from_laser_) {
+                //why choose this limit?????????????????????????????????
+                if (use_obstacles_) {
+                    if (obstacle.getDistToAgent() < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
 
-            for (int i = 0; i < footprint_original.size(); i++) {
-                own_footprint.add(new Vector2(
-                                footprint_original.get(i).getX(),
-                                footprint_original.get(i).getY())
-                );
-            }
-
-            min_dist_obst_ = Double.MAX_VALUE;
-            int i = 0;
-            Vector<Integer> delete_list = new Vector<Integer>();
-            for (Obstacle obst : obstacles_from_laser_) {
-                if (!obst.getBegin().equals(obst.getEnd())) {
-                    double dist = Methods_Planners.distSqPointLineSegment(obst.getBegin(), obst.getEnd(), position.getPos());
-                    //why choose this limit?????????????????????????????????
-                    if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
-                        if (use_obstacles_) {
-                            if (orca) {// currently set to false
-                                createObstacleLine(own_footprint, obst.getBegin(), obst.getEnd());
-                            } else {//called from CP
-                                VO obstacle_vo = ClearPathMethods.createObstacleVO(
-                                        position.getPos(),
-                                        footprint_radius_,
-                                        footPrint_rotated,
-                                        obst.getBegin(),
-                                        obst.getEnd()
-                                );
-                                voAgents.add(obstacle_vo);
-                            }
-                        }
-                        if (dist < min_dist_obst_) {
-                            min_dist_obst_ = dist;
+                        if (orca) {// currently set to false
+                            createObstacleLine(footprint_original, obstacle.getBegin(), obstacle.getEnd());
+                        } else {//called from CP
+                            VO obstacle_vo = Methods_Planners.ClearPath.createObstacleVO(
+                                    position.getPos(),
+                                    footprint_radius_,
+                                    footprint_original,
+                                    obstacle.getBegin(),
+                                    obstacle.getEnd()
+                            );
+                            voAgents.add(obstacle_vo);
                         }
                     }
-                } else {
-                    delete_list.add(i);
                 }
-                i++;
-            }
 
-            for (i = delete_list.size() - 1; i >= 0; i--) {
-                obstacles_from_laser_.remove(delete_list.get(i));
             }
-
         } finally {
             obstacle_lock_.unlock();
         }
     }
 
-    void createObstacleLine(Vector<Vector2> own_footprint, Vector2 obst1, Vector2 obst2) {
+    void createObstacleLine(List<Vector2> own_footprint, Vector2 obst1, Vector2 obst2) {
 
         double dist = Methods_Planners.distSqPointLineSegment(obst1, obst2, position.getPos());
 
@@ -663,7 +647,7 @@ public class Agent {
             if (controlled) {
                 computeAgentVOs();
             }
-            newVelocity = ClearPathMethods.calculateClearpathVelocity(samples, voAgents, addOrcaLines, pref_velocity, max_speed_x_, useTruancation);
+            newVelocity = Methods_Planners.ClearPath.calculateClearpathVelocity(samples, voAgents, addOrcaLines, pref_velocity, max_speed_x_, useTruancation);
 
             radius -= cur_allowed_error_;
         } finally {
@@ -686,29 +670,24 @@ public class Agent {
             //use footprint or radius to create VO
             if (convex) {
                 if (AgentNeighbors.get(i).controlled) {
-                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, voType);
+                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, voType);
                 } else {
-                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, ClearPathMethods.VOS);
+                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, Methods_Planners.ClearPath.VOS);
                 }
             } else {
                 if (AgentNeighbors.get(i).controlled) {
-                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), radius, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).radius, AgentNeighbors.get(i).velocity, voType);
+                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), radius, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).radius, AgentNeighbors.get(i).velocity, voType);
                 } else {
-                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), radius, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).radius, AgentNeighbors.get(i).velocity, ClearPathMethods.VOS);
+                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), radius, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).radius, AgentNeighbors.get(i).velocity, Methods_Planners.ClearPath.VOS);
                 }
             }
             //truncation--not collide in certain amount of time
             if (useTruancation) {
-                new_agent_vo = ClearPathMethods.createTruncVO(new_agent_vo, truncTime);
+                new_agent_vo = Methods_Planners.ClearPath.createTruncVO(new_agent_vo, truncTime);
             }
             voAgents.add(new_agent_vo);
         }
     }
-
-    public void stop() {
-        rmqMsgManager.stop();
-    }
-
 
     /*++++++++++++++++++++++++Get stuff++++++++++++++++++++++++++*/
     public double getRadius() {
@@ -717,7 +696,7 @@ public class Agent {
 
     public Odometry_ getBaseOdom() {
         return base_odom_;
-    }   
+    }
 
     public long getLastSeen() {
         return last_seen_;
@@ -735,10 +714,6 @@ public class Agent {
         return lastTimeMePublished;
     }
 
-    public RMQMsgManager getRmqMsgManager() {
-        return rmqMsgManager;
-    }
-
     public String getBase_frame_() {
         return base_frame_;
     }
@@ -751,9 +726,9 @@ public class Agent {
         return controlled;
     }
 
-    public Vector2 getHolo_velocity_() {
-        return holo_velocity_;
-    }
+    //public Vector2 getHolo_velocity_() {
+//        return holo_velocity_;
+//    }
 
     public double getCur_loc_unc_radius_() {
         return cur_loc_unc_radius_;
@@ -811,9 +786,9 @@ public class Agent {
         this.holo_robot_ = holo_robot_;
     }
 
-    public void setHolo_velocity_(Vector2 holo_velocity_) {
-        this.holo_velocity_ = holo_velocity_;
-    }
+//    public void setHolo_velocity_(Vector2 holo_velocity_) {
+//        this.holo_velocity_ = holo_velocity_;
+//    }
 
     public void setRadius(double radius) {
         this.radius = radius;

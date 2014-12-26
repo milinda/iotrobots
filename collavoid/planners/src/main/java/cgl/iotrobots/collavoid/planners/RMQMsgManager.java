@@ -26,13 +26,13 @@ public class RMQMsgManager {
         this.addresses = addresses;
         this.url = url;
 
-        RMQContexts.put(Constant.KEY_ODOMETRY, new RMQContext(exchangeName, Constant.KEY_ODOMETRY));
-        RMQContexts.put(Constant.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant.KEY_PARTICLE_CLOUD));
-        RMQContexts.put(Constant.KEY_SCAN, new RMQContext(exchangeName, Constant.KEY_SCAN));
-        RMQContexts.put(Constant.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant.KEY_VELOCITY_CMD));
+        RMQContexts.put(Constant_msg.KEY_ODOMETRY, new RMQContext(exchangeName, Constant_msg.KEY_ODOMETRY));
+        RMQContexts.put(Constant_msg.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant_msg.KEY_PARTICLE_CLOUD));
+        RMQContexts.put(Constant_msg.KEY_SCAN, new RMQContext(exchangeName, Constant_msg.KEY_SCAN));
+        RMQContexts.put(Constant_msg.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant_msg.KEY_VELOCITY_CMD));
 
-        RMQContexts.put(Constant.KEY_POSE_SHARE, new RMQContext(Constant.KEY_POSE_SHARE, ""));
-        RMQContexts.get(Constant.KEY_POSE_SHARE).EXCHANGE_TYPE = Constant.TYPE_EXCHANGE_FANOUT;
+        RMQContexts.put(Constant_msg.KEY_POSE_SHARE, new RMQContext(Constant_msg.KEY_POSE_SHARE, ""));
+        RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_FANOUT;
 
     }
 
@@ -42,13 +42,13 @@ public class RMQMsgManager {
                 url,
                 null,
                 exchangeName,
-                Constant.TYPE_EXCHANGE_DIRECT
+                Constant_msg.TYPE_EXCHANGE_DIRECT
         );
         shareChannel = Methods_RMQ.getChannel(
                 addresses, url,
                 null,
-                RMQContexts.get(Constant.KEY_POSE_SHARE).EXCHANGE_NAME,
-                Constant.TYPE_EXCHANGE_FANOUT
+                RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_NAME,
+                Constant_msg.TYPE_EXCHANGE_FANOUT
         );
         bindQueue();
         MsgCallBacks.bindCallBacks(agent, RMQContexts);
@@ -57,18 +57,18 @@ public class RMQMsgManager {
     private void bindQueue() {
         try {
             for (Map.Entry<String, RMQContext> e : RMQContexts.entrySet()) {
-                if (e.getKey().equals(Constant.KEY_POSE_SHARE))
+                if (e.getKey().equals(Constant_msg.KEY_POSE_SHARE))
                     continue;
                 e.getValue().CHANNEL = channel;
                 e.getValue().QUEUE_NAME = channel.queueDeclare().getQueue();// may need to set queue size
                 channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
-            RMQContexts.get(Constant.KEY_POSE_SHARE).CHANNEL = shareChannel;
-            RMQContexts.get(Constant.KEY_POSE_SHARE).QUEUE_NAME = shareChannel.queueDeclare().getQueue();
+            RMQContexts.get(Constant_msg.KEY_POSE_SHARE).CHANNEL = shareChannel;
+            RMQContexts.get(Constant_msg.KEY_POSE_SHARE).QUEUE_NAME = shareChannel.queueDeclare().getQueue();
             shareChannel.queueBind(
-                    RMQContexts.get(Constant.KEY_POSE_SHARE).QUEUE_NAME,
-                    RMQContexts.get(Constant.KEY_POSE_SHARE).EXCHANGE_NAME,
-                    RMQContexts.get(Constant.KEY_POSE_SHARE).ROUTING_KEY);
+                    RMQContexts.get(Constant_msg.KEY_POSE_SHARE).QUEUE_NAME,
+                    RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_NAME,
+                    RMQContexts.get(Constant_msg.KEY_POSE_SHARE).ROUTING_KEY);
             
         } catch (IOException e) {
             e.printStackTrace();

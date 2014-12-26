@@ -916,10 +916,11 @@ public class ROSAgent {
                     prev = new Vector2(next);
                     prev_ang = ang;
                 }
+                if (!start.equals(prev)) {
                 Obstacle obst = new Obstacle(start, prev);
                 obst.setTime(msg.getHeader().getStamp());
-
                 obstacles_from_laser_.add(obst);
+                }
             }
         } finally {
             obstacle_lock_.unlock();
@@ -962,6 +963,7 @@ public class ROSAgent {
                 //neighbors have already been sorted according to their dist to me
                 min_dist_neigh = Vector2.abs(Vector2.minus(ROSAgentNeighbors.get(0).position.getPos(), position.getPos()));
 
+            computeObstacles();
 //            System.out.println("min neighbor: "+min dist neigh);
 //            System.out.println("obst_min: "+min dist obst_);
             double min_dist = Math.min(min_dist_neigh, min_dist_obst_);
@@ -975,8 +977,6 @@ public class ROSAgent {
             //add acceleration constraints
 
             NHORCA.addAccelerationConstraintsXY(max_vel_x_, acc_lim_x_, max_vel_y_, acc_lim_y_, velocity, position.getHeading(), simPeriod, holo_robot_, addOrcaLines);
-
-            computeObstacles();
 
             // currently only compute the clear path velocity which has the best performance as described in the thesis.
 
@@ -1165,8 +1165,7 @@ public class ROSAgent {
             min_dist_obst_ = Double.MAX_VALUE;
             int i = 0;
             Vector<Integer> delete_list = new Vector<Integer>();
-            for (int j = 0; j < obstacles_from_laser_.size(); j++) {
-                Obstacle obst = obstacles_from_laser_.get(i);
+            for (Obstacle obst : obstacles_from_laser_) {
                 if (!obst.getBegin().equals(obst.getEnd())) {
                     double dist = utils.distSqPointLineSegment(obst.getBegin(), obst.getEnd(), position.getPos());
                     //why choose this limit?????????????????????????????????

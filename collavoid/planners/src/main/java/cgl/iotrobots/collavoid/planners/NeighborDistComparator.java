@@ -8,17 +8,6 @@ import java.util.Comparator;
 // separated from commons to avoid cycle references
 public class NeighborDistComparator implements Comparator<Agent> {
 
-
-//    public static class ConvexHullPointsPositionComparator implements Comparator<Agent> {
-//        public int compare(ConvexHullPoint chp1, ConvexHullPoint chp2) {
-//            if (Vector2.absSqr(chp1.getX(), chp1.getY()) <= Vector2.absSqr(chp2.getX(), chp2.getY()))
-//                return -1;
-//            else
-//                return 1;
-//        }
-//    }
-
-
     private Vector2 pos = null;
 
     public NeighborDistComparator(double x, double y) {
