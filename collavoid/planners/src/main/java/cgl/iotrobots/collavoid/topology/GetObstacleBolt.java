@@ -15,25 +15,29 @@ import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class GetObstacleBolt extends BaseBasicBolt {
     private Logger logger = Logger.getLogger("GetObstacleBolt");
     private List<Obstacle> obstacles = new ArrayList<Obstacle>();
-    private List<Agent> Neighbors = new ArrayList<Agent>();
+    private Map<String, Agent> Agents = new HashMap<String, Agent>();
+    private String agentID;//use sensor Id as robot id
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
 
-        if (tuple.getSourceComponent().equals(Constant_storm.Components.GET_NEIGHBORS_COMPONENT)) {
-            Neighbors = (List<Agent>) tuple.getValueByField(Constant_storm.Fields.NEIGHBORS_FIELD);
-        } else if (tuple.getSourceComponent().equals(Constant_storm.Components.SCAN_COMPONENT)) {
+        if (tuple.getSourceComponent().equals(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)) {
+            Agents = (Map<String, Agent>) tuple.getValueByField(Constant_storm.FIELDS.ALL_AGENTS_FIELD);
+        } else if (tuple.getSourceComponent().equals(Constant_storm.Components.SCAN_COMPONENT) && Agents.size() > 0) {
             List<Object> emit = new ArrayList<Object>();
-            PointCloud2_ pointCloud2_ = (PointCloud2_) tuple.getValueByField(Constant_storm.Fields.SCAN_FIELD);
+            agentID = (String) tuple.getValue(1);
+            PointCloud2_ pointCloud2_ = (PointCloud2_) tuple.getValueByField(Constant_storm.FIELDS.SCAN_FIELD);
             getObstacles(pointCloud2_);
             emit.add(tuple.getValue(0));
-            emit.add(tuple.getValue(1));
+            emit.add(agentID);
             emit.add(obstacles);
             basicOutputCollector.emit(emit);
         }
@@ -41,7 +45,11 @@ public class GetObstacleBolt extends BaseBasicBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields(Constant_storm.Fields.OBSTACLE_FIELD));
+        outputFieldsDeclarer.declare(new Fields(
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.OBSTACLE_FIELD
+        ));
     }
 
     private void getObstacles(PointCloud2_ msg) {
@@ -140,10 +148,12 @@ public class GetObstacleBolt extends BaseBasicBolt {
 
     private boolean pointInNeighbor(Vector2 point) {
         double dist;
-        for (int i = 0; i < Neighbors.size(); i++) {
-            dist = Vector2.abs(Vector2.minus(point, Neighbors.get(i).getPosition().getPos()));
-            if (dist <= Neighbors.get(i).getRadius()) {
-                return true;
+        for (Map.Entry<String, Agent> e : Agents.entrySet()) {
+            if (!e.getKey().equals(agentID)) {
+                dist = Vector2.abs(Vector2.minus(point, e.getValue().position.getPos()));
+                if (dist <= e.getValue().radius) {
+                    return true;
+                }
             }
         }
         return false;

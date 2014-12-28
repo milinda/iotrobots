@@ -21,7 +21,7 @@ public class VOObstacleBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        agent = (Agent) input.getValueByField(Constant_storm.Fields.AGENT_FIELD);
+        agent = (Agent) input.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
         obstacleOrcaLines.clear();
         obstacleVOs.clear();
         computeObstacleVOs();
@@ -37,22 +37,22 @@ public class VOObstacleBolt extends BaseBasicBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields(
-                Constant_storm.Fields.TIME_FIELD,
-                Constant_storm.Fields.SENSOR_ID_FIELD,
-                Constant_storm.Fields.VOS_FIELD,
-                Constant_storm.Fields.ADDORCA_LINES_FIELD,
-                Constant_storm.Fields.SEQUENCE_FIELD
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.OBSTACLE_VO_FIELD,
+                Constant_storm.FIELDS.OBSTACLE_LINES_FIELD,
+                Constant_storm.FIELDS.SEQUENCE_FIELD
         ));
     }
 
     void computeObstacleVOs() {
         if (agent.obstacles_from_laser_.size() <= 0)
             return;
+        double maxDist = Math.pow((Vector2.abs(agent.velocity) + 4.0 * agent.footprint_radius_), 2);
         for (Obstacle obstacle : agent.obstacles_from_laser_) {
             //why choose this limit?????????????????????????????????
             if (agent.use_obstacles_) {
-                if (obstacle.getDistToAgent() <
-                        Math.pow((Vector2.abs(agent.velocity) + 4.0 * agent.footprint_radius_), 2)) {
+                if (obstacle.getDistToAgent() < maxDist) {
                     if (agent.orca) {// currently set to false
                         createObstacleLine(agent.footprint_original, obstacle.getBegin(), obstacle.getEnd());
                     } else {//called from CP

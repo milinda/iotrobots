@@ -24,19 +24,20 @@ public class AddNHConstraintsBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        agent = (Agent) input.getValueByField(Constant_storm.Fields.AGENT_FIELD);
+        agent = (Agent) input.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
         nhConstLines.clear();
-        addNHConstraints();
+        if (!agent.holo_robot_)
+            addNHConstraints();
         collector.emit(new Values(input.getValue(0), input.getValue(1), nhConstLines, seq++));
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields(
-                Constant_storm.Fields.TIME_FIELD,
-                Constant_storm.Fields.SENSOR_ID_FIELD,
-                Constant_storm.Fields.ADDORCA_LINES_FIELD,
-                Constant_storm.Fields.SEQUENCE_FIELD));
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.NH_LINES_FIELD,
+                Constant_storm.FIELDS.SEQUENCE_FIELD));
     }
 
     private void addNHConstraints() {

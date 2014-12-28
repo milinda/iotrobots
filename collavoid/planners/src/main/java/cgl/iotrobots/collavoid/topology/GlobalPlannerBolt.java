@@ -22,9 +22,9 @@ public class GlobalPlannerBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple input) {
-        Object time = input.getValueByField(Constant_storm.Fields.TIME_FIELD);
-        Object sensorId = input.getValueByField(Constant_storm.Fields.SENSOR_ID_FIELD);
-        Object startGoal = input.getValueByField(Constant_storm.Fields.START_GOAL_FIELD);
+        Object time = input.getValueByField(Constant_storm.FIELDS.TIME_FIELD);
+        Object sensorId = input.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
+        Object startGoal = input.getValueByField(Constant_storm.FIELDS.START_GOAL_FIELD);
         if (!(startGoal instanceof HashMap)) {
             throw new IllegalArgumentException("Start and goal should be Map.");
         }
@@ -47,9 +47,9 @@ public class GlobalPlannerBolt extends BaseRichBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields(
-                Constant_storm.Fields.TIME_FIELD,
-                Constant_storm.Fields.SENSOR_ID_FIELD,
-                Constant_storm.Fields.PLAN_FIELD
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.PLAN_FIELD
         ));
     }
 

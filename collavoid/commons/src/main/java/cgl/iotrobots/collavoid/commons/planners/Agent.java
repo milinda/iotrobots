@@ -38,7 +38,7 @@ public class Agent {
     //robot information
     public Position position; //contains the heading information
     public Vector2 velocity;
-    public Vector2 newVelocity;
+    //    public Vector2 newVelocity;
     public Vector2 prefVelociy;
     public double radius;
     public List<Vector2> footPrint_rotated;
@@ -52,7 +52,7 @@ public class Agent {
 
     //VO
     public List<VO> voAgents;
-    public List<VelocitySample> samples;
+//    public List<VelocitySample> samples;
 
     public List<Agent> AgentNeighbors;
 
@@ -60,11 +60,11 @@ public class Agent {
     public double publishPositionsPeriod;
     public double publishMePeriod;//position share,in seconds
 
-    public double thresholdLastSeen;
-    public int numSamples;
+//    public double thresholdLastSeen;
+//    public int numSamples;
 
     //helpers??
-    public long lastTimePositionsPublished;//for visualization in rviz
+//    public long lastTimePositionsPublished;//for visualization in rviz
     public long lastTimeMePublished; //for position share
 
     //NH stuff
@@ -87,7 +87,7 @@ public class Agent {
     public List<Vector2> obstacle_points_;
 
     //Agent description
-    private String Name;
+    public String Name;
     public String base_frame_;
     public String global_frame_;
     public double wheel_base_;
@@ -101,15 +101,15 @@ public class Agent {
 
     public List<LinePair> footprint_original_lines;
 
-    private long last_seen_;
-    private Odometry_ base_odom_;
+    public long last_seen_;
+    public Odometry_ base_odom_;
 
     //LOC uncertatiny
     public double eps_;
     public double cur_loc_unc_radius_;
 
     //COLLVOID
-    public List<Vector2> footprint_minkowski;
+    public List<Vector2> footprint_minkowski;// with localization uncertainty
     public List<PoseWeighted> pose_array_weighted_;
 
     //lock
@@ -121,11 +121,11 @@ public class Agent {
 
     //-----------------------method begin-------------------------------//
     public Agent() {
-        Name = "robot";
-        me_lock_ = new ReentrantLock();
-        obstacle_lock_ = new ReentrantLock();
-        neighbors_lock_ = new ReentrantLock();
-        convex_lock_ = new ReentrantLock();
+        Name = "";
+//        me_lock_ = new ReentrantLock();
+//        obstacle_lock_ = new ReentrantLock();
+//        neighbors_lock_ = new ReentrantLock();
+//        convex_lock_ = new ReentrantLock();
 
         cur_allowed_error_ = 0;
         cur_loc_unc_radius_ = 0;// not used
@@ -143,9 +143,9 @@ public class Agent {
         obstacles_from_laser_ = new ArrayList<Obstacle>();
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
-        samples = new ArrayList<VelocitySample>();
+//        samples = new ArrayList<VelocitySample>();
 
-        logger = Logger.getLogger(Name + "Agent_Logger");
+        logger = Logger.getLogger("Agent_Logger");
         initParameters();
     }
 
@@ -168,7 +168,7 @@ public class Agent {
         use_obstacles_ = Parameters.USE_OBSTACLES;
         controlled = Parameters.CONTROLLED;
 
-        base_frame_ = Name.replace("/", "") + Parameters.BASE_FRAME_SUFFIX;//get rid of the / character
+        updateBaseFrame();//get rid of the / character
         global_frame_ = Parameters.GLOBAL_FRAME;
 
         //acceleration limits load from params_turtle.yaml
@@ -249,7 +249,7 @@ public class Agent {
         }
         setFootprintOrignial(footprint_original);
 
-        logger.info("************************Agent " + Name + " is initialized!");
+//        logger.info("************************Agent " + Name + " is initialized!");
     }
 
     //called by local planner
@@ -257,108 +257,88 @@ public class Agent {
     * velocity */
 
     // cmd_vel is in robot frame that means it should have no Y velocity, just X and Z angular velocity
-    public void computeNewVelocity(Vector2 pref_velocity, Twist_ cmd_vel) {
-        me_lock_.lock();
-        try {
-            prefVelociy = pref_velocity;
+    public void updateState() {
+//        me_lock_.lock();
+//        try {
+//            prefVelociy = pref_velocity;
             //Forward project agents,update me status like position and so on
             upDateAgentState(this);
             updateAllNeighbors();
+//
+//            newVelocity = new Vector2(0.0, 0.0);
 
-            newVelocity = new Vector2(0.0, 0.0);
-
-            addOrcaLines.clear();
-            voAgents.clear();
+//            addOrcaLines.clear();
+//            voAgents.clear();
 
             computeMinDistToAll();
 
-            //incorporate NH constraints
             max_speed_x_ = max_vel_x_;//???????????????????????????
-
-            if (!holo_robot_) {
-                addNHConstraints(min_dist, pref_velocity);
-            }
-            //add acceleration constraints
-
-            Methods_Planners.NHORCA.addAccelerationConstraintsXY(
-                    max_vel_x_,
-                    acc_lim_x_,
-                    max_vel_y_,
-                    acc_lim_y_,
-                    velocity,
-                    position.getHeading(),
-                    ControlPeriod,
-                    holo_robot_,
-                    addOrcaLines
-            );
-
-            computeObstacles();
 
             // currently only compute the clear path velocity which has the best performance as described in the thesis.
 
 //            if (orca_) {
 //                computeOrcaVelocity(pref_velocity);
 //            } else {
-            samples.clear();
+//            samples.clear();
 //                if (clearpath_) {
-            computeClearpathVelocity(pref_velocity);
+//            computeClearpathVelocity(pref_velocity);
 //                } else {
 //                    computeSampledVelocity(pref_velocity);
 //                }
 //            }
-
-
-            double speed_ang = Math.atan2(newVelocity.getY(), newVelocity.getX());
-            double dif_ang = Methods_Planners.shortest_angular_distance(position.getHeading(), speed_ang);
-
-            Vector3d_ linear = new Vector3d_();
-            Vector3d_ angular = new Vector3d_();
-            if (!holo_robot_) {
-                double vel = Vector2.abs(newVelocity);
-                double vstar;
-
-                if (Math.abs(dif_ang) > Parameters.EPSILON)
-                    vstar = Methods_Planners.NHORCA.calcVstar(vel, dif_ang);//get nonholomonic velocity
-                else
-                    vstar = max_vel_x_;
-
-                linear.setX(Math.min(vstar, vMaxAng()));
-                linear.setY(0.0);
-                cmd_vel.setLinear(linear);
-
-                //ROS_ERROR("dif_ang %f", dif_ang);
-                if (Math.abs(dif_ang) > 3.0 * Math.PI / 4.0) {
-                    angular.setZ(
-                            Methods_Planners.sign(
-                                    base_odom_.getTwist().getAngular().getZ()) *
-                                    Math.min(Math.abs(dif_ang / time_to_holo_),
-                                            max_vel_th_)
-                    );
-                    cmd_vel.setAngular(angular);
-                } else {
-                    angular.setZ(
-                            Methods_Planners.sign(dif_ang) *
-                                    Math.min(Math.abs(dif_ang / time_to_holo_),
-                                            max_vel_th_)
-                    );
-                    cmd_vel.setAngular(angular);
-                }
-                //ROS_ERROR("vstar = %.3f", vstar);
-            } else {
-                //new velocity is caculated in world frame, it has to be transformed to robot base frame
-                Vector2 rotated_vel = Vector2.rotateVectorByAngle(newVelocity, -position.getHeading());
-
-                linear.setX(rotated_vel.getX());
-                linear.setY(rotated_vel.getY());
-                cmd_vel.setLinear(linear);
-                if (min_dist > 2 * footprint_radius_) {
-                    angular.setZ(Methods_Planners.sign(dif_ang) * Math.min(Math.abs(dif_ang), max_vel_th_));
-                    cmd_vel.setAngular(angular);
-                }
-            }
-        } finally {
-            me_lock_.unlock();
-        }
+//
+//
+//            double speed_ang = Math.atan2(newVelocity.getY(), newVelocity.getX());
+//            double dif_ang = Methods_Planners.shortest_angular_distance(position.getHeading(), speed_ang);
+//
+//            Vector3d_ linear = new Vector3d_();
+//            Vector3d_ angular = new Vector3d_();
+//            if (!holo_robot_) {
+//                double vel = Vector2.abs(newVelocity);
+//                double vstar;
+//
+//                if (Math.abs(dif_ang) > Parameters.EPSILON)
+//                    vstar = Methods_Planners.NHORCA.calcVstar(vel, dif_ang);//get nonholomonic velocity
+//                else
+//                    vstar = max_vel_x_;
+//
+//                linear.setX(Math.min(vstar, vMaxAng()));
+//                linear.setY(0.0);
+//                cmd_vel.setLinear(linear);
+//
+//                //ROS_ERROR("dif_ang %f", dif_ang);
+//                if (Math.abs(dif_ang) > 3.0 * Math.PI / 4.0) {
+//                    angular.setZ(
+//                            Methods_Planners.sign(
+//                                    base_odom_.getTwist().getAngular().getZ()) *
+//                                    Math.min(Math.abs(dif_ang / time_to_holo_),
+//                                            max_vel_th_)
+//                    );
+//                    cmd_vel.setAngular(angular);
+//                } else {
+//                    angular.setZ(
+//                            Methods_Planners.sign(dif_ang) *
+//                                    Math.min(Math.abs(dif_ang / time_to_holo_),
+//                                            max_vel_th_)
+//                    );
+//                    cmd_vel.setAngular(angular);
+//                }
+//                //ROS_ERROR("vstar = %.3f", vstar);
+//            } else {
+//                //new velocity is caculated in world frame, it has to be transformed to robot base frame
+//                Vector2 rotated_vel = Vector2.rotateVectorByAngle(newVelocity, -position.getHeading());
+//
+//                linear.setX(rotated_vel.getX());
+//                linear.setY(rotated_vel.getY());
+//                cmd_vel.setLinear(linear);
+//                if (min_dist > 2 * footprint_radius_) {
+//                    angular.setZ(Methods_Planners.sign(dif_ang) * Math.min(Math.abs(dif_ang), max_vel_th_));
+//                    cmd_vel.setAngular(angular);
+//                }
+//            }
+//        } finally {
+//            me_lock_.unlock();
+//        }
     }
 
     //get closest ROSAgent/obstacle
@@ -369,13 +349,14 @@ public class Agent {
         if (AgentNeighbors.size() > 0)
             min_dist_neigh = Vector2.abs(Vector2.minus(AgentNeighbors.get(0).position.getPos(), position.getPos()));
 
+        double threshold = Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2);
         for (Obstacle obstacle : obstacles_from_laser_) {
             double dist = Methods_Planners.distSqPointLineSegment(
                     obstacle.getBegin(),
                     obstacle.getEnd(),
                     position.getPos());
             obstacle.setDistToAgent(dist);
-            if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
+            if (dist < threshold) {
                 if (dist < min_dist_obstacle) {
                     min_dist_obstacle = dist;
                 }
@@ -440,8 +421,8 @@ public class Agent {
     void updateAllNeighbors() {
         neighbors_lock_.lock();
         try {
-            for (int i = 0; i < AgentNeighbors.size(); i++) {
-                upDateAgentState(AgentNeighbors.get(i));
+            for (Agent neighbor : AgentNeighbors) {
+                upDateAgentState(neighbor);
             }
             AgentNeighbors.sort(new Comparators.NeighborDistComparator(position.getPos()));
         } finally {
@@ -449,244 +430,8 @@ public class Agent {
         }
     }
 
-
-    void addNHConstraints(double min_dist, Vector2 pref_velocity) {
-        double min_error = minErrorHolo;
-        double max_error = maxErrorHolo;
-        double error = max_error;
-        double v_max_ang = vMaxAng();
-
-        //ROS_ERROR("v_max_ang %.2f", v_max_ang);
-
-        if (min_dist < 2.0 * footprint_radius_ + cur_loc_unc_radius_) {
-            error = (max_error - min_error) / (Math.pow(2 * (footprint_radius_ + cur_loc_unc_radius_), 2)) * Math.pow(min_dist, 2) + min_error; // how much error do i allow?
-            //ROS_DEBUG("Error = %f", error);
-            if (min_dist < 0) {
-                error = min_error;
-                // ROS_DEBUG("%s I think I am in collision", me_->getId().c_str());
-            }
-        }
-        cur_allowed_error_ = 1.0 / 3.0 * cur_allowed_error_ + 2.0 / 3.0 * error;
-        //ROS_ERROR("error = %f", cur_allowed_error_);
-        double speed_ang = Math.atan2(pref_velocity.getY(), pref_velocity.getX());
-        double dif_ang = Methods_Planners.shortest_angular_distance(position.getHeading(), speed_ang);
-        //calculate possible tracking holomonic robot speed range
-        if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_error_ < 2.0 * min_error) {
-            double max_track_speed = Methods_Planners.NHORCA.calculateMaxTrackSpeedAngle(time_to_holo_, Math.PI / 2.0, cur_allowed_error_, max_vel_x_, max_vel_th_, v_max_ang);
-            // tracking errors are not in velocity space!!!!!!!!!!!!!!
-            if (max_track_speed <= 2 * min_error) {
-                max_track_speed = 2 * min_error;
-            }
-            Methods_Planners.NHORCA.addMovementConstraintsDiffSimple(max_track_speed, position.getHeading(), addOrcaLines);
-        } else {
-            Methods_Planners.NHORCA.addMovementConstraintsDiff(cur_allowed_error_, time_to_holo_, max_vel_x_, max_vel_th_, position.getHeading(), v_max_ang, addOrcaLines);
-        }
-        max_speed_x_ = vMaxAng();
-
-    }
-
-    double vMaxAng() {
-        //double theoretical_max_v = max_vel_th_ * wheel_base_ / 2.0;
-        //return theoretical_max_v - std::abs(base_odom_.twist.twist.angular.z) * wheel_base_/2.0;
-        return max_vel_x_; //TODO: fixme
-    }
-
-    // update min_dist_obst_ and obstacles_from_laser_
-    void computeObstacles() {
-        if (obstacles_from_laser_.size() <= 0)
-            return;
-        obstacle_lock_.lock();
-        try {
-            for (Obstacle obstacle : obstacles_from_laser_) {
-                //why choose this limit?????????????????????????????????
-                if (use_obstacles_) {
-                    if (obstacle.getDistToAgent() < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
-
-                        if (orca) {// currently set to false
-                            createObstacleLine(footprint_original, obstacle.getBegin(), obstacle.getEnd());
-                        } else {//called from CP
-                            VO obstacle_vo = Methods_Planners.ClearPath.createObstacleVO(
-                                    position.getPos(),
-                                    footprint_radius_,
-                                    footprint_original,
-                                    obstacle.getBegin(),
-                                    obstacle.getEnd()
-                            );
-                            voAgents.add(obstacle_vo);
-                        }
-                    }
-                }
-
-            }
-        } finally {
-            obstacle_lock_.unlock();
-        }
-    }
-
-    void createObstacleLine(List<Vector2> own_footprint, Vector2 obst1, Vector2 obst2) {
-
-        double dist = Methods_Planners.distSqPointLineSegment(obst1, obst2, position.getPos());
-
-        if (dist == Vector2.absSqr(Vector2.minus(position.getPos(), obst1))) {
-            computeObstacleLine(obst1);
-        } else if (dist == Vector2.absSqr(Vector2.minus(position.getPos(), obst2))) {
-            computeObstacleLine(obst2);
-        } else {
-            Vector2 position_obst = Methods_Planners.projectPointOnLine(obst1, Vector2.minus(obst2, obst1), position.getPos());
-            Vector2 rel_position = Vector2.minus(position_obst, position.getPos());
-            dist = Math.sqrt(dist);
-            double dist_to_footprint = getDistToFootprint(rel_position);
-            if (dist_to_footprint == -1) {
-                dist_to_footprint = footprint_radius_;
-            }
-            dist = dist - dist_to_footprint - 0.03;
-
-            if (dist < 0.0) {
-                Line line = new Line();
-                line.setPoint(Vector2.scale(Vector2.normalize(rel_position), (dist - 0.02)));
-                line.setDir(Vector2.normalize(Vector2.minus(obst1, obst2)));
-                addOrcaLines.add(line);
-                return;
-            }
-
-            if (Vector2.abs(Vector2.minus(position.getPos(), obst1)) > 2 * footprint_radius_ &&
-                    Vector2.abs(Vector2.minus(position.getPos(), obst2)) > 2 * footprint_radius_) {
-                Line line = new Line();
-                line.setPoint(Vector2.scale(Vector2.normalize(rel_position), dist));
-                line.setDir(Vector2.negative(Vector2.normalize(Vector2.minus(obst1, obst2))));
-                addOrcaLines.add(line);
-                return;
-
-            }
-
-            rel_position = Vector2.scale(Vector2.normalize(rel_position), Vector2.abs(rel_position) - dist / 2.0);
-
-            Vector<Vector2> obst = new Vector<Vector2>();
-            obst.add(Vector2.minus(obst1, position_obst));
-            obst.add(Vector2.minus(obst2, position_obst));
-            List<Vector2> mink_sum = Methods_Planners.minkowskiSumConvexHull(own_footprint, obst);
-
-            Vector2 min = new Vector2();
-            Vector2 max = new Vector2();
-            double min_ang = 0.0;
-            double max_ang = 0.0;
-
-            for (int i = 0; i < mink_sum.size(); i++) {
-                double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
-                if (Methods_Planners.leftOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
-                    if (-angle < min_ang) {
-                        min = Vector2.plus(rel_position, mink_sum.get(i));
-                        min_ang = -angle;
-                    }
-                } else {
-                    if (angle > max_ang) {
-                        max = Vector2.plus(rel_position, mink_sum.get(i));
-                        max_ang = angle;
-                    }
-                }
-            }
-
-            Line line = new Line();
-            line.setPoint(Vector2.scale(Vector2.normalize(rel_position), dist / 2.0));
-            if (Vector2.absSqr(Vector2.minus(position_obst, obst1)) > Vector2.absSqr(Vector2.minus(position_obst, obst2))) {
-                // ROS_ERROR("max_ang = %.2f", max_ang);
-                line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(max), 0.1));
-            } else {
-                // ROS_ERROR("min_ang = %.2f", min_ang);
-                line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(min), 0.1));
-
-            }
-            addOrcaLines.add(line);
-
-        }
-    }
-
-    void computeObstacleLine(Vector2 obst) {
-        Line line = new Line();
-        Vector2 relative_position = Vector2.minus(obst, position.getPos());
-        double dist_to_footprint;
-        double dist = Vector2.abs(Vector2.minus(position.getPos(), obst));
-        if (!has_polygon_footprint_)
-            dist_to_footprint = footprint_radius_;
-        else {
-            dist_to_footprint = getDistToFootprint(relative_position);
-            if (dist_to_footprint == -1) {
-                dist_to_footprint = footprint_radius_;
-            }
-        }
-        dist = dist - dist_to_footprint - 0.03;
-
-        line.setPoint(Vector2.scale(Vector2.normalize(relative_position), dist));
-        line.setDir(new Vector2(-(Vector2.normalize(relative_position)).getY(), (Vector2.normalize(relative_position)).getX()));
-        addOrcaLines.add(line);
-    }
-
-    double getDistToFootprint(Vector2 point) {
-        Vector2 result;
-        for (int i = 0; i < footprint_original_lines.size(); i++) {
-            LinePair l1 = new LinePair(footprint_original_lines.get(i).getFirst(), footprint_original_lines.get(i).getSecond());
-            LinePair l2 = new LinePair(new Vector2(0.0, 0.0), point);
-
-            result = LinePair.Intersection(l1, l2);
-            if (result != null) {
-                //ROS_DEBUG("Result = %f, %f, dist %f", result.x(), result.y(), collvoid::abs(result));
-                return Vector2.abs(result);
-            }
-        }
-        //ROS_DEBUG("Obstacle Point within Footprint. I am close to/in collision");
-        return -1;
-    }
-
-
-    void computeClearpathVelocity(Vector2 pref_velocity) {
-        //account for nh error
-        neighbors_lock_.lock();
-        try {
-            radius += cur_allowed_error_;
-
-            if (controlled) {
-                computeAgentVOs();
-            }
-            newVelocity = Methods_Planners.ClearPath.calculateClearpathVelocity(samples, voAgents, addOrcaLines, pref_velocity, max_speed_x_, useTruancation);
-
-            radius -= cur_allowed_error_;
-        } finally {
-            neighbors_lock_.unlock();
-        }
-        //for visualization
-//        msgPublisher.publishHoloSpeed(position, newVelocity, global_frame_, base_frame_, speed_pub_);
-//        msgPublisher.publishVOs(position, voAgents, useTruancation, global_frame_, base_frame_, vo_pub_);
-//        msgPublisher.publishPoints(position, samples, global_frame_, base_frame_, samples_pub_);
-//        msgPublisher.publishOrcaLines(addOrcaLines, position, global_frame_, base_frame_, lines_pub_);
-
-
-    }
-
-    void computeAgentVOs() {
-        // neighbors are published with localization uncertainty that means radius and footprint
-        // include localization uncertainty radius and minkowski footprint.
-        for (int i = 0; i < AgentNeighbors.size(); i++) {
-            VO new_agent_vo;
-            //use footprint or radius to create VO
-            if (convex) {
-                if (AgentNeighbors.get(i).controlled) {
-                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, voType);
-                } else {
-                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, Methods_Planners.ClearPath.VOS);
-                }
-            } else {
-                if (AgentNeighbors.get(i).controlled) {
-                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), radius, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).radius, AgentNeighbors.get(i).velocity, voType);
-                } else {
-                    new_agent_vo = Methods_Planners.ClearPath.createVO(position.getPos(), radius, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).radius, AgentNeighbors.get(i).velocity, Methods_Planners.ClearPath.VOS);
-                }
-            }
-            //truncation--not collide in certain amount of time
-            if (useTruancation) {
-                new_agent_vo = Methods_Planners.ClearPath.createTruncVO(new_agent_vo, truncTime);
-            }
-            voAgents.add(new_agent_vo);
-        }
+    public void updateBaseFrame() {
+        base_frame_ = Name.replace("/", "") + Parameters.BASE_FRAME_SUFFIX;//get rid of the / character
     }
 
     /*++++++++++++++++++++++++Get stuff++++++++++++++++++++++++++*/
@@ -702,7 +447,7 @@ public class Agent {
         return last_seen_;
     }
 
-    public String getRobotId() {
+    public String getName() {
         return Name;
     }
 

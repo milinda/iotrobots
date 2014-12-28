@@ -373,7 +373,9 @@ public class Methods_Planners {
                 final Vector2 pref_vel,
                 double max_speed,
                 boolean use_truncation) {
-
+            if (samples == null) {
+                samples = new ArrayList<VelocitySample>();
+            }
             boolean isWithinAllAdditionalConstraints = true;
             if (!isWithinAdditionalConstraints(additional_constraints, pref_vel)) {
                 isWithinAllAdditionalConstraints = false;

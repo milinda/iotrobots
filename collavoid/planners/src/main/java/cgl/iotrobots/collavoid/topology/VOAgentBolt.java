@@ -7,7 +7,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
-import cgl.iotrobots.collavoid.commons.planners.Line;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.VO;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
@@ -23,7 +22,7 @@ public class VOAgentBolt extends BaseBasicBolt {
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
         voAgents.clear();
-        agent = (Agent) input.getValueByField(Constant_storm.Fields.AGENT_FIELD);
+        agent = (Agent) input.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
         if (agent.controlled)
             computeAgentVOs();
         collector.emit(new Values(
@@ -36,10 +35,10 @@ public class VOAgentBolt extends BaseBasicBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields(
-                Constant_storm.Fields.TIME_FIELD,
-                Constant_storm.Fields.SENSOR_ID_FIELD,
-                Constant_storm.Fields.VOS_FIELD,
-                Constant_storm.Fields.SEQUENCE_FIELD
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.AGENT_VO_FIELD,
+                Constant_storm.FIELDS.SEQUENCE_FIELD
         ));
     }
 

@@ -6,19 +6,18 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
-import cgl.iotrobots.collavoid.commons.storm.Methods_storm;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-//TODO:ack
 public class LocalPlannerBolt extends BaseRichBolt {
     private Logger logger = Logger.getLogger("LocalPlannerBolt");
     private OutputCollector outputCollector;
@@ -31,54 +30,75 @@ public class LocalPlannerBolt extends BaseRichBolt {
     private List<PoseStamped_> transformed_plan = new ArrayList<PoseStamped_>();
     private List<PoseStamped_> global_plan = null;
     private Odometry_ base_odom = null;
+    private boolean locked = false;
+    private boolean reachedGoal = true;
 
     @Override
     public void execute(Tuple input) {
-        //TODO: tick tuple is not suitable for this situation need to fix this
-        if (Methods_storm.isTickTuple(input)) {
-            Twist_ cmd_vel = null;
-            Vector2 pre_vel = null;
-            if (!computeVelocity(pre_vel, cmd_vel)) {
-                logger.warning("In valid preferred velocity calculation!!");
-            } else {
-                List<Object> emit = new ArrayList<Object>();
-                emit.add(time);
-                emit.add(sensorID);
-                if (pre_vel != null) {
-                    emit.add(pre_vel);
-                    outputCollector.emit(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM, emit);
-                } else {
-                    emit.add(cmd_vel);
-                    outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
-                }
-            }
-        } else {
-            sensorID = input.getValueByField(Constant_storm.Fields.SENSOR_ID_FIELD);
-            time = input.getValueByField(Constant_storm.Fields.TIME_FIELD);
-            if (input.getSourceComponent().equals(Constant_storm.Components.GLOBAL_PLANNER_COMPONENT)) {
-                global_plan = (List<PoseStamped_>) input.getValueByField(Constant_storm.Fields.PLAN_FIELD);
+        // when ever reset the global plan stop the robot
+        if (input.getSourceComponent().equals(Constant_storm.Components.GLOBAL_PLANNER_COMPONENT)) {
+            global_plan = (List<PoseStamped_>) input.getValueByField(Constant_storm.FIELDS.PLAN_FIELD);
+            if (!transformGlobalPlan(global_plan, transformed_plan)) {
+                logger.warning("Could not transform the global plan to the frame of the controller");
+            } else {// reset global plan
+                skip_next = false;
                 current_waypoint = 0;
                 xy_tolerance_latch_ = false;
-                if (!transformGlobalPlan(true, global_plan, transformed_plan)) {
-                    logger.warning("Could not transform the global plan to the frame of the controller");
+            }
+            Twist_ cmd_vel_stop = new Twist_();
+            resetPlanner(cmd_vel_stop);
+            reachedGoal = false;
+            outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM,
+                    new Values(input.getValue(0), input.getValue(1), cmd_vel_stop));
+        }
+
+        if (!reachedGoal) {
+            if (input.getSourceStreamId().equals(Constant_storm.Streams.CONTROLLER_TIMER_STREAM)) {
+                if (locked) {
+                    outputCollector.ack(input);
+                    return;
                 }
-            } else if (input.getSourceComponent().equals(Constant_storm.Components.ODOMETRY_COMPONENT)) {
-                base_odom = (Odometry_) input.getValueByField(Constant_storm.Fields.ODOMETRY_FIELD);
-            } else if (input.getSourceComponent().equals(Constant_storm.Components.AGENT_COMPONENT)) {
-                Twist_ cmd_vel = (Twist_) input.getValueByField(Constant_storm.Fields.VELOCITY_COMMAND_FIELD);
-                if (!checkVelocityCommand(cmd_vel)) {
-                    logger.info("Already reached the goal!!");
+                Twist_ cmd_vel = null;
+                Vector2 pre_vel = null;
+                if (!computeVelocity(pre_vel, cmd_vel)) {
+                    logger.warning("In valid preferred velocity calculation!!");
                 } else {
                     List<Object> emit = new ArrayList<Object>();
                     emit.add(time);
                     emit.add(sensorID);
-                    emit.add(cmd_vel);
-                    outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
+                    if (pre_vel != null) {
+                        emit.add(pre_vel);
+                        outputCollector.emit(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM, emit);
+                        locked = true;
+                    } else {
+                        emit.add(cmd_vel);
+                        outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
+                    }
+                }
+            } else {
+                sensorID = input.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
+                time = input.getValueByField(Constant_storm.FIELDS.TIME_FIELD);
+                if (input.getSourceComponent().equals(Constant_storm.Components.ODOMETRY_COMPONENT)) {
+                    base_odom = (Odometry_) input.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
+                } else if (locked && input.getSourceComponent().equals(Constant_storm.Components.AGENT_COMPONENT)) {
+                    Twist_ cmd_vel = (Twist_) input.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);
+                    locked = false;
+                    if (!checkVelocityCommand(cmd_vel)) {
+                        logger.info("Already reached the goal!!");
+                        reachedGoal = true;
+                    } else {
+                        List<Object> emit = new ArrayList<Object>();
+                        emit.add(time);
+                        emit.add(sensorID);
+                        emit.add(cmd_vel);
+                        outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
+
+                    }
                 }
             }
         }
-        outputCollector.ack(input);
 
+        outputCollector.ack(input);
     }
 
     @Override
@@ -90,16 +110,16 @@ public class LocalPlannerBolt extends BaseRichBolt {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declareStream(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM,
                 new Fields(
-                        Constant_storm.Fields.TIME_FIELD,
-                        Constant_storm.Fields.SENSOR_ID_FIELD,
-                        Constant_storm.Fields.PREFERRED_VELOCITY_FIELD
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD
                 )
         );
         declarer.declareStream(Constant_storm.Streams.VELOCITY_COMMAND_STREAM,
                 new Fields(
-                        Constant_storm.Fields.TIME_FIELD,
-                        Constant_storm.Fields.SENSOR_ID_FIELD,
-                        Constant_storm.Fields.VELOCITY_COMMAND_FIELD
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD
                 )
         );
     }
@@ -151,10 +171,8 @@ public class LocalPlannerBolt extends BaseRichBolt {
             if (Math.abs(angle) <= Parameters.YAW_GOAL_TOLERANCE) {
                 //set the velocity command to zero
                 cmd_vel = new Twist_();
-                cmd_vel.setLinear(new Vector3d_(0, 0, 0));
-                cmd_vel.setAngular(new Vector3d_(0, 0, 0));
-                rotating_to_goal_ = false;
-                xy_tolerance_latch_ = false;
+                resetPlanner(cmd_vel);
+                reachedGoal = true;
             } else {
                 //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
                 if (!rotating_to_goal_ && !Methods_Planners.stopped(
@@ -181,7 +199,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
         Pose_ target_pose = new Pose_();
 
         if (!skip_next) {
-            if (!transformGlobalPlan(false, global_plan, transformed_plan)) {
+            if (!transformGlobalPlan(global_plan, transformed_plan)) {
                 logger.warning("Could not transform the global plan to the frame of the controller");
                 return false;
             }
@@ -203,6 +221,14 @@ public class LocalPlannerBolt extends BaseRichBolt {
             pre_vel = Vector2.scale(Vector2.normalize(pre_vel), Parameters.MAX_VEL_X * 1.2);
         }
         return true;
+    }
+
+    private void resetPlanner(Twist_ cmd_vel) {
+        cmd_vel.setLinear(new Vector3d_(0, 0, 0));
+        cmd_vel.setAngular(new Vector3d_(0, 0, 0));
+        rotating_to_goal_ = false;
+        xy_tolerance_latch_ = false;
+        locked = false;
     }
 
 
@@ -233,7 +259,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
         return true;
     }
 
-    private boolean transformGlobalPlan(boolean initialPlan, final List<PoseStamped_> global_plan, List<PoseStamped_> transformed_plan) {
+    private boolean transformGlobalPlan(final List<PoseStamped_> global_plan, List<PoseStamped_> transformed_plan) {
         transformed_plan.clear();
         if (!(global_plan.size() > 0)) {
             logger.severe("Recieved plan with zero length");
@@ -243,11 +269,8 @@ public class LocalPlannerBolt extends BaseRichBolt {
         long t;
         Pose_ robot_pose;
         int cur_waypoint = 0;
-        if (!initialPlan) {
-            if (base_odom == null) {
-                logger.severe("Odometry not received!!");
-                return false;
-            }
+
+        if (base_odom != null) {
             robot_pose = base_odom.getPose().copy();
             t = base_odom.getHeader().getStamp();
             //we'll keep points on the plan that are within the window that we're looking at
@@ -257,20 +280,19 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 dist = Methods_Planners.getGoalPositionDistance(
                         robot_pose,
                         global_plan.get(i).getPose().getPosition().getX(),
-                        global_plan.get(i).getPose().getPosition().getY());
-
+                        global_plan.get(i).getPose().getPosition().getY()
+                );
                 if (dist < Math.sqrt(sq_dist)) {
                     sq_dist = dist * dist;
                     cur_waypoint = i;
                 }
             }
-
         } else {
+            logger.warning("Odometry not received, consider initialization plan!!");
             t = System.currentTimeMillis();
         }
 
         int i = cur_waypoint;
-
         // add rest way points
         while (i < global_plan.size()) {
             PoseStamped_ pose = new PoseStamped_();

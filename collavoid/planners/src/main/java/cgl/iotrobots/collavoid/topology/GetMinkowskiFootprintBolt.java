@@ -13,9 +13,6 @@ import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by hjh on 12/25/14.
- */
 public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
     private List<Vector2> MinkowskiFootprint = new ArrayList<Vector2>();
     private List<Vector2> ownFootprint = new ArrayList<Vector2>();
@@ -24,22 +21,25 @@ public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
     public void execute(Tuple input, BasicOutputCollector collector) {
         if (input.getSourceComponent().equals(Constant_storm.Components.PARTICLE_CLOUD_COMPONENT)
                 && ownFootprint.size() > 0) {
-            PoseArray_ poseArray_ = (PoseArray_) input.getValueByField(Constant_storm.Fields.POSE_ARRAY_FIELD);
+            PoseArray_ poseArray_ = (PoseArray_) input.getValueByField(Constant_storm.FIELDS.POSE_ARRAY_FIELD);
             getMinkowskiFootprint(poseArray_);
             List<Object> emit = new ArrayList<Object>();
             emit.add(input.getValue(0));
             emit.add(input.getValue(1));
             emit.add(MinkowskiFootprint);
             collector.emit(emit);
-        } else if (input.getSourceComponent().equals(Constant_storm.Components.AGENT_COMPONENT)) {
-            ownFootprint = (List<Vector2>) input.getValueByField(Constant_storm.Fields.FOOTPRINT_OWN_FIELD);
+        } else if (input.getSourceStreamId().equals(Constant_storm.Streams.FOOTPRINT_OWN_STREAM)) {
+            ownFootprint = (List<Vector2>) input.getValueByField(Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD);
         }
     }
 
-
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(Constant_storm.Fields.FOOTPRINT_MINKOWSK_FIELD));
+        declarer.declare(new Fields(
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD
+        ));
     }
 
     //for test replaced the algorithm computeNewMinkowskiFootprint
