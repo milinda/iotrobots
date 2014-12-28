@@ -491,8 +491,11 @@ public class ScanMatchBolt extends BaseRichBolt {
         for (int i = 0; i < assignmentList.size(); i++) {
             ParticleAssignment assignment = assignmentList.get(i);
             if (assignment.getNewTask() == taskId) {
-                expectingParticleMaps++;
                 expectingParticleValues++;
+                // we only expects maps from other bolt tasks
+                if (assignment.getPreviousTask() != taskId) {
+                    expectingParticleMaps++;
+                }
             }
         }
     }
@@ -506,18 +509,32 @@ public class ScanMatchBolt extends BaseRichBolt {
             if (assignment.getPreviousTask() == taskId) {
                 int previousIndex = assignment.getPreviousIndex();
                 if (gfsp.getActiveParticles().contains(assignment.getPreviousIndex())) {
-                    Particle p = gfsp.getParticles().get(previousIndex);
-                    // create a new ParticleMaps
-                    ParticleMaps particleMaps = new ParticleMaps(Utils.createTransferMap(p.getMap()),
-                            assignment.getNewIndex(), assignment.getNewTask());
+                    // send the particle over rabbitmq if this is a different task
+                    if (assignment.getNewTask() != taskId) {
+                        Particle p = gfsp.getParticles().get(previousIndex);
+                        // create a new ParticleMaps
+                        ParticleMaps particleMaps = new ParticleMaps(Utils.createTransferMap(p.getMap()),
+                                assignment.getNewIndex(), assignment.getNewTask());
 
-                    byte []b = Utils.serialize(kryoMapWriting, particleMaps);
-                    Message message = new Message(b, new HashMap<String, Object>());
-                    LOG.info("Sending particle map to {}", assignment.getNewTask());
-                    try {
-                        particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + assignment.getNewTask());
-                    } catch (Exception e) {
-                        LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
+                        byte[] b = Utils.serialize(kryoMapWriting, particleMaps);
+                        Message message = new Message(b, new HashMap<String, Object>());
+                        LOG.info("Sending particle map to {}", assignment.getNewTask());
+                        try {
+                            particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + assignment.getNewTask());
+                        } catch (Exception e) {
+                            LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
+                        }
+                    } else {
+                        // add the previous particles map to the new particles map
+                        int newIndex = assignment.getNewIndex();
+                        int prevIndex = assignment.getPreviousIndex();
+                        Particle p = gfsp.getParticles().get(newIndex);
+                        Particle pOld = gfsp.getParticles().get(prevIndex);
+
+                        p.setMap(pOld.getMap());
+                        // gfsp.getActiveParticles().add(newIndex);
+                        // add the new particle index
+                        gfsp.addActiveParticle(newIndex);
                     }
                 } else {
                     LOG.error("taskId {}: The particle {} is not in this bolt's active list, something is wrong", taskId,
