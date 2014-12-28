@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimbardExample {
-    public static final int SENSORS = 180;
+    public static final int SENSORS = 360;
 
     public static final double ANGLE = 2 * Math.PI;
 

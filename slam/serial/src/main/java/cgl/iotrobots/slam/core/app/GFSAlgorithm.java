@@ -111,10 +111,10 @@ public class GFSAlgorithm {
         throttle_scans_ = 1;
 
         // gmapping parameters
-        maxUrange_ = 0.0;
-        maxRange_ = 0.0;
+        maxUrange_ = 100.0;
+        maxRange_ = 100.0;
         minimum_score_ = 0;
-        sigma_ = 0.05;
+        sigma_ = 0.005;
         kernelSize_ = 1;
         lstep_ = 0.05;
         astep_ = 0.05;
@@ -127,7 +127,7 @@ public class GFSAlgorithm {
         str_ = 0.1;
         stt_ = 0.2;
         linearUpdate_ = .05;
-        angularUpdate_ = 0.05;
+        angularUpdate_ = 0.0005;
         temporalUpdate_ = 0.0;
         resampleThreshold_ = .5;
         particles_ = 30;

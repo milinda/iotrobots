@@ -162,6 +162,7 @@ public abstract class AbstractGridSlamProcessor {
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
         //    it->pose=corrected;
         if (score > minimumScore) {
+            LOG.info("Correcting the position from {} to {}", it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
             LOG.info("Scan Matching Failed, using odometry. Likelihood=");

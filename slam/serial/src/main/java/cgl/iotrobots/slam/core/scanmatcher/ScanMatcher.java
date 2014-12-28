@@ -771,7 +771,7 @@ public class ScanMatcher {
                     IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
                     IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
                     int ss = map.getStorage().cellState(pr);
-                    if ((ss) > 0) {
+//                    if ((ss) > 0) {
                         PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
                         PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
                         if (cell.doubleValue() > fullnessThreshold && fcell.doubleValue() < fullnessThreshold) {
@@ -783,11 +783,11 @@ public class ScanMatcher {
                                 bestMu = DoublePoint.mulD(mu, mu) < DoublePoint.mulD(bestMu, bestMu) ? mu : bestMu;
                             }
                         }
-                    }
+//                    }
                 }
             }
             if (found) {
-                s += Math.exp(-1. / gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
+                s += Math.exp(-1. / (gaussianSigma * DoublePoint.mulD(bestMu, bestMu)));
             }
         }
         return s;
