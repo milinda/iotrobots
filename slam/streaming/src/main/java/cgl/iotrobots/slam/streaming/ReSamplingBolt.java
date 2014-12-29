@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ReSamplingBolt extends BaseRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(ReSamplingBolt.class);
@@ -84,12 +85,14 @@ public class ReSamplingBolt extends BaseRichBolt {
         outputCollector.ack(tuple);
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-        ParticleValue value;
+        ParticleValue []pvs;
 
-        if (val != null && (val instanceof ParticleValue)) {
-            value = (ParticleValue) val;
-            LOG.debug("Received particle with index {}", value.getIndex());
-            addParticleValue(value);
+        if (val != null && (val instanceof ParticleValue [])) {
+            pvs = (ParticleValue []) val;
+            for (ParticleValue value : pvs) {
+                LOG.debug("Received particle with index {}", value.getIndex());
+                addParticleValue(value);
+            }
         } else {
             throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
