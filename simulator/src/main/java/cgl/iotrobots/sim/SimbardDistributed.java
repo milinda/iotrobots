@@ -133,6 +133,9 @@ public class SimbardDistributed {
             @Override
             public void onMessage(Message message) {
                 GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
+                Object time = message.getProperties().get("time");
+                Long t = Long.parseLong(time.toString());
+                System.out.println("******************* Time: " + (System.currentTimeMillis() - t) + " ***************************");
                 mapUI.setMap(map);
             }
         }

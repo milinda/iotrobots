@@ -34,7 +34,7 @@ conf:
     str: 0.1
     stt: 0.2
     linearUpdate: .05
-    angularUpdate: 0.0005
+    angularUpdate: 0.05
     temporalUpdate: 0.0
     resampleThreshold: 0.5
     particles: 30
