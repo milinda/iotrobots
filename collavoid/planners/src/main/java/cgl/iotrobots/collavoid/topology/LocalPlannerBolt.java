@@ -92,7 +92,6 @@ public class LocalPlannerBolt extends BaseRichBolt {
                         emit.add(sensorID);
                         emit.add(cmd_vel);
                         outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
-
                     }
                 }
             }

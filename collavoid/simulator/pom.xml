@@ -11,9 +11,8 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>simulator</artifactId>
+    <artifactId>simulator-collavoid</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>simulator</name>
 
     <build>
         <plugins>
@@ -83,7 +82,7 @@
 
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>commons-collavoid</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 

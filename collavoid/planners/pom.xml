@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>commons-collavoid</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
@@ -25,6 +25,21 @@
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>${rabitmq.verion}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>sensorstream</groupId>
+            <artifactId>sensorstream-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.storm</groupId>
+                    <artifactId>storm-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>

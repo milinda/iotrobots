@@ -10,9 +10,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>controller</artifactId>
+    <artifactId>controller-collavoid</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>controller</name>
 
     <dependencies>
         <dependency>
@@ -23,7 +22,7 @@
 
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>commons-collavoid</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
