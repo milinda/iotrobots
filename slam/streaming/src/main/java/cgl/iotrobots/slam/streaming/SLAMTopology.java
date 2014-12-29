@@ -18,9 +18,7 @@ import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
-import cgl.iotrobots.slam.streaming.msgs.MapCell;
-import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
-import cgl.iotrobots.slam.streaming.msgs.TransferMap;
+import cgl.iotrobots.slam.streaming.msgs.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import cgl.sensorstream.core.rabbitmq.DefaultRabbitMQMessageBuilder;
@@ -131,6 +129,8 @@ public class SLAMTopology {
         config.registerSerialization(ParticleMaps.class);
         config.registerSerialization(MapCell.class);
         config.registerSerialization(LaserScan.class);
+        config.registerSerialization(ParticleValue.class);
+        config.registerSerialization(TNodeValue.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

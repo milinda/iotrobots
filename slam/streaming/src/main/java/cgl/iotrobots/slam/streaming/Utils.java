@@ -156,5 +156,6 @@ public class Utils {
         kryo.register(ParticleAssignment.class);
         kryo.register(ParticleAssignments.class);
         kryo.register(LaserScan.class);
+        kryo.register(ParticleValue.class);
     }
 }
