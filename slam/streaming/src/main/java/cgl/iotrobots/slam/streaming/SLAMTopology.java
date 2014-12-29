@@ -15,6 +15,8 @@ import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
+import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
@@ -131,6 +133,8 @@ public class SLAMTopology {
         config.registerSerialization(LaserScan.class);
         config.registerSerialization(ParticleValue.class);
         config.registerSerialization(TNodeValue.class);
+        config.registerSerialization(RangeSensor.class);
+        config.registerSerialization(RangeReading.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

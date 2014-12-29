@@ -8,6 +8,8 @@ import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
+import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
@@ -157,5 +159,7 @@ public class Utils {
         kryo.register(ParticleAssignments.class);
         kryo.register(LaserScan.class);
         kryo.register(ParticleValue.class);
+        kryo.register(RangeSensor.class);
+        kryo.register(RangeReading.class);
     }
 }
