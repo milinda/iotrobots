@@ -229,7 +229,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
         // these will be used by the re sampler to re sample particles
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
-        ParticleValue []pvs = new ParticleValue[activeParticles.size()];
+        List<ParticleValue> pvs = new ArrayList<ParticleValue>();
         for (int i = 0; i < activeParticles.size(); i++) {
             int index = activeParticles.get(i);
             Particle particle = particles.get(index);
@@ -237,10 +237,9 @@ public class ScanMatchBolt extends BaseRichBolt {
 //                    particle.previousPose, particle.weight,
 //                    particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
             ParticleValue particleValue = Utils.createParticleValue(particle, taskId, index, totalTasks);
-            pvs[i] = particleValue;
+            pvs.add(particleValue);
 
         }
-
         List<Object> emit = new ArrayList<Object>();
         emit.add(pvs);
         emit.add(scan);

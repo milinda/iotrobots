@@ -85,10 +85,10 @@ public class ReSamplingBolt extends BaseRichBolt {
         outputCollector.ack(tuple);
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-        ParticleValue []pvs;
+        List<ParticleValue> pvs;
 
-        if (val != null && (val instanceof ParticleValue [])) {
-            pvs = (ParticleValue []) val;
+        if (val != null && (val instanceof List)) {
+            pvs = (List<ParticleValue>) val;
             for (ParticleValue value : pvs) {
                 LOG.debug("Received particle with index {}", value.getIndex());
                 addParticleValue(value);
