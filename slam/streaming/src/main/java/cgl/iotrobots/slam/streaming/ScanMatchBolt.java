@@ -282,7 +282,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         outputFieldsDeclarer.declareStream(Constants.Fields.MAP_STREAM, new Fields(
                 Constants.Fields.PARTICLE_VALUE_FIELD,
-                Constants.Fields.PARTICLE_MAP_FIELD,
+//                Constants.Fields.PARTICLE_MAP_FIELD,
                 Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD));
@@ -430,10 +430,10 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
         LOG.error("Emit for map, transfermap");
-        TransferMap map = Utils.createTransferMap(best.getMap());
+//        TransferMap map = Utils.createTransferMap(best.getMap());
 
         emit.add(particleValue);
-        emit.add(map);
+//        emit.add(map);
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);

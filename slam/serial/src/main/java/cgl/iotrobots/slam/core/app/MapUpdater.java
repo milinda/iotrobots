@@ -63,7 +63,7 @@ public class MapUpdater {
 
         DoublePoint center = new DoublePoint((xmin + xmax) / 2.0, (ymin + ymax) / 2.0);
         GMap smap = new GMap(center, xmin, ymin, xmax, ymax, delta);
-
+        best.setMap(smap);
         map.currentPos.clear();
 
         LOG.debug("Trajectory tree:");

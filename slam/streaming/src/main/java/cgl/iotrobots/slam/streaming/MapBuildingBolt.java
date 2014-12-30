@@ -68,11 +68,11 @@ public class MapBuildingBolt extends BaseRichBolt {
         }
         ParticleValue particleValue = (ParticleValue) val;
 
-        val = tuple.getValueByField(Constants.Fields.PARTICLE_MAP_FIELD);
-        if (!(val instanceof TransferMap)) {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
-        }
-        TransferMap transferMap = (TransferMap) val;
+//        val = tuple.getValueByField(Constants.Fields.PARTICLE_MAP_FIELD);
+//        if (!(val instanceof TransferMap)) {
+//            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+//        }
+//        TransferMap transferMap = (TransferMap) val;
 
         val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (!(val instanceof LaserScan)) {
@@ -82,8 +82,8 @@ public class MapBuildingBolt extends BaseRichBolt {
 
         Particle p = new Particle();
         Utils.createParticle(particleValue, p);
-        GMap m = Utils.createGMap(transferMap);
-        p.setMap(m);
+        //GMap m = Utils.createGMap(transferMap);
+        //p.setMap(m);
 
         double[] laser_angles = new double[scan.getRanges().size()];
         double theta = scan.getAngle_min();
