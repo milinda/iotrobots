@@ -6,7 +6,6 @@ import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.streaming.Constants;
 import cgl.iotrobots.slam.streaming.Utils;
 import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
@@ -46,12 +45,12 @@ public class SimbardDistributed {
             super(position, name);
 
             try {
-                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
-                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
-                bestReceiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
-//                sender = new RabbitMQSender("amqp://149.165.159.3:5672", "simbard_laser");
-//                receiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_map");
-//                bestReceiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_best");
+//                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
+//                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
+//                bestReceiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
+                sender = new RabbitMQSender("amqp://149.165.159.3:5672", "simbard_laser");
+                receiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_map");
+                bestReceiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_best");
                 sender.open();
                 receiver.listen(new MapReceiver());
                 bestReceiver.listen(new BestParticleReceiver());
@@ -112,7 +111,7 @@ public class SimbardDistributed {
             props.put("time", System.currentTimeMillis());
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
-            if (System.currentTimeMillis() - lastTime > 5000) {
+            if (System.currentTimeMillis() - lastTime > 3000) {
                 lastTime = System.currentTimeMillis();
                 Message message = new Message(body, props);
                 try {
@@ -134,6 +133,11 @@ public class SimbardDistributed {
             }
         }
 
+        private long bestSum;
+        private long mapSum;
+        private long bestCount;
+        private long mapCount;
+
         private class BestParticleReceiver implements MessageHandler {
             @Override
             public Map<String, String> getProperties() {
@@ -148,7 +152,9 @@ public class SimbardDistributed {
 //                GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
                 Object time = message.getProperties().get("time");
                 Long t = Long.parseLong(time.toString());
-                System.out.println("*******************Best Time: " + (System.currentTimeMillis() - t) + " ***************************");
+                bestSum += System.currentTimeMillis() - t;
+                bestCount++;
+                System.out.println("*******************Best Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double)(bestSum) / bestCount) +" ***************************");
 //                mapUI.setMap(map);
             }
         }
@@ -167,7 +173,9 @@ public class SimbardDistributed {
                 GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
                 Object time = message.getProperties().get("time");
                 Long t = Long.parseLong(time.toString());
-                System.out.println("*******************Map Time: " + (System.currentTimeMillis() - t) + " ***************************");
+                mapCount++;
+                mapSum += (System.currentTimeMillis() - t);
+                System.out.println("*******************Map Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double)(mapSum) / mapCount) +" ***************************");
                 mapUI.setMap(map);
             }
         }
