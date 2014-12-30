@@ -44,10 +44,10 @@ public class SimbardDistributed {
             super(position, name);
 
             try {
-//                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
-//                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
-                sender = new RabbitMQSender("amqp://149.165.159.3:5672", "simbard_laser");
-                receiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_map");
+                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
+                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
+//                sender = new RabbitMQSender("amqp://149.165.159.3:5672", "simbard_laser");
+//                receiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_map");
                 sender.open();
                 receiver.listen(new MapReceiver());
             } catch (Exception e) {
