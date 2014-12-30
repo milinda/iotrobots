@@ -4,6 +4,7 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -44,7 +45,7 @@ public class SimbardExample {
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
-            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngle_increment(ANGLE / SENSORS);

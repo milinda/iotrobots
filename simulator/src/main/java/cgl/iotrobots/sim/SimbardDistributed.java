@@ -89,6 +89,9 @@ public class SimbardDistributed {
         }
 
         boolean forward = false;
+
+        long lastTime = System.currentTimeMillis();
+
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
             System.out.println("\n\n");
@@ -104,11 +107,13 @@ public class SimbardDistributed {
             props.put("time", System.currentTimeMillis());
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
-            Message message = new Message(body, props);
-            try {
-                sender.send(message, "test.test.laser_scan");
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (System.currentTimeMillis() - lastTime > 5000) {
+                Message message = new Message(body, props);
+                try {
+                    sender.send(message, "test.test.laser_scan");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // progress at 0.5 m/s

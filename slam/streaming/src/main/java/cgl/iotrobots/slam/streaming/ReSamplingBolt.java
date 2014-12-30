@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class ReSamplingBolt extends BaseRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(ReSamplingBolt.class);
@@ -94,7 +93,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         long currentMessageTime = Long.parseLong(time.toString());
         // if this message came within that window, discard it
         // this will allow us to keep track of the current interval
-        if (currentMessageTime < lastComputationTime * 10 + lastMessageTime) {
+        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
             outputCollector.ack(tuple);
             return;
         }
