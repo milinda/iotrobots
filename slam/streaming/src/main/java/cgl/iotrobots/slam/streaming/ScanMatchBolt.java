@@ -161,6 +161,8 @@ public class ScanMatchBolt extends BaseRichBolt {
     LaserScan scan;
     Object time;
     Object sensorId;
+    long lastMessageTime;
+    long lastComputationTime;
     // flag to be set when this bolt is has the best particle
 
     @Override
@@ -170,10 +172,22 @@ public class ScanMatchBolt extends BaseRichBolt {
             outputCollector.ack(tuple);
             return;
         }
+
+        // check weather this tuple came between the last computation time. if so discard it
+
+        long t0 = System.currentTimeMillis();
         int taskId = topologyContext.getThisTaskIndex();
 
         time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
+
+        long currentMessageTime = Long.parseLong(time.toString());
+        // if this message came within that window, discard it
+        // this will allow us to keep track of the current interval
+        if (currentMessageTime < lastComputationTime + lastMessageTime) {
+            outputCollector.ack(tuple);
+            return;
+        }
 
         Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (!(val instanceof byte [])) {
@@ -248,6 +262,9 @@ public class ScanMatchBolt extends BaseRichBolt {
         outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
 
         outputCollector.ack(tuple);
+        // we compute the last computation time
+        lastComputationTime = System.currentTimeMillis() - t0;
+        lastMessageTime = Long.parseLong(time.toString());
     }
 
 

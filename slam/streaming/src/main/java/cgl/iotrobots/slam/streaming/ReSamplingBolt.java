@@ -80,12 +80,24 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
     }
 
+    long lastMessageTime;
+    long lastComputationTime;
+
     @Override
     public void execute(Tuple tuple) {
         outputCollector.ack(tuple);
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         List<ParticleValue> pvs;
+        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+        long t0 = System.currentTimeMillis();
+        long currentMessageTime = Long.parseLong(time.toString());
+        // if this message came within that window, discard it
+        // this will allow us to keep track of the current interval
+        if (currentMessageTime < lastComputationTime + lastMessageTime) {
+            outputCollector.ack(tuple);
+            return;
+        }
 
         if (val != null && (val instanceof List)) {
             pvs = (List<ParticleValue>) val;
@@ -185,6 +197,8 @@ public class ReSamplingBolt extends BaseRichBolt {
             assignments.setBestParticle(best);
             distributeAssignments(assignments);
         }
+        lastComputationTime = System.currentTimeMillis() - t0;
+        lastMessageTime = Long.parseLong(time.toString());
 
         reading = null;
     }
