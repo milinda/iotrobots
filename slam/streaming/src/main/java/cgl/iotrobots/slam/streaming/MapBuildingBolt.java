@@ -32,6 +32,8 @@ public class MapBuildingBolt extends BaseRichBolt {
 
     private Kryo kryo;
 
+    long lastMessageTime;
+    long lastComputationTime;
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
@@ -49,6 +51,15 @@ public class MapBuildingBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+        long t0 = System.currentTimeMillis();
+        long currentMessageTime = Long.parseLong(time.toString());
+        // if this message came within that window, discard it
+        // this will allow us to keep track of the current interval
+        if (currentMessageTime < lastComputationTime + lastMessageTime) {
+            outputCollector.ack(tuple);
+            return;
+        }
+
         Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
@@ -95,6 +106,8 @@ public class MapBuildingBolt extends BaseRichBolt {
         emit.add(time);
 
         outputCollector.emit(emit);
+        lastComputationTime = System.currentTimeMillis() - t0;
+        lastMessageTime = Long.parseLong(time.toString());
     }
 
     @Override
