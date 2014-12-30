@@ -38,6 +38,8 @@ public class SimbardDistributed {
         CameraSensor camera;
         RabbitMQSender sender;
         RabbitMQReceiver receiver;
+        RabbitMQReceiver bestReceiver;
+
         Kryo kryo = new Kryo();
 
         public Robot(Vector3d position, String name) {
@@ -46,10 +48,13 @@ public class SimbardDistributed {
             try {
                 sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
                 receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
+                bestReceiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
 //                sender = new RabbitMQSender("amqp://149.165.159.3:5672", "simbard_laser");
 //                receiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_map");
+//                bestReceiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_best");
                 sender.open();
                 receiver.listen(new MapReceiver());
+                bestReceiver.listen(new BestParticleReceiver());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -108,6 +113,7 @@ public class SimbardDistributed {
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
             if (System.currentTimeMillis() - lastTime > 5000) {
+                lastTime = System.currentTimeMillis();
                 Message message = new Message(body, props);
                 try {
                     sender.send(message, "test.test.laser_scan");
@@ -128,6 +134,25 @@ public class SimbardDistributed {
             }
         }
 
+        private class BestParticleReceiver implements MessageHandler {
+            @Override
+            public Map<String, String> getProperties() {
+                Map<String, String> props = new HashMap<String, String>();
+                props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.best");
+                props.put(MessagingConstants.RABBIT_QUEUE, "test.test.best");
+                return props;
+            }
+
+            @Override
+            public void onMessage(Message message) {
+//                GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
+                Object time = message.getProperties().get("time");
+                Long t = Long.parseLong(time.toString());
+                System.out.println("*******************Best Time: " + (System.currentTimeMillis() - t) + " ***************************");
+//                mapUI.setMap(map);
+            }
+        }
+
         private class MapReceiver implements MessageHandler {
             @Override
             public Map<String, String> getProperties() {
@@ -142,7 +167,7 @@ public class SimbardDistributed {
                 GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
                 Object time = message.getProperties().get("time");
                 Long t = Long.parseLong(time.toString());
-                System.out.println("******************* Time: " + (System.currentTimeMillis() - t) + " ***************************");
+                System.out.println("*******************Map Time: " + (System.currentTimeMillis() - t) + " ***************************");
                 mapUI.setMap(map);
             }
         }

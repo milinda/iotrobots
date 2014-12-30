@@ -61,6 +61,8 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private Kryo kryoLaserReading;
 
+    private Kryo kryoBestParticle;
+
     private volatile MatchState state = MatchState.WAITING_FOR_READING;
 
     private int expectingParticleMaps = 0;
@@ -88,12 +90,14 @@ public class ScanMatchBolt extends BaseRichBolt {
         this.kryoMapWriting = new Kryo();
         this.kryoMapReading = new Kryo();
         this.kryoLaserReading = new Kryo();
+        this.kryoBestParticle = new Kryo();
 
         Utils.registerClasses(kryoAssignReading);
         Utils.registerClasses(kryoPVReading);
         Utils.registerClasses(kryoMapWriting);
         Utils.registerClasses(kryoMapReading);
         Utils.registerClasses(kryoLaserReading);
+        Utils.registerClasses(kryoBestParticle);
 
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
@@ -286,6 +290,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                 Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD));
+
+        outputFieldsDeclarer.declareStream(Constants.Fields.BEST_PARTICLE_STREAM,
+                new Fields("body", Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
     }
 
     /** We are going to keep the particles maps until we get an assignment */
@@ -439,6 +446,12 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(time);
         LOG.error("Emit for map, collector");
         outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
+
+        List<Object> emitValue = new ArrayList<Object>();
+        emitValue.add(Utils.serialize(kryoBestParticle, ParticleValue.class));
+        emitValue.add(sensorId);
+        emitValue.add(time);
+        outputCollector.emit(Constants.Fields.BEST_PARTICLE_STREAM, emitValue);
 //        ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
 //                best.previousPose, best.weight,
 //                best.weightSum, best.gweight, best.previousIndex, best.node);

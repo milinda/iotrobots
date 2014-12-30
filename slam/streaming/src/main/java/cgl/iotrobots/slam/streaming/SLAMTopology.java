@@ -99,7 +99,8 @@ public class SLAMTopology {
             }
         };
         RabbitMQSpout spout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(), reporter);
-        RabbitMQBolt sendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(), reporter);
+        RabbitMQBolt mapSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(1), reporter);
+        RabbitMQBolt valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
 
         ScanMatchBolt scanMatchBolt = new ScanMatchBolt();
         ReSamplingBolt reSamplingBolt = new ReSamplingBolt();
@@ -109,7 +110,8 @@ public class SLAMTopology {
         builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).allGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
-        builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
+        builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
+        builder.setBolt(Constants.Topology.BEST_PARTICLE_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.BEST_PARTICLE_STREAM);
     }
 
     private static void addSerializers(Config config) {
@@ -138,6 +140,12 @@ public class SLAMTopology {
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {
+
+        int bolt;
+
+        private RabbitMQStaticBoltConfigurator(int bolt) {
+            this.bolt = bolt;
+        }
 
         @Override
         public MessageBuilder getMessageBuilder() {
@@ -170,7 +178,7 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations(true);
+            return new StaticDestinations(bolt);
         }
     }
 
@@ -197,16 +205,16 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations(false);
+            return new StaticDestinations(0);
         }
     }
 
     private static class StaticDestinations implements DestinationChanger {
         private DestinationChangeListener dstListener;
 
-        private boolean sender;
+        private int sender;
 
-        private StaticDestinations(boolean sender) {
+        private StaticDestinations(int sender) {
             this.sender = sender;
         }
 
@@ -218,14 +226,18 @@ public class SLAMTopology {
             String url = (String) conf.get(Constants.RABBITMQ_URL);
             DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", url, "test", "test");
             configuration.setGrouped(true);
-            if (!sender) {
+            if (sender == 0) {
                 configuration.addProperty("queueName", "laser_scan");
                 configuration.addProperty("routingKey", "laser_scan");
                 configuration.addProperty("exchange", "simbard_laser");
-            } else {
+            } else if (sender == 1){
                 configuration.addProperty("queueName", "map");
                 configuration.addProperty("routingKey", "map");
                 configuration.addProperty("exchange", "simbard_map");
+            } else {
+                configuration.addProperty("queueName", "best");
+                configuration.addProperty("routingKey", "best");
+                configuration.addProperty("exchange", "simbard_best");
             }
 
             dstListener.addDestination("rabbitmq", configuration);
