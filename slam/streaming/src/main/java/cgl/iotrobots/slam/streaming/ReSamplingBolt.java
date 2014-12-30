@@ -15,6 +15,7 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
 import cgl.iotrobots.utils.rabbitmq.Message;
 import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
 import cgl.sensorstream.core.StreamComponents;
@@ -23,6 +24,7 @@ import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,6 +168,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             assignments.setBestParticle(best);
             distributeAssignments(assignments);
 
+            Map<Integer, List<ParticleValue>> values = new HashMap<Integer, List<ParticleValue>>();
             // distribute the new particle values according to
             for (int i = 0; i < reSampler.getParticles().size(); i++) {
                 Particle p = reSampler.getParticles().get(i);
@@ -173,20 +176,24 @@ public class ReSamplingBolt extends BaseRichBolt {
 //                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
                 ParticleValue pv = Utils.createParticleValue(p, -1, i, -1);
 
-                byte[] b = Utils.serialize(kryo, pv);
-                Message message = new Message(b, new HashMap<String, Object>());
                 // we assume there is a direct mapping between particles in the resampler and the indexes
                 ParticleAssignment assignment = assignments.getAssignments().get(i);
-                try {
-                    if (i == best) {
-                        LOG.info("Best node index: {}, sending this to task: {}", i, assignment.getNewTask());
-                        pv.setBest(true);
-                    }
+                if (i == best) {
+                    LOG.info("Best node index: {}, sending this to task: {}", i, assignment.getNewTask());
+                    pv.setBest(true);
+                }
+                addParticleValueToMap(values, assignment.getNewTask(), pv);
+            }
 
-                    LOG.info("Sending particle value to: {}", assignment.getNewTask());
-                    valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
-                } catch (Exception e) {
-                    LOG.error("Failed to send the message");
+            for (Map.Entry<Integer, List<ParticleValue>> e : values.entrySet()) {
+                try {
+                    ParticleValues particleValues = new ParticleValues(e.getValue());
+                    byte[] b = Utils.serialize(kryo, particleValues);
+                    Message message = new Message(b, new HashMap<String, Object>());
+                    LOG.info("Sending particle value to: {}", e.getKey());
+                    valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + e.getKey());
+                } catch (Exception e1) {
+                    LOG.error("Failed to send the message", e1);
                 }
             }
         } else {
@@ -200,6 +207,17 @@ public class ReSamplingBolt extends BaseRichBolt {
         lastMessageTime = Long.parseLong(time.toString());
 
         reading = null;
+    }
+
+    private void addParticleValueToMap(Map<Integer, List<ParticleValue>> map, int task, ParticleValue value) {
+        List<ParticleValue> values = null;
+        if (map.containsKey(task)) {
+            values = map.get(task);
+        } else {
+            values = new ArrayList<ParticleValue>();
+            map.put(task, values);
+        }
+        values.add(value);
     }
 
     @Override

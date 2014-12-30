@@ -161,5 +161,6 @@ public class Utils {
         kryo.register(ParticleValue.class);
         kryo.register(RangeSensor.class);
         kryo.register(RangeReading.class);
+        kryo.register(ParticleValues.class);
     }
 }

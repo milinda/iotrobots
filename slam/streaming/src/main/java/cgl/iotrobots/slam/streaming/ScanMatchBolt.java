@@ -593,7 +593,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         public void onMessage(Message message) {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
-            ParticleValue pm = (ParticleValue) Utils.deSerialize(kryoPVReading, body, ParticleValue.class);
+            ParticleValues pvs = (ParticleValues) Utils.deSerialize(kryoPVReading, body, ParticleValues.class);
             LOG.info("taskId {}: Received particle value", taskId);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
                 try {
@@ -602,7 +602,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                     processReceivedValues("value");
                     processReceivedMaps("value");
                     // now go through the assignments and send them to the bolts directly
-                    addParticle(pm, "value");
+                    for (ParticleValue pv : pvs.getParticleValues()) {
+                        addParticle(pv, "value");
+                    }
 
                     // we have received all the particles we need to do the processing after resampling
                     postProcessingAfterReceiveAll(taskId, "assign", assignments.getBestParticle());
@@ -614,7 +616,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                 // because we haven't received the assignments yet, we will keep the values temporaly in this list
                 lock.lock();
                 try {
-                    particleValues.add(pm);
+                    for (ParticleValue pv : pvs.getParticleValues()) {
+                        particleValues.add(pv);
+                    }
                 } finally {
                     lock.unlock();
                 }
