@@ -94,7 +94,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         long currentMessageTime = Long.parseLong(time.toString());
         // if this message came within that window, discard it
         // this will allow us to keep track of the current interval
-        if (currentMessageTime < lastComputationTime * 4 + lastMessageTime) {
+        if (currentMessageTime < lastComputationTime * 10 + lastMessageTime) {
             outputCollector.ack(tuple);
             return;
         }
