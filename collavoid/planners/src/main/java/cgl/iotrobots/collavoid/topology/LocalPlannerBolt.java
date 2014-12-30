@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 public class LocalPlannerBolt extends BaseRichBolt {
     private Logger logger = Logger.getLogger("LocalPlannerBolt");
     private OutputCollector outputCollector;
-    private Object sensorID;
+    private Object sensorID = null;
     private Object time;
     private int current_waypoint = 0;
     private boolean skip_next = false;
@@ -63,16 +63,21 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 if (!computeVelocity(pre_vel, cmd_vel)) {
                     logger.warning("In valid preferred velocity calculation!!");
                 } else {
-                    List<Object> emit = new ArrayList<Object>();
-                    emit.add(time);
-                    emit.add(sensorID);
+                    if (sensorID == null)
+                        return;
                     if (pre_vel != null) {
-                        emit.add(pre_vel);
-                        outputCollector.emit(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM, emit);
+                        outputCollector.emit(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM, new Values(
+                                input.getValueByField(Constant_storm.FIELDS.TIME_FIELD),
+                                sensorID,
+                                pre_vel
+                        ));
                         locked = true;
                     } else {
-                        emit.add(cmd_vel);
-                        outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
+                        outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, new Values(
+                                input.getValueByField(Constant_storm.FIELDS.TIME_FIELD),
+                                sensorID,
+                                cmd_vel
+                        ));
                     }
                 }
             } else {

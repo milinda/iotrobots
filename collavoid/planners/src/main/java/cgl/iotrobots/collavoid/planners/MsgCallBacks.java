@@ -43,7 +43,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Odometry_ odometry_ = JsonConverter.JSONToOdometry_(body);
+                            Odometry_ odometry_ = Serializers.JSONToOdometry_(body);
                             odomCallback(agent, odometry_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -69,7 +69,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            PoseShareMsg_ poseShareMsg_ = JsonConverter.JSONToPoseShareMsg_(body);
+                            PoseShareMsg_ poseShareMsg_ = Serializers.JSONToPoseShareMsg_(body);
                             poseShareCallback(agent, poseShareMsg_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -95,7 +95,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            PointCloud2_ pointCloud2_ = JsonConverter.JSONToPointCloud2_(body);
+                            PointCloud2_ pointCloud2_ = Serializers.JSONToPointCloud2_(body);
                             scanCallback(agent, pointCloud2_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -121,7 +121,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            PoseArray_ poseArray_ = JsonConverter.JSONToPoseArray_(body);
+                            PoseArray_ poseArray_ = Serializers.JSONToPoseArray_(body);
                             particleCloudTestCallback(agent, poseArray_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }

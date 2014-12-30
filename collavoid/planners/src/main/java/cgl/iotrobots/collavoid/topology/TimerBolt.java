@@ -24,9 +24,13 @@ public class TimerBolt extends BaseRichSpout {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declareStream(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM,
-                new Fields(Constant_storm.FIELDS.TIMER_FIELD));
+                new Fields(
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.TIMER_FIELD));
         declarer.declareStream(Constant_storm.Streams.CONTROLLER_TIMER_STREAM,
-                new Fields(Constant_storm.FIELDS.TIMER_FIELD));
+                new Fields(
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.TIMER_FIELD));
     }
 
     @Override
@@ -41,10 +45,11 @@ public class TimerBolt extends BaseRichSpout {
     @Override
     public void nextTuple() {
         Utils.sleep(10);
-        if (System.currentTimeMillis() - lastMepub > pubMePeriod)
-            collector.emit(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM, new Values(pubseq++));
-        if (System.currentTimeMillis() - lastControlled > controlPeriod)
-            collector.emit(Constant_storm.Streams.CONTROLLER_TIMER_STREAM, new Values(controlseq++));
+        long now = System.currentTimeMillis();
+        if (now - lastMepub > pubMePeriod)
+            collector.emit(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM, new Values(now, pubseq++));
+        if (now - lastControlled > controlPeriod)
+            collector.emit(Constant_storm.Streams.CONTROLLER_TIMER_STREAM, new Values(now, controlseq++));
     }
 
     @Override

@@ -87,7 +87,7 @@ public class AgentROSNode extends AbstractNodeMain {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Twist_ velocity = JsonConverter.JSONToTwist_(body);
+                            Twist_ velocity = Serializers.JSONToTwist_(body);
                             velQueue.offer(velocity);
                             channel.basicAck(deliveryTag, false);
                         }

@@ -27,7 +27,7 @@
             <version>${rabitmq.verion}</version>
         </dependency>
 
-        <dependency>
+        <!--dependency>
             <groupId>sensorstream</groupId>
             <artifactId>sensorstream-core</artifactId>
             <exclusions>
@@ -40,6 +40,17 @@
                     <artifactId>storm-core</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency-->
+
+        <dependency>
+            <groupId>io.latent</groupId>
+            <artifactId>storm-rabbitmq</artifactId>
+            <version>0.5.10</version>
+        </dependency>
+
+        <dependency>
+            <groupId>iotrobots</groupId>
+            <artifactId>iotrobots-utils</artifactId>
         </dependency>
 
     </dependencies>

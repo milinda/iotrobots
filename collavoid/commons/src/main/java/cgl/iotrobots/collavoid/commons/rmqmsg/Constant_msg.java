@@ -10,5 +10,11 @@ public abstract class Constant_msg {
     public static final String TYPE_EXCHANGE_DIRECT = "direct";
     public static final String TYPE_EXCHANGE_FANOUT = "fanout";
 
+    // for test
+    public static final String AGENT_ID_PREFIX = "robot";
+    public static final String RMQ_EXCHANGE_SUFFIX = "_rmq";
+    public static final String RMQ_QUEUE_PREFIX = "Queue_";
+    public static final String RMQ_ROUTINGKEY_PREFIX = "RoutingKey_";
+
 
 }

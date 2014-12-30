@@ -19,7 +19,7 @@ public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        if (input.getSourceComponent().equals(Constant_storm.Components.PARTICLE_CLOUD_COMPONENT)
+        if (input.getSourceComponent().equals(Constant_storm.Components.POSE_ARRAY_COMPONENT)
                 && ownFootprint.size() > 0) {
             PoseArray_ poseArray_ = (PoseArray_) input.getValueByField(Constant_storm.FIELDS.POSE_ARRAY_FIELD);
             getMinkowskiFootprint(poseArray_);
