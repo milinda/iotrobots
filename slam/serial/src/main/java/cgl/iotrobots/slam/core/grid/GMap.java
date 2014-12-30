@@ -139,19 +139,23 @@ public class GMap {
     }
 
     public IntPoint world2map(double x, double y) {
-        return new IntPoint((int) Math.round((x - center.x) / delta) + sizeX2, (int) Math.round((y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((x - center.x) / delta) + sizeX2,
+                (int) Math.round((y - center.y) / delta) + sizeY2);
     }
 
     public IntPoint world2map(IntPoint p) {
-        return new IntPoint((int) Math.round(((Integer) p.x - center.x) / delta) + sizeX2, (int) Math.round(((Integer) p.y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((p.x - center.x) / delta) + sizeX2,
+                (int) Math.round((p.y - center.y) / delta) + sizeY2);
     }
 
     public IntPoint world2map(DoublePoint p) {
-        return new IntPoint((int) Math.round(((Double) p.x - center.x) / delta) + sizeX2, (int) Math.round(((Double) p.y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((p.x - center.x) / delta) + sizeX2,
+                (int) Math.round((p.y - center.y) / delta) + sizeY2);
     }
 
     public IntPoint world2map(DoubleOrientedPoint p) {
-        return new IntPoint((int) Math.round(((Double) p.x - center.x) / delta) + sizeX2, (int) Math.round(((Double) p.y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((p.x - center.x) / delta) + sizeX2,
+                (int) Math.round((p.y - center.y) / delta) + sizeY2);
     }
 
     public DoublePoint map2world(IntPoint p) {
