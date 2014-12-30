@@ -55,7 +55,7 @@ public class MapBuildingBolt extends BaseRichBolt {
         long currentMessageTime = Long.parseLong(time.toString());
         // if this message came within that window, discard it
         // this will allow us to keep track of the current interval
-        if (currentMessageTime < lastComputationTime + lastMessageTime) {
+        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
             outputCollector.ack(tuple);
             return;
         }
