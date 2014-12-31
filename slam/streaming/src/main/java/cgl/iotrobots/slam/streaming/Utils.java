@@ -5,6 +5,7 @@ import cgl.iotrobots.slam.core.app.Position;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
+import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
@@ -55,7 +56,7 @@ public class Utils {
         return kryo.readObject(new Input(new ByteArrayInputStream(b)), e);
     }
 
-    public static TransferMap createTransferMap(GMap map) {
+    public static TransferMap createTransferMap(IGMap map) {
         TransferMap transferMap = new TransferMap(map.getCenter(), map.getWorldSizeX(),
                 map.getWorldSizeY(), map.getDelta(), map.getMapSizeX(),
                 map.getMapSizeY(), map.getSizeX2(), map.getSizeY2(),

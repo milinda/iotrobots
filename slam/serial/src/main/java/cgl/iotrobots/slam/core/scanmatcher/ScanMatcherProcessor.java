@@ -1,6 +1,7 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
@@ -21,14 +22,14 @@ public class ScanMatcherProcessor {
     int m_beams;
     double m_maxMove;
     //state
-    GMap m_map;
+    IGMap m_map;
     DoubleOrientedPoint m_pose;
     DoubleOrientedPoint m_odoPose;
     int  m_count;
 
     boolean useICP;
 
-    public ScanMatcherProcessor(GMap m) {
+    public ScanMatcherProcessor(IGMap m) {
         m_map = new GMap(m.getCenter(), m.getWorldSizeX(), m.getWorldSizeY(), m.getResolution());
         m_pose = new DoubleOrientedPoint(0.0,0.0,0.0);
         m_regScore=300;

@@ -1,6 +1,6 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
-import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,7 +154,7 @@ public class ScanMatcher {
         this.likelihoodSkip = likelihoodSkip;
     }
 
-    public void computeActiveArea(GMap map, DoubleOrientedPoint p, double[] readings) {
+    public void computeActiveArea(IGMap map, DoubleOrientedPoint p, double[] readings) {
         if (m_activeAreaComputed)
             return;
         Set<IntPoint> activeArea = new HashSet<IntPoint>();
@@ -249,7 +249,7 @@ public class ScanMatcher {
 
     private IntPoint m_linePoints [] = new IntPoint[20000];
 
-    public double registerScan(GMap map, DoubleOrientedPoint p, double[] readings) {
+    public double registerScan(IGMap map, DoubleOrientedPoint p, double[] readings) {
         if (!m_activeAreaComputed)
             computeActiveArea(map, p, readings);
 
@@ -311,7 +311,7 @@ public class ScanMatcher {
         return esum;
     }
 
-    public double icpOptimize(DoubleOrientedPoint pnew, GMap map, DoubleOrientedPoint init, double[] readings) {
+    public double icpOptimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
         double currentScore;
         double sc = score(map, init, readings);
         DoubleOrientedPoint start = init;
@@ -328,7 +328,7 @@ public class ScanMatcher {
         return currentScore;
     }
 
-    public double optimize(DoubleOrientedPoint _mean, Covariance3 _cov, GMap map, DoubleOrientedPoint init, double[] readings) {
+    public double optimize(DoubleOrientedPoint _mean, Covariance3 _cov, IGMap map, DoubleOrientedPoint init, double[] readings) {
         List<ScoredMove> moveList = new ArrayList<ScoredMove>();
         double bestScore = -1;
         DoubleOrientedPoint currentPose = init;
@@ -441,7 +441,7 @@ public class ScanMatcher {
         return bestScore;
     }
 
-    public double optimize(DoubleOrientedPoint pnew, GMap map, DoubleOrientedPoint init, double[] readings) {
+    public double optimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
         double bestScore = -1;
         DoubleOrientedPoint currentPose = new DoubleOrientedPoint(init.x, init.y, init.theta);
         double currentScore = score(map, currentPose, readings);
@@ -532,7 +532,7 @@ public class ScanMatcher {
     }
 
     public LikeliHood likelihood
-            (GMap map, DoubleOrientedPoint p, double[] readings) {
+            (IGMap map, DoubleOrientedPoint p, double[] readings) {
         List<ScoredMove> moveList = new ArrayList<ScoredMove>();
 
         for (double xx = -llsamplerange; xx <= llsamplerange; xx += llsamplestep) {
@@ -612,7 +612,7 @@ public class ScanMatcher {
         }
     }
 
-    public LikeliHoodAndScore likelihoodAndScore(GMap map, DoubleOrientedPoint p, double[] readings) {
+    public LikeliHoodAndScore likelihoodAndScore(IGMap map, DoubleOrientedPoint p, double[] readings) {
         double l = 0;
         double s = 0;
         int angleIndex = initialBeamsSkip;
@@ -675,7 +675,7 @@ public class ScanMatcher {
         return new LikeliHoodAndScore(s, l, c);
     }
 
-    public double icpStep(DoubleOrientedPoint pret, GMap map, DoubleOrientedPoint p, double[] readings) {
+    public double icpStep(DoubleOrientedPoint pret, IGMap map, DoubleOrientedPoint p, double[] readings) {
         int angleIndex = initialBeamsSkip;
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
 
@@ -740,7 +740,7 @@ public class ScanMatcher {
         return score(map, p, readings);
     }
 
-    double score(GMap map, DoubleOrientedPoint p, double[] readings) {
+    double score(IGMap map, DoubleOrientedPoint p, double[] readings) {
         double s = 0;
         int angleIndex = initialBeamsSkip;
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
@@ -770,7 +770,7 @@ public class ScanMatcher {
                 for (int yy = -kernelSize; yy <= kernelSize; yy++) {
                     IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
                     IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
-                    int ss = map.getStorage().cellState(pr);
+                   // int ss = map.getStorage().cellState(pr);
 //                    if ((ss) > 0) {
                         PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
                         PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
