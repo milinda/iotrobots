@@ -97,13 +97,17 @@ public class StaticMap implements IGMap {
     }
 
     public Object cell(int x, int y, boolean c) {
-        Object pa = storage[x][y];
-        if (pa != null) {
-            return pa;
+        if (x < mapSizeX && y < mapSizeY) {
+            Object pa = storage[x][y];
+            if (pa != null) {
+                return pa;
+            } else {
+                pa = new PointAccumulator();
+                storage[x][y] = pa;
+                return pa;
+            }
         } else {
-            pa = new PointAccumulator();
-            storage[x][y] = pa;
-            return pa;
+            return new PointAccumulator();
         }
     }
 
@@ -193,12 +197,7 @@ public class StaticMap implements IGMap {
     }
 
     public Object cell(IntPoint p, boolean c) {
-        PointAccumulator pa = (PointAccumulator) cell(p.x, p.y, c);
-        if (pa != null) {
-            return pa;
-        } else {
-            return new PointAccumulator();
-        }
+        return cell(p.x, p.y, c);
     }
 
     public DoublePoint getM_center() {
