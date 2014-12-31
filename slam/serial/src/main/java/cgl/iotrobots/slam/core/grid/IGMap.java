@@ -5,6 +5,9 @@ import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
 public interface IGMap {
+    int STATIC_MAP = 1;
+    int HIERARCHICAL_MAP = 0;
+
     DoublePoint getCenter();
 
     double getWorldSizeX();

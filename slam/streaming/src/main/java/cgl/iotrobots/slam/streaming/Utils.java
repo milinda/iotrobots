@@ -2,10 +2,7 @@ package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.Position;
-import cgl.iotrobots.slam.core.grid.Array2D;
-import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
-import cgl.iotrobots.slam.core.grid.IGMap;
+import cgl.iotrobots.slam.core.grid.*;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
@@ -79,8 +76,30 @@ public class Utils {
         return transferMap;
     }
 
-    public static GMap createGMap(TransferMap tMap) {
+    public static IGMap createGMap(TransferMap tMap) {
         GMap gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+
+        for (MapCell cell : tMap.getMapCells()) {
+            PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
+            accumulator.setAcc(cell.getAcc());
+            accumulator.setN(cell.getN());
+            accumulator.setVisits(cell.getVisits());
+        }
+
+        if (tMap.getActiveArea() != null) {
+            gMap.getStorage().setActiveArea(tMap.getActiveArea());
+        }
+
+        return gMap;
+    }
+
+    public static IGMap createGMap(TransferMap tMap, int type) {
+        IGMap gMap;
+        if (type == IGMap.HIERARCHICAL_MAP) {
+            gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+        } else {
+            gMap = new StaticMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+        }
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);

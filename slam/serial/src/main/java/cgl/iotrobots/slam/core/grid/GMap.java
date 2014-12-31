@@ -6,12 +6,12 @@ import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
 public class GMap implements IGMap {
-    public DoublePoint center;
-    double worldSizeX, worldSizeY, delta;
-    public HierarchicalArray2D storage;
-    public int mapSizeX, mapSizeY;
-    public int sizeX2, sizeY2;
-    public static final int DEFAULT_PATCH = 5;
+    private DoublePoint center;
+    private double worldSizeX, worldSizeY, delta;
+    private HierarchicalArray2D storage;
+    private int mapSizeX, mapSizeY;
+    private int sizeX2, sizeY2;
+    private static final int DEFAULT_PATCH = 5;
 
     public GMap() {
     }

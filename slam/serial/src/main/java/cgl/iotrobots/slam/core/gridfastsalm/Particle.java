@@ -2,11 +2,12 @@ package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
+import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
 public class Particle {
     /** The map */
-    public GMap map;
+    public IGMap map;
     /** The pose of the robot */
     public DoubleOrientedPoint pose;
 
@@ -33,7 +34,7 @@ public class Particle {
     public Particle(Particle p, boolean withMap) {
         if (withMap) {
             map = p.map;
-            map.storage = new HierarchicalArray2D(p.map.storage);
+            map.setStorage(new HierarchicalArray2D(p.map.getStorage()));
         }
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);
@@ -46,7 +47,7 @@ public class Particle {
 
     public Particle(Particle p) {
         map = p.map;
-        map.storage = new HierarchicalArray2D(p.map.storage);
+        map.setStorage(new HierarchicalArray2D(p.map.getStorage()));
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);
         weight = p.weight;
@@ -70,7 +71,7 @@ public class Particle {
         this.weight = weight;
     }
 
-    public void setMap(GMap map) {
+    public void setMap(IGMap map) {
         this.map = map;
     }
 
@@ -98,7 +99,7 @@ public class Particle {
         this.node = node;
     }
 
-    public GMap getMap() {
+    public IGMap getMap() {
         return map;
     }
 
