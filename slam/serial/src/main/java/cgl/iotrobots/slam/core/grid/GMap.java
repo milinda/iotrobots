@@ -65,6 +65,11 @@ public class GMap implements IGMap {
     }
 
     @Override
+    public Object cloneStorage() {
+        return new HierarchicalArray2D(storage);
+    }
+
+    @Override
     public DoublePoint getCenter() {
         return center;
     }
@@ -284,8 +289,26 @@ public class GMap implements IGMap {
     }
 
     @Override
-    public void setStorage(HierarchicalArray2D storage) {
-        this.storage = storage;
+    public void setStorage(Object storage) {
+        if (storage instanceof HierarchicalArray2D) {
+            this.storage = (HierarchicalArray2D) storage;
+        } else {
+            throw new IllegalArgumentException("HierarchicalArray2D expected");
+        }
+    }
+
+    public Set<IntPoint> getActiveArea() {
+        return activeArea;
+    }
+
+    @Override
+    public int getPatchSize() {
+        return 0;
+    }
+
+    @Override
+    public int getPatchMagnitude() {
+        return 0;
     }
 
     @Override

@@ -54,7 +54,7 @@ public interface IGMap {
 
     double getDelta();
 
-    HierarchicalArray2D getStorage();
+    Object getStorage();
 
     int getMapSizeX();
 
@@ -72,7 +72,7 @@ public interface IGMap {
 
     void setDelta(double delta);
 
-    void setStorage(HierarchicalArray2D storage);
+    void setStorage(Object storage);
 
     void setMapSizeX(int mapSizeX);
 
@@ -85,4 +85,12 @@ public interface IGMap {
     public void setActiveArea(Set<IntPoint> aa, boolean patchCoords);
 
     public void allocActiveArea();
+
+    public Object cloneStorage();
+
+    public Set<IntPoint> getActiveArea();
+    public int getPatchSize();
+
+    public int getPatchMagnitude();
+
 }

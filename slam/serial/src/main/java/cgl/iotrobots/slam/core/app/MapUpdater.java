@@ -64,7 +64,7 @@ public class MapUpdater {
         }
 
         DoublePoint center = new DoublePoint((xmin + xmax) / 2.0, (ymin + ymax) / 2.0);
-        IGMap smap = MapFactory.create(center, xmin, ymin, xmax, ymax, delta);
+        IGMap smap = MapFactory.create(center, xmax - xmin, ymax - ymin, delta);
         best.setMap(smap);
         map.currentPos.clear();
 

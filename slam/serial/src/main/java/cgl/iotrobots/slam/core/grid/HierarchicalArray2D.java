@@ -31,7 +31,7 @@ public class HierarchicalArray2D {
     }
 
     public int getPatchSize() {
-        return patchMagnitude;
+        return patchSize;
     }
 
     public int getPatchMagnitude() {

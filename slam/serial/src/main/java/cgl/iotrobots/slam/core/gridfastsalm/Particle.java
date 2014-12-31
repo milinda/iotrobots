@@ -33,7 +33,7 @@ public class Particle {
     public Particle(Particle p, boolean withMap) {
         if (withMap) {
             map = p.map;
-            map.setStorage(new HierarchicalArray2D(p.map.getStorage()));
+            map.setStorage(p.getMap().cloneStorage());
         }
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);
@@ -46,7 +46,7 @@ public class Particle {
 
     public Particle(Particle p) {
         map = p.map;
-        map.setStorage(new HierarchicalArray2D(p.map.getStorage()));
+        map.setStorage(p.getMap().cloneStorage());
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);
         weight = p.weight;

@@ -5,24 +5,29 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * This is a straight forward map.
  */
 public class StaticMap implements IGMap {
-    public DoublePoint center;
-    double worldSizeX, worldSizeY, delta;
-    public Object [][]storage;
-    public int mapSizeX, mapSizeY;
-    public int sizeX2, sizeY2;
-    public static final int DEFAULT_PATCH = 5;
+    private DoublePoint center;
+    private double worldSizeX, worldSizeY, delta;
+    private Object [][]storage;
+    private int mapSizeX, mapSizeY;
+    private int sizeX2, sizeY2;
+    private static final int DEFAULT_PATCH = 5;
+    private Set<IntPoint> activeArea = new HashSet<IntPoint>();
 
     public StaticMap() {
     }
 
     public StaticMap(int mapSizeX, int mapSizeY, double delta) {
         storage = new Object[mapSizeX][mapSizeY];
+        for (int i = 0; i < mapSizeX; i++) {
+            storage[i] = new Object[mapSizeY];
+        }
         worldSizeX = mapSizeX * delta;
         worldSizeY = mapSizeY * delta;
         this.delta = delta;
@@ -37,6 +42,9 @@ public class StaticMap implements IGMap {
         int xSize = new Double(Math.ceil(worldSizeX / delta)).intValue();
         int ySize = new Double(Math.ceil(worldSizeY / delta)).intValue();
         storage = new Object[xSize][ySize];
+        for (int i = 0; i < xSize; i++) {
+            storage[i] = new Object[ySize];
+        }
         this.center = center;
         this.worldSizeX = worldSizeX;
         this.worldSizeY = worldSizeY;
@@ -51,6 +59,11 @@ public class StaticMap implements IGMap {
         int xSize = new Double(Math.ceil((xmax - xmin) / delta)).intValue();
         int ySize = new Double(Math.ceil((ymax - ymin) / delta)).intValue();
         storage = new Object[xSize][ySize];
+
+        for (int i = 0; i < xSize; i++) {
+            storage[i] = new Object[ySize];
+        }
+
         this.center = center;
         worldSizeX = xmax - xmin;
         worldSizeY = ymax - ymin;
@@ -237,7 +250,7 @@ public class StaticMap implements IGMap {
     }
 
     @Override
-    public void setStorage(HierarchicalArray2D storage) {
+    public void setStorage(Object storage) {
 
     }
 
@@ -271,5 +284,28 @@ public class StaticMap implements IGMap {
 
     }
 
+    @Override
+    public Object cloneStorage() {
+        Object [][]cells = new Object[mapSizeX][mapSizeY];
+        for (int i = 0; i < mapSizeX; i++) {
+            cells[i] = new Object[mapSizeY];
+            System.arraycopy(this.storage[i], 0, cells[i], 0, mapSizeY);
+        }
+        return cells;
+    }
 
+    @Override
+    public Set<IntPoint> getActiveArea() {
+        return activeArea;
+    }
+
+    @Override
+    public int getPatchSize() {
+        return 0;
+    }
+
+    @Override
+    public int getPatchMagnitude() {
+        return 0;
+    }
 }

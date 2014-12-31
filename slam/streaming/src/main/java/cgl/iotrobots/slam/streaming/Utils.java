@@ -57,8 +57,8 @@ public class Utils {
         TransferMap transferMap = new TransferMap(map.getCenter(), map.getWorldSizeX(),
                 map.getWorldSizeY(), map.getDelta(), map.getMapSizeX(),
                 map.getMapSizeY(), map.getSizeX2(), map.getSizeY2(),
-                map.getStorage().getPatchMagnitude(),
-                map.getStorage().getPatchSize());
+                map.getPatchMagnitude(),
+                map.getPatchSize());
         LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
         for (int x = 0; x < map.getMapSizeX(); x++) {
             for (int y = 0; y < map.getMapSizeY(); y++) {
@@ -72,7 +72,7 @@ public class Utils {
             }
         }
 
-        transferMap.setActiveArea(map.getStorage().getActiveArea());
+        transferMap.setActiveArea(map.getActiveArea());
         return transferMap;
     }
 
@@ -87,7 +87,7 @@ public class Utils {
         }
 
         if (tMap.getActiveArea() != null) {
-            gMap.getStorage().setActiveArea(tMap.getActiveArea());
+            gMap.setActiveArea(tMap.getActiveArea(), true);
         }
 
         return gMap;
@@ -109,7 +109,7 @@ public class Utils {
         }
 
         if (tMap.getActiveArea() != null) {
-            gMap.getStorage().setActiveArea(tMap.getActiveArea());
+            gMap.setActiveArea(tMap.getActiveArea(), true);
         }
 
         return gMap;

@@ -217,11 +217,11 @@ public class ScanMatcher {
                 line.points = m_linePoints;
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.numPoints - 1; i++) {
-                    IntPoint patch = map.getStorage().patchIndexes(m_linePoints[i]);
+                    IntPoint patch = (m_linePoints[i]);
                     activeArea.add(patch);
                 }
                 if (d <= usableRange) {
-                    IntPoint patch = map.getStorage().patchIndexes(p1);
+                    IntPoint patch = (p1);
                     activeArea.add(patch);
                 }
             } else {
@@ -235,12 +235,12 @@ public class ScanMatcher {
                 phit.y += r * Math.sin(lp.theta + angle);
                 IntPoint p1 = map.world2map(phit);
                 assert (p1.x >= 0 && p1.y >= 0);
-                IntPoint cp = map.getStorage().patchIndexes(p1);
+                IntPoint cp = (p1);
                 assert (cp.x >= 0 && cp.y >= 0);
                 activeArea.add(cp);
             }
         //this allocates the unallocated cells in the active area of the map
-        map.setActiveArea(activeArea, true);
+        map.setActiveArea(activeArea, false);
         m_activeAreaComputed = true;
     }
 
