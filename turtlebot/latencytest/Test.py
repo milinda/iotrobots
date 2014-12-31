@@ -10,7 +10,7 @@ def send_frames():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='156.56.95.184', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     # try:
@@ -29,7 +29,7 @@ def send_nav_data():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672')
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host='149.165.159.3', port=5672))
     # connection = pika.BlockingConnection(parameters)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='156.56.95.184', port=5672))
     channel = connection.channel()
     channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
     for x in range(0, 1596):
@@ -45,13 +45,13 @@ def send_nav_data():
 
 def recv_commands():
     # parameters = pika.URLParameters('amqp://149.165.159.3:5672/')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='156.56.95.184', port=5672))
     # connection = pika.BlockingConnection(parameters)
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
     channel = connection.channel()
-    channel.exchange_declare(exchange="drone", exchange_type="direct", passive=False)
+    channel.exchange_declare(exchange="turtle_control", exchange_type="fanout", passive=False,  durable=True, auto_delete=False)
 
-    channel.basic_consume(on_message, queue='control')
+    channel.basic_consume(on_message, queue='turtle_control')
     channel.start_consuming()
 
 average = 0.0
@@ -76,7 +76,8 @@ def on_message(channel, method_frame, header_frame, body):
     print body
 
 def file_read(i):
-    f = open('/home/supun/dev/projects/dist/data/kinect/kinect' + str(i + 1), 'r')
+    # f = open('/home/supun/dev/projects/dist/data/kinect/kinect' + str(i + 1), 'r')
+    f = open('/home/supun/dev/projects/kinect/compressed/frame_' + str(i + 1), 'r')
     data = f.read()
     f.close()
     return data
@@ -90,9 +91,9 @@ def main():
     # t.daemon = True
     # t.start()
 
-    # t = Thread(target=recv_commands)
-    # t.daemon = True
-    # t.start()
+    t = Thread(target=recv_commands)
+    t.daemon = True
+    t.start()
 
     t.join()
 
