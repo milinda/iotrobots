@@ -4,6 +4,8 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
+import java.util.Set;
+
 public interface IGMap {
     int STATIC_MAP = 1;
     int HIERARCHICAL_MAP = 0;
@@ -79,4 +81,8 @@ public interface IGMap {
     void setSizeX2(int sizeX2);
 
     void setSizeY2(int sizeY2);
+
+    public void setActiveArea(Set<IntPoint> aa, boolean patchCoords);
+
+    public void allocActiveArea();
 }

@@ -5,6 +5,8 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
+import java.util.Set;
+
 /**
  * This is a straight forward map.
  */
@@ -255,6 +257,16 @@ public class StaticMap implements IGMap {
 
     public void setSizeY2(int sizeY2) {
         this.sizeY2 = sizeY2;
+    }
+
+    @Override
+    public void setActiveArea(Set<IntPoint> aa, boolean patchCoords) {
+
+    }
+
+    @Override
+    public void allocActiveArea() {
+
     }
 
 

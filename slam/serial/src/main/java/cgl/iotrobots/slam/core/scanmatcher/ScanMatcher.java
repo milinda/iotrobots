@@ -240,7 +240,7 @@ public class ScanMatcher {
                 activeArea.add(cp);
             }
         //this allocates the unallocated cells in the active area of the map
-        map.getStorage().setActiveArea(activeArea, true);
+        map.setActiveArea(activeArea, true);
         m_activeAreaComputed = true;
     }
 
@@ -254,7 +254,7 @@ public class ScanMatcher {
             computeActiveArea(map, p, readings);
 
         //this operation replicates the cells that will be changed in the registration operation
-        map.getStorage().allocActiveArea();
+        map.allocActiveArea();
 
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * laserPose.x - Math.sin(p.theta) * laserPose.y;

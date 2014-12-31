@@ -5,6 +5,9 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class GMap implements IGMap {
     private DoublePoint center;
     private double worldSizeX, worldSizeY, delta;
@@ -12,6 +15,7 @@ public class GMap implements IGMap {
     private int mapSizeX, mapSizeY;
     private int sizeX2, sizeY2;
     private static final int DEFAULT_PATCH = 5;
+    private Set<IntPoint> activeArea = new HashSet<IntPoint>();
 
     public GMap() {
     }
@@ -50,6 +54,14 @@ public class GMap implements IGMap {
         mapSizeY = storage.getYSize() << storage.getPatchSize();
         sizeX2 = (int) Math.round((this.center.x - xmin) / this.delta);
         sizeY2 = (int) Math.round((this.center.y - ymin) / this.delta);
+    }
+
+    public void setActiveArea(Set<IntPoint> aa, boolean patchCoords) {
+        storage.setActiveArea(aa, patchCoords);
+    }
+
+    public void allocActiveArea() {
+        storage.allocActiveArea();
     }
 
     @Override
