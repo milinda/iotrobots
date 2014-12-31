@@ -94,6 +94,15 @@ public class BuildTopology {
                         "")
         );
 
+        startGoalSpout = new RabbitMQSpout(
+                new Schemes.startGoalScheme(),
+                new StormDeclarator(
+                        exchange,
+                        Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_START_GOAL,
+                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_START_GOAL,
+                        "")
+        );
+
         poseShareSpout = new RabbitMQSpout(
                 new Schemes.PoseShareScheme(),
                 new StormDeclarator(
@@ -102,7 +111,6 @@ public class BuildTopology {
                         "",
                         Constant_msg.TYPE_EXCHANGE_FANOUT)
         );
-
     }
 
     private void setAttachBolts() {
@@ -112,7 +120,7 @@ public class BuildTopology {
         builder.setBolt(Constant_storm.Components.ODOMETRY_COMPONENT,
                 new AttachTimeID(sensorid, Constant_storm.FIELDS.ODOMETRY_FIELD), 1)
                 .fieldsGrouping(Constant_storm.Components.ODOMETRY_COMPONENT + "Spout",
-                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));//???? no sensor id at all
 
         builder.setSpout(Constant_storm.Components.SCAN_COMPONENT + "Spout", scanSpout, 1)
                 .addConfigurations(spoutConfig.asMap())
@@ -128,6 +136,14 @@ public class BuildTopology {
         builder.setBolt(Constant_storm.Components.POSE_ARRAY_COMPONENT,
                 new AttachTimeID(sensorid, Constant_storm.FIELDS.POSE_ARRAY_FIELD), 1)
                 .fieldsGrouping(Constant_storm.Components.POSE_ARRAY_COMPONENT + "Spout",
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+
+        builder.setSpout(Constant_storm.Components.START_GOAL_COMPONENT + "Spout", startGoalSpout, 1)
+                .addConfigurations(spoutConfig.asMap())
+                .setMaxSpoutPending(200);
+        builder.setBolt(Constant_storm.Components.START_GOAL_COMPONENT,
+                new AttachTimeID(sensorid, Constant_storm.FIELDS.START_GOAL_FIELD), 1)
+                .fieldsGrouping(Constant_storm.Components.START_GOAL_COMPONENT + "Spout",
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 
         builder.setSpout(Constant_storm.Components.POSE_SHARE_COMPONENT + "Spout", poseShareSpout, 1)

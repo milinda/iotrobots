@@ -7,7 +7,9 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Schemes {
     public static class OdometryScheme implements Scheme {
@@ -87,6 +89,22 @@ public class Schemes {
         @Override
         public Fields getOutputFields() {
             return new Fields(Constant_storm.FIELDS.POSE_SHARE_FIELD);
+        }
+    }
+
+    public static class startGoalScheme implements Scheme {
+        @Override
+        public List<Object> deserialize(byte[] bytes) {
+            return new Values(deserializeObject(bytes));
+        }
+
+        public static Object deserializeObject(byte[] body) {
+            return Serializers.deSerialize(body, HashMap.class);
+        }
+
+        @Override
+        public Fields getOutputFields() {
+            return new Fields(Constant_storm.FIELDS.START_GOAL_FIELD);
         }
     }
 }

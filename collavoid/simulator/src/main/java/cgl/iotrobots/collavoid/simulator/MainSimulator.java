@@ -3,8 +3,10 @@ package cgl.iotrobots.collavoid.simulator;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
+import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
+import org.ros.message.MessageFactory;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
@@ -52,6 +54,12 @@ public class MainSimulator {
         private ConnectedNode node;
         private ParameterTree params;
 
+        //start and goal pubisher
+        Publisher<PoseStamped> startGoalPublisher = null;
+        PoseStamped startGoalMsg;
+        Pose start, goal;
+        int sgseq;
+        
         //odometry publisher
         Publisher<Odometry> odometryPublisher = null;
         Odometry odomMsg;
@@ -171,6 +179,15 @@ public class MainSimulator {
                 });
             }
 
+            if (startGoalPublisher == null) {
+                startGoalPublisher = node.newPublisher(this.getName() + "/start_goal", PoseStamped._TYPE);
+                startGoalMsg = startGoalPublisher.newMessage();
+                startGoalMsg.getHeader().setFrameId(globalFrame);
+                start = utilsSim.messageFactory.newFromType(Pose._TYPE);
+                goal = utilsSim.messageFactory.newFromType(Pose._TYPE);
+                sgseq = 0;
+            }
+
             if (ctlCmdSubscriber==null){
                 ctlCmdSubscriber=node.newSubscriber("/ctl_cmd", std_msgs.String._TYPE);
                 ctlCmd = "";
@@ -197,14 +214,15 @@ public class MainSimulator {
             this.rotateY(orientation);
             vl=0;
             vr=0;
+            sgseq = 0;
         }
 
         /**
          * This method is call cyclically (20 times per second)  by the simulator engine.
          */
         public void performBehavior() {
-
-            if (ctlCmd.equals("pause"))
+            // send out goal
+            if (ctlCmd.equals("pause") || sgseq < 10)
                 kinematic.setWheelsVelocity(0,0);
             else
                 kinematic.setWheelsVelocity(vl,vr);
@@ -240,6 +258,39 @@ public class MainSimulator {
                 odometryPublisher.publish(odomMsg);
             }
 
+            if (sgseq < 10) {
+
+                getStartGoal();
+                startGoalMsg.getHeader().setStamp(time);
+                startGoalMsg.getHeader().setSeq(sgseq);
+
+                // set start in even sequence
+                if (sgseq % 2 == 0)
+                    startGoalMsg.setPose(start);
+                else
+                    startGoalMsg.setPose(goal);
+                startGoalPublisher.publish(startGoalMsg);
+                sgseq++;
+            }
+
+        }
+
+        private void getStartGoal() {
+            Point3d start_cor = new Point3d();
+            this.getCoords(start_cor);
+            Point3d goal_cor = new Point3d();
+            goal_cor.set(-start_cor.getX(), start_cor.getY(), -start_cor.getZ());
+
+            Quat4d oriStart = getOrientation();
+            Quat4d oriGoal = new Quat4d();
+            Transform3D tfr = new Transform3D(oriStart, new Vector3d(0, 0, 0), 1);
+            Transform3D tfrPI = new Transform3D(new Quat4d(0, 1, 0, 0), new Vector3d(), 1);
+            tfr.mul(tfrPI);
+            tfr.get(oriGoal);
+
+            // transform coordinates
+            start = utilsSim.getPose(start_cor, oriStart);
+            goal = utilsSim.getPose(goal_cor, oriGoal);
         }
 
         public void setOdomMsg(Time t) {

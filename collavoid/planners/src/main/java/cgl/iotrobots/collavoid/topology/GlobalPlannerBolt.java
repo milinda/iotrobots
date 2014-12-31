@@ -6,7 +6,9 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseStamped_;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Serializers;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ public class GlobalPlannerBolt extends BaseRichBolt {
         }
         Map<String, PoseStamped_> startGoalMap = (HashMap<String, PoseStamped_>) startGoal;
         List<PoseStamped_> plan = new ArrayList<PoseStamped_>();
-        makePlan(startGoalMap.get("start"), startGoalMap.get("goal"), plan);
+        makePlan(startGoalMap.get(Constant_msg.KEY_START), startGoalMap.get(Constant_msg.KEY_GOAL), plan);
         List<Object> emit = new ArrayList<Object>();
         emit.add(time);
         emit.add(sensorId);

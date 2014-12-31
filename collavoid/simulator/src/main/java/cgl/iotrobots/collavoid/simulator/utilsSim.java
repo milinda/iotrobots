@@ -43,8 +43,10 @@ public class utilsSim {
         // set z to zero, previously this is the z position of the robot center
         pose.getPosition().setZ(0);
 
-        pose.getOrientation().setZ(quat4d.getY());
-        pose.getOrientation().setW(quat4d.getW());
+        Quat4d q = new Quat4d(quat4d);
+        toROSCoordinate(q);
+        pose.getOrientation().setZ(q.getZ());
+        pose.getOrientation().setW(q.getW());
         return pose;
     }
 

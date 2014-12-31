@@ -42,6 +42,7 @@ public class AgentController {
         RMQContexts.put(Constant_msg.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant_msg.KEY_PARTICLE_CLOUD));
         RMQContexts.put(Constant_msg.KEY_SCAN, new RMQContext(exchangeName, Constant_msg.KEY_SCAN));
         RMQContexts.put(Constant_msg.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant_msg.KEY_VELOCITY_CMD));
+        RMQContexts.put(Constant_msg.KEY_START_GOAL, new RMQContext(exchangeName, Constant_msg.KEY_START_GOAL));
     }
 
     public void start(NodeConfiguration configuration) {
