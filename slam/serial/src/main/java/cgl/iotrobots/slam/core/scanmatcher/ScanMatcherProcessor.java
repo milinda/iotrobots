@@ -2,6 +2,7 @@ package cgl.iotrobots.slam.core.scanmatcher;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.IGMap;
+import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
@@ -30,7 +31,7 @@ public class ScanMatcherProcessor {
     boolean useICP;
 
     public ScanMatcherProcessor(IGMap m) {
-        m_map = new GMap(m.getCenter(), m.getWorldSizeX(), m.getWorldSizeY(), m.getResolution());
+        m_map = MapFactory.create(m.getCenter(), m.getWorldSizeX(), m.getWorldSizeY(), m.getResolution());
         m_pose = new DoubleOrientedPoint(0.0,0.0,0.0);
         m_regScore=300;
         m_critScore=.5*m_regScore;
@@ -43,7 +44,7 @@ public class ScanMatcherProcessor {
 
     public ScanMatcherProcessor
             (double xmin, double ymin, double xmax, double ymax, double delta, double patchdelta) {
-        m_map = new GMap(new DoublePoint((xmax+xmin)*.5, (ymax+ymin)*.5), xmax-xmin, ymax-ymin, patchdelta);
+        m_map = MapFactory.create(new DoublePoint((xmax + xmin) * .5, (ymax + ymin) * .5), xmax - xmin, ymax - ymin, patchdelta);
         m_pose = new DoubleOrientedPoint(0.0,0.0,0.0);
         m_regScore=300;
         m_critScore=.5*m_regScore;

@@ -88,7 +88,9 @@ public class StaticMap implements IGMap {
         if (pa != null) {
             return pa;
         } else {
-            return new PointAccumulator();
+            pa = new PointAccumulator();
+            storage[x][y] = pa;
+            return pa;
         }
     }
 

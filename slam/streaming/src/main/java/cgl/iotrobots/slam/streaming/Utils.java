@@ -77,7 +77,7 @@ public class Utils {
     }
 
     public static IGMap createGMap(TransferMap tMap) {
-        GMap gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+        IGMap gMap = MapFactory.create(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
@@ -96,9 +96,9 @@ public class Utils {
     public static IGMap createGMap(TransferMap tMap, int type) {
         IGMap gMap;
         if (type == IGMap.HIERARCHICAL_MAP) {
-            gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+            gMap = MapFactory.create(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
         } else {
-            gMap = new StaticMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+            gMap = MapFactory.create(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
         }
 
         for (MapCell cell : tMap.getMapCells()) {

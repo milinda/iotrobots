@@ -2,6 +2,7 @@ package cgl.iotrobots.slam.core.app;
 
 import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.IGMap;
+import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
@@ -63,7 +64,7 @@ public class MapUpdater {
         }
 
         DoublePoint center = new DoublePoint((xmin + xmax) / 2.0, (ymin + ymax) / 2.0);
-        IGMap smap = new GMap(center, xmin, ymin, xmax, ymax, delta);
+        IGMap smap = MapFactory.create(center, xmin, ymin, xmax, ymax, delta);
         best.setMap(smap);
         map.currentPos.clear();
 

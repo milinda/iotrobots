@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
-import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
@@ -57,7 +56,7 @@ public class Particle {
         node = p.node;
     }
 
-    public Particle(GMap map) {
+    public Particle(IGMap map) {
         this.map = map;
         pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         weight = 0;
