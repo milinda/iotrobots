@@ -18,6 +18,9 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.awt.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +43,8 @@ public class SimbardDistributed {
         RabbitMQReceiver bestReceiver;
 
         Kryo kryo = new Kryo();
+
+        PrintWriter pw;
 
         public Robot(Vector3d position, String name) {
             super(position, name);

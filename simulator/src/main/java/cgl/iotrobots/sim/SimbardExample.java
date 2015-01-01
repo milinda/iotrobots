@@ -11,6 +11,9 @@ import simbad.sim.*;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +29,8 @@ public class SimbardExample {
         RangeSensorBelt sonars;
         CameraSensor camera;
 
+        PrintWriter pw;
+
         public Robot(Vector3d position, String name) {
             super(position, name);
             // Add camera
@@ -39,6 +44,12 @@ public class SimbardExample {
 
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
+
+            try {
+                pw = new PrintWriter(new FileWriter("out.txt"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
         }
 
@@ -74,6 +85,7 @@ public class SimbardExample {
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            pw.printf("%s\n", laserScan.getString());
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             // progress at 0.5 m/s
