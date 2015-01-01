@@ -4,6 +4,8 @@ import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +14,8 @@ import java.util.Set;
  * This is a straight forward map.
  */
 public class StaticMap implements IGMap {
+    private static Logger LOG = LoggerFactory.getLogger(StaticMap.class);
+
     private DoublePoint center;
     private double worldSizeX, worldSizeY, delta;
     private Object [][]storage;
@@ -53,6 +57,7 @@ public class StaticMap implements IGMap {
         mapSizeY = ySize;
         sizeX2 = mapSizeX >> 1;
         sizeY2 = mapSizeY >> 1;
+        LOG.info("******************************* mapSizeX {} mapSizeY {} **************************", mapSizeX, mapSizeY);
     }
 
     public StaticMap(DoublePoint center, double xmin, double ymin, double xmax, double ymax, double delta) {
@@ -72,6 +77,7 @@ public class StaticMap implements IGMap {
         mapSizeY = ySize;
         sizeX2 = (int) Math.round((this.center.x - xmin) / this.delta);
         sizeY2 = (int) Math.round((this.center.y - ymin) / this.delta);
+        LOG.info("******************************* mapSizeX {} mapSizeY {} **************************", mapSizeX, mapSizeY);
     }
 
     public DoublePoint getCenter() {
@@ -132,6 +138,7 @@ public class StaticMap implements IGMap {
     }
 
     public void resize(double xmin, double ymin, double xmax, double ymax) {
+        LOG.info("Resizing map ************************************************************ ");
         IntPoint imin = world2map(xmin, ymin);
         IntPoint imax = world2map(xmax, ymax);
         int pxmin, pymin, pxmax, pymax;
@@ -140,8 +147,8 @@ public class StaticMap implements IGMap {
         pymin = (int) Math.floor((double) imin.y);
         pymax = (int) Math.ceil((double) imax.y);
         resizeArray(pxmin, pymin, pxmax, pymax);
-        mapSizeX = mapSizeX << 1;
-        mapSizeY = mapSizeY << 1;
+//        mapSizeX = mapSizeX << 1;
+//        mapSizeY = mapSizeY << 1;
         worldSizeX = xmax - xmin;
         worldSizeY = ymax - ymin;
         sizeX2 -= pxmin * (1 << 1);
@@ -157,6 +164,9 @@ public class StaticMap implements IGMap {
         int xsize = xmax - xmin;
         int ysize = ymax - ymin;
         Object[][] newcells = new Object[xsize][ysize];
+        for (int i = 0; i < xsize; i++) {
+            newcells[i] = new Object[ysize];
+        }
 
         int dx = xmin < 0 ? 0 : xmin;
         int dy = ymin < 0 ? 0 : ymin;

@@ -1,7 +1,7 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.grid.IGMap;
+import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
 public class Particle {
@@ -31,8 +31,11 @@ public class Particle {
     }
 
     public Particle(Particle p, boolean withMap) {
+        map = MapFactory.create(p.map.getCenter(), p.map.getWorldSizeX(), p.map.getWorldSizeY(), p.map.getDelta());
+        map.setActiveArea(p.map.getActiveArea(), true);
         if (withMap) {
-            map = p.map;
+            map = MapFactory.create(p.map.getCenter(), p.map.getWorldSizeX(), p.map.getWorldSizeY(), p.map.getDelta());
+            map.setActiveArea(p.map.getActiveArea(), true);
             map.setStorage(p.getMap().cloneStorage());
         }
         pose = new DoubleOrientedPoint(p.pose);
@@ -45,7 +48,8 @@ public class Particle {
     }
 
     public Particle(Particle p) {
-        map = p.map;
+        map = MapFactory.create(p.map.getCenter(), p.map.getWorldSizeX(), p.map.getWorldSizeY(), p.map.getDelta());
+        map.setActiveArea(p.map.getActiveArea(), true);
         map.setStorage(p.getMap().cloneStorage());
         pose = new DoubleOrientedPoint(p.pose);
         previousPose = new DoubleOrientedPoint(p.previousPose);

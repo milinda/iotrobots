@@ -303,12 +303,12 @@ public class GMap implements IGMap {
 
     @Override
     public int getPatchSize() {
-        return 0;
+        return storage.getPatchSize();
     }
 
     @Override
     public int getPatchMagnitude() {
-        return 0;
+        return storage.getPatchMagnitude();
     }
 
     @Override
