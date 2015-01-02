@@ -31,8 +31,6 @@ public class Particle {
     }
 
     public Particle(Particle p, boolean withMap) {
-        map = MapFactory.create(p.map.getCenter(), p.map.getWorldSizeX(), p.map.getWorldSizeY(), p.map.getDelta());
-        map.setActiveArea(p.map.getActiveArea(), true);
         if (withMap) {
             map = MapFactory.create(p.map.getCenter(), p.map.getWorldSizeX(), p.map.getWorldSizeY(), p.map.getDelta());
             map.setActiveArea(p.map.getActiveArea(), true);
