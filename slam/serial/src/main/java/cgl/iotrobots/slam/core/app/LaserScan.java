@@ -110,6 +110,7 @@ public class LaserScan {
         angle_min = Double.parseDouble(vals[2]);
         angle_max = Double.parseDouble(vals[3]);
         angle_increment = Double.parseDouble(vals[4]);
+        pose = new DoubleOrientedPoint();
         pose.setX(Double.parseDouble(vals[5]));
         pose.setY(Double.parseDouble(vals[6]));
         pose.setTheta(Double.parseDouble(vals[7]));
