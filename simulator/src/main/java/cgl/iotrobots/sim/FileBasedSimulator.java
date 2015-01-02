@@ -24,7 +24,7 @@ public class FileBasedSimulator {
     public void start(boolean parallel) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
-            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
         } else {
             gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
         }
