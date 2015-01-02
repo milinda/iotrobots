@@ -6,6 +6,10 @@ public class Obstacle {
     private Vector2 end;
     private double distToAgent = Double.MAX_VALUE;
 
+    public Obstacle() {
+
+    }
+
     public Obstacle(Vector2 p1, Vector2 p2) {
         this.begin = new Vector2(p1.getX(), p1.getY());
         this.end = new Vector2(p2.getX(), p2.getY());

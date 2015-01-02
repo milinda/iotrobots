@@ -20,7 +20,7 @@ public class AttachTimeID extends BaseBasicBolt {
     }
     @Override
     public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
-        basicOutputCollector.emit(new Values(System.currentTimeMillis(), sensorID, tuple));
+        basicOutputCollector.emit(new Values(System.currentTimeMillis(), sensorID, tuple.getValue(0)));
     }
 
     @Override

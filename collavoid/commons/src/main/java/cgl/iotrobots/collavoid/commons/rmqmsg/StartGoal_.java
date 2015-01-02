@@ -31,6 +31,11 @@ public class StartGoal_ implements Serializable {
         this.start = start;
     }
 
+    @Override
+    public String toString() {
+        return "{start: " + start.toString() + ";" + "goal: " + goal.toString() + "}";
+    }
+
     public byte[] toJSON() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);

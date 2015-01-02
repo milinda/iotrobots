@@ -1,6 +1,8 @@
 package cgl.iotrobots.collavoid.simulator;
 
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
+import cgl.iotrobots.collavoid.controller.AgentController;
+import com.rabbitmq.client.Address;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.PoseStamped;
@@ -10,6 +12,7 @@ import org.ros.message.MessageFactory;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
+import org.ros.node.NodeConfiguration;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
@@ -79,6 +82,7 @@ public class MainSimulator {
         // control command subscriber
         Subscriber<std_msgs.String> ctlCmdSubscriber=null;
         String ctlCmd;
+        AgentController agentController;
 
         //tf broadcaster
         TransformBroadcaster tfb = null;
@@ -124,7 +128,18 @@ public class MainSimulator {
             globalFrame = "map";
 
             initPubSub();
+            initController(
+                    "robot" + id + "_rmq",
+                    null,
+                    "amqp://localhost:5672"
+            );
 
+        }
+
+        private void initController(String name, Address[] addresses, String url) {
+            agentController = new AgentController(name, addresses, url);
+            NodeConfiguration configuration = NodeConfiguration.newPublic("localhost");
+            agentController.start(configuration);
         }
 
         public void initPubSub() {
@@ -215,6 +230,7 @@ public class MainSimulator {
             vl=0;
             vr=0;
             sgseq = 0;
+            agentController.clearQueues();
         }
 
         /**
@@ -379,6 +395,7 @@ public class MainSimulator {
         }
 
         public void shutDown() {
+            agentController.stop();
             agentNode.shutDown();
         }
 

@@ -5,6 +5,10 @@ public class VelocitySample {
     private Vector2 velocity;
     private double distToPrefVel;
 
+    public VelocitySample() {
+
+    }
+
     public Vector2 getVelocity(){
         return new Vector2(this.velocity);
     }

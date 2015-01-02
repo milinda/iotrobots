@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -73,7 +74,34 @@ public class Serializers {
         public static Object deSerialize(byte[] b, Class e) {
             return kryo.readObject(new Input(b), e);
         }
-        
+
+    }
+
+    /**
+     * Serialize an object using kryo and return the bytes
+     *
+     * @param kryo   instance of kryo
+     * @param object the object to be serialized
+     * @return the serialized bytes
+     */
+    public static byte[] serialize(Kryo kryo, Object object) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        Output output = new Output(byteArrayOutputStream);
+//        output.setOutputStream(byteArrayOutputStream);
+        kryo.writeObject(output, object);
+        output.flush();
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    /**
+     * De Serialize bytes using kryo and return the object
+     *
+     * @param kryo instance of kryo
+     * @param b    the byte to be de serialized
+     * @return the serialized bytes
+     */
+    public static Object deSerialize(Kryo kryo, byte[] b, Class e) {
+        return kryo.readObject(new Input(new ByteArrayInputStream(b)), e);
     }
 
 }

@@ -8,6 +8,7 @@ import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class AgentController {
 
     private NodeMainExecutor nodeMainExecutor;
 
-    private Channel channel;
+    private Channel channel = null;
     
     private Address[] addresses;
 
@@ -50,6 +51,20 @@ public class AgentController {
         agentROSNode = new AgentROSNode(nodeName, channel, RMQContexts);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(agentROSNode, configuration);
+        clearQueues();
+    }
+
+    public void clearQueues() {
+        if (channel != null) {
+            for (Map.Entry<String, RMQContext> context : RMQContexts.entrySet()) {
+                try {
+                    channel.queuePurge(context.getValue().QUEUE_NAME);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
     }
 
     public void stop() {

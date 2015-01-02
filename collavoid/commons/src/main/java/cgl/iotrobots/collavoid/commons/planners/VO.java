@@ -13,6 +13,10 @@ public class VO {
     private Vector2 truncLeft;
     private Vector2 truncRight;
 
+    public VO() {
+
+    }
+
     public void setPoint(Vector2 v){
         this.point=new Vector2(v);
     }
