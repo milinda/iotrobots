@@ -18,10 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GetObstacleBolt extends BaseBasicBolt {
-    private Logger logger = Logger.getLogger("GetObstacleBolt");
+    private Logger logger = LoggerFactory.getLogger(GetObstacleBolt.class);
     private List<Obstacle> obstacles = new ArrayList<Obstacle>();
     private Map<String, Agent> Agents = new HashMap<String, Agent>();
     private String agentID;//use sensor Id as robot id
@@ -58,7 +60,7 @@ public class GetObstacleBolt extends BaseBasicBolt {
             return;
         }
         if (msg.getData().length % 3 != 0) {
-            logger.severe("Bad PointCloud2_ data!!");
+            logger.error("Bad PointCloud2_ data!!");
             return;
         }
         List<Vector3d_> point3ds = new ArrayList<Vector3d_>();

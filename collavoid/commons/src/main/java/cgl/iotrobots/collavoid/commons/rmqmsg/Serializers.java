@@ -3,16 +3,16 @@ package cgl.iotrobots.collavoid.commons.rmqmsg;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.serializers.MapSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class Serializers {
-    private static final Kryo kryo = new Kryo();
 
     public static Twist_ JSONToTwist_(byte[] data) throws IOException {
         ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
@@ -44,15 +44,36 @@ public class Serializers {
         return mapper.readValue(data, PoseArray_.class);
     }
 
-    public static byte[] serialize(Object object) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        Output output = new Output(byteArrayOutputStream);
-        kryo.writeObject(output, object);
-        output.flush();
-        return byteArrayOutputStream.toByteArray();
+    public static StartGoal_ JSONToStartGoal_(byte[] data) throws IOException {
+        ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        return mapper.readValue(data, StartGoal_.class);
     }
 
-    public static Object deSerialize(byte[] b, Class e) {
-        return kryo.readObject(new Input(new ByteArrayInputStream(b)), e);
+    public static class StartGoalSerializer {
+        private static final Kryo kryo = new Kryo();
+
+        public StartGoalSerializer() {
+            MapSerializer serializer = new MapSerializer();
+            kryo.register(HashMap.class, serializer);
+            serializer.setKeyClass(String.class, serializer);
+            serializer.setValueClass(PoseStamped_.class, serializer);
+
+        }
+
+        public static byte[] serialize(Object object) {
+
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            Output output = new Output(byteArrayOutputStream);
+            kryo.writeObject(output, object);
+            output.flush();
+            return byteArrayOutputStream.toByteArray();
+        }
+
+        public static Object deSerialize(byte[] b, Class e) {
+            return kryo.readObject(new Input(b), e);
+        }
+        
     }
+
 }

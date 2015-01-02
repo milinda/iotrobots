@@ -23,7 +23,6 @@ import sensor_msgs.PointCloud2;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -40,6 +39,8 @@ public class AgentROSNode extends AbstractNodeMain {
     private BlockingQueue<Twist_> velQueue = new LinkedBlockingDeque<Twist_>();
 
     private Map<String, RMQContext> Contexts;
+
+    private StartGoal_ startGoal = new StartGoal_();
 
     public AgentROSNode(String name, Channel channel, Map<String, RMQContext> msgContexts) {
         this.nodeName = name;
@@ -179,13 +180,12 @@ public class AgentROSNode extends AbstractNodeMain {
         startGoalSubscriber.addMessageListener(new MessageListener<PoseStamped>() {
             @Override
             public void onNewMessage(PoseStamped msg) {
-                Map<String, PoseStamped_> startGoalMap = new HashMap<String, PoseStamped_>();
                 PoseStamped_ poseStamped_ = toPoseStamped_(msg);
-
-                if (msg.getHeader().getSeq() % 2 == 0)
-                    startGoalMap.put(Constant_msg.KEY_START, poseStamped_);
-                else
-                    startGoalMap.put(Constant_msg.KEY_GOAL, poseStamped_);
+                if (msg.getHeader().getSeq() % 2 == 0) {
+                    startGoal.setStart(poseStamped_);
+                } else {
+                    startGoal.setGoal(poseStamped_);
+                }
 
                 if (msg.getHeader().getSeq() >= 9) {
                     try {
@@ -193,7 +193,7 @@ public class AgentROSNode extends AbstractNodeMain {
                                 Contexts.get(Constant_msg.KEY_START_GOAL).EXCHANGE_NAME,
                                 Contexts.get(Constant_msg.KEY_START_GOAL).ROUTING_KEY,
                                 null,
-                                Serializers.serialize(startGoalMap)
+                                startGoal.toJSON()
                         );
                     } catch (IOException e) {
                         e.printStackTrace();

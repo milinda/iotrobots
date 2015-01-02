@@ -3,14 +3,15 @@ package cgl.iotrobots.collavoid.commons.planners;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
+import clojure.tools.logging.impl.LoggerFactory;
 import com.rabbitmq.client.Address;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Logger;
 
 public class Agent {
 
@@ -145,7 +146,7 @@ public class Agent {
         voAgents = new ArrayList<VO>();
 //        samples = new ArrayList<VelocitySample>();
 
-        logger = Logger.getLogger("Agent_Logger");
+        logger = org.slf4j.LoggerFactory.getLogger(Agent.class);
         initParameters();
     }
 
@@ -228,7 +229,7 @@ public class Agent {
         radius = footprint_radius_ + cur_loc_unc_radius_;
 
         if (controller_frequency <= 0) {
-            logger.warning("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
+            logger.warn("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
             ControlPeriod = 0.05;
         } else {
             ControlPeriod = 1.0 / controller_frequency;
@@ -570,7 +571,7 @@ public class Agent {
     // footprint(minkowski footprint) are all in robot frame
     public void setFootprintOrignial(List<Vector2> footprint) {
         if (footprint.size() < 2) {
-            logger.severe("The footprint specified has less than two nodes");
+            logger.error("The footprint specified has less than two nodes");
             return;
         }
 

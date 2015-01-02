@@ -15,13 +15,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by hjh on 12/24/14.
  */
 public class GetAllAgentsBolt extends BaseBasicBolt {
-    private Logger logger = Logger.getLogger("GetAllAgentsBolt");
+    private Logger logger = LoggerFactory.getLogger(GetAllAgentsBolt.class);
     private Map<String, Agent> Agents = new HashMap<String, Agent>();
     //private List<Agent> Agents = new ArrayList<Agent>();
 

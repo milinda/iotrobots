@@ -98,8 +98,12 @@ public class Schemes {
             return new Values(deserializeObject(bytes));
         }
 
-        public static Object deserializeObject(byte[] body) {
-            return Serializers.deSerialize(body, HashMap.class);
+        public static StartGoal_ deserializeObject(byte[] body) {
+            try {
+                return Serializers.JSONToStartGoal_(body);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override

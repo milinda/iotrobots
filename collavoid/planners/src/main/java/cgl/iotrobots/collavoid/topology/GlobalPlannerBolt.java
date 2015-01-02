@@ -9,6 +9,7 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseStamped_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Serializers;
+import cgl.iotrobots.collavoid.commons.rmqmsg.StartGoal_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
 import java.util.ArrayList;
@@ -21,18 +22,19 @@ import java.util.Map;
  */
 public class GlobalPlannerBolt extends BaseRichBolt {
     private OutputCollector outputCollector;
+    private StartGoal_ startGoal_;
 
     @Override
     public void execute(Tuple input) {
         Object time = input.getValueByField(Constant_storm.FIELDS.TIME_FIELD);
         Object sensorId = input.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
-        Object startGoal = input.getValueByField(Constant_storm.FIELDS.START_GOAL_FIELD);
-        if (!(startGoal instanceof HashMap)) {
-            throw new IllegalArgumentException("Start and goal should be Map.");
+        Object inputObj = input.getValueByField(Constant_storm.FIELDS.START_GOAL_FIELD);
+        if (!(inputObj instanceof StartGoal_)) {
+            throw new IllegalArgumentException("Start and goal should be wrapped in StartGoal_ object.");
         }
-        Map<String, PoseStamped_> startGoalMap = (HashMap<String, PoseStamped_>) startGoal;
+        startGoal_ = (StartGoal_) inputObj;
         List<PoseStamped_> plan = new ArrayList<PoseStamped_>();
-        makePlan(startGoalMap.get(Constant_msg.KEY_START), startGoalMap.get(Constant_msg.KEY_GOAL), plan);
+        makePlan(startGoal_.getStart(), startGoal_.getGoal(), plan);
         List<Object> emit = new ArrayList<Object>();
         emit.add(time);
         emit.add(sensorId);

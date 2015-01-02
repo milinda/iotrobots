@@ -4,12 +4,13 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector4d_;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class Methods_Planners {
 
@@ -930,7 +931,7 @@ public class Methods_Planners {
                 radius = Math.tan(ang_between / 2.0) * Vector2.abs(min_right);
             }
             //check min_point, if failed stupid calc for new radius and point;
-            Logger logger = Logger.getLogger("CreateVO");
+            Logger logger = LoggerFactory.getLogger(Methods_Planners.class);
             if (Vector2.abs(Vector2.minus(min_point, center_r)) > radius) {
                 double gamma = min_point.getX() * dir_center.getX() + min_point.getY() * dir_center.getY();
                 double sqrt_exp = Vector2.absSqr(min_point) / (Math.pow(Math.sin(ang_between / 2.0), 2) - 1) + Math.pow(gamma / (Math.pow(Math.sin(ang_between / 2.0), 2) - 1), 2);
@@ -942,8 +943,8 @@ public class Methods_Planners {
                     center_r = Vector2.scale(dir_center, center_p);
                     radius = Vector2.abs(Vector2.minus(min_point, center_r));
                 } else {
-                    logger.severe("CreateVO error: ang =" + ang_between + ", sqrt_ext = " + sqrt_exp);
-                    logger.severe("CreateVO error: rel position " + rel_position.getX() + " " + rel_position.getY() + ", radius " + radius + ", center_p " + center_p);
+                    logger.error("CreateVO error: ang =" + ang_between + ", sqrt_ext = " + sqrt_exp);
+                    logger.error("CreateVO error: rel position " + rel_position.getX() + " " + rel_position.getY() + ", radius " + radius + ", center_p " + center_p);
                 }
             }
             //result.relative_position = rel_position;

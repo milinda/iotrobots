@@ -56,7 +56,7 @@ public abstract class Parameters {
 
     // For simulator
     //robot number, in meter
-    public static int ROBOT_NUMBER = 4;
+    public static int ROBOT_NUMBER = 2;
     //robot position radius, robot are evenly distributed around a circle and
     // heading toward the center
     public static double POSE_RADIUS = 4;

@@ -12,7 +12,7 @@ import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
 import java.util.Map;
 
-public class TimerBolt extends BaseRichSpout {
+public class TimerSpout extends BaseRichSpout {
     private SpoutOutputCollector collector;
     private long pubMePeriod = (long) (1 / Parameters.PUBLISH_ME_FREQUENCY * 1000);
     private long controlPeriod = (long) (1 / Parameters.CONTROLLER_FREQUENCY * 1000);

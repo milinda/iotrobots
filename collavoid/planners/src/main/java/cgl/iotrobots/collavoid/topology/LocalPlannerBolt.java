@@ -16,10 +16,12 @@ import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalPlannerBolt extends BaseRichBolt {
-    private Logger logger = Logger.getLogger("LocalPlannerBolt");
+    private Logger logger = LoggerFactory.getLogger(LocalPlannerBolt.class);
     private OutputCollector outputCollector;
     private Object sensorID = null;
     private Object time;
@@ -39,7 +41,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
         if (input.getSourceComponent().equals(Constant_storm.Components.GLOBAL_PLANNER_COMPONENT)) {
             global_plan = (List<PoseStamped_>) input.getValueByField(Constant_storm.FIELDS.PLAN_FIELD);
             if (!transformGlobalPlan(global_plan, transformed_plan)) {
-                logger.warning("Could not transform the global plan to the frame of the controller");
+                logger.warn("Could not transform the global plan to the frame of the controller");
             } else {// reset global plan
                 skip_next = false;
                 current_waypoint = 0;
@@ -61,7 +63,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 Twist_ cmd_vel = null;
                 Vector2 pre_vel = null;
                 if (!computeVelocity(pre_vel, cmd_vel)) {
-                    logger.warning("In valid preferred velocity calculation!!");
+                    logger.warn("In valid preferred velocity calculation!!");
                 } else {
                     if (sensorID == null)
                         return;
@@ -131,11 +133,11 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
     private boolean computeVelocity(Vector2 pre_vel, Twist_ cmd_vel) {
         if (base_odom == null) {
-            logger.severe("No odometry received yet!!");
+            logger.error("No odometry received yet!!");
             return false;
         }
         if (global_plan == null) {
-            logger.severe("No global plan received yet!!");
+            logger.error("No global plan received yet!!");
             return false;
         }
 
@@ -204,7 +206,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
         if (!skip_next) {
             if (!transformGlobalPlan(global_plan, transformed_plan)) {
-                logger.warning("Could not transform the global plan to the frame of the controller");
+                logger.warn("Could not transform the global plan to the frame of the controller");
                 return false;
             }
             findBestWaypoint(target_pose, global_pose.getPose());
@@ -248,7 +250,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
 
         if (cmd_vel.getLinear().getX() == 0.0 && cmd_vel.getAngular().getZ() == 0.0 && cmd_vel.getLinear().getY() == 0.0) {
-            logger.fine("Did not find a good vel, trying next waypoint!");
+            logger.info("Did not find a good vel, trying next waypoint!");
 
             if (current_waypoint < transformed_plan.size() - 1) {
                 current_waypoint++;
@@ -266,7 +268,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
     private boolean transformGlobalPlan(final List<PoseStamped_> global_plan, List<PoseStamped_> transformed_plan) {
         transformed_plan.clear();
         if (!(global_plan.size() > 0)) {
-            logger.severe("Recieved plan with zero length");
+            logger.error("Recieved plan with zero length");
             return false;
         }
         //currently global plan is in global frame do not need transform, robot pose is also in global frame
@@ -292,7 +294,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 }
             }
         } else {
-            logger.warning("Odometry not received, consider initialization plan!!");
+            logger.warn("Odometry not received, consider initialization plan!!");
             t = System.currentTimeMillis();
         }
 
@@ -358,7 +360,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
         else if (Math.abs(v_th_samp) < Parameters.MIN_VEL_TH_INPLACE)
             v_th_samp = Methods_Planners.sign(v_th_samp) * Math.max(Parameters.MIN_VEL_TH_INPLACE, Math.abs(v_th_samp));
 
-        logger.fine("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
+        logger.info("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
         cmd_vel.getAngular().setZ(v_th_samp);
 
     }

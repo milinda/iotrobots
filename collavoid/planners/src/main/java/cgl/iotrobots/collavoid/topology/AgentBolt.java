@@ -39,15 +39,27 @@ public class AgentBolt extends BaseRichBolt {
         if (agent.Name.equals("")) {
             agent.Name = (String) tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
             agent.updateBaseFrame();
+            collector.emit(Constant_storm.Streams.FOOTPRINT_OWN_STREAM, new Values(
+                    tuple.getValue(0),
+                    tuple.getValue(1),
+                    agent.footprint_original));
         }
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
             updateAgentToPub(tuple);
-            Message msg = new Message(Serializers.serialize(poseShareMsg_));
-            poseShareSender.send(msg);
+            Message msg;
+            try {
+                msg = new Message(poseShareMsg_.toJSON());
+                poseShareSender.send(msg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
             updateAgentToCalVel(tuple);
-            collector.emit(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM, new Values(agent));
+            collector.emit(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM, new Values(
+                    tuple.getValue(0),
+                    tuple.getValue(1),
+                    agent));
         }
     }
 
@@ -67,19 +79,27 @@ public class AgentBolt extends BaseRichBolt {
                 .build();
         poseShareSender = new RabbitMQProducer(new StormDeclarator(
                 Constant_msg.KEY_POSE_SHARE,
+                Constant_msg.KEY_POSE_SHARE,
+                "",
                 Constant_msg.TYPE_EXCHANGE_FANOUT));
         poseShareSender.open(spoutConfig.asMap());
         collector = outputCollector;
         agent = new Agent();
-        collector.emit(Constant_storm.Streams.FOOTPRINT_OWN_STREAM, new Values(agent.footprint_original));
+
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declareStream(Constant_storm.Streams.PUBLISHME_STREAM,
-                new Fields(Constant_storm.FIELDS.POSE_SHARE_FIELD));
         outputFieldsDeclarer.declareStream(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM,
-                new Fields(Constant_storm.FIELDS.AGENT_FIELD));
+                new Fields(
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.AGENT_FIELD));
+        outputFieldsDeclarer.declareStream(Constant_storm.Streams.FOOTPRINT_OWN_STREAM,
+                new Fields(
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD));
     }
 
     private void updateAgentToPub(Tuple tuple) {
@@ -111,15 +131,21 @@ public class AgentBolt extends BaseRichBolt {
         agent.prefVelociy = (Vector2) tuple.getValueByField(Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD);
     }
 
-    public static class StormDeclarator implements Declarator {
+    private static class StormDeclarator implements Declarator {
         private final String exchange;
+        private final String queue;
+        private final String routingKey;
         private final String exType;
 
-        public StormDeclarator(String exchange, String exType) {
+        public StormDeclarator(String exchange, String queue, String routingKey, String exType) {
             this.exchange = exchange;
-            this.exType = exType;
+            this.queue = queue;
+            this.routingKey = routingKey;
+            if (exType.equals(""))
+                this.exType = "direct";
+            else
+                this.exType = exType;
         }
-
 
         @Override
         public void execute(Channel channel) {
@@ -127,6 +153,8 @@ public class AgentBolt extends BaseRichBolt {
             try {
                 Map<String, Object> args = new HashMap<String, Object>();
                 channel.exchangeDeclare(exchange, exType, true);
+                channel.queueDeclare(queue, true, false, false, args);
+                channel.queueBind(queue, exchange, routingKey);
             } catch (IOException e) {
                 throw new RuntimeException("Error executing rabbitmq declarations.", e);
             }

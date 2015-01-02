@@ -1,6 +1,8 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-public class Vector2 {
+import java.io.Serializable;
+
+public class Vector2 implements Serializable {
     private double x;
     private double y;
 
