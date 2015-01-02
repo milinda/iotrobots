@@ -17,10 +17,10 @@ public class FileBasedDistributedSimulator {
     RabbitMQSender sender;
     RabbitMQReceiver receiver;
     RabbitMQReceiver bestReceiver;
-    private String url = "amqp://localhost:5672";
+//    private String url = "amqp://localhost:5672";
     BufferedReader br = null;
     Kryo kryo = new Kryo();
-    //private String url = "amqp://149.165.159.3:5672";
+    private String url = "amqp://149.165.159.3:5672";
     public FileBasedDistributedSimulator() {
         try {
             sender = new RabbitMQSender(url, "simbard_laser");
@@ -101,7 +101,7 @@ public class FileBasedDistributedSimulator {
             Long t = Long.parseLong(time.toString());
             bestSum += System.currentTimeMillis() - t;
             bestCount++;
-            System.out.println("*******************Best Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double)(bestSum) / bestCount) +" ***************************");
+            System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double)(bestSum) / bestCount));
         }
     }
 
@@ -121,7 +121,7 @@ public class FileBasedDistributedSimulator {
             Long t = Long.parseLong(time.toString());
             mapCount++;
             mapSum += (System.currentTimeMillis() - t);
-            System.out.println("*******************Map Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double) (mapSum) / mapCount) + " ***************************");
+            System.out.println("Map Time: " + (System.currentTimeMillis() - t) + "\nAverage Map: " + ((double) (mapSum) / mapCount));
         }
     }
 }
