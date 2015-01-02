@@ -28,7 +28,7 @@ public class FileBasedSimulator {
 
     public void start() throws InterruptedException {
         // nothing particular in this case
-        gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
+        gfsAlgorithm.gsp_ = new GridSlamProcessor();
         gfsAlgorithm.init();
         LaserScan scanI = new LaserScan();
         scanI.setAngle_increment(ANGLE / SENSORS);
