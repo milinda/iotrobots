@@ -257,10 +257,9 @@ public class GFSAlgorithm {
             }
             System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
-        long scanTime = System.currentTimeMillis() - t0;
-        System.out.println("Total Scan Time: " + scanTime);
+        totalTime += System.currentTimeMillis() - t0;
+        System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0));
         count++;
-        totalTime += scanTime;
         System.out.println("Average scan time: " + scanTime / count);
         System.out.println("Average total time: " + totalTime / count);
     }
