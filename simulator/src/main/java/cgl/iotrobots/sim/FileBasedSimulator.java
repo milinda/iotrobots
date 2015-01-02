@@ -1,21 +1,16 @@
 package cgl.iotrobots.sim;
 
-import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
-import cgl.iotrobots.slam.streaming.Utils;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
-import cgl.iotrobots.utils.rabbitmq.Message;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class FileBasedSimulator {
     public static final int SENSORS = 360;
@@ -26,9 +21,13 @@ public class FileBasedSimulator {
 
     BufferedReader br = null;
 
-    public void start() throws InterruptedException {
+    public void start(boolean parallel) throws InterruptedException {
         // nothing particular in this case
-        gfsAlgorithm.gsp_ = new GridSlamProcessor();
+        if (!parallel) {
+            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+        } else {
+            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
+        }
         gfsAlgorithm.init();
         LaserScan scanI = new LaserScan();
         scanI.setAngle_increment(ANGLE / SENSORS);
@@ -82,6 +81,10 @@ public class FileBasedSimulator {
 
     public static void main(String[] args) throws InterruptedException {
         FileBasedSimulator simulator = new FileBasedSimulator();
-        simulator.start();
+        if (args.length > 0) {
+            simulator.start(true);
+        } else {
+            simulator.start(false);
+        }
     }
 }

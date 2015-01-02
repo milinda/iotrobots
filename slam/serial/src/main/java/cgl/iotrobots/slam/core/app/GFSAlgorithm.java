@@ -213,7 +213,8 @@ public class GFSAlgorithm {
         return true;
     }
 
-    double totalScanTime = 0;
+    double totalTime = 0;
+    double scanTime = 0;
     int count = 0;
 
     public void laserScan(LaserScan scan) {
@@ -238,6 +239,7 @@ public class GFSAlgorithm {
         }
 
         if (addScan(scan)) {
+            scanTime += System.currentTimeMillis() - t0;
             System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
@@ -258,8 +260,9 @@ public class GFSAlgorithm {
         long scanTime = System.currentTimeMillis() - t0;
         System.out.println("Total Scan Time: " + scanTime);
         count++;
-        totalScanTime += scanTime;
-        System.out.println("Average: " + totalScanTime / count);
+        totalTime += scanTime;
+        System.out.println("Average scan time: " + scanTime / count);
+        System.out.println("Average total time: " + totalTime / count);
     }
 
     public boolean addScan(LaserScan scan) {
