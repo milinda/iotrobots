@@ -13,8 +13,8 @@ public class RMQContext {
         if (exchangeName != null)
             this.EXCHANGE_NAME = exchangeName;
         if (msgName != null) {
-        this.ROUTING_KEY = "RoutingKey_" + msgName;
-            this.QUEUE_NAME = "Queue_" + msgName;
+            this.ROUTING_KEY = "RoutingKey_" + msgName;
+            this.QUEUE_NAME = exchangeName + "_Queue_" + msgName;// queue name should not be the same
         }
     }
 

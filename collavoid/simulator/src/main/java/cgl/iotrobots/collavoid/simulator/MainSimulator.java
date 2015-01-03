@@ -401,8 +401,6 @@ public class MainSimulator {
 
     }
 
-
-
     /**
      * Describe the environement
      */

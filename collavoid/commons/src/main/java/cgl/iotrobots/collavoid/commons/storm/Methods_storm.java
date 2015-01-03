@@ -45,7 +45,7 @@ public class Methods_storm {
                 Map<String, Object> args = new HashMap<String, Object>();
                 channel.exchangeDeclare(exchange, exType, true);
                 if (!queue.equals("")) {
-                    channel.queueDeclare(queue, true, false, false, args);
+                    channel.queueDeclare(queue, false, false, false, args);
                     channel.queueBind(queue, exchange, routingKey);
                 }
             } catch (IOException e) {

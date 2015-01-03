@@ -68,19 +68,24 @@ public class AgentController {
     }
 
     public void stop() {
-//        try {
-//            if (channel != null) {
-//                channel.close();
-//            }
-//            if (connection != null) {
-//                connection.close();
-//            }
+        try {
             if (agentROSNode != null) {
                 nodeMainExecutor.shutdown();
             }
-//        } catch (IOException e) {
-//            System.out.println("Error closing the rabbit MQ connection" + e);
-//        }
+            if (channel != null) {
+                for (Map.Entry<String, RMQContext> context : RMQContexts.entrySet()) {
+                    channel.queueDelete(context.getValue().QUEUE_NAME);
+                }
+                channel.exchangeDelete(exchangeName);
+            }
+
+//            if (connection != null) {
+//                connection.close();
+//            }
+
+        } catch (IOException e) {
+            System.out.println("Error closing the rabbit MQ connection" + e);
+        }
     }
 
 }

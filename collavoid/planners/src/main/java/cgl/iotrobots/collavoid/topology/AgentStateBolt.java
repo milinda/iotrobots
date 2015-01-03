@@ -48,7 +48,7 @@ public class AgentStateBolt extends BaseRichBolt {
             updateNeighbors(agents);
         } else if (sourceComp.equals(Constant_storm.Components.GET_MINKOWSKI_FOOTPRINT_COMPONENT))
             Footprint_minkowski = (List<Vector2>) tuple.getValueByField(Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD);
-        else if (sourceComp.equals(Constant_storm.Components.LOCAL_PLANNER_COMPONENT)) {
+        else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM)) {
             prefVel = (Vector2) tuple.getValueByField(Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD);
             snedPrefvel();
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM))
@@ -63,7 +63,7 @@ public class AgentStateBolt extends BaseRichBolt {
             return;
         List<Object> emit = new ArrayList<Object>();
         emit.add(input.getValueByField(Constant_storm.FIELDS.TIME_FIELD));
-        emit.add(input.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+        emit.add(sensorID);
         emit.add(odometry_);
         emit.add(Footprint_minkowski);
         collector.emit(Constant_storm.Streams.PUBLISHME_STREAM, emit);

@@ -46,10 +46,14 @@ public class TimerSpout extends BaseRichSpout {
     public void nextTuple() {
         Utils.sleep(10);
         long now = System.currentTimeMillis();
-        if (now - lastMepub > pubMePeriod)
+        if (now - lastMepub > pubMePeriod) {
+            lastMepub = now;
             collector.emit(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM, new Values(now, pubseq++));
-        if (now - lastControlled > controlPeriod)
+        }
+        if (now - lastControlled > controlPeriod) {
+            lastControlled = now;
             collector.emit(Constant_storm.Streams.CONTROLLER_TIMER_STREAM, new Values(now, controlseq++));
+        }
     }
 
     @Override

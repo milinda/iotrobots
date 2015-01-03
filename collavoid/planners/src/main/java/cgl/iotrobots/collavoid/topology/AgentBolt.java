@@ -7,20 +7,11 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import cgl.iotrobots.collavoid.commons.planners.Agent;
-import cgl.iotrobots.collavoid.commons.planners.Obstacle;
-import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import cgl.iotrobots.collavoid.commons.planners.*;
+import cgl.iotrobots.collavoid.commons.rabbitmq.Message;
+import cgl.iotrobots.collavoid.commons.rabbitmq.RabbitMQSender;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
-import io.latent.storm.rabbitmq.Declarator;
-import io.latent.storm.rabbitmq.Message;
-import io.latent.storm.rabbitmq.RabbitMQProducer;
-import io.latent.storm.rabbitmq.config.ConnectionConfig;
-import io.latent.storm.rabbitmq.config.ConsumerConfig;
-import io.latent.storm.rabbitmq.config.ConsumerConfigBuilder;
-
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,13 +23,22 @@ public class AgentBolt extends BaseRichBolt {
     private OutputCollector collector;
     private Agent agent;
     private PoseShareMsg_ poseShareMsg_ = new PoseShareMsg_();
-    private RabbitMQProducer poseShareSender;
+    private RabbitMQSender poseShareSender;
+    //    private String routingKey;
+    private String exchange;
 
     @Override
     public void execute(Tuple tuple) {
         if (agent.Name.equals("")) {
             agent.Name = (String) tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
             agent.updateBaseFrame();
+//            routingKey=Constant_msg.RMQ_ROUTINGKEY_PREFIX+Constant_msg.KEY_POSE_SHARE;
+            poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, exchange, true);
+            try {
+                poseShareSender.open();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             collector.emit(Constant_storm.Streams.FOOTPRINT_OWN_STREAM, new Values(
                     tuple.getValue(0),
                     tuple.getValue(1),
@@ -49,9 +49,11 @@ public class AgentBolt extends BaseRichBolt {
             updateAgentToPub(tuple);
             Message msg;
             try {
-                msg = new Message(poseShareMsg_.toJSON());
-                poseShareSender.send(msg);
+                msg = new Message(poseShareMsg_.toJSON(), new HashMap<String, Object>());
+                poseShareSender.send(msg, "");
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
@@ -65,25 +67,8 @@ public class AgentBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        ConnectionConfig connectionConfig = new ConnectionConfig(
-                "localhost",
-                5672,
-                "guest",
-                "guest",
-                ConnectionFactory.DEFAULT_VHOST,
-                10); // host, port, username, password, virtualHost, heartBeat
-        ConsumerConfig spoutConfig = new ConsumerConfigBuilder().connection(connectionConfig)
-                .queue("")
-                .prefetch(200)
-                .requeueOnFail()
-                .build();
-        poseShareSender = new RabbitMQProducer(new StormDeclarator(
-                Constant_msg.KEY_POSE_SHARE,
-                Constant_msg.KEY_POSE_SHARE,
-                "",
-                Constant_msg.TYPE_EXCHANGE_FANOUT));
-        poseShareSender.open(spoutConfig.asMap());
         collector = outputCollector;
+        exchange = Constant_msg.KEY_POSE_SHARE;
         agent = new Agent();
 
     }
@@ -129,35 +114,94 @@ public class AgentBolt extends BaseRichBolt {
         agent.footprint_minkowski = (List<Vector2>) tuple.getValueByField(Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD);
         agent.obstacles_from_laser_ = (List<Obstacle>) tuple.getValueByField(Constant_storm.FIELDS.OBSTACLE_FIELD);
         agent.prefVelociy = (Vector2) tuple.getValueByField(Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD);
+        upDateAgentState(agent);
+        updateAllNeighbors(agent);
+        computeMinDistToAll(agent);
     }
 
-    private static class StormDeclarator implements Declarator {
-        private final String exchange;
-        private final String queue;
-        private final String routingKey;
-        private final String exType;
-
-        public StormDeclarator(String exchange, String queue, String routingKey, String exType) {
-            this.exchange = exchange;
-            this.queue = queue;
-            this.routingKey = routingKey;
-            if (exType.equals(""))
-                this.exType = "direct";
-            else
-                this.exType = exType;
+    void updateAllNeighbors(Agent agent) {
+        for (Agent agent1 : agent.AgentNeighbors) {
+            upDateAgentState(agent1);
         }
+        agent.AgentNeighbors.sort(new Comparators.NeighborDistComparator(
+                agent.position.getPos()));
+    }
 
-        @Override
-        public void execute(Channel channel) {
-            // you're given a RabbitMQ Channel so you're free to wire up your exchange/queue bindings as you see fit
-            try {
-                Map<String, Object> args = new HashMap<String, Object>();
-                channel.exchangeDeclare(exchange, exType, true);
-                channel.queueDeclare(queue, true, false, false, args);
-                channel.queueBind(queue, exchange, routingKey);
-            } catch (IOException e) {
-                throw new RuntimeException("Error executing rabbitmq declarations.", e);
+    private void upDateAgentState(Agent agt) {
+        double time_dif;
+        if (agt.getLastSeen() == 0)
+            time_dif = 0;
+        else
+            time_dif = System.currentTimeMillis() - agt.getLastSeen();
+        time_dif = time_dif / 1000.0;
+
+        double yaw, x_dif, y_dif, th_dif, x, y, theta;
+        Vector2 pt = new Vector2(0.0, 0.0);
+
+        //update position
+        yaw = Methods_Planners.getYaw(agt.getBaseOdom().getPose().getOrientation());
+        th_dif = time_dif * agt.getBaseOdom().getTwist().getAngular().getZ();
+        if (agt.getHoloRobot()) {
+            x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX();
+            y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY();
+        } else {
+            x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(yaw + th_dif / 2.0);
+            y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY() * Math.sin(yaw + th_dif / 2.0);
+        }
+        theta = yaw + th_dif;
+        x = agt.getBaseOdom().getPose().getPosition().getX() + x_dif;
+        y = agt.getBaseOdom().getPose().getPosition().getY() + y_dif;
+        agt.setPosition(new Position(x, y, theta));
+
+
+        //minkowski footprint is in robot frame, in velocity space only need orientation.
+        agt.setFootPrint_rotated(Methods_Planners.rotateFootprint(
+                agt.getFootprint_minkowski(),
+                agt.getPosition().getHeading()));
+
+        //update velocity
+        if (agt.getHoloRobot()) {
+            x = agt.getBaseOdom().getTwist().getLinear().getX();
+            y = agt.getBaseOdom().getTwist().getLinear().getY();
+            pt.setX(x);
+            pt.setY(y);
+            agt.setVelocity(Vector2.rotateVectorByAngle(pt, (yaw + th_dif)));
+        } else {//?????????????????????????????????????????????????????????????
+            double dif_x, dif_y, dif_ang;
+            dif_ang = agt.getControlPeriod() * agt.getBaseOdom().getTwist().getAngular().getZ();
+            //in robot frame differential robot has only x velocity
+            pt.setX(agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(dif_ang / 2.0));
+            pt.setY(agt.getBaseOdom().getTwist().getLinear().getX() * Math.sin(dif_ang / 2.0));
+            // in global frame, velocity need no translation
+            agt.setVelocity(Vector2.rotateVectorByAngle(pt, (yaw + th_dif)));
+        }
+    }
+
+    private void computeMinDistToAll(Agent agent) {
+        double min_dist_neigh = Double.MAX_VALUE;
+        double min_dist_obstacle = Double.MAX_VALUE;
+        //neighbors have already been sorted according to their dist to me
+        if (agent.AgentNeighbors.size() > 0)
+            min_dist_neigh = Vector2.abs(Vector2.minus(
+                            agent.AgentNeighbors.get(0).position.getPos(),
+                            agent.position.getPos())
+            );
+
+        double threshold = Math.pow((Vector2.abs(agent.velocity) + 4.0 * agent.footprint_radius_), 2);
+        for (Obstacle obstacle : agent.obstacles_from_laser_) {
+            double dist = Methods_Planners.distSqPointLineSegment(
+                    obstacle.getBegin(),
+                    obstacle.getEnd(),
+                    agent.position.getPos());
+            obstacle.setDistToAgent(dist);
+            if (dist < threshold) {
+                if (dist < min_dist_obstacle) {
+                    min_dist_obstacle = dist;
+                }
             }
+
         }
+        agent.min_dist = Math.min(min_dist_neigh, min_dist_obstacle);
     }
+
 }

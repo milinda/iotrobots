@@ -23,6 +23,7 @@ import sensor_msgs.PointCloud2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -42,6 +43,16 @@ public class AgentROSNode extends AbstractNodeMain {
 
     private StartGoal_ startGoal = new StartGoal_();
 
+    private Publisher<Twist> velcmdPublisher;
+
+    private Subscriber<Odometry> odometrySubscriber;
+
+    private Subscriber<PointCloud2> laserScanSubscriber;
+
+    private Subscriber<PoseArray> poseArraySubscriber;
+
+    private Subscriber<PoseStamped> startGoalSubscriber;
+
     public AgentROSNode(String name, Channel channel, Map<String, RMQContext> msgContexts) {
         this.nodeName = name;
         this.channel = channel;
@@ -52,7 +63,7 @@ public class AgentROSNode extends AbstractNodeMain {
     private void BindQueue(Map<String, RMQContext> RMQParams) {
         try {
             for (Map.Entry<String, RMQContext> e : RMQParams.entrySet()) {
-                e.getValue().QUEUE_NAME = channel.queueDeclare().getQueue();
+                channel.queueDeclare(e.getValue().QUEUE_NAME, false, false, false, null);
                 channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
         } catch (IOException e) {
@@ -63,15 +74,15 @@ public class AgentROSNode extends AbstractNodeMain {
     @Override
     public void onStart(ConnectedNode connectedNode) {
         String robotNodeName = new String(nodeName).replace("_rmq", "");
-        final Publisher<Twist> velcmdPublisher =
+        velcmdPublisher =
                 connectedNode.newPublisher(robotNodeName + "/cmd_vel", Twist._TYPE);
-        final Subscriber<Odometry> odometrySubscriber =
+        odometrySubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/odometry", Odometry._TYPE);
-        final Subscriber<PointCloud2> laserScanSubscriber =
+        laserScanSubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/scan/point_cloud2", PointCloud2._TYPE);
-        final Subscriber<PoseArray> poseArraySubscriber =
+        poseArraySubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/particlecloud", PoseArray._TYPE);
-        final Subscriber<PoseStamped> startGoalSubscriber =
+        startGoalSubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/start_goal", PoseStamped._TYPE);
 
         try {
@@ -125,6 +136,7 @@ public class AgentROSNode extends AbstractNodeMain {
         odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
             @Override
             public void onNewMessage(Odometry odometry) {
+                if (channel.isOpen())
                 try {
                     channel.basicPublish(
                             Contexts.get(Constant_msg.KEY_ODOMETRY).EXCHANGE_NAME,
@@ -140,6 +152,7 @@ public class AgentROSNode extends AbstractNodeMain {
         laserScanSubscriber.addMessageListener(new MessageListener<PointCloud2>() {
             @Override
             public void onNewMessage(PointCloud2 pointCloud2) {
+                if (channel.isOpen())
                 try {
                     channel.basicPublish(
                             Contexts.get(Constant_msg.KEY_SCAN).EXCHANGE_NAME,
@@ -164,7 +177,7 @@ public class AgentROSNode extends AbstractNodeMain {
                     poses.add(toPose_(pose));
                 }
                 pa.setPoses(poses);
-
+                if (channel.isOpen())
                 try {
                     channel.basicPublish(
                             Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
@@ -295,6 +308,11 @@ public class AgentROSNode extends AbstractNodeMain {
 
     @Override
     public void onShutdown(Node node) {
+        velcmdPublisher.shutdown();
+        odometrySubscriber.shutdown();
+        poseArraySubscriber.shutdown();
+        startGoalSubscriber.shutdown();
+        laserScanSubscriber.shutdown();
         node.shutdown();
     }
 
