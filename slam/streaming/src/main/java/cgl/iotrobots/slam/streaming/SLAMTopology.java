@@ -107,7 +107,7 @@ public class SLAMTopology {
         MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 4).allGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).allGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);

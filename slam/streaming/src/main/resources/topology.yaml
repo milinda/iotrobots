@@ -36,7 +36,7 @@ conf:
     linearUpdate: .05
     angularUpdate: 0.05
     temporalUpdate: 0.0
-    resampleThreshold: 0.5
+    resampleThreshold: 0.55
     particles: 30
     xmin: -20.0
     ymin: -20.0

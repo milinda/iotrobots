@@ -52,7 +52,7 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-            p.pose = relPose;
+//            p.pose = relPose;
         }
 
         LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());

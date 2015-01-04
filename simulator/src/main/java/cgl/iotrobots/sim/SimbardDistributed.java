@@ -45,17 +45,16 @@ public class SimbardDistributed {
         Kryo kryo = new Kryo();
 
         PrintWriter pw;
+//        private String url = "amqp://149.165.159.3:5672";
+        private String url = "amqp://localhost:5672";
 
         public Robot(Vector3d position, String name) {
             super(position, name);
 
             try {
-//                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
-//                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
-//                bestReceiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
-                sender = new RabbitMQSender("amqp://149.165.159.3:5672", "simbard_laser");
-                receiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_map");
-                bestReceiver = new RabbitMQReceiver("amqp://149.165.159.3:5672", "simbard_best");
+                sender = new RabbitMQSender(url, "simbard_laser");
+                receiver = new RabbitMQReceiver(url, "simbard_map");
+                bestReceiver = new RabbitMQReceiver(url, "simbard_best");
                 sender.open();
                 receiver.listen(new MapReceiver());
                 bestReceiver.listen(new BestParticleReceiver());

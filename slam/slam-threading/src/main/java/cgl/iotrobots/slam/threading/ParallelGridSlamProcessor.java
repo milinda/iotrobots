@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ParallelGridSlamProcessor extends SharedMemoryGridSlamProcessor {
-    private int parallelism = 2;
+    private int parallelism = 8;
 
     private ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 

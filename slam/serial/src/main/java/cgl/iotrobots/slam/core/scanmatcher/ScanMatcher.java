@@ -200,7 +200,7 @@ public class ScanMatcher {
 
         readingIndex = initialBeamsSkip;
         angleIndex = initialBeamsSkip;
-        for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++)
+        for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++) {
             if (generateMap) {
                 double d = readings[readingIndex];
                 if (d > laserMaxRange || d == 0.0 || d > Double.MAX_VALUE)
@@ -239,6 +239,7 @@ public class ScanMatcher {
                 assert (cp.x >= 0 && cp.y >= 0);
                 activeArea.add(cp);
             }
+        }
         //this allocates the unallocated cells in the active area of the map
         map.setActiveArea(activeArea, false);
         m_activeAreaComputed = true;

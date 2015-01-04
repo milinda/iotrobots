@@ -234,7 +234,7 @@ public class DistributedScanMatcher {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-            p.pose = relPose;
+//            p.pose = relPose;
         }
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);

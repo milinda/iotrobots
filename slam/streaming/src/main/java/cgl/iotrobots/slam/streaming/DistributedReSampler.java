@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.streaming;
 
-import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
@@ -35,7 +34,7 @@ public class DistributedReSampler {
     protected MotionModel motionModel = new MotionModel();
 
     protected int beams;
-    protected double last_update_time_;
+    protected double lastUpdateTime;
     protected double period_;
 
     protected double minimumScore;
@@ -201,26 +200,18 @@ public class DistributedReSampler {
     public boolean processScan(RangeReading reading, int adaptParticles) {
         DoubleOrientedPoint relPose = reading.getPose();
         boolean hasRsSampled = false;
-        if (count == 0) {
-            lastPartPose = odoPose = relPose;
-        }
-
-        for (Particle p : particles) {
-            p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-            p.pose = relPose;
-        }
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
         linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
         angularDistance += Math.abs(move.theta);
-
-        odoPose = relPose;
+//
+//        odoPose = relPose;
         // process a scan only if the robot has traveled a given distance or a certain amount of time has elapsed
 
         // here there is no need to check weather we need to perform the calculation.
         // If we are at this point we need to do the calculation
-        last_update_time_ = reading.getTime();
+        lastUpdateTime = reading.getTime();
 
         //this is for converting the reading in a scan-matcher feedable form
         if (reading.size() != beams) {
