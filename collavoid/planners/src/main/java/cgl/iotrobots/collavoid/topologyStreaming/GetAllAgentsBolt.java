@@ -32,12 +32,14 @@ public class GetAllAgentsBolt extends BaseBasicBolt {
         if (input.getSourceStreamId().equals(Constant_storm.Streams.RESET_STREAM)) {
             // here we simply clear all agents but in more practical situation this is
             // not good.
-            Agents.clear();
-            return;
+            String sensorID = input.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
+            if (Agents.containsKey(sensorID)) {
+                Agents.remove(sensorID);
+            }
+        } else {
+            poseShareMsg_ = (PoseShareMsg_) input.getValueByField(Constant_storm.FIELDS.POSE_SHARE_FIELD);
+            updateAgentList(poseShareMsg_);
         }
-        poseShareMsg_ = (PoseShareMsg_) input.getValueByField(Constant_storm.FIELDS.POSE_SHARE_FIELD);
-
-        updateAgentList(poseShareMsg_);
         List<Object> emit = new ArrayList<Object>();
         emit.add(input.getLongByField(Constant_storm.FIELDS.TIME_FIELD));
         emit.add(Utils.serialize(Agents));

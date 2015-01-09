@@ -114,8 +114,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                     currentContext.cmd_vel_cal = (Twist_) input.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);
                     currentContext.locked = false;
                     if (!checkVelocityCommand(currentContext.cmd_vel_cal)) {
-                        logger.info("{}: Already reached the goal!!", currentContext.sensorID);
-                        currentContext.reachedGoal = true;
+                        logger.info("{}: Did not get available velocity, Try again!!", currentContext.sensorID);
                     } else {
                         outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM,
                                 new Values(input.getLongByField(Constant_storm.FIELDS.TIME_FIELD),

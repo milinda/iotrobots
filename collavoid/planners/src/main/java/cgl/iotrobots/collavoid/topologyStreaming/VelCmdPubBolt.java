@@ -25,13 +25,13 @@ public class VelCmdPubBolt extends BaseRichBolt {
     private Message msg;
     private OutputCollector collector;
     private RabbitMQSender msgSender;
-    private String url = "amqp://localhost:5672";
     private String routingKey;
+    private int init = 0;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         collector = outputCollector;
-        msgSender = new RabbitMQSender(url, Constant_msg.KEY_VELOCITY_CMD);
+        msgSender = new RabbitMQSender(Constant_msg.RMQ_URL, Constant_msg.KEY_VELOCITY_CMD);
         try {
             msgSender.open(Constant_msg.TYPE_EXCHANGE_TOPIC);
         } catch (Exception e) {
@@ -41,6 +41,10 @@ public class VelCmdPubBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        if (init++ < 10) {
+            collector.ack(tuple);
+            return;
+        }
         sensorID = (String) tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
         routingKey = new RMQContext(Constant_msg.KEY_VELOCITY_CMD, sensorID).ROUTING_KEY;
         Object input = tuple.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);

@@ -247,8 +247,9 @@ public class BuildTopology {
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
                 .fieldsGrouping(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .shuffleGrouping(Constant_storm.Components.TIMER_COMPONENT,
-                        Constant_storm.Streams.CONTROLLER_TIMER_STREAM);
+                .fieldsGrouping(Constant_storm.Components.TIMER_COMPONENT,
+                        Constant_storm.Streams.CONTROLLER_TIMER_STREAM,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 
         builder.setBolt(Constant_storm.Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT, new VelCmdPubBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.LOCAL_PLANNER_COMPONENT,
@@ -258,10 +259,11 @@ public class BuildTopology {
         builder.setBolt(Constant_storm.Components.GET_OBSTACLES_COMPONENT, new GetObstacleBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.SCAN_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .shuffleGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT);
+                .allGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT);
 
+        // each topology has only one
         builder.setBolt(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT, new GetAllAgentsBolt(), 1)
-                .shuffleGrouping(Constant_storm.Components.LOCAL_PLANNER_COMPONENT,
+                .shuffleGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,
                         Constant_storm.Streams.RESET_STREAM)
                 .shuffleGrouping(Constant_storm.Components.POSE_SHARE_COMPONENT);
 
@@ -285,9 +287,10 @@ public class BuildTopology {
                 .fieldsGrouping(Constant_storm.Components.LOCAL_PLANNER_COMPONENT,
                         Constant_storm.Streams.RESET_STREAM,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .shuffleGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)
-                .shuffleGrouping(Constant_storm.Components.TIMER_COMPONENT,
-                        Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM);
+                .allGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)
+                .fieldsGrouping(Constant_storm.Components.TIMER_COMPONENT,
+                        Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 //
         builder.setBolt(Constant_storm.Components.AGENT_COMPONENT, new AgentBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,

@@ -30,11 +30,11 @@ public class AgentControllerStorm {
     private Map<String, RMQContext> RMQContexts;
 
     public AgentControllerStorm(String sensorName_,
-                                Address[] addresses_,
-                                String url_) {
+                                Address[] rmqAddress,
+                                String rmqUrl_) {
         this.sensorName = sensorName_;
-        this.addresses = addresses_;
-        this.url = url_;
+        this.addresses = rmqAddress;
+        this.url = rmqUrl_;
         // build exchange according to message types
         RMQContexts = new Contexts(sensorName_).getRMQContexts();
         channel = Methods_RMQ.getChannel(addresses, url, null);

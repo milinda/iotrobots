@@ -74,6 +74,7 @@ public class AgentStateBolt extends BaseRichBolt {
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.RESET_STREAM)) {
             currentContext.odometry_ = null;
             currentContext.minkowskiFootprintChanged = false;
+            collector.emit(Constant_storm.Streams.RESET_STREAM, tuple.getValues());
         }
         collector.ack(tuple);
     }
@@ -95,6 +96,11 @@ public class AgentStateBolt extends BaseRichBolt {
                 Constant_storm.FIELDS.OBSTACLE_FIELD,
                 Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD,
                 Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD
+        ));
+        outputFieldsDeclarer.declareStream(Constant_storm.Streams.RESET_STREAM, new Fields(
+                Constant_storm.FIELDS.TIME_FIELD,
+                Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                Constant_storm.FIELDS.RESET_FIELD
         ));
     }
 
