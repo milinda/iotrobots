@@ -1,6 +1,7 @@
 package test;
 
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import com.rabbitmq.client.Channel;
@@ -28,7 +29,7 @@ public class Talker {
         vel.setLinear(new Vector3d_(1, 0, 0));
         int i = 0;
         while (i++ < 100) {
-            channel.basicPublish(EXCHANGE_NAME, routingKey, null, vel.toJSON());
+            channel.basicPublish(EXCHANGE_NAME, routingKey, null, Methods_RMQ.serialize(vel));
             Thread.sleep(50);
         }
 

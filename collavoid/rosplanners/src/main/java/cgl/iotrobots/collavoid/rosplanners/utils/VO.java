@@ -13,6 +13,8 @@ public class VO {
     private Vector2 truncLeft;
     private Vector2 truncRight;
 
+    private String type;
+
     public void setPoint(Vector2 v) {
         this.point = new Vector2(v);
     }
@@ -45,6 +47,9 @@ public class VO {
         this.truncRight = new Vector2(v);
     }
 
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public Vector2 getPoint() {
         return new Vector2(this.point);
@@ -78,5 +83,7 @@ public class VO {
         return new Vector2(this.truncRight);
     }
 
-
+    public String getType() {
+        return type;
+    }
 }

@@ -29,17 +29,9 @@ public class RabbitMQSender {
 
     private String url;
 
-    private boolean topic;
-
     public RabbitMQSender(String url, String exchangeName) {
         this.exchangeName = exchangeName;
         this.url = url;
-    }
-
-    public RabbitMQSender(String url, String exchangeName, boolean topic) {
-        this.exchangeName = exchangeName;
-        this.url = url;
-        this.topic = topic;
     }
 
     public void setPrefetchCount(int prefetchCount) {
@@ -57,7 +49,7 @@ public class RabbitMQSender {
     private void reInitIfNecessary() throws Exception {
         if (consumerTag == null || consumer == null) {
             close();
-            open();
+            open("fanout");
         }
     }
 
@@ -85,7 +77,7 @@ public class RabbitMQSender {
         connection = null;
     }
 
-    public void open() throws Exception {
+    public void open(String exchangeType) throws Exception {
         try {
             connection = createConnection();
             channel = connection.createChannel();
@@ -93,11 +85,8 @@ public class RabbitMQSender {
                 LOG.info("setting basic.qos / prefetch count to " + prefetchCount + " for " + exchangeName);
                 channel.basicQos(prefetchCount);
             }
-            if (!topic) {
-                channel.exchangeDeclare(exchangeName, "direct", true);//set to true for test
-            } else {
-                channel.exchangeDeclare(exchangeName, "fanout", true);
-            }
+            channel.exchangeDeclare(exchangeName, exchangeType, true);//set to true for test
+
         } catch (Exception e) {
             reset();
             String msg = "could not open channel for exchange " + exchangeName;

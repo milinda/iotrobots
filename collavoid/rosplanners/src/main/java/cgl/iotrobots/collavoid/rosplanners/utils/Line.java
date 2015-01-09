@@ -4,6 +4,7 @@ package cgl.iotrobots.collavoid.rosplanners.utils;
 public class Line {
     private Vector2 point;
     private Vector2 dir;
+    private String type;
 
     public Line(Vector2 point, Vector2 dir) {
         this.point = new Vector2(point);
@@ -23,6 +24,10 @@ public class Line {
         return new Vector2(this.dir);
     }
 
+    public String getType() {
+        return type;
+    }
+
     public void setPoint(Vector2 p) {
         this.point = new Vector2(p);
     }
@@ -31,6 +36,8 @@ public class Line {
         this.dir = new Vector2(d);
     }
 
-
+    public void setType(String type) {
+        this.type = type;
+    }
 }
 

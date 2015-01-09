@@ -1,6 +1,8 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-public abstract class Parameters {
+import java.io.Serializable;
+
+public abstract class Parameters implements Serializable {
     public static String BASE_FRAME_SUFFIX = "_base";
     public static String GLOBAL_FRAME = "map";
 
@@ -56,7 +58,7 @@ public abstract class Parameters {
 
     // For simulator
     //robot number, in meter
-    public static int ROBOT_NUMBER = 2;
+    public static int ROBOT_NUMBER = 6;
     //robot position radius, robot are evenly distributed around a circle and
     // heading toward the center
     public static double POSE_RADIUS = 4;

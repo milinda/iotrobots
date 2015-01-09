@@ -7,9 +7,7 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Schemes {
     public static class OdometryScheme implements Scheme {
@@ -19,11 +17,7 @@ public class Schemes {
         }
 
         public static Odometry_ deserializeObject(byte[] body) {
-            try {
-                return Serializers.JSONToOdometry_(body);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return (Odometry_) Methods_RMQ.deserialize(body, Odometry_.class);
         }
 
         @Override
@@ -39,11 +33,7 @@ public class Schemes {
         }
 
         public static PointCloud2_ deserializeObject(byte[] body) {
-            try {
-                return Serializers.JSONToPointCloud2_(body);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return (PointCloud2_) Methods_RMQ.deserialize(body, PointCloud2_.class);
         }
 
         @Override
@@ -59,11 +49,7 @@ public class Schemes {
         }
 
         public static PoseArray_ deserializeObject(byte[] body) {
-            try {
-                return Serializers.JSONToPoseArray_(body);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return (PoseArray_) Methods_RMQ.deserialize(body, PoseArray_.class);
         }
 
         @Override
@@ -79,11 +65,7 @@ public class Schemes {
         }
 
         public static PoseShareMsg_ deserializeObject(byte[] body) {
-            try {
-                return Serializers.JSONToPoseShareMsg_(body);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return (PoseShareMsg_) Methods_RMQ.deserialize(body, PoseShareMsg_.class);
         }
 
         @Override
@@ -98,12 +80,8 @@ public class Schemes {
             return new Values(deserializeObject(bytes));
         }
 
-        public static StartGoal_ deserializeObject(byte[] body) {
-            try {
-                return Serializers.JSONToStartGoal_(body);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        public static BaseConfig_ deserializeObject(byte[] body) {
+            return (BaseConfig_) Methods_RMQ.deserialize(body, BaseConfig_.class);
         }
 
         @Override

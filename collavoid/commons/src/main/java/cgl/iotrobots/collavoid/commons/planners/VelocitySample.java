@@ -1,7 +1,9 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
 
-public class VelocitySample {
+import java.io.Serializable;
+
+public class VelocitySample implements Serializable {
     private Vector2 velocity;
     private double distToPrefVel;
 

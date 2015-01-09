@@ -24,7 +24,8 @@ public class NHORCA {
         maxVel1=new Line(pt,Vector2.negative(dir));
         pt=Vector2.mul(new Vector2(-dir.getY(),dir.getX()),-max_track_speed);
         maxVel2=new Line(pt,dir);
-
+        maxVel1.setType("NH");
+        maxVel2.setType("NH");
         additional_orca_lines.add(maxVel1);
         additional_orca_lines.add(maxVel2);
 
@@ -51,6 +52,7 @@ public class NHORCA {
             second_point.setVector2(Vector2.mul(second_point,track_speed));
 
             line=new Line(first_point,Vector2.normalize(Vector2.minus(second_point, first_point)));
+            line.setType("NH");
             additional_orca_lines.add(line);
             //    ROS_DEBUG("line point 1 x, y, %f, %f, point 2 = %f,%f",first_point.x(),first_point.y(),second_point.x(),second_point.y());
             first_point.setVector2(second_point);
@@ -103,6 +105,8 @@ public class NHORCA {
             line_x_back=new Line(Vector2.mul(dir_front,min_lim_x),dir_right);
 
             //ROS_ERROR("Max limints x = %f, %f", max_lim_x, min_lim_x);
+            line_x_front.setType("ACC");
+            line_x_back.setType("ACC");
             additional_orca_lines.add(line_x_front);
             additional_orca_lines.add(line_x_back);
 

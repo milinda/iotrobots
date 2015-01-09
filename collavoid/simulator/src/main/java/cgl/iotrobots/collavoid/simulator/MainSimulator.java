@@ -1,6 +1,7 @@
 package cgl.iotrobots.collavoid.simulator;
 
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.controller.AgentController;
 import com.rabbitmq.client.Address;
 import geometry_msgs.Pose;
@@ -131,7 +132,7 @@ public class MainSimulator {
             initController(
                     "robot" + id + "_rmq",
                     null,
-                    "amqp://localhost:5672"
+                    Constant_msg.RMQ_URL
             );
 
         }
@@ -223,14 +224,13 @@ public class MainSimulator {
          * This method is called by the simulator engine on reset.
          */
         public void initBehavior() {
+            agentController.clearQueues();
             float colorvalue=(float)this.id/robotNb;
             setColor(new Color3f(0,colorvalue,0));
             this.resetPosition();
             this.rotateY(orientation);
-            vl=0;
-            vr=0;
             sgseq = 0;
-            agentController.clearQueues();
+
         }
 
         /**
@@ -238,9 +238,9 @@ public class MainSimulator {
          */
         public void performBehavior() {
             // send out goal
-            if (ctlCmd.equals("pause") || sgseq < 10)
+            if (ctlCmd.equals("pause") || sgseq < 10) {
                 kinematic.setWheelsVelocity(0,0);
-            else
+            } else
                 kinematic.setWheelsVelocity(vl,vr);
 
             time = node.getCurrentTime();
@@ -251,7 +251,7 @@ public class MainSimulator {
                 pc2.getHeader().setSeq(pc2Seq++);
                 pc2.getHeader().setStamp(time);
                 //publish valid laser scan in pointcloud2 format in global frame
-                laserScan.getLaserscanPointCloud2(pc2, this);
+                laserScan.getLaserscanPointCloud2(pc2, this.getTransform());
                 laserscanPublisher.publish(pc2);
             }
             //test publish localization pose array

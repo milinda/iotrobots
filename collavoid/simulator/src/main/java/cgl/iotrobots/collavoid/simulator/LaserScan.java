@@ -30,9 +30,9 @@ public class LaserScan {
     private double minRange,maxRange;
 
     // original
-    public LaserScan(double radius, double angle, int nbsensors, double minRange,double maxRange, int updateFreq) {
-        this.maxRange=maxRange;
-        this.minRange=minRange;
+    public LaserScan(double radius, double angle, int nbsensors, double minRange_, double maxRange_, int updateFreq) {
+        this.maxRange = maxRange_;
+        this.minRange = minRange_;
         this.radius = radius;
         this.height = 0;
         // angle is arranged symmetrically around x axis
@@ -59,7 +59,41 @@ public class LaserScan {
         sensors = new RangeSensorBelt(positions, directions, RangeSensorBelt.TYPE_LASER, 0);
         sensors.setUpdatePerSecond(updateFreq);
     }
-//
+
+
+    public RangeSensorBelt getSensor() {
+        return sensors;
+    }
+
+    public void setHeight(double h) {
+        this.height = h;
+    }
+
+    public void getScan(List<Point3d> res) {
+        //in robot base frame
+        double d;
+        res.clear();
+        for (int i = 0; i < sensors.getNumSensors(); i++) {
+            if (Double.isFinite(sensors.getMeasurement(i))) {
+                d = sensors.getMeasurement(i) + this.radius;
+                double x=d * Math.cos(angles[i]);
+                double z=d * Math.sin(-angles[i]);
+                if (x>=this.minRange)
+                res.add(new Point3d(x, height,z ));
+            }
+        }
+    }
+
+    public void getLaserscanPointCloud2(PointCloud2 pc2, Transform3D transform3D) {
+        List<Point3d> scan = new ArrayList<Point3d>();
+        getScan(scan);
+        // transform to map or global frame
+        for (int i = 0; i < scan.size(); i++) {
+            transform3D.transform(scan.get(i));
+        }
+        utilsSim.toPointCloud2(pc2, scan);
+    }
+
 //    public cgl.iotrobots.collavoid.simulator.LaserScan(double minrange, double angle, int nbsensors, double maxRange, int updateFreq) {
 //        this.minrange = minrange;
 //        this.height = 0;
@@ -87,80 +121,4 @@ public class LaserScan {
 //        sensors = new RangeSensorBelt(positions, directions, RangeSensorBelt.TYPE_LASER, 0);
 //        sensors.setUpdatePerSecond(updateFreq);
 //    }
-
-
-
-    public RangeSensorBelt getSensor() {
-        return sensors;
-    }
-
-
-    public void setHeight(double h) {
-        this.height = h;
-    }
-
-    public void getScan(List<Point3d> res) {
-        //in robot base frame
-        double d;
-        res.clear();
-        for (int i = 0; i < sensors.getNumSensors(); i++) {
-            if (Double.isFinite(sensors.getMeasurement(i))) {
-                d = sensors.getMeasurement(i) + this.radius;
-                double x=d * Math.cos(angles[i]);
-                double z=d * Math.sin(-angles[i]);
-                if (x>=this.minRange)
-                res.add(new Point3d(x, height,z ));
-            }
-        }
-    }
-//
-//    public void getScan(List<Point3d> res) {
-//        //in robot base frame
-//        double d;
-//        res.clear();
-//        for (int i = 0; i < sensors.getNumSensors(); i++) {
-//            if (Double.isFinite(sensors.getMeasurement(i))) {
-//                d = sensors.getMeasurement(i) + minrange/Math.cos(angles[i]);
-//                res.add(new Point3d(d * Math.cos(angles[i]), height, d * Math.sin(-angles[i])));
-//            }
-//        }
-//    }
-
-    public void getLaserscanPointCloud2(PointCloud2 pc2) {
-        List<Point3d> scan = new ArrayList<Point3d>();
-        getScan(scan);
-        utilsSim.toPointCloud2(pc2, scan);
-    }
-
-    public void getScan(List<Point3d> res, MainSimulator.Robot robot) {
-        //in map frame
-        getScan(res);
-        double d;
-        Transform3D tf=robot.getTransform();
-        for (int i = 0; i <res.size() ; i++) {
-            tf.transform(res.get(i));
-        }
-    }
-
-    public void getLaserscanPointCloud2(PointCloud2 pc2, MainSimulator.Robot robot) {
-        List<Point3d> scan = new ArrayList<Point3d>();
-        getScan(scan,robot);
-        utilsSim.toPointCloud2(pc2, scan, robot);
-    }
-
-    public void getScan(List<Point3d> res, MainSimulatorWithPlanner.Robot robot) {
-        //in map frame
-        getScan(res);
-        double d;
-        Transform3D tf=robot.getTransform();
-        for (int i = 0; i <res.size() ; i++) {
-            tf.transform(res.get(i));
-        }
-    }
-
-    public void getLaserscanPointCloud2(PointCloud2 pc2, MainSimulatorWithPlanner.Robot robot) {
-        List<Point3d> scan = new ArrayList<Point3d>();
-        getScan(scan,robot);
-        utilsSim.toPointCloud2(pc2, scan, robot);
-    }
 }

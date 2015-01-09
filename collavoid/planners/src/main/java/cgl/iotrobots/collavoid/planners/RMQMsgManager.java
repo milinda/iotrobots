@@ -40,16 +40,15 @@ public class RMQMsgManager {
         channel = Methods_RMQ.getChannel(
                 addresses,
                 url,
-                null,
-                exchangeName,
-                Constant_msg.TYPE_EXCHANGE_DIRECT
+                null
         );
+        channel.exchangeDeclare(exchangeName, Constant_msg.TYPE_EXCHANGE_DIRECT, true);
         shareChannel = Methods_RMQ.getChannel(
                 addresses, url,
-                null,
-                RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_NAME,
-                Constant_msg.TYPE_EXCHANGE_FANOUT
+                null
         );
+        channel.exchangeDeclare(RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_NAME,
+                Constant_msg.TYPE_EXCHANGE_FANOUT, true);
         bindQueue();
         MsgCallBacks.bindCallBacks(agent, RMQContexts);
     }

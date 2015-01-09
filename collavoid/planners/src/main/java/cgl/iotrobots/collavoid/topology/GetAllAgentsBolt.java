@@ -5,8 +5,11 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
+import cgl.iotrobots.collavoid.commons.planners.Neighbor;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseShareMsg_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
@@ -24,16 +27,24 @@ import org.slf4j.LoggerFactory;
  */
 public class GetAllAgentsBolt extends BaseBasicBolt {
     private Logger logger = LoggerFactory.getLogger(GetAllAgentsBolt.class);
-    private Map<String, Agent> Agents = new HashMap<String, Agent>();
+    private Map<String, Neighbor> Agents = new HashMap<String, Neighbor>();
+    private PoseShareMsg_ poseShareMsg_;
     //private List<Agent> Agents = new ArrayList<Agent>();
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        PoseShareMsg_ poseShareMsg_ = (PoseShareMsg_) input.getValueByField(Constant_storm.FIELDS.POSE_SHARE_FIELD);
+        if (input.getSourceStreamId().equals(Constant_storm.Streams.RESET_STREAM)) {
+            // here we simply clear all agents but in more practical situation this is
+            // not good.
+            Agents.clear();
+            return;
+        }
+        poseShareMsg_ = (PoseShareMsg_) input.getValueByField(Constant_storm.FIELDS.POSE_SHARE_FIELD);
+
         updateAgentList(poseShareMsg_);
             List<Object> emit = new ArrayList<Object>();
-        emit.add(input.getValueByField(Constant_storm.FIELDS.TIME_FIELD));
-        emit.add(Agents);
+        emit.add(input.getLongByField(Constant_storm.FIELDS.TIME_FIELD));
+        emit.add(Utils.serialize(Agents));
             collector.emit(emit);
     }
 
@@ -46,20 +57,17 @@ public class GetAllAgentsBolt extends BaseBasicBolt {
     }
 
     private void updateAgentList(PoseShareMsg_ msg) {
-        Agent newagent = new Agent(msg.getRobotId());
+        Neighbor newagent = new Neighbor(msg.getName());
         newagent.holo_robot_ = msg.getHoloRobot();
+        newagent.base_odom_ = new Odometry_();
         newagent.base_odom_.setPose(msg.getPose());
         newagent.base_odom_.setTwist(msg.getTwist());
         newagent.radius = msg.getRadius();
         newagent.controlled = msg.getControlled();
-
-        List<Vector2> footprint_min = new ArrayList<Vector2>();
-        for (Vector3d_ vector3d_ : msg.getFootPrint_Minkowski())
-            footprint_min.add(new Vector2(vector3d_.getX(), vector3d_.getY()));
-
-        newagent.footprint_minkowski = footprint_min;
+        newagent.setControlPeriod(msg.getControlPeriod());
+        newagent.setFootprint_minkowski(msg.getFootPrint_Minkowski());
         newagent.last_seen_ = msg.getHeader().getStamp();
 
-        Agents.put(msg.getRobotId(), newagent);
+        Agents.put(msg.getName(), newagent);
     }
 }

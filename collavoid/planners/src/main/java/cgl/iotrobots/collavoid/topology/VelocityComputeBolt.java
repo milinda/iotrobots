@@ -6,6 +6,7 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
@@ -13,15 +14,18 @@ import cgl.iotrobots.collavoid.commons.planners.Vector2;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VelocityComputeBolt extends BaseBasicBolt {
     private Twist_ cmdVel = new Twist_();
-    private Vector2 newVelocity = new Vector2();
+    private Vector2 newVelocity = new Vector2();// calculated new holo velocity
     private Agent agent;
+    private Logger logger = LoggerFactory.getLogger(VelocityComputeBolt.class);
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
-        agent = (Agent) tuple.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
+        agent = (Agent) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
         newVelocity = Methods_Planners.ClearPath.calculateClearpathVelocity(
                 null,
                 agent.voAgents,
@@ -29,8 +33,9 @@ public class VelocityComputeBolt extends BaseBasicBolt {
                 agent.prefVelociy,
                 agent.max_speed_x_,
                 agent.useTruancation);
+//        logger.warn("{}+++++++++++++++cal new vel {}",agent.Name,newVelocity);
         getVelocityCmd();
-        basicOutputCollector.emit(new Values(tuple.getValue(0), tuple.getValue(1), cmdVel));
+        basicOutputCollector.emit(new Values(tuple.getValue(0), tuple.getValue(1), cmdVel.copy()));
     }
 
     @Override
@@ -45,6 +50,7 @@ public class VelocityComputeBolt extends BaseBasicBolt {
     private void getVelocityCmd() {
         double speed_ang = Math.atan2(newVelocity.getY(), newVelocity.getX());
         double dif_ang = Methods_Planners.shortest_angular_distance(agent.position.getHeading(), speed_ang);
+//        System.out.println(agent.Name+"************************* dif ang: "+dif_ang+"; speed ang "+speed_ang+"; heading "+agent.position.getHeading());
 
         Vector3d_ linear = new Vector3d_();
         Vector3d_ angular = new Vector3d_();

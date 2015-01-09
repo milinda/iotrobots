@@ -153,7 +153,7 @@ public class MainSimulatorWithPlanner {
                 // initialize message
                 pctmp = laserscanPublisher.newMessage();
                 pc2 = laserscanPublisher.newMessage();
-                pc2.getHeader().setFrameId(robotFrame);
+                pc2.getHeader().setFrameId(globalFrame);
                 pc2Seq = 0;
             }
             if (velocityPublisher == null) {
@@ -221,7 +221,7 @@ public class MainSimulatorWithPlanner {
                 pc2.getHeader().setSeq(pc2Seq++);
                 pc2.getHeader().setStamp(time);
                 //publish valid laser scan in pointcloud2 format in global frame
-                laserScan.getLaserscanPointCloud2(pc2, this);
+                laserScan.getLaserscanPointCloud2(pc2, this.getTransform());
                 laserscanPublisher.publish(pc2);
             }
             //test, publish localization pose array

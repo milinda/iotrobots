@@ -1,21 +1,27 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
+
 import com.rabbitmq.client.Channel;
 
-public class RMQContext {
-    public String EXCHANGE_NAME = "";
-    public String ROUTING_KEY = "";
-    public String QUEUE_NAME = "";
-    public String EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_DIRECT;
-    public Channel CHANNEL = null;
+import java.util.UUID;
 
-    public RMQContext(String exchangeName, String msgName) {
-        if (exchangeName != null)
-            this.EXCHANGE_NAME = exchangeName;
-        if (msgName != null) {
-            this.ROUTING_KEY = "RoutingKey_" + msgName;
-            this.QUEUE_NAME = exchangeName + "_Queue_" + msgName;// queue name should not be the same
-        }
+public class RMQContext {
+    public String EXCHANGE_NAME = null;
+    public String ROUTING_KEY = null;
+    public String QUEUE_NAME = null;
+
+    public Channel CHANNEL = null;
+    public String EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_TOPIC;
+    public boolean DURABLE = true;
+
+    public RMQContext(String MessageType, String sensorID) {
+        this.EXCHANGE_NAME = MessageType;
+        this.ROUTING_KEY = MessageType + "." + sensorID;
+        UUID uuid = UUID.randomUUID();
+        if (sensorID.equals("*"))
+            this.QUEUE_NAME = MessageType + Constant_msg.RMQ_QUEUE_PREFIX + uuid;
+        else
+            this.QUEUE_NAME = MessageType + Constant_msg.RMQ_QUEUE_PREFIX + sensorID + "_" + uuid;// queue name should not be the same
     }
 
 }

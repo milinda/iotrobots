@@ -70,11 +70,7 @@ public class Planner {
                     if (System.currentTimeMillis() - lastPublished > (long) (ControlPeriod * 1000)) {
                         lastPublished = System.currentTimeMillis();
                         if (localPlanner.computeVelocityCommands(cmd_vel)) {
-                            try {
-                                Methods_RMQ.publishMsg(velContext, cmd_vel.toJSON());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            Methods_RMQ.publishMsg(velContext, Methods_RMQ.serialize(cmd_vel));
                         }
                     }
                     try {

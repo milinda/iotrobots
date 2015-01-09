@@ -26,11 +26,11 @@ public class TimerSpout extends BaseRichSpout {
         declarer.declareStream(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM,
                 new Fields(
                         Constant_storm.FIELDS.TIME_FIELD,
-                        Constant_storm.FIELDS.TIMER_FIELD));
+                        Constant_storm.FIELDS.TIMER_TICK_FIELD));
         declarer.declareStream(Constant_storm.Streams.CONTROLLER_TIMER_STREAM,
                 new Fields(
                         Constant_storm.FIELDS.TIME_FIELD,
-                        Constant_storm.FIELDS.TIMER_FIELD));
+                        Constant_storm.FIELDS.TIMER_TICK_FIELD));
     }
 
     @Override

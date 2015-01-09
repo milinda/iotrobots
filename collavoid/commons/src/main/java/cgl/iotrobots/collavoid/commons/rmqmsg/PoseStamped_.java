@@ -45,11 +45,4 @@ public class PoseStamped_ implements Serializable {
         return Header.toString() + Pose.toString();
     }
 
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
-    }
 }

@@ -6,10 +6,13 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
 import cgl.iotrobots.collavoid.commons.planners.Line;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +23,12 @@ import java.util.List;
 public class AddAccelerationConstraintBolt extends BaseBasicBolt {
     private Agent agent;
     private int seq = 0;
-    private List<Line> accConstLines = new ArrayList<Line>();
+    private Logger logger = LoggerFactory.getLogger(AddAccelerationConstraintBolt.class);
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        agent = (Agent) input.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
+        agent = (Agent) Utils.deserialize(input.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
+        List<Line> accConstLines = new ArrayList<Line>();
         Methods_Planners.NHORCA.addAccelerationConstraintsXY(
                 agent.max_vel_x_,
                 agent.acc_lim_x_,
@@ -32,11 +36,18 @@ public class AddAccelerationConstraintBolt extends BaseBasicBolt {
                 agent.acc_lim_y_,
                 agent.velocity,
                 agent.position.getHeading(),
-                agent.ControlPeriod,
+                agent.controlPeriod,
                 agent.holo_robot_,
                 accConstLines
         );
-        collector.emit(new Values(input.getValue(0), input.getValue(1), agent, accConstLines, seq++));
+        collector.emit(new Values(
+                        input.getValue(0),
+                        input.getValue(1),
+                        Utils.serialize(agent),
+                        accConstLines,
+                        seq++)
+        );
+
     }
 
     @Override

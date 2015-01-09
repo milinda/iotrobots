@@ -1,10 +1,11 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
-public class Comparators {
+public class Comparators implements Serializable {
 
-    public static class NeighborDistComparator implements Comparator<Agent> {
+    public static class NeighborDistComparator implements Comparator<Neighbor> {
 
         private Vector2 pos = null;
 
@@ -12,7 +13,7 @@ public class Comparators {
             this.pos = pose;
         }
 
-        public int compare(Agent a1, Agent a2) {
+        public int compare(Neighbor a1, Neighbor a2) {
             Vector2 nb1 = a1.getPosition().getPos(), nb2 = a2.getPosition().getPos();
             Vector2 relativePos1 = Vector2.minus(pos, nb1);
             Vector2 relativePos2 = Vector2.minus(pos, nb2);

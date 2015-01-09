@@ -7,11 +7,15 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.*;
 import cgl.iotrobots.collavoid.commons.rabbitmq.Message;
 import cgl.iotrobots.collavoid.commons.rabbitmq.RabbitMQSender;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import com.esotericsoftware.kryo.Kryo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,53 +28,80 @@ public class AgentBolt extends BaseRichBolt {
     private Agent agent;
     private PoseShareMsg_ poseShareMsg_ = new PoseShareMsg_();
     private RabbitMQSender poseShareSender;
-    //    private String routingKey;
     private String exchange;
+    private Logger logger = LoggerFactory.getLogger(AgentBolt.class);
+    private boolean footprintSent = false;
 
     @Override
     public void execute(Tuple tuple) {
         if (agent.Name.equals("")) {
             agent.Name = (String) tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
             agent.updateBaseFrame();
-//            routingKey=Constant_msg.RMQ_ROUTINGKEY_PREFIX+Constant_msg.KEY_POSE_SHARE;
-            poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, exchange, true);
+            poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, exchange);
             try {
-                poseShareSender.open();
+                poseShareSender.open(Constant_msg.TYPE_EXCHANGE_FANOUT);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            collector.emit(Constant_storm.Streams.FOOTPRINT_OWN_STREAM, new Values(
-                    tuple.getValue(0),
-                    tuple.getValue(1),
-                    agent.footprint_original));
         }
-        String streamId = tuple.getSourceStreamId();
-        if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
-            updateAgentToPub(tuple);
-            Message msg;
+
+        Object tupleObj = tuple.getValueByField(Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD);
+        if (tupleObj != null) {
+            agent.lock.lock();
             try {
-                msg = new Message(poseShareMsg_.toJSON(), new HashMap<String, Object>());
-                poseShareSender.send(msg, "");
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
+                agent.setFootprint_minkowski((List<Vector2>) tupleObj);
+            } finally {
+                agent.lock.unlock();
+            }
+        }
+
+        if (!footprintSent) {
+            collector.emit(Constant_storm.Streams.FOOTPRINT_OWN_STREAM,
+                    new Values(
+                            tuple.getValueByField(Constant_storm.FIELDS.TIME_FIELD),
+                            tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                            // this will not change and will not be modified, so just send original variable not a copy
+                            agent.footprint_original
+                    )
+            );
+            footprintSent = true;
+        }
+
+        String streamId = tuple.getSourceStreamId();
+//        if (tuple.getSourceComponent().equals(Constant_storm.Components.POSE_ARRAY_COMPONENT)) {
+//            PoseArray_ poseArray_ = (PoseArray_) tuple.getValueByField(Constant_storm.FIELDS.POSE_ARRAY_FIELD);
+//            getMinkowskiFootprint(poseArray_);
+//        } else
+        if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
+            if (updateAgentToPub(tuple)) {
+                Message msg;
+                try {
+                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
+                    poseShareSender.send(msg, "");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
-            updateAgentToCalVel(tuple);
-            collector.emit(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM, new Values(
-                    tuple.getValue(0),
-                    tuple.getValue(1),
-                    agent));
+            if (updateAgentToCalVel(tuple)) {
+                collector.emit(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM,
+                        new Values(
+                                tuple.getValue(0),
+                                tuple.getValue(1),
+                                Utils.serialize(agent)));
+            }
         }
+
+        collector.ack(tuple);
     }
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         collector = outputCollector;
         exchange = Constant_msg.KEY_POSE_SHARE;
-        agent = new Agent();
-
+        agent = new Agent("");
     }
 
     @Override
@@ -85,11 +116,44 @@ public class AgentBolt extends BaseRichBolt {
                         Constant_storm.FIELDS.TIME_FIELD,
                         Constant_storm.FIELDS.SENSOR_ID_FIELD,
                         Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD));
+
     }
 
-    private void updateAgentToPub(Tuple tuple) {
-        agent.base_odom_ = (Odometry_) tuple.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
-        agent.footprint_minkowski = (List<Vector2>) tuple.getValueByField(Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD);
+
+//
+//    private void getMinkowskiFootprint(PoseArray_ poseArray_) {
+//        // in robot base frame do not need transform
+//        double x, y;
+//        List<Vector2> localization_footprint = new ArrayList<Vector2>();
+//
+//        // select valid localization (need to replace)
+//        for (int i = 0; i < poseArray_.getPoses().size(); i++) {
+//            x = poseArray_.getPoses().get(i).getPosition().getX();
+//            y = poseArray_.getPoses().get(i).getPosition().getY();
+//            Vector2 p = new Vector2(x, y);
+//            if (p.VectorLength() > 0.1)
+//                continue;
+//            localization_footprint.add(p);
+//        }
+//        agent.lock.lock();
+//        try {
+//            agent.setFootprint_minkowski(Methods_Planners.minkowskiSumConvexHull(
+//                    localization_footprint,
+//                    agent.footprint_original));
+//        }finally {
+//            agent.lock.unlock();
+//        }
+//
+//    }
+
+    private boolean updateAgentToPub(Tuple tuple) {
+        if (tuple.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD) == null &&
+                agent.base_odom_ == null)
+            return false;
+
+        if (tuple.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD) != null) {
+            agent.base_odom_ = (Odometry_) tuple.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
+        }
 
         poseShareMsg_.getHeader().setFrameId(agent.getBase_frame_());
         poseShareMsg_.getHeader().setStamp(System.currentTimeMillis());
@@ -98,36 +162,40 @@ public class AgentBolt extends BaseRichBolt {
         poseShareMsg_.setControlled(agent.getController());
         poseShareMsg_.setHoloRobot(agent.getHoloRobot());
         poseShareMsg_.setRadius(agent.getRadius() + agent.getCur_loc_unc_radius_());
-        poseShareMsg_.setRobotId(agent.getName());
+        poseShareMsg_.setName(agent.getName());
+        poseShareMsg_.setControlPeriod(agent.controlPeriod);
+        poseShareMsg_.setFootPrint_Minkowski(agent.getFootprint_minkowski());
 
-        List<Vector3d_> footprint = new ArrayList<Vector3d_>();
-        for (Vector2 vector2 : agent.getFootprint_minkowski()) {
-            Vector3d_ vector3d_ = new Vector3d_(vector2.getX(), vector2.getY(), 0);
-            footprint.add(vector3d_);
-        }
-        poseShareMsg_.setFootPrint_Minkowski(footprint);
+        return true;
     }
 
-    private void updateAgentToCalVel(Tuple tuple) {
+    private boolean updateAgentToCalVel(Tuple tuple) {
         agent.base_odom_ = (Odometry_) tuple.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
-        agent.AgentNeighbors = (List<Agent>) tuple.getValueByField(Constant_storm.FIELDS.NEIGHBORS_FIELD);
-        agent.footprint_minkowski = (List<Vector2>) tuple.getValueByField(Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD);
+        agent.AgentNeighbors = (List<Neighbor>) tuple.getValueByField(Constant_storm.FIELDS.NEIGHBORS_FIELD);
         agent.obstacles_from_laser_ = (List<Obstacle>) tuple.getValueByField(Constant_storm.FIELDS.OBSTACLE_FIELD);
         agent.prefVelociy = (Vector2) tuple.getValueByField(Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD);
-        upDateAgentState(agent);
-        updateAllNeighbors(agent);
-        computeMinDistToAll(agent);
+        agent.last_seen_ = agent.base_odom_.getHeader().getStamp();
+        agent.lock.lock();
+        try {
+            updateAgentState(agent);
+            updateAllNeighbors(agent);
+            computeMinDistToAll(agent);
+        } finally {
+            agent.lock.unlock();
+        }
+
+        return true;
     }
 
     void updateAllNeighbors(Agent agent) {
-        for (Agent agent1 : agent.AgentNeighbors) {
-            upDateAgentState(agent1);
+        for (Neighbor agent1 : agent.AgentNeighbors) {
+            updateAgentState(agent1);
         }
         agent.AgentNeighbors.sort(new Comparators.NeighborDistComparator(
                 agent.position.getPos()));
     }
 
-    private void upDateAgentState(Agent agt) {
+    private void updateAgentState(Neighbor agt) {
         double time_dif;
         if (agt.getLastSeen() == 0)
             time_dif = 0;
@@ -146,7 +214,7 @@ public class AgentBolt extends BaseRichBolt {
             y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY();
         } else {
             x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(yaw + th_dif / 2.0);
-            y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY() * Math.sin(yaw + th_dif / 2.0);
+            y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX() * Math.sin(yaw + th_dif / 2.0);
         }
         theta = yaw + th_dif;
         x = agt.getBaseOdom().getPose().getPosition().getX() + x_dif;
@@ -155,9 +223,10 @@ public class AgentBolt extends BaseRichBolt {
 
 
         //minkowski footprint is in robot frame, in velocity space only need orientation.
-        agt.setFootPrint_rotated(Methods_Planners.rotateFootprint(
+        agt.setFootprint_rotated(Methods_Planners.rotateFootprint(
                 agt.getFootprint_minkowski(),
                 agt.getPosition().getHeading()));
+
 
         //update velocity
         if (agt.getHoloRobot()) {

@@ -3,9 +3,9 @@ package testTopology;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.TopologyBuilder;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
+import cgl.iotrobots.collavoid.commons.planners.Position;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 
@@ -70,7 +70,8 @@ public class runTopology {
         config.registerSerialization(Vector3d_.class);
         config.registerSerialization(Vector4d_.class);
         config.registerSerialization(Vector2.class);
-        config.registerSerialization(StartGoal_.class);
+        config.registerSerialization(BaseConfig_.class);
+        config.registerSerialization(Position.class);
     }
 
 }

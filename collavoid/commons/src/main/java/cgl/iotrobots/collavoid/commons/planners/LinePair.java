@@ -1,7 +1,9 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
 
-public class LinePair {
+import java.io.Serializable;
+
+public class LinePair implements Serializable {
     private Vector2 first;
     private Vector2 second;
 

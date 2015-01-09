@@ -10,18 +10,22 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.RotatingMap;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
 import cgl.iotrobots.collavoid.commons.planners.Line;
 import cgl.iotrobots.collavoid.commons.planners.VO;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import cgl.iotrobots.collavoid.commons.storm.Methods_storm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class VOLinesJoinBolt extends BaseRichBolt {
+    private Logger logger = LoggerFactory.getLogger(VOLinesJoinBolt.class);
     OutputCollector _collector;
     Fields _idFields;
-    Fields _outFields;
+    Fields _joinFields;
     int _numSources;
     int _timeOut = 10;
     RotatingMap<List<Object>, Map<GlobalStreamId, Tuple>> _pending;
@@ -31,7 +35,7 @@ public class VOLinesJoinBolt extends BaseRichBolt {
     Agent agent;
 
     public VOLinesJoinBolt(Fields outFields) {
-        _outFields = outFields;
+        _joinFields = outFields;
     }
 
     @Override
@@ -49,8 +53,7 @@ public class VOLinesJoinBolt extends BaseRichBolt {
                 idFields = setFields;
             else
                 idFields.retainAll(setFields);
-
-            for (String outfield : _outFields) {
+            for (String outfield : _joinFields) {
                 for (String sourcefield : fields) {
                     if (outfield.equals(sourcefield)) {
                         _fieldLocations.put(outfield, source);
@@ -60,7 +63,7 @@ public class VOLinesJoinBolt extends BaseRichBolt {
         }
         _idFields = new Fields(new ArrayList<String>(idFields));
 
-        if (_fieldLocations.size() != _outFields.size()) {
+        if (_fieldLocations.size() != _joinFields.size()) {
             throw new RuntimeException("Cannot find all outfields among sources");
         }
     }
@@ -72,7 +75,7 @@ public class VOLinesJoinBolt extends BaseRichBolt {
             _pending.rotate();
             return;
         }
-        List<Object> id = tuple.select(_idFields);
+        List<Object> id = tuple.select(_idFields);//use rest fields as id
         GlobalStreamId streamId = new GlobalStreamId(tuple.getSourceComponent(), tuple.getSourceStreamId());
         if (!_pending.containsKey(id)) {
             _pending.put(id, new HashMap<GlobalStreamId, Tuple>());
@@ -84,15 +87,17 @@ public class VOLinesJoinBolt extends BaseRichBolt {
         if (parts.size() == _numSources) {
             _pending.remove(id);
             List<Object> joinResult = new ArrayList<Object>();
-            for (String outField : _outFields) {
+            for (String outField : _joinFields) {
                 GlobalStreamId loc = _fieldLocations.get(outField);
-                // results are in _outFields sequence
-                joinResult.add(parts.get(loc).getValueByField(outField));
+                // results are in _joinFields sequence
+                if (outField.equals(Constant_storm.FIELDS.AGENT_FIELD))
+                    joinResult.add(Utils.deserialize(parts.get(loc).getBinaryByField(outField)));
+                else
+                    joinResult.add(parts.get(loc).getValueByField(outField));
             }
-            orcalines.clear();
-            vos.clear();
             mergeLinesAndVOs(joinResult);
-            _collector.emit(new Values(tuple.getValue(0), tuple.getValue(1), agent));
+            // do not need to copy the agent as new agent will not be sent until this computation complete
+            _collector.emit(new Values(tuple.getValue(0), tuple.getValue(1), Utils.serialize(agent)));
 
             for (Tuple part : parts.values()) {
                 _collector.ack(part);
@@ -120,20 +125,24 @@ public class VOLinesJoinBolt extends BaseRichBolt {
         @Override
         public void expire(List<Object> id, Map<GlobalStreamId, Tuple> tuples) {
             for (Tuple tuple : tuples.values()) {
-                System.err.println("Delete expired tuple: {" + tuple.toString() + "}");
+                logger.error("Delete expired tuple: {" + tuple.toString() + "}");
                 _collector.fail(tuple);
             }
         }
     }
 
     private void mergeLinesAndVOs(List<Object> joinResult) {
+        orcalines.clear();
+        vos.clear();
         agent = (Agent) joinResult.get(0);
         for (int i = 1; i < 4; i++) {
             orcalines.addAll((List<Line>) joinResult.get(i));
         }
+
         for (int i = 4; i < 6; i++) {
             vos.addAll((List<VO>) joinResult.get(i));
         }
+
         agent.addOrcaLines = orcalines;
         agent.voAgents = vos;
     }

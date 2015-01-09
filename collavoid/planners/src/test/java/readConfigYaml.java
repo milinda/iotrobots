@@ -1,5 +1,3 @@
-package testTopology;
-
 //import cgl.sensorstream.core.StreamComponents;
 //import cgl.sensorstream.core.StreamTopologyBuilder;
 

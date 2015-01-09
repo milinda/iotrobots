@@ -6,8 +6,11 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,21 +19,24 @@ import java.util.Vector;
 public class VOObstacleBolt extends BaseBasicBolt {
     private Agent agent;
     private int seq = 0;
-    private List<VO> obstacleVOs = new ArrayList<VO>();
-    private List<Line> obstacleOrcaLines = new ArrayList<Line>();
+    private Logger logger = LoggerFactory.getLogger(VOObstacleBolt.class);
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        agent = (Agent) input.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
-        obstacleOrcaLines.clear();
-        obstacleVOs.clear();
-        computeObstacleVOs();
+        agent = (Agent) Utils.deserialize(input.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
+        List<VO> obstacleVOs = new ArrayList<VO>();
+        List<Line> obstacleOrcaLines = new ArrayList<Line>();
+        computeObstacleVOs(obstacleVOs, obstacleOrcaLines);
         collector.emit(new Values(
                 input.getValue(0),
                 input.getValue(1),
                 obstacleVOs,
                 obstacleOrcaLines,
                 seq++));
+//        if (obstacleOrcaLines.size()>0)
+//            logger.warn("{}-----------------obstacle orca lines >0 ",agent.Name);
+//        if (obstacleVOs.size()>0)
+//            logger.warn("{}-----------------obstacle vos >0 ",agent.Name);
 
     }
 
@@ -45,7 +51,7 @@ public class VOObstacleBolt extends BaseBasicBolt {
         ));
     }
 
-    void computeObstacleVOs() {
+    void computeObstacleVOs(List<VO> obstacleVOs, List<Line> obstacleOrcaLines) {
         if (agent.obstacles_from_laser_.size() <= 0)
             return;
         double maxDist = Math.pow((Vector2.abs(agent.velocity) + 4.0 * agent.footprint_radius_), 2);
@@ -54,7 +60,7 @@ public class VOObstacleBolt extends BaseBasicBolt {
             if (agent.use_obstacles_) {
                 if (obstacle.getDistToAgent() < maxDist) {
                     if (agent.orca) {// currently set to false
-                        createObstacleLine(agent.footprint_original, obstacle.getBegin(), obstacle.getEnd());
+                        createObstacleLine(obstacleOrcaLines, agent.footprint_original, obstacle.getBegin(), obstacle.getEnd());
                     } else {//called from CP
                         VO obstacle_vo = Methods_Planners.ClearPath.createObstacleVO(
                                 agent.position.getPos(),
@@ -63,6 +69,7 @@ public class VOObstacleBolt extends BaseBasicBolt {
                                 obstacle.getBegin(),
                                 obstacle.getEnd()
                         );
+                        obstacle_vo.setType("obstacleVo");
                         obstacleVOs.add(obstacle_vo);
                     }
                 }
@@ -71,14 +78,14 @@ public class VOObstacleBolt extends BaseBasicBolt {
         }
     }
 
-    private void createObstacleLine(List<Vector2> own_footprint, Vector2 obst1, Vector2 obst2) {
+    private void createObstacleLine(List<Line> obstacleOrcaLines, List<Vector2> own_footprint, Vector2 obst1, Vector2 obst2) {
 
         double dist = Methods_Planners.distSqPointLineSegment(obst1, obst2, agent.position.getPos());
 
         if (dist == Vector2.absSqr(Vector2.minus(agent.position.getPos(), obst1))) {
-            computeObstacleLine(obst1);
+            computeObstacleLine(obstacleOrcaLines, obst1);
         } else if (dist == Vector2.absSqr(Vector2.minus(agent.position.getPos(), obst2))) {
-            computeObstacleLine(obst2);
+            computeObstacleLine(obstacleOrcaLines, obst2);
         } else {
             Vector2 position_obst = Methods_Planners.projectPointOnLine(obst1, Vector2.minus(obst2, obst1), agent.position.getPos());
             Vector2 rel_position = Vector2.minus(position_obst, agent.position.getPos());
@@ -147,7 +154,7 @@ public class VOObstacleBolt extends BaseBasicBolt {
         }
     }
 
-    private void computeObstacleLine(Vector2 obst) {
+    private void computeObstacleLine(List<Line> obstacleOrcaLines, Vector2 obst) {
         Line line = new Line();
         Vector2 relative_position = Vector2.minus(obst, agent.position.getPos());
         double dist_to_footprint;
@@ -170,9 +177,9 @@ public class VOObstacleBolt extends BaseBasicBolt {
 
     private double getDistToFootprint(Vector2 point) {
         Vector2 result;
-        for (int i = 0; i < agent.footprint_original_lines.size(); i++) {
-            LinePair l1 = new LinePair(agent.footprint_original_lines.get(i).getFirst(),
-                    agent.footprint_original_lines.get(i).getSecond());
+        for (int i = 0; i < agent.footprint_minkowski_lines.size(); i++) {
+            LinePair l1 = new LinePair(agent.footprint_minkowski_lines.get(i).getFirst(),
+                    agent.footprint_minkowski_lines.get(i).getSecond());
             LinePair l2 = new LinePair(new Vector2(0.0, 0.0), point);
 
             result = LinePair.Intersection(l1, l2);

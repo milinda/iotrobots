@@ -23,7 +23,6 @@ import sensor_msgs.PointCloud2;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -41,7 +40,7 @@ public class AgentROSNode extends AbstractNodeMain {
 
     private Map<String, RMQContext> Contexts;
 
-    private StartGoal_ startGoal = new StartGoal_();
+    private BaseConfig_ startGoal = new BaseConfig_();
 
     private Publisher<Twist> velcmdPublisher;
 
@@ -63,6 +62,12 @@ public class AgentROSNode extends AbstractNodeMain {
     private void BindQueue(Map<String, RMQContext> RMQParams) {
         try {
             for (Map.Entry<String, RMQContext> e : RMQParams.entrySet()) {
+                e.getValue().CHANNEL = channel;
+                e.getValue().CHANNEL.exchangeDeclare(
+                        e.getValue().EXCHANGE_NAME,
+                        e.getValue().EXCHANGE_TYPE,
+                        e.getValue().DURABLE
+                );
                 channel.queueDeclare(e.getValue().QUEUE_NAME, false, false, false, null);
                 channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
@@ -73,7 +78,7 @@ public class AgentROSNode extends AbstractNodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
-        String robotNodeName = new String(nodeName).replace("_rmq", "");
+        final String robotNodeName = new String(nodeName).replace("_rmq", "");
         velcmdPublisher =
                 connectedNode.newPublisher(robotNodeName + "/cmd_vel", Twist._TYPE);
         odometrySubscriber =
@@ -103,7 +108,7 @@ public class AgentROSNode extends AbstractNodeMain {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Twist_ velocity = Serializers.JSONToTwist_(body);
+                            Twist_ velocity = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
                             velQueue.offer(velocity);
                             channel.basicAck(deliveryTag, false);
                         }
@@ -142,7 +147,7 @@ public class AgentROSNode extends AbstractNodeMain {
                             Contexts.get(Constant_msg.KEY_ODOMETRY).EXCHANGE_NAME,
                             Contexts.get(Constant_msg.KEY_ODOMETRY).ROUTING_KEY,
                             null,
-                            toOdometry_(odometry).toJSON());
+                            Methods_RMQ.serialize(toOdometry_(odometry)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -158,7 +163,7 @@ public class AgentROSNode extends AbstractNodeMain {
                             Contexts.get(Constant_msg.KEY_SCAN).EXCHANGE_NAME,
                             Contexts.get(Constant_msg.KEY_SCAN).ROUTING_KEY,
                             null,
-                            toPointCloud2_(pointCloud2).toJSON());
+                            Methods_RMQ.serialize(toPointCloud2_(pointCloud2)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -183,7 +188,7 @@ public class AgentROSNode extends AbstractNodeMain {
                             Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
                             Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).ROUTING_KEY,
                             null,
-                            pa.toJSON());
+                            Methods_RMQ.serialize(pa));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -191,6 +196,7 @@ public class AgentROSNode extends AbstractNodeMain {
         });
 
         startGoalSubscriber.addMessageListener(new MessageListener<PoseStamped>() {
+            RMQContext startGoalContext = Contexts.get(Constant_msg.KEY_START_GOAL);
             @Override
             public void onNewMessage(PoseStamped msg) {
                 PoseStamped_ poseStamped_ = toPoseStamped_(msg);
@@ -201,16 +207,7 @@ public class AgentROSNode extends AbstractNodeMain {
                 }
 
                 if (msg.getHeader().getSeq() >= 9) {
-                    try {
-                        channel.basicPublish(
-                                Contexts.get(Constant_msg.KEY_START_GOAL).EXCHANGE_NAME,
-                                Contexts.get(Constant_msg.KEY_START_GOAL).ROUTING_KEY,
-                                null,
-                                startGoal.toJSON()
-                        );
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    Methods_RMQ.publishMsg(startGoalContext, Methods_RMQ.serialize(startGoal));
                 }
             }
         });

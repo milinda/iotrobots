@@ -1,6 +1,7 @@
 package cgl.iotrobots.collavoid.planners;
 
 import cgl.iotrobots.collavoid.commons.planners.*;
+import cgl.iotrobots.collavoid.commons.planners.Neighbor;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
@@ -11,7 +12,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-public class Agent {
+public class Agent extends Neighbor {
 
     //config for simulation and some rules
     public boolean useTruancation;
@@ -19,7 +20,7 @@ public class Agent {
     public double ControlPeriod;
 
     //whether it is a controlled robot
-    public boolean controlled;
+//    public boolean controlled;
 
     //setting for different CollAvoid strategies
     //orca or vo, need to figure out its usage
@@ -35,11 +36,11 @@ public class Agent {
     public int voType;
 
     //robot information
-    public Position position; //contains the heading information
-    public Vector2 velocity;
-    public Vector2 newVelocity;
-    private double radius;
-    public List<Vector2> footPrint_rotated;
+//    public Position position; //contains the heading information
+//    public Vector2 velocity;
+    public Vector2 newVelocity;// calculated new holo velocity
+//    private double radius;
+//    public List<Vector2> footprint_rotated;
 
     //allowed error for non-holonomic robot
     public double cur_allowed_error_;
@@ -52,7 +53,7 @@ public class Agent {
     public List<VO> voAgents;
     public List<VelocitySample> samples;
 
-    public List<Agent> AgentNeighbors;
+    public List<Neighbor> AgentNeighbors;
 
     //config
     public double publishPositionsPeriod;
@@ -68,7 +69,7 @@ public class Agent {
     //NH stuff
     public double minErrorHolo;
     public double maxErrorHolo;
-    public boolean holo_robot_;
+    //    public boolean holo_robot_;
     public double time_to_holo_;
 
     //ORCA stuff
@@ -85,7 +86,7 @@ public class Agent {
     public List<Vector2> obstacle_points_;
 
     //Agent description
-    private String Name;
+//    private String Name;
     public String base_frame_;
     public String global_frame_;
     public double wheel_base_;
@@ -97,17 +98,17 @@ public class Agent {
     //set automatically
     public boolean has_polygon_footprint_;
 
-    public List<LinePair> footprint_original_lines;
+    public List<LinePair> footprint_minkowski_lines;
 
-    private long last_seen_;
-    private Odometry_ base_odom_;
+//    private long last_seen_;
+//    private Odometry_ base_odom_;
 
     //LOC uncertatiny
     public double eps_;
     public double cur_loc_unc_radius_;
 
     //COLLVOID
-    public List<Vector2> footprint_minkowski;
+//    public List<Vector2> footprint_minkowski;
     public List<PoseWeighted> pose_array_weighted_;
 
     //lock
@@ -123,7 +124,7 @@ public class Agent {
     public Agent(String name,
                  Address[] addresses,
                  String url) {
-        Name = name;
+        super(name);
         me_lock_ = new ReentrantLock();
         obstacle_lock_ = new ReentrantLock();
         neighbors_lock_ = new ReentrantLock();
@@ -139,10 +140,10 @@ public class Agent {
 
         footprint_original = new ArrayList<Vector2>();
         footprint_minkowski = new ArrayList<Vector2>();
-        footprint_original_lines = new ArrayList<LinePair>();
+        footprint_minkowski_lines = new ArrayList<LinePair>();
         obstacle_points_ = new ArrayList<Vector2>();
         pose_array_weighted_ = new ArrayList<PoseWeighted>();
-        AgentNeighbors = new ArrayList<Agent>();
+        AgentNeighbors = new ArrayList<Neighbor>();
         obstacles_from_laser_ = new ArrayList<Obstacle>();
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
@@ -153,16 +154,17 @@ public class Agent {
         initParameters();
     }
 
-    // for neighbor recording
-    public Agent(String name) {
-        Name = name;
-        footprint_original = new ArrayList<Vector2>();
-        base_odom_ = new Odometry_();
-        holo_velocity_ = new Vector2();
-        //set when update the agent state
-        position = new Position();
-        footprint_minkowski = new ArrayList<Vector2>();
-    }
+//    // for neighbor recording
+//    public Agent(String name) {
+//        Name = name;
+//        footprint_original = new ArrayList<Vector2>();
+//        base_odom_ = new Odometry_();
+//        holo_velocity_ = new Vector2();
+//        //set when update the agent state
+//        position = new Position();
+//        footprint_minkowski = new ArrayList<Vector2>();
+//        footprint_minkowski_lines = new ArrayList<LinePair>();
+//    }
 
     void initParameters() {
 
@@ -237,8 +239,6 @@ public class Agent {
         } else {
             ControlPeriod = 1.0 / controller_frequency;
         }
-        logger.info("Sim period is set to " + String.format("%1$.2f", ControlPeriod));
-
 
         //currently use circular footprint
         footprint_original.clear();
@@ -251,7 +251,8 @@ public class Agent {
             footprint_original.add(pt);
             angle += step;
         }
-        setFootprintOrignial(footprint_original);
+
+        setFootprint_minkowski(footprint_original);
 
         try {
             rmqMsgManager.start(this);
@@ -261,6 +262,7 @@ public class Agent {
 
         logger.info("************************Agent " + Name + " is initialized!");
     }
+
 
     //called by local planner
     /* first refresh agent status according to the last velocity computed and then compute new
@@ -379,53 +381,56 @@ public class Agent {
     }
 
     //update status of the agent according to its velocity
-    void upDateAgentState(Agent agt) {
-        double time_dif;
-        if (agt.getLastSeen() == 0)
-            time_dif = 0;
-        else
-            time_dif = System.currentTimeMillis() - agt.getLastSeen();
-        time_dif = time_dif / 1000.0;
+    void upDateAgentState(Neighbor agt) {
+        agt.getLock().lock();
+        try {
+            double time_dif;
+            if (agt.getLastSeen() == 0)
+                time_dif = 0;
+            else
+                time_dif = System.currentTimeMillis() - agt.getLastSeen();
+            time_dif = time_dif / 1000.0;
 
-        double yaw, x_dif, y_dif, th_dif, x, y, theta;
-        Vector2 pt = new Vector2(0.0, 0.0);
+            double yaw, x_dif, y_dif, th_dif, x, y, theta;
+            Vector2 pt = new Vector2(0.0, 0.0);
 
-        //update position
-        yaw = Methods_Planners.getYaw(agt.getBaseOdom().getPose().getOrientation());
-        th_dif = time_dif * agt.getBaseOdom().getTwist().getAngular().getZ();
-        if (agt.getHoloRobot()) {
-            x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX();
-            y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY();
-        } else {
-            x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(yaw + th_dif / 2.0);
-            y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY() * Math.sin(yaw + th_dif / 2.0);
-        }
-        theta = yaw + th_dif;
-        x = agt.getBaseOdom().getPose().getPosition().getX() + x_dif;
-        y = agt.getBaseOdom().getPose().getPosition().getY() + y_dif;
-        agt.setPosition(new Position(x, y, theta));
+            //update position
+            yaw = Methods_Planners.getYaw(agt.getBaseOdom().getPose().getOrientation());
+            th_dif = time_dif * agt.getBaseOdom().getTwist().getAngular().getZ();
+            if (agt.getHoloRobot()) {
+                x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX();
+                y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY();
+            } else {
+                x_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(yaw + th_dif / 2.0);
+                y_dif = time_dif * agt.getBaseOdom().getTwist().getLinear().getY() * Math.sin(yaw + th_dif / 2.0);
+            }
+            theta = yaw + th_dif;
+            x = agt.getBaseOdom().getPose().getPosition().getX() + x_dif;
+            y = agt.getBaseOdom().getPose().getPosition().getY() + y_dif;
 
-
-        //minkowski footprint is in robot frame, in velocity space only need orientation.
-        agt.setFootPrint_rotated(Methods_Planners.rotateFootprint(
-                agt.getFootprint_minkowski(),
-                agt.getPosition().getHeading()));
-
-        //update velocity
-        if (agt.getHoloRobot()) {
-            x = agt.getBaseOdom().getTwist().getLinear().getX();
-            y = agt.getBaseOdom().getTwist().getLinear().getY();
-            pt.setX(x);
-            pt.setY(y);
-            agt.setVelocity(Vector2.rotateVectorByAngle(pt, (yaw + th_dif)));
-        } else {//?????????????????????????????????????????????????????????????
-            double dif_x, dif_y, dif_ang;
-            dif_ang = agt.getControlPeriod() * agt.getBaseOdom().getTwist().getAngular().getZ();
-            //in robot frame differential robot has only x velocity
-            pt.setX(agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(dif_ang / 2.0));
-            pt.setY(agt.getBaseOdom().getTwist().getLinear().getX() * Math.sin(dif_ang / 2.0));
-            // in global frame, velocity need no translation
-            agt.setVelocity(Vector2.rotateVectorByAngle(pt, (yaw + th_dif)));
+            agt.setPosition(new Position(x, y, theta));
+            //minkowski footprint is in robot frame, in velocity space only need orientation.
+            agt.setFootprint_rotated(Methods_Planners.rotateFootprint(
+                    agt.getFootprint_minkowski(),
+                    agt.getPosition().getHeading()));
+            //update velocity
+            if (agt.getHoloRobot()) {
+                x = agt.getBaseOdom().getTwist().getLinear().getX();
+                y = agt.getBaseOdom().getTwist().getLinear().getY();
+                pt.setX(x);
+                pt.setY(y);
+                agt.setVelocity(Vector2.rotateVectorByAngle(pt, (yaw + th_dif)));
+            } else {//?????????????????????????????????????????????????????????????
+                double dif_x, dif_y, dif_ang;
+                dif_ang = agt.getControlPeriod() * agt.getBaseOdom().getTwist().getAngular().getZ();
+                //in robot frame differential robot has only x velocity
+                pt.setX(agt.getBaseOdom().getTwist().getLinear().getX() * Math.cos(dif_ang / 2.0));
+                pt.setY(agt.getBaseOdom().getTwist().getLinear().getX() * Math.sin(dif_ang / 2.0));
+                // in global frame, velocity need no translation
+                agt.setVelocity(Vector2.rotateVectorByAngle(pt, (yaw + th_dif)));
+            }
+        } finally {
+            agt.getLock().unlock();
         }
     }
 
@@ -459,11 +464,11 @@ public class Agent {
             }
         }
         cur_allowed_error_ = 1.0 / 3.0 * cur_allowed_error_ + 2.0 / 3.0 * error;
-        //ROS_ERROR("error = %f", cur_allowed_error_);
+        //ROS_ERROR("error = %f", cur_allowed_nh_error_);
         double speed_ang = Math.atan2(pref_velocity.getY(), pref_velocity.getX());
         double dif_ang = Methods_Planners.shortest_angular_distance(position.getHeading(), speed_ang);
         //calculate possible tracking holomonic robot speed range
-        if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_error_ < 2.0 * min_error) {
+        if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_nh_error_ < 2.0 * min_error) {
             double max_track_speed = NHORCA.calculateMaxTrackSpeedAngle(time_to_holo_, Math.PI / 2.0, cur_allowed_error_, max_vel_x_, max_vel_th_, v_max_ang);
             // tracking errors are not in velocity space!!!!!!!!!!!!!!
             if (max_track_speed <= 2 * min_error) {
@@ -513,7 +518,7 @@ public class Agent {
                                 VO obstacle_vo = ClearPathMethods.createObstacleVO(
                                         position.getPos(),
                                         footprint_radius_,
-                                        footPrint_rotated,
+                                        footprint_rotated,
                                         obst.getBegin(),
                                         obst.getEnd()
                                 );
@@ -639,8 +644,8 @@ public class Agent {
 
     double getDistToFootprint(Vector2 point) {
         Vector2 result;
-        for (int i = 0; i < footprint_original_lines.size(); i++) {
-            LinePair l1 = new LinePair(footprint_original_lines.get(i).getFirst(), footprint_original_lines.get(i).getSecond());
+        for (int i = 0; i < footprint_minkowski_lines.size(); i++) {
+            LinePair l1 = new LinePair(footprint_minkowski_lines.get(i).getFirst(), footprint_minkowski_lines.get(i).getSecond());
             LinePair l2 = new LinePair(new Vector2(0.0, 0.0), point);
 
             result = LinePair.Intersection(l1, l2);
@@ -686,9 +691,9 @@ public class Agent {
             //use footprint or radius to create VO
             if (convex) {
                 if (AgentNeighbors.get(i).controlled) {
-                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, voType);
+                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), footprint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footprint_rotated, AgentNeighbors.get(i).velocity, voType);
                 } else {
-                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), footPrint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footPrint_rotated, AgentNeighbors.get(i).velocity, ClearPathMethods.VOS);
+                    new_agent_vo = ClearPathMethods.createVO(position.getPos(), footprint_rotated, velocity, AgentNeighbors.get(i).position.getPos(), AgentNeighbors.get(i).footprint_rotated, AgentNeighbors.get(i).velocity, ClearPathMethods.VOS);
                 }
             } else {
                 if (AgentNeighbors.get(i).controlled) {
@@ -717,7 +722,7 @@ public class Agent {
 
     public Odometry_ getBaseOdom() {
         return base_odom_;
-    }   
+    }
 
     public long getLastSeen() {
         return last_seen_;
@@ -771,7 +776,7 @@ public class Agent {
         return position;
     }
 
-    public List<Agent> getAgentNeighbors() {
+    public List<Neighbor> getAgentNeighbors() {
         return AgentNeighbors;
     }
 
@@ -827,12 +832,8 @@ public class Agent {
         this.velocity = velocity;
     }
 
-    public void setFootprint_minkowski(List<Vector2> footprint_minkowski) {
-        this.footprint_minkowski = footprint_minkowski;
-    }
-
-    public void setFootPrint_rotated(List<Vector2> footPrint_rotated) {
-        this.footPrint_rotated = footPrint_rotated;
+    public void setFootprint_rotated(List<Vector2> footprint_rotated) {
+        this.footprint_rotated = footprint_rotated;
     }
 
     public void setPosition(Position position) {
@@ -848,31 +849,33 @@ public class Agent {
     }
 
     // footprint(minkowski footprint) are all in robot frame
-    public void setFootprintOrignial(List<Vector2> footprint) {
+    public void setFootprint_minkowski(List<Vector2> footprint) {
         if (footprint.size() < 2) {
             logger.severe("The footprint specified has less than two nodes");
             return;
         }
-
-        footprint_minkowski.clear();
-        for (Vector2 pt : footprint) {
-            footprint_minkowski.add(pt);
+        this.me_lock_.lock();
+        try {
+            footprint_minkowski.clear();
+            for (Vector2 pt : footprint) {
+                footprint_minkowski.add(new Vector2(pt.getX(), pt.getY()));
+            }
+            footprint_minkowski_lines.clear();
+            Vector2 p = footprint.get(0);
+            Vector2 first = new Vector2(p.getX(), p.getY());
+            Vector2 old = new Vector2(p.getX(), p.getY());
+            //add linesegments for footprint
+            for (int i = 0; i < footprint.size(); i++) {
+                footprint_minkowski_lines.add(new LinePair(old, footprint.get(i)));
+                old.setVector2(footprint.get(i));
+            }
+            //add last segment
+            footprint_minkowski_lines.add(new LinePair(old, first));
+            has_polygon_footprint_ = true;
+        } finally {
+            this.me_lock_.unlock();
         }
-
-        footprint_original_lines.clear();
-        Vector2 p = footprint.get(0);
-        Vector2 first = new Vector2(p.getX(), p.getY());
-        Vector2 old = new Vector2(p.getX(), p.getY());
-        //add linesegments for footprint
-        for (int i = 0; i < footprint.size(); i++) {
-            footprint_original_lines.add(new LinePair(old, footprint.get(i)));
-            old.setVector2(footprint.get(i));
-        }
-        //add last segment
-        footprint_original_lines.add(new LinePair(old, first));
-        has_polygon_footprint_ = true;
     }
-
 
     /*+++++++++++++++++++++++++Set stuff end+++++++++++++++++++++++++*/
 

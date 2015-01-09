@@ -1,7 +1,9 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
 
-public class Obstacle {
+import java.io.Serializable;
+
+public class Obstacle implements Serializable {
     private Vector2 begin;
     private Vector2 end;
     private double distToAgent = Double.MAX_VALUE;
@@ -42,5 +44,13 @@ public class Obstacle {
 
     public double getDistToAgent() {
         return distToAgent;
+    }
+
+    public Obstacle copy() {
+        Obstacle res = new Obstacle();
+        res.setDistToAgent(distToAgent);
+        res.setBegin(begin.copy());
+        res.setEnd(end.copy());
+        return res;
     }
 }

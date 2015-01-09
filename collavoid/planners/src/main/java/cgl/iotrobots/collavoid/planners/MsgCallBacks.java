@@ -43,7 +43,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Odometry_ odometry_ = Serializers.JSONToOdometry_(body);
+                            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deserialize(body, Odometry_.class);
                             odomCallback(agent, odometry_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -69,7 +69,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            PoseShareMsg_ poseShareMsg_ = Serializers.JSONToPoseShareMsg_(body);
+                            PoseShareMsg_ poseShareMsg_ = (PoseShareMsg_) Methods_RMQ.deserialize(body, PoseShareMsg_.class);
                             poseShareCallback(agent, poseShareMsg_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -95,7 +95,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            PointCloud2_ pointCloud2_ = Serializers.JSONToPointCloud2_(body);
+                            PointCloud2_ pointCloud2_ = (PointCloud2_) Methods_RMQ.deserialize(body, PointCloud2_.class);
                             scanCallback(agent, pointCloud2_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -121,7 +121,7 @@ public class MsgCallBacks {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            PoseArray_ poseArray_ = Serializers.JSONToPoseArray_(body);
+                            PoseArray_ poseArray_ = (PoseArray_) Methods_RMQ.deserialize(body, PoseArray_.class);
                             particleCloudTestCallback(agent, poseArray_);
                             context.CHANNEL.basicAck(deliveryTag, false);
                         }
@@ -163,13 +163,9 @@ public class MsgCallBacks {
 
             if ((System.currentTimeMillis() - agent.getLastTimeMePublished()) > agent.getPublishMePeriod() * 1000) {
                 agent.setLastTimeMePublished(System.currentTimeMillis());
-                try {
                     Methods_RMQ.publishMsg(
                             agent.getRmqMsgManager().getRMQContexts().get(Constant_msg.KEY_POSE_SHARE),
-                            getPoseShareMsg(agent).toJSON());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                            Methods_RMQ.serialize(getPoseShareMsg(agent)));
             }
         } finally {
             agent.me_lock_.unlock();
@@ -185,14 +181,14 @@ public class MsgCallBacks {
         poseShareMsg_.setControlled(agent.getController());
         poseShareMsg_.setHoloRobot(agent.getHoloRobot());
         poseShareMsg_.setRadius(agent.getRadius() + agent.getCur_loc_unc_radius_());
-        poseShareMsg_.setRobotId(agent.getRobotId());
+        poseShareMsg_.setName(agent.getRobotId());
 
-        List<Vector3d_> footprint = new ArrayList<Vector3d_>();
-        for (Vector2 vector2 : agent.getFootprint_minkowski()) {
-            Vector3d_ vector3d_ = new Vector3d_(vector2.getX(), vector2.getY(), 0);
-            footprint.add(vector3d_);
-        }
-        poseShareMsg_.setFootPrint_Minkowski(footprint);
+//        List<Vector3d_> footprint = new ArrayList<Vector3d_>();
+//        for (Vector2 vector2 : agent.getFootprint_minkowski()) {
+//            Vector3d_ vector3d_ = new Vector3d_(vector2.getX(), vector2.getY(), 0);
+//            footprint.add(vector3d_);
+//        }
+        poseShareMsg_.setFootPrint_Minkowski(agent.getFootprint_minkowski());
         return poseShareMsg_;
     }
 
@@ -200,32 +196,32 @@ public class MsgCallBacks {
     public static void poseShareCallback(final Agent agent, final PoseShareMsg_ msg) {
         agent.getNeighbors_lock_().lock();
         try {
-            String cur_id = msg.getRobotId();
+            String cur_id = msg.getName();
             if (!cur_id.equals(agent.getRobotId())) {  //if it is not me do something
                 int i;
-                List<Agent> neighbors = agent.getAgentNeighbors();
+                List<Neighbor> neighbors = agent.getAgentNeighbors();
                 for (i = 0; i < neighbors.size(); i++) {
-                    if (neighbors.get(i).getRobotId().equals(cur_id)) {
+                    if (neighbors.get(i).getName().equals(cur_id)) {
                         //I found the robot
                         break;
                     }
                 }
                 if (i >= neighbors.size()) { //Robot is new, so it will be added to the list
-                    Agent new_robot = new Agent(cur_id);
+                    Neighbor new_robot = new Neighbor(cur_id);
                     new_robot.setHolo_robot_(msg.getHoloRobot());
                     neighbors.add(new_robot);
                     loggerCallback.info(agent.getRobotId() + " added a new neighbor with AgentName " + cur_id + " and radius " + msg.getRadius());
                 }
 
-                Agent lstagent = neighbors.get(i);
+                Neighbor lstagent = neighbors.get(i);
                 lstagent.getBaseOdom().setPose(msg.getPose());
                 lstagent.getBaseOdom().setTwist(msg.getTwist());
 
                 lstagent.setRadius(msg.getRadius());
                 lstagent.setControlled(msg.getControlled());
                 List<Vector2> footprint = new ArrayList<Vector2>();
-                for (Vector3d_ vector3d_ : msg.getFootPrint_Minkowski())
-                    footprint.add(new Vector2(vector3d_.getX(), vector3d_.getY()));
+                for (Vector2 vec : msg.getFootPrint_Minkowski())
+                    footprint.add(new Vector2(vec.getX(), vec.getY()));
                 lstagent.setFootprint_minkowski(footprint);
                 lstagent.setLast_seen_(msg.getHeader().getStamp());
             }
@@ -368,7 +364,7 @@ public class MsgCallBacks {
             x = msg.getPoses().get(i).getPosition().getX();
             y = msg.getPoses().get(i).getPosition().getY();
             Vector2 p = new Vector2(x, y);
-            if (p.getLength() > 0.1)
+            if (p.VectorLength() > 0.1)
                 continue;
             localization_footprint.add(p);
         }

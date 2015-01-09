@@ -47,7 +47,7 @@ public class AgentController {
     }
 
     public void start(NodeConfiguration configuration) {
-        channel = Methods_RMQ.getChannel(addresses, url, null, exchangeName, Constant_msg.TYPE_EXCHANGE_DIRECT);
+        channel = Methods_RMQ.getChannel(addresses, url, null);
         agentROSNode = new AgentROSNode(nodeName, channel, RMQContexts);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(agentROSNode, configuration);
@@ -78,6 +78,7 @@ public class AgentController {
                 }
                 channel.exchangeDelete(exchangeName);
             }
+
 
 //            if (connection != null) {
 //                connection.close();

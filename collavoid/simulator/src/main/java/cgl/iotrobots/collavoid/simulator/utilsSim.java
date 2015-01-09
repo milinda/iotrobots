@@ -100,16 +100,6 @@ public class utilsSim {
             pc2.setData(buffer);
     }
 
-    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan, MainSimulator.Robot robot) {
-        pc2.getHeader().setFrameId(robot.globalFrame);
-        toPointCloud2(pc2,scan);
-    }
-
-    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan, MainSimulatorWithPlanner.Robot robot) {
-        pc2.getHeader().setFrameId(robot.globalFrame);
-        toPointCloud2(pc2,scan);
-    }
-
     public static void Vector3ToPoint3d(Vector3 in, Point3d out) {
         out.set(in.getX(), in.getY(), in.getZ());
     }

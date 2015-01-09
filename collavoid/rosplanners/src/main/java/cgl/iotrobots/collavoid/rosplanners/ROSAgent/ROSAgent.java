@@ -980,17 +980,18 @@ public class ROSAgent {
 
             // currently only compute the clear path velocity which has the best performance as described in the thesis.
 
+
 //            if (orca_) {
 //                computeOrcaVelocity(pref_velocity);
 //            } else {
             samples.clear();
 //                if (clearpath_) {
             computeClearpathVelocity(pref_velocity);
+
 //                } else {
 //                    computeSampledVelocity(pref_velocity);
 //                }
 //            }
-
 
             double speed_ang = Math.atan2(newVelocity.getY(), newVelocity.getX());
             double dif_ang = Angles.shortest_angular_distance(position.getHeading(), speed_ang);
@@ -1057,7 +1058,7 @@ public class ROSAgent {
             y_dif = time_dif * agt.base_odom_.getTwist().getTwist().getLinear().getY();
         } else {
             x_dif = time_dif * agt.base_odom_.getTwist().getTwist().getLinear().getX() * Math.cos(yaw + th_dif / 2.0);
-            y_dif = time_dif * agt.base_odom_.getTwist().getTwist().getLinear().getY() * Math.sin(yaw + th_dif / 2.0);
+            y_dif = time_dif * agt.base_odom_.getTwist().getTwist().getLinear().getX() * Math.sin(yaw + th_dif / 2.0);
         }
         theta = yaw + th_dif;
         x = agt.base_odom_.getPose().getPose().getPosition().getX() + x_dif;
@@ -1169,12 +1170,13 @@ public class ROSAgent {
                 if (!obst.getBegin().equals(obst.getEnd())) {
                     double dist = utils.distSqPointLineSegment(obst.getBegin(), obst.getEnd(), position.getPos());
                     //why choose this limit?????????????????????????????????
-                    if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {
+                    if (dist < Math.pow((Vector2.abs(velocity) + 4.0 * footprint_radius_), 2)) {// laser min range is 1.2 so this condition is never satisfied
                         if (use_obstacles_) {
                             if (orca) {// currently set to false
                                 createObstacleLine(own_footprint, obst.getBegin(), obst.getEnd());
                             } else {//called from CP
                                 VO obstacle_vo = CP.createObstacleVO(position.getPos(), footprint_radius_, footPrint_rotated, obst.getBegin(), obst.getEnd());
+                                obstacle_vo.setType("obstacle");
                                 voAgents.add(obstacle_vo);
                             }
                         }
@@ -1339,6 +1341,8 @@ public class ROSAgent {
     void computeAgentVOs() {
         // neighbors are published with localization uncertainty that means radius and footprint
         // include localization uncertainty radius and minkowski footprint.
+
+        // TODO: when reset the simulator as neighbors are not updated immediately, then agent is inside neighbor vos
         for (int i = 0; i < ROSAgentNeighbors.size(); i++) {
             VO new_agent_vo;
             //use footprint or radius to create VO
@@ -1358,6 +1362,7 @@ public class ROSAgent {
             //truncation--not collide in certain amount of time
             if (useTruancation) {
                 new_agent_vo = CP.createTruncVO(new_agent_vo, truncTime);
+                new_agent_vo.setType("Agent");
             }
             voAgents.add(new_agent_vo);
         }

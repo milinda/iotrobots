@@ -7,12 +7,14 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Vector4d_;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class Methods_Planners {
+public class Methods_Planners implements Serializable {
+    private static Logger logger = LoggerFactory.getLogger(Methods_Planners.class);
 
     public static List<Vector2> rotateFootprint(final List<Vector2> footprint, double angle) {
         List<Vector2> result = new ArrayList<Vector2>();
@@ -215,7 +217,8 @@ public class Methods_Planners {
             maxVel1 = new Line(pt, Vector2.negative(dir));
             pt = Vector2.scale(new Vector2(-dir.getY(), dir.getX()), -max_track_speed);
             maxVel2 = new Line(pt, dir);
-
+            maxVel1.setType("NHConstraints");
+            maxVel2.setType("NHConstraints");
             additional_orca_lines.add(maxVel1);
             additional_orca_lines.add(maxVel2);
 
@@ -249,13 +252,24 @@ public class Methods_Planners {
                 second_point.setVector2(Vector2.scale(second_point, track_speed));
 
                 line = new Line(first_point, Vector2.normalize(Vector2.minus(second_point, first_point)));
+                line.setType("NHConstraints");
                 additional_orca_lines.add(line);
                 //    ROS_DEBUG("line point 1 x, y, %f, %f, point 2 = %f,%f",first_point.x(),first_point.y(),second_point.x(),second_point.y());
                 first_point.setVector2(second_point);
             }
         }
 
-        public static void addAccelerationConstraintsXY(double max_vel_x, double acc_lim_x, double max_vel_y, double acc_lim_y, Vector2 cur_vel, double heading, double sim_period, boolean holo_robot, List<Line> additional_orca_lines) {
+        public static void addAccelerationConstraintsXY(
+                double max_vel_x,
+                double acc_lim_x,
+                double max_vel_y,
+                double acc_lim_y,
+                final Vector2 cur_vel_agent,
+                double heading,
+                double sim_period,
+                boolean holo_robot,
+                List<Line> additional_orca_lines) {
+            Vector2 cur_vel = new Vector2(cur_vel_agent.getX(), cur_vel_agent.getY());
             double max_lim_x, max_lim_y, min_lim_x, min_lim_y;
             Line line_x_back, line_x_front, line_y_left, line_y_right;
 
@@ -279,6 +293,8 @@ public class Methods_Planners {
 
                 line_x_back = new Line(Vector2.scale(dir_front, min_lim_x), dir_right);
 
+                line_x_front.setType("accConstraints");
+                line_x_back.setType("accConstraints");
                 additional_orca_lines.add(line_x_front);
                 additional_orca_lines.add(line_x_back);
 
@@ -286,7 +302,8 @@ public class Methods_Planners {
 
                 line_y_right = new Line(Vector2.scale(Vector2.negative(dir_right), min_lim_y), dir_front);
 
-
+                line_y_left.setType("accConstraints");
+                line_y_right.setType("accConstraints");
                 additional_orca_lines.add(line_y_left);
                 additional_orca_lines.add(line_y_right);
             } else {
@@ -294,12 +311,13 @@ public class Methods_Planners {
                 double cur_x = Vector2.abs(cur_vel);
                 max_lim_x = Math.min(max_vel_x, cur_x + sim_period * acc_lim_x);
                 min_lim_x = Math.max(-max_vel_x, cur_x - sim_period * acc_lim_x);
-
                 line_x_front = new Line(Vector2.scale(dir_front, max_lim_x), Vector2.negative(dir_right));
 
                 line_x_back = new Line(Vector2.scale(dir_front, min_lim_x), dir_right);
 
                 //ROS_ERROR("Max limints x = %f, %f", max_lim_x, min_lim_x);
+                line_x_front.setType("accConstraints");
+                line_x_back.setType("accConstraints");
                 additional_orca_lines.add(line_x_front);
                 additional_orca_lines.add(line_x_back);
 
@@ -390,7 +408,7 @@ public class Methods_Planners {
                     samples.add(pref_vel_sample);
                 }
 
-                //intersection point of vo lines
+                //intersection point of constraint lines
                 for (int i = 0; i < additional_constraints.size(); i++) {
                     for (int j = 0; j < additional_constraints.size(); j++) {
                         addRayVelocitySamples(samples, pref_vel,
@@ -406,10 +424,12 @@ public class Methods_Planners {
                 samples.add(pref_vel_sample);
             }
 
+
             boolean isOutsideVOs = true;
             for (int i = 0; i < truncated_vos.size(); i++) {
                 if (isInsideVO(truncated_vos.get(i), pref_vel, use_truncation)) {
                     isOutsideVOs = false;
+//                    logger.warn("in side vo {}",truncated_vos.get(i).getType());
 
                     VelocitySample leg_projection = new VelocitySample();
                     if (Methods_Planners.leftOf(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRelativePosition(), pref_vel)) { //left of centerline, project on left leg
@@ -539,6 +559,7 @@ public class Methods_Planners {
         static boolean isWithinAdditionalConstraints(final List<Line> additional_constraints, final Vector2 point) {
             for (int i = 0; i < additional_constraints.size(); i++) {
                 if (Methods_Planners.rightOf(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(), point)) {
+//                    logger.warn("not with in {} constraint",additional_constraints.get(i).getType());
                     return false;
                 }
             }
@@ -546,16 +567,22 @@ public class Methods_Planners {
         }
 
 
-        static boolean isInsideVO(VO vo, Vector2 point, boolean use_truncation) {
+        static boolean isInsideVO(final VO vo, Vector2 point, boolean use_truncation) {
             boolean trunc = Methods_Planners.leftOf(vo.getTruncLeft(), Vector2.minus(vo.getTruncRight(), vo.getTruncLeft()), point);
             if (Vector2.abs(Vector2.minus(vo.getTruncLeft(), vo.getTruncRight())) < Parameters.EPSILON)
                 trunc = true;
             return Methods_Planners.rightOf(vo.getPoint(), vo.getLeftLegDir(), point) && Methods_Planners.leftOf(vo.getPoint(), vo.getRightLegDir(), point) && (!use_truncation || trunc);
         }
 
-        static void addRayVelocitySamples(List<VelocitySample> samples, final Vector2 pref_vel, Vector2 point1, Vector2 dir1, Vector2 point2, Vector2 dir2, double max_speed, int TYPE) {
+        static void addRayVelocitySamples(
+                List<VelocitySample> samples,
+                final Vector2 pref_vel,
+                final Vector2 point1,
+                final Vector2 dir1,
+                final Vector2 point2,
+                final Vector2 dir2, double max_speed, int TYPE) {
+            
             double r, s;
-
             double x1, x2, x3, x4, y1, y2, y3, y4;
             x1 = point1.getX();
             y1 = point1.getY();
@@ -578,8 +605,6 @@ public class Methods_Planners {
 
                 if ((TYPE == LINELINE) || (TYPE == RAYLINE && r >= 0) || (TYPE == SEGMENTLINE && r >= 0 && r <= 1) || (TYPE == RAYRAY && r >= 0 && s >= 0) ||
                         (TYPE == RAYSEGMENT && r >= 0 && s >= 0 && s <= 1) || (TYPE == SEGMENTSEGMENT && r >= 0 && s >= 0 && r <= 1 && s <= 1)) {
-
-
                     VelocitySample intersection_point = new VelocitySample();
                     intersection_point.setVelocity(new Vector2(x1 + r * (x2 - x1), y1 + r * (y2 - y1)));
                     intersection_point.setDistToPrefVel(Vector2.absSqr(Vector2.minus(pref_vel, intersection_point.getVelocity())));
@@ -593,70 +618,70 @@ public class Methods_Planners {
             }
         }
 
-        public static List<Vector2> minkowskiSumConvexHull(final List<Vector2> polygon1, final List<Vector2> polygon2) {
-            List<Vector2> result = new ArrayList<Vector2>();
-            ConvexHullPoint[] convex_hull = new ConvexHullPoint[polygon1.size() * polygon2.size()];
-
-            int n = 0;
-            for (int i = 0; i < polygon1.size(); i++) {
-                for (int j = 0; j < polygon2.size(); j++) {
-                    ConvexHullPoint p = new ConvexHullPoint();
-                    p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
-                    convex_hull[n++] = p;
-                }
-            }
-            convex_hull = convexHull(convex_hull, false);
-            for (int i = 0; i < convex_hull.length; i++) {
-                result.add(new Vector2(convex_hull[i].getX(), convex_hull[i].getY()));
-            }
-            return result;
-
-        }
-
-        // Returns a list of points on the convex hull in counter-clockwise order.
-        // Note: the last point in the returned list is the same as the first one.
-        //Wikipedia Monotone chain...
-        public static ConvexHullPoint[] convexHull(ConvexHullPoint[] P, boolean sorted) {
-            int n = P.length, k = 0;
-            ConvexHullPoint[] result = new ConvexHullPoint[2 * n];
-
-            // Sort points lexicographically
-            if (!sorted)
-                Arrays.sort(P, new Comparators.VectorsLexigraphicComparator());
-
-            //    ROS_WARN("points length %d", (int)P.size());
-
-            // Build lower hull,
-            for (int i = 0; i < n; i++) {
-                while (k >= 2 && Vector2.det(
-                        result[k - 2].getX() - result[k - 1].getX(),
-                        result[k - 2].getY() - result[k - 1].getY(),
-                        P[i].getX() - result[k - 1].getX(),
-                        P[i].getY() - result[k - 1].getY()
-                ) <= 0) k--;
-                ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
-                result[k++] = pt;
-            }
-
-            // Build upper hull
-            for (int i = n - 2, t = k + 1; i >= 0; i--) {
-                while (k >= t && Vector2.det(
-                        result[k - 2].getX() - result[k - 1].getX(),
-                        result[k - 2].getY() - result[k - 1].getY(),
-                        P[i].getX() - result[k - 1].getX(),
-                        P[i].getY() - result[k - 1].getY()
-                ) <= 0) k--;
-                ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
-                result[k++] = pt;
-            }
-
-
-            //resize list
-            ConvexHullPoint[] resultnew = new ConvexHullPoint[k];
-            System.arraycopy(result, 0, resultnew, 0, k);
-
-            return resultnew;
-        }
+//        public static List<Vector2> minkowskiSumConvexHull(final List<Vector2> polygon1, final List<Vector2> polygon2) {
+//            List<Vector2> result = new ArrayList<Vector2>();
+//            ConvexHullPoint[] convex_hull = new ConvexHullPoint[polygon1.size() * polygon2.size()];
+//
+//            int n = 0;
+//            for (int i = 0; i < polygon1.size(); i++) {
+//                for (int j = 0; j < polygon2.size(); j++) {
+//                    ConvexHullPoint p = new ConvexHullPoint();
+//                    p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
+//                    convex_hull[n++] = p;
+//                }
+//            }
+//            convex_hull = convexHull(convex_hull, false);
+//            for (int i = 0; i < convex_hull.length; i++) {
+//                result.add(new Vector2(convex_hull[i].getX(), convex_hull[i].getY()));
+//            }
+//            return result;
+//
+//        }
+//
+//        // Returns a list of points on the convex hull in counter-clockwise order.
+//        // Note: the last point in the returned list is the same as the first one.
+//        //Wikipedia Monotone chain...
+//        public static ConvexHullPoint[] convexHull(ConvexHullPoint[] P, boolean sorted) {
+//            int n = P.length, k = 0;
+//            ConvexHullPoint[] result = new ConvexHullPoint[2 * n];
+//
+//            // Sort points lexicographically
+//            if (!sorted)
+//                Arrays.sort(P, new Comparators.VectorsLexigraphicComparator());
+//
+//            //    ROS_WARN("points length %d", (int)P.size());
+//
+//            // Build lower hull,
+//            for (int i = 0; i < n; i++) {
+//                while (k >= 2 && Vector2.det(
+//                        result[k - 2].getX() - result[k - 1].getX(),
+//                        result[k - 2].getY() - result[k - 1].getY(),
+//                        P[i].getX() - result[k - 1].getX(),
+//                        P[i].getY() - result[k - 1].getY()
+//                ) <= 0) k--;
+//                ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
+//                result[k++] = pt;
+//            }
+//
+//            // Build upper hull
+//            for (int i = n - 2, t = k + 1; i >= 0; i--) {
+//                while (k >= t && Vector2.det(
+//                        result[k - 2].getX() - result[k - 1].getX(),
+//                        result[k - 2].getY() - result[k - 1].getY(),
+//                        P[i].getX() - result[k - 1].getX(),
+//                        P[i].getY() - result[k - 1].getY()
+//                ) <= 0) k--;
+//                ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
+//                result[k++] = pt;
+//            }
+//
+//
+//            //resize list
+//            ConvexHullPoint[] resultnew = new ConvexHullPoint[k];
+//            System.arraycopy(result, 0, resultnew, 0, k);
+//
+//            return resultnew;
+//        }
 
 //    static double cross(final ConvexHullPoint o, final ConvexHullPoint A, final ConvexHullPoint B){
 //        return (A.getPoint().getX()- o.getPoint().getX()) * (B.getPoint().getY() - o.getPoint().getY())
@@ -931,7 +956,6 @@ public class Methods_Planners {
                 radius = Math.tan(ang_between / 2.0) * Vector2.abs(min_right);
             }
             //check min_point, if failed stupid calc for new radius and point;
-            Logger logger = LoggerFactory.getLogger(Methods_Planners.class);
             if (Vector2.abs(Vector2.minus(min_point, center_r)) > radius) {
                 double gamma = min_point.getX() * dir_center.getX() + min_point.getY() * dir_center.getY();
                 double sqrt_exp = Vector2.absSqr(min_point) / (Math.pow(Math.sin(ang_between / 2.0), 2) - 1) + Math.pow(gamma / (Math.pow(Math.sin(ang_between / 2.0), 2) - 1), 2);

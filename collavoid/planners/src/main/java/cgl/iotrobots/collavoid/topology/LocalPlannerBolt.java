@@ -37,32 +37,41 @@ public class LocalPlannerBolt extends BaseRichBolt {
     private boolean reachedGoal = true;
     private Vector2 pref_vel;
     private Twist_ cmd_vel;
+    private Twist_ cmd_vel_cal;
+    private boolean reset = true;
 
     String topName;
 
+    // every time emit a new tuple
+    
     @Override
     public void execute(Tuple input) {
+        if (null == sensorID) {
+            if (input.contains(Constant_storm.FIELDS.SENSOR_ID_FIELD)) {
+                sensorID = input.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
+            } else {
+                outputCollector.ack(input);
+                return;
+            }
+        }
         // when ever reset the global plan stop the robot
         if (input.getSourceComponent().equals(Constant_storm.Components.GLOBAL_PLANNER_COMPONENT)) {
             global_plan = (List<PoseStamped_>) input.getValueByField(Constant_storm.FIELDS.PLAN_FIELD);
+//            logger.warn("----------------------------"+sensorID+"received new plan");
             if (!transformGlobalPlan(global_plan, transformed_plan)) {
-                logger.warn("Could not transform the global plan to the frame of the controller");
+                logger.warn("{}: Could not transform the global plan to the frame of the controller", sensorID);
+                reachedGoal = true;
             } else {// reset global plan
-                skip_next = false;
-                current_waypoint = 0;
-                xy_tolerance_latch_ = false;
+                resetPlanner(null);
+                reachedGoal = false;
             }
-            Twist_ cmd_vel_stop = new Twist_();
-            resetPlanner(cmd_vel_stop);
-            reachedGoal = false;
             outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM,
-                    new Values(input.getValue(0), input.getValue(1), cmd_vel_stop));
-        }
-
-        if (!reachedGoal) {
+                    new Values(input.getValue(0), input.getValue(1), new Twist_()));
+            // reset neighbor information, in practical situations this may need further consideration
+            outputCollector.emit(Constant_storm.Streams.RESET_STREAM,
+                    new Values(input.getValue(0), input.getValue(1), reset));
+        } else if (!reachedGoal) {
             if (input.getSourceStreamId().equals(Constant_storm.Streams.CONTROLLER_TIMER_STREAM)) {
-                if (sensorID == null)
-                    return;
                 if (locked) {
                     outputCollector.ack(input);
                     return;
@@ -70,43 +79,41 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 cmd_vel = null;
                 pref_vel = null;
                 if (!computeVelocity()) {
-                    logger.warn("In valid preferred velocity calculation!!");
+                    logger.warn("{}: Invalid preferred velocity calculation!!", sensorID);
                 } else {
                     if (pref_vel != null) {
                         outputCollector.emit(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM, new Values(
                                 input.getValueByField(Constant_storm.FIELDS.TIME_FIELD),
                                 sensorID,
-                                pref_vel
+                                base_odom.copy(),
+                                pref_vel.copy()
                         ));
                         locked = true;
                     } else {
                         outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, new Values(
                                 input.getValueByField(Constant_storm.FIELDS.TIME_FIELD),
                                 sensorID,
-                                cmd_vel
+                                cmd_vel.copy()
                         ));
                     }
                 }
             } else {
-                sensorID = input.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
-                time = input.getValueByField(Constant_storm.FIELDS.TIME_FIELD);
-                if (input.getSourceComponent().equals(Constant_storm.Components.ODOMETRY_COMPONENT)) {
+                time = input.getLongByField(Constant_storm.FIELDS.TIME_FIELD);
+                if (input.getSourceComponent().equals(Constant_storm.Components.ODOMETRY_TRANSFORM_COMPONENT)) {
                     base_odom = (Odometry_) input.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
-                } else if (locked && input.getSourceComponent().equals(Constant_storm.Components.AGENT_COMPONENT)) {
-                    Twist_ cmd_vel_cal = (Twist_) input.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);
+                } else if (locked && input.getSourceComponent().equals(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT)) {
+                    cmd_vel_cal = (Twist_) input.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);
                     locked = false;
                     if (!checkVelocityCommand(cmd_vel_cal)) {
-                        logger.info("Already reached the goal!!");
+                        logger.info("{}: Already reached the goal!!", sensorID);
                         reachedGoal = true;
                     } else {
-                        List<Object> emit = new ArrayList<Object>();
-                        emit.add(time);
-                        emit.add(sensorID);
-                        emit.add(cmd_vel_cal);
-                        outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, emit);
+                        outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM,
+                                new Values(time, sensorID, cmd_vel_cal.copy()));
                     }
                 }
             }
+
         }
 
         outputCollector.ack(input);
@@ -124,6 +131,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 new Fields(
                         Constant_storm.FIELDS.TIME_FIELD,
                         Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.ODOMETRY_FIELD,
                         Constant_storm.FIELDS.PREFERRED_VELOCITY_FIELD
                 )
         );
@@ -134,16 +142,20 @@ public class LocalPlannerBolt extends BaseRichBolt {
                         Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD
                 )
         );
+        declarer.declareStream(Constant_storm.Streams.RESET_STREAM,
+                new Fields(Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.RESET_FIELD));
     }
 
 
     private boolean computeVelocity() {
         if (base_odom == null) {
-            logger.warn("No odometry received yet!!");
+            logger.warn("{}: No odometry received yet!!", sensorID);
             return false;
         }
         if (global_plan == null) {
-            logger.warn("No global plan received yet!!");
+            logger.warn("{}: No global plan received yet!!", sensorID);
             return false;
         }
 
@@ -185,6 +197,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 //set the velocity command to zero
 
                 resetPlanner(cmd_vel);
+                logger.info("{} reached the goal x: {}, y {}, theta {}.", sensorID, goal_x, goal_y, goal_th);
                 reachedGoal = true;
             } else {
                 //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
@@ -212,7 +225,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
         if (!skip_next) {
             if (!transformGlobalPlan(global_plan, transformed_plan)) {
-                logger.warn("Could not transform the global plan to the frame of the controller");
+                logger.warn(sensorID + ": Could not transform the global plan to the frame of the controller");
                 return false;
             }
             findBestWaypoint(target_pose, global_pose.getPose());
@@ -236,10 +249,15 @@ public class LocalPlannerBolt extends BaseRichBolt {
     }
 
     private void resetPlanner(Twist_ cmd_vel) {
-        cmd_vel.setLinear(new Vector3d_(0, 0, 0));
-        cmd_vel.setAngular(new Vector3d_(0, 0, 0));
-        rotating_to_goal_ = false;
+        if (cmd_vel != null) {
+            cmd_vel.setLinear(new Vector3d_(0, 0, 0));
+            cmd_vel.setAngular(new Vector3d_(0, 0, 0));
+        }
+        base_odom = null;
+        skip_next = false;
+        current_waypoint = 0;
         xy_tolerance_latch_ = false;
+        rotating_to_goal_ = false;
         locked = false;
     }
 
@@ -256,7 +274,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
 
         if (cmd_vel.getLinear().getX() == 0.0 && cmd_vel.getAngular().getZ() == 0.0 && cmd_vel.getLinear().getY() == 0.0) {
-            logger.info("Did not find a good vel, trying next waypoint!");
+            logger.info(sensorID + ": Did not find a good vel, trying next waypoint!");
 
             if (current_waypoint < transformed_plan.size() - 1) {
                 current_waypoint++;
@@ -364,7 +382,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
         else if (Math.abs(v_th_samp) < Parameters.MIN_VEL_TH_INPLACE)
             v_th_samp = Methods_Planners.sign(v_th_samp) * Math.max(Parameters.MIN_VEL_TH_INPLACE, Math.abs(v_th_samp));
 
-        logger.info("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
+//        logger.info("Moving to desired goal orientation, th cmd: %1$2f" + v_th_samp);
         cmd_vel.getAngular().setZ(v_th_samp);
 
     }

@@ -10,6 +10,7 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.collavoid.commons.rabbitmq.Message;
 import cgl.iotrobots.collavoid.commons.rabbitmq.RabbitMQSender;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import cgl.iotrobots.collavoid.commons.storm.Methods_storm;
@@ -41,7 +42,7 @@ public class VelCmdPubBolt extends BaseRichBolt {
             String exchange = sensorID + Constant_msg.RMQ_EXCHANGE_SUFFIX;
             msgSender = new RabbitMQSender(url, exchange);
             try {
-                msgSender.open();
+                msgSender.open(Constant_msg.TYPE_EXCHANGE_TOPIC);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -53,7 +54,7 @@ public class VelCmdPubBolt extends BaseRichBolt {
         }
         Twist_ velCmd = (Twist_) input;
         try {
-            msg = new Message(velCmd.toJSON(), new HashMap<String, Object>());
+            msg = new Message(Methods_RMQ.serialize(velCmd), new HashMap<String, Object>());
             msgSender.send(msg, routingKey);
         } catch (IOException e) {
             e.printStackTrace();

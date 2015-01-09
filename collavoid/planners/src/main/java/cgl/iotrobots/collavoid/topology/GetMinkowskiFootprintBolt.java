@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
-    private List<Vector2> MinkowskiFootprint = new ArrayList<Vector2>();
     private List<Vector2> ownFootprint = new ArrayList<Vector2>();
 
     @Override
@@ -22,11 +21,11 @@ public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
         if (input.getSourceComponent().equals(Constant_storm.Components.POSE_ARRAY_COMPONENT)
                 && ownFootprint.size() > 0) {
             PoseArray_ poseArray_ = (PoseArray_) input.getValueByField(Constant_storm.FIELDS.POSE_ARRAY_FIELD);
-            getMinkowskiFootprint(poseArray_);
+
             List<Object> emit = new ArrayList<Object>();
             emit.add(input.getValue(0));
             emit.add(input.getValue(1));
-            emit.add(MinkowskiFootprint);
+            emit.add(getMinkowskiFootprint(poseArray_, ownFootprint));
             collector.emit(emit);
         } else if (input.getSourceStreamId().equals(Constant_storm.Streams.FOOTPRINT_OWN_STREAM)) {
             ownFootprint = (List<Vector2>) input.getValueByField(Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD);
@@ -43,7 +42,7 @@ public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
     }
 
     //for test replaced the algorithm computeNewMinkowskiFootprint
-    private void getMinkowskiFootprint(PoseArray_ poseArray_) {
+    private List<Vector2> getMinkowskiFootprint(PoseArray_ poseArray_, List<Vector2> ownFootprint) {
         // in robot base frame do not need transform
         double x, y;
         List<Vector2> localization_footprint = new ArrayList<Vector2>();
@@ -52,10 +51,10 @@ public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
             x = poseArray_.getPoses().get(i).getPosition().getX();
             y = poseArray_.getPoses().get(i).getPosition().getY();
             Vector2 p = new Vector2(x, y);
-            if (p.getLength() > 0.1)
+            if (p.VectorLength() > 0.1)
                 continue;
             localization_footprint.add(p);
         }
-        MinkowskiFootprint = Methods_Planners.minkowskiSumConvexHull(localization_footprint, ownFootprint);
+        return Methods_Planners.minkowskiSumConvexHull(localization_footprint, ownFootprint);
     }
 }

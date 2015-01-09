@@ -6,10 +6,13 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
 import cgl.iotrobots.collavoid.commons.planners.Line;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,15 +22,15 @@ import java.util.List;
  */
 public class AddNHConstraintsBolt extends BaseBasicBolt {
     private Agent agent;
-    private List<Line> nhConstLines = new ArrayList<Line>();
     private int seq = 0;
+    private Logger logger = LoggerFactory.getLogger(AddNHConstraintsBolt.class);
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        agent = (Agent) input.getValueByField(Constant_storm.FIELDS.AGENT_FIELD);
-        nhConstLines.clear();
+        agent = (Agent) Utils.deserialize(input.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
+        List<Line> nhConstLines = new ArrayList<Line>();
         if (!agent.holo_robot_)
-            addNHConstraints();
+            addNHConstraints(nhConstLines);
         collector.emit(new Values(input.getValue(0), input.getValue(1), nhConstLines, seq++));
     }
 
@@ -40,7 +43,7 @@ public class AddNHConstraintsBolt extends BaseBasicBolt {
                 Constant_storm.FIELDS.SEQUENCE_FIELD));
     }
 
-    private void addNHConstraints() {
+    private void addNHConstraints(List<Line> nhConstLines) {
         double min_error = agent.minErrorHolo;
         double max_error = agent.maxErrorHolo;
         double error = max_error;
@@ -58,16 +61,16 @@ public class AddNHConstraintsBolt extends BaseBasicBolt {
                 // ROS_DEBUG("%s I think I am in collision", me_->getId().c_str());
             }
         }
-        agent.cur_allowed_error_ = 1.0 / 3.0 * agent.cur_allowed_error_ + 2.0 / 3.0 * error;
-        //ROS_ERROR("error = %f", cur_allowed_error_);
+        agent.cur_allowed_nh_error_ = 1.0 / 3.0 * agent.cur_allowed_nh_error_ + 2.0 / 3.0 * error;
+        //ROS_ERROR("error = %f", cur_allowed_nh_error_);
         double speed_ang = Math.atan2(agent.prefVelociy.getY(), agent.prefVelociy.getX());
         double dif_ang = Methods_Planners.shortest_angular_distance(agent.position.getHeading(), speed_ang);
         //calculate possible tracking holomonic robot speed range
-        if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_error_ < 2.0 * min_error) {
+        if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_nh_error_ < 2.0 * min_error) {
             double max_track_speed = Methods_Planners.NHORCA.calculateMaxTrackSpeedAngle(
                     agent.time_to_holo_,
                     Math.PI / 2.0,
-                    agent.cur_allowed_error_,
+                    agent.cur_allowed_nh_error_,
                     agent.max_vel_x_,
                     agent.max_vel_th_,
                     v_max_ang);
@@ -81,7 +84,7 @@ public class AddNHConstraintsBolt extends BaseBasicBolt {
                     nhConstLines);
         } else {
             Methods_Planners.NHORCA.addMovementConstraintsDiff(
-                    agent.cur_allowed_error_,
+                    agent.cur_allowed_nh_error_,
                     agent.time_to_holo_,
                     agent.max_vel_x_,
                     agent.max_vel_th_,

@@ -5,10 +5,8 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import cgl.iotrobots.collavoid.commons.planners.Agent;
-import cgl.iotrobots.collavoid.commons.planners.Obstacle;
-import cgl.iotrobots.collavoid.commons.planners.Parameters;
-import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import backtype.storm.utils.Utils;
+import cgl.iotrobots.collavoid.commons.planners.*;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PointCloud2_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
@@ -24,22 +22,23 @@ import org.slf4j.LoggerFactory;
 
 public class GetObstacleBolt extends BaseBasicBolt {
     private Logger logger = LoggerFactory.getLogger(GetObstacleBolt.class);
-    private List<Obstacle> obstacles = new ArrayList<Obstacle>();
-    private Map<String, Agent> Agents = new HashMap<String, Agent>();
-    private String agentID;//use sensor Id as robot id
+    private Map<String, Neighbor> agents = new HashMap<String, Neighbor>();
+    private String sensorID = null;//use sensor Id as robot id
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
-
+        if (tuple.contains(Constant_storm.FIELDS.SENSOR_ID_FIELD)) {
+            sensorID = tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
+        }
         if (tuple.getSourceComponent().equals(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)) {
-            Agents = (Map<String, Agent>) tuple.getValueByField(Constant_storm.FIELDS.ALL_AGENTS_FIELD);
-        } else if (tuple.getSourceComponent().equals(Constant_storm.Components.SCAN_COMPONENT) && Agents.size() > 0) {
+            agents = (Map<String, Neighbor>) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.ALL_AGENTS_FIELD));
+        } else if (tuple.getSourceComponent().equals(Constant_storm.Components.SCAN_COMPONENT)) {
             List<Object> emit = new ArrayList<Object>();
-            agentID = (String) tuple.getValue(1);
+            List<Obstacle> obstacles = new ArrayList<Obstacle>();
             PointCloud2_ pointCloud2_ = (PointCloud2_) tuple.getValueByField(Constant_storm.FIELDS.SCAN_FIELD);
-            getObstacles(pointCloud2_);
+            getObstacles(pointCloud2_, obstacles);
             emit.add(tuple.getValue(0));
-            emit.add(agentID);
+            emit.add(sensorID);
             emit.add(obstacles);
             basicOutputCollector.emit(emit);
         }
@@ -54,7 +53,7 @@ public class GetObstacleBolt extends BaseBasicBolt {
         ));
     }
 
-    private void getObstacles(PointCloud2_ msg) {
+    private void getObstacles(PointCloud2_ msg, List<Obstacle> obstacles) {
         if (msg.getWidth() * msg.getHeight() == 0) {
             obstacles.clear();
             return;
@@ -150,13 +149,13 @@ public class GetObstacleBolt extends BaseBasicBolt {
 
     private boolean pointInNeighbor(Vector2 point) {
         double dist;
-        for (Map.Entry<String, Agent> e : Agents.entrySet()) {
-            if (!e.getKey().equals(agentID)) {
+        for (Map.Entry<String, Neighbor> e : agents.entrySet()) {
+            if (e.getKey().equals(sensorID))
+                continue;
                 dist = Vector2.abs(Vector2.minus(point, e.getValue().position.getPos()));
                 if (dist <= e.getValue().radius) {
                     return true;
                 }
-            }
         }
         return false;
     }

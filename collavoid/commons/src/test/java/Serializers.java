@@ -1,5 +1,5 @@
-package cgl.iotrobots.collavoid.commons.rmqmsg;
-
+import cgl.iotrobots.collavoid.commons.planners.Agent;
+import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -45,10 +45,16 @@ public class Serializers {
         return mapper.readValue(data, PoseArray_.class);
     }
 
-    public static StartGoal_ JSONToStartGoal_(byte[] data) throws IOException {
+    public static BaseConfig_ JSONToStartGoal_(byte[] data) throws IOException {
         ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        return mapper.readValue(data, StartGoal_.class);
+        return mapper.readValue(data, BaseConfig_.class);
+    }
+
+    public static Agent JSONToAgent(byte[] data) throws IOException {
+        ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        return mapper.readValue(data, Agent.class);
     }
 
     public static class StartGoalSerializer {

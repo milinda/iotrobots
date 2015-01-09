@@ -63,8 +63,10 @@ public class BuildTopology {
     }
 
     public void shutdown() {
-        odomSpout.close();
-        particleSpout.close();
+        if (odomSpout != null)
+            odomSpout.close();
+        if (particleSpout != null)
+            particleSpout.close();
         Map conf = Utils.readStormConfig();
         Nimbus.Client client = NimbusClient.getConfiguredClient(conf).getClient();
         KillOptions killOpts = new KillOptions();
@@ -145,8 +147,8 @@ public class BuildTopology {
     }
 
     private void setAttachBolts() {
-        builder.setSpout(Constant_storm.Components.TIMER_COMPONENT, new TimerSpout());
-        
+        builder.setSpout(Constant_storm.Components.TIMER_SPOUT_COMPONENT, new TimerSpout());
+
         builder.setSpout(Constant_storm.Components.ODOMETRY_COMPONENT + "Spout", odomSpout, 1)
                 .addConfigurations(spoutConfig.asMap())
                 .setMaxSpoutPending(200);
@@ -216,18 +218,23 @@ public class BuildTopology {
 
 
     private void buildTopology() {
+        //shufflegrouping need to change
         builder.setBolt(Constant_storm.Components.GLOBAL_PLANNER_COMPONENT, new GlobalPlannerBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.START_GOAL_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+
+        builder.setBolt(Constant_storm.Components.ODOMETRY_TRANSFORM_COMPONENT, new OdometryTransformBolt(), 1)
+                .fieldsGrouping(Constant_storm.Components.ODOMETRY_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 
         builder.setBolt(Constant_storm.Components.LOCAL_PLANNER_COMPONENT, new LocalPlannerBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.GLOBAL_PLANNER_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .fieldsGrouping(Constant_storm.Components.ODOMETRY_COMPONENT,
+                .fieldsGrouping(Constant_storm.Components.ODOMETRY_TRANSFORM_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-//                .fieldsGrouping(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT,
-//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .shuffleGrouping(Constant_storm.Components.TIMER_COMPONENT,
+                .fieldsGrouping(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
+                .shuffleGrouping(Constant_storm.Components.TIMER_SPOUT_COMPONENT,
                         Constant_storm.Streams.CONTROLLER_TIMER_STREAM);
 
         builder.setBolt(Constant_storm.Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT, new VelCmdPubBolt(), 1)
@@ -241,6 +248,8 @@ public class BuildTopology {
                 .shuffleGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT);
 
         builder.setBolt(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT, new GetAllAgentsBolt(), 1)
+                .shuffleGrouping(Constant_storm.Components.LOCAL_PLANNER_COMPONENT,
+                        Constant_storm.Streams.RESET_STREAM)
                 .shuffleGrouping(Constant_storm.Components.POSE_SHARE_COMPONENT);
 
         builder.setBolt(Constant_storm.Components.GET_MINKOWSKI_FOOTPRINT_COMPONENT, new GetMinkowskiFootprintBolt(), 1)
@@ -251,17 +260,20 @@ public class BuildTopology {
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 //
         builder.setBolt(Constant_storm.Components.AGENT_STATE_COMPONENT, new AgentStateBolt(), 1)
-                .fieldsGrouping(Constant_storm.Components.ODOMETRY_COMPONENT,
+                .fieldsGrouping(Constant_storm.Components.ODOMETRY_TRANSFORM_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
                 .fieldsGrouping(Constant_storm.Components.GET_OBSTACLES_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .shuffleGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)
                 .fieldsGrouping(Constant_storm.Components.GET_MINKOWSKI_FOOTPRINT_COMPONENT,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
                 .fieldsGrouping(Constant_storm.Components.LOCAL_PLANNER_COMPONENT,
                         Constant_storm.Streams.PREFERRED_VELOCITY_STREAM,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-                .shuffleGrouping(Constant_storm.Components.TIMER_COMPONENT,
+                .fieldsGrouping(Constant_storm.Components.LOCAL_PLANNER_COMPONENT,
+                        Constant_storm.Streams.RESET_STREAM,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
+                .shuffleGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)
+                .shuffleGrouping(Constant_storm.Components.TIMER_SPOUT_COMPONENT,
                         Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM);
 //
         builder.setBolt(Constant_storm.Components.AGENT_COMPONENT, new AgentBolt(), 1)
@@ -271,6 +283,8 @@ public class BuildTopology {
                 .fieldsGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,
                         Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+//                .fieldsGrouping(Constant_storm.Components.POSE_ARRAY_COMPONENT,
+//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 //
         builder.setBolt(Constant_storm.Components.ACC_CONSTRAINTS_COMPONENT, new AddAccelerationConstraintBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.AGENT_COMPONENT,
@@ -289,20 +303,20 @@ public class BuildTopology {
                         Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 //
-//        builder.setBolt(Constant_storm.Components.VO_LINES_JOIN_COMPONENT,
-//                new VOLinesJoinBolt(Constant_storm.FIELDS.JOIN_FIELDS), 1)
-//                .fieldsGrouping(Constant_storm.Components.ACC_CONSTRAINTS_COMPONENT,
-//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-//                .fieldsGrouping(Constant_storm.Components.NH_CONSTRAINTS_COMPONENT,
-//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-//                .fieldsGrouping(Constant_storm.Components.VO_AGENT_COMPONENT,
-//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
-//                .fieldsGrouping(Constant_storm.Components.VO_OBSTACLE_COMPONENT,
-//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+        builder.setBolt(Constant_storm.Components.VO_LINES_JOIN_COMPONENT,
+                new VOLinesJoinBolt(Constant_storm.FIELDS.JOIN_FIELDS), 1)
+                .fieldsGrouping(Constant_storm.Components.ACC_CONSTRAINTS_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
+                .fieldsGrouping(Constant_storm.Components.NH_CONSTRAINTS_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
+                .fieldsGrouping(Constant_storm.Components.VO_AGENT_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
+                .fieldsGrouping(Constant_storm.Components.VO_OBSTACLE_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 //
-//        builder.setBolt(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT, new VelocityComputeBolt(), 1)
-//                .fieldsGrouping(Constant_storm.Components.VO_LINES_JOIN_COMPONENT,
-//                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
+        builder.setBolt(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT, new VelocityComputeBolt(), 1)
+                .fieldsGrouping(Constant_storm.Components.VO_LINES_JOIN_COMPONENT,
+                        new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
     }
 
 }

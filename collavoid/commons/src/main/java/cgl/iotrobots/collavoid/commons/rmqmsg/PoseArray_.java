@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PoseArray_ implements Serializable {
+    private String id;
 
     private Header_ Header = new Header_();
 
@@ -24,8 +25,16 @@ public class PoseArray_ implements Serializable {
         return Poses;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public void setHeader(Header_ header) {
         Header = header;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setPoses(List<Pose_> poses) {
@@ -40,11 +49,4 @@ public class PoseArray_ implements Serializable {
         return poseArray_;
     }
 
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
-    }
 }

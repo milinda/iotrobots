@@ -21,7 +21,6 @@ public class Vector2 implements Serializable {
         this.y = p.getY();
     }
 
-
     public double getX() {
         return this.x;
     }
@@ -43,7 +42,7 @@ public class Vector2 implements Serializable {
         this.y = p.getY();
     }
 
-    public double getLength(){
+    public double VectorLength() {
         return Vector2.abs(this);
     }
 
@@ -135,8 +134,6 @@ public class Vector2 implements Serializable {
         }
     }
 
-
-
     public static Vector2 normalize(Vector2 p) {
         double x = p.getX() / abs(p);
         double y = p.getY() / abs(p);
@@ -147,13 +144,6 @@ public class Vector2 implements Serializable {
     public static Vector2 normal(Vector2 p){
         return normalize(new Vector2(p.getY(),-p.getX()));
     }
-
-    //convert pointcloud point32 datatype to Point2
-//    public static Vector2 Point32ToVector2(Point32 p) {
-//        double x = p.getX();
-//        double y = p.getY();
-//        return new Vector2(x, y);
-//    }
 
     public static Vector2 rotateVectorByAngle(Vector2 p, double ang) {
         double cos_a, sin_a, x, y;
@@ -178,5 +168,9 @@ public class Vector2 implements Serializable {
     @Override
     public String toString() {
         return "(x:" + x + ", " + "y:" + y + ")";
+    }
+
+    public Vector2 copy() {
+        return new Vector2(this.getX(), this.getY());
     }
 }
