@@ -21,6 +21,8 @@ public class FileBasedSimulator {
 
     BufferedReader br = null;
 
+    int parallel = 2;
+
     public void start(boolean parallel) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
@@ -83,6 +85,7 @@ public class FileBasedSimulator {
         FileBasedSimulator simulator = new FileBasedSimulator();
         if (args.length > 0) {
             simulator.start(true);
+            simulator.parallel = Integer.parseInt(args[0]);
         } else {
             simulator.start(false);
         }
