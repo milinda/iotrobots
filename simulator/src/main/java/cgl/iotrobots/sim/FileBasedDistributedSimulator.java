@@ -17,11 +17,11 @@ public class FileBasedDistributedSimulator {
     RabbitMQSender sender;
     RabbitMQReceiver receiver;
     RabbitMQReceiver bestReceiver;
-    private String url = "amqp://localhost:5672";
+//    private String url = "amqp://localhost:5672";
     BufferedReader br = null;
     Kryo kryo = new Kryo();
-//    private String url = "amqp://149.165.159.3:5672";
-    public FileBasedDistributedSimulator() {
+    private String url = "amqp://149.165.159.3:5672";
+    public FileBasedDistributedSimulator(String url) {
         try {
             sender = new RabbitMQSender(url, "simbard_laser");
             receiver = new RabbitMQReceiver(url, "simbard_map");
@@ -45,7 +45,7 @@ public class FileBasedDistributedSimulator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator();
+        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0]);
         fileBasedSimulator.start();
     }
 
