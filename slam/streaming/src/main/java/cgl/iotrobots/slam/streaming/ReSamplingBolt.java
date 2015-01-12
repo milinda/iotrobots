@@ -225,7 +225,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     }
 
-    protected void addParticleValue(ParticleValue value) {
+    protected synchronized void addParticleValue(ParticleValue value) {
         particleValueses[value.getIndex()] = value;
         receivedParticles++;
     }

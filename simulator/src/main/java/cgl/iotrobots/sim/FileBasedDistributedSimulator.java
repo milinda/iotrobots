@@ -20,7 +20,7 @@ public class FileBasedDistributedSimulator {
 //    private String url = "amqp://localhost:5672";
     BufferedReader br = null;
     Kryo kryo = new Kryo();
-    private String url = "amqp://149.165.159.3:5672";
+//    private String url = "amqp://149.165.159.3:5672";
     public FileBasedDistributedSimulator(String url) {
         try {
             sender = new RabbitMQSender(url, "simbard_laser");
