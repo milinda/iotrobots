@@ -76,7 +76,7 @@ public class SLAMTopology {
 
         // we are going to deploy on a real cluster
         if (!local) {
-            conf.setNumWorkers(6);
+            conf.setNumWorkers(8);
             StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
             // deploy on a local cluster
