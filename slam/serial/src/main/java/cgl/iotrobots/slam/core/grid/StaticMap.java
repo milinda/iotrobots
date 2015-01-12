@@ -103,7 +103,7 @@ public class StaticMap implements IGMap {
     }
 
     public Object cell(int x, int y, boolean c) {
-        if (x < mapSizeX && y < mapSizeY) {
+        if (x >= 0 && y >= 0 && x < mapSizeX && y < mapSizeY) {
             Object pa = storage[x][y];
             if (pa != null) {
                 return pa;
