@@ -48,6 +48,7 @@ public class SLAMTopology {
         options.addOption(Constants.ARGS_NAME, true, "Name of the topology");
         options.addOption(Constants.ARGS_LOCAL, false, "Weather we want run locally");
         options.addOption(Constants.ARGS_DS_MODE, true, "The distributed mode, specify 0, 1, 2, 3 etc");
+        options.addOption(Constants.ARGS_PARALLEL, true, "No of parallel nodes");
 
         CommandLineParser commandLineParser = new BasicParser();
         CommandLine cmd = commandLineParser.parse(options, args);
@@ -55,11 +56,13 @@ public class SLAMTopology {
         boolean local = cmd.hasOption(Constants.ARGS_LOCAL);
         String dsModeValue = cmd.getOptionValue(Constants.ARGS_DS_MODE);
         int dsMode = Integer.parseInt(dsModeValue);
+        String pValue = cmd.getOptionValue(Constants.ARGS_PARALLEL);
+        int p = Integer.parseInt(pValue);
 
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildTestTopology(builder, streamTopologyBuilder);
+            buildTestTopology(builder, streamTopologyBuilder, p);
         }
 
         Config conf = new Config();
@@ -89,7 +92,7 @@ public class SLAMTopology {
         StreamComponents components = streamTopologyBuilder.buildComponents();
     }
 
-    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
+    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder, int parallel) {
 
         // first create a rabbitmq Spout
         ErrorReporter reporter = new ErrorReporter() {
@@ -107,7 +110,7 @@ public class SLAMTopology {
         MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).allGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
