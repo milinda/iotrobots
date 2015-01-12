@@ -57,7 +57,7 @@ public class StaticMap implements IGMap {
         mapSizeY = ySize;
         sizeX2 = mapSizeX >> 1;
         sizeY2 = mapSizeY >> 1;
-        LOG.info("******************************* mapSizeX {} mapSizeY {} **************************", mapSizeX, mapSizeY);
+//        LOG.info("******************************* mapSizeX {} mapSizeY {} **************************", mapSizeX, mapSizeY);
     }
 
     public StaticMap(DoublePoint center, double xmin, double ymin, double xmax, double ymax, double delta) {
@@ -77,7 +77,7 @@ public class StaticMap implements IGMap {
         mapSizeY = ySize;
         sizeX2 = (int) Math.round((this.center.x - xmin) / this.delta);
         sizeY2 = (int) Math.round((this.center.y - ymin) / this.delta);
-        LOG.info("******************************* mapSizeX {} mapSizeY {} **************************", mapSizeX, mapSizeY);
+//        LOG.info("******************************* mapSizeX {} mapSizeY {} **************************", mapSizeX, mapSizeY);
     }
 
     public DoublePoint getCenter() {
