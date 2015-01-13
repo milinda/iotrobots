@@ -9,6 +9,7 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.LaserScan;
+import cgl.iotrobots.slam.core.grid.StaticMap;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
@@ -22,7 +23,10 @@ import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -554,7 +558,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     if (assignment.getNewTask() != taskId) {
                         Particle p = gfsp.getParticles().get(previousIndex);
                         // create a new ParticleMaps
-                        ParticleMaps particleMaps = new ParticleMaps(Utils.createTransferMap(p.getMap()),
+                        ParticleMaps particleMaps = new ParticleMaps((StaticMap) p.getMap(),
                                 assignment.getNewIndex(), assignment.getNewTask());
 
                         ParticleMapsList list;
@@ -712,7 +716,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         int newIndex = particleMaps.getIndex();
         Particle p = gfsp.getParticles().get(newIndex);
 
-        p.setMap(Utils.createGMap(particleMaps.getMap()));
+        p.setMap(particleMaps.getMap());
 
         // add the new particle index
         gfsp.addActiveParticle(newIndex);

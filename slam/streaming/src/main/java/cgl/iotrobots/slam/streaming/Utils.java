@@ -185,5 +185,6 @@ public class Utils {
         kryo.register(RangeReading.class);
         kryo.register(ParticleValues.class);
         kryo.register(ParticleMapsList.class);
+        kryo.register(StaticMap.class);
     }
 }
