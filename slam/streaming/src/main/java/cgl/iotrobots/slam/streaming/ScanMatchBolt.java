@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -75,6 +77,12 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private Lock lock = new ReentrantLock();
 
+    private ExecutorService executor;
+
+    private List<RabbitMQSender> particleSenders = new ArrayList<RabbitMQSender>();
+
+    private List<Kryo> kryoMapWriters = new ArrayList<Kryo>();
+
     private enum MatchState {
         WAITING_FOR_READING,
         COMPUTING_INIT_READINGS,
@@ -85,6 +93,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        executor = Executors.newFixedThreadPool(5);
         gfsp = new DistributedScanMatcher();
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
@@ -109,6 +118,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
         gfsp = ProcessorFactory.createMatcher(cfg);
 
+        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
+
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             // we use broadcast to receive assignments
@@ -118,8 +129,15 @@ public class ScanMatchBolt extends BaseRichBolt {
             // we use direct to receive particle values
             this.particleValueReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             // we use direct to send the new particle maps
-            this.particleSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
-            this.particleSender.open();
+            for (int i = 0; i < totalTasks; i++) {
+                RabbitMQSender  particleSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
+                particleSender.open();
+                particleSenders.add(particleSender);
+
+                Kryo k = new Kryo();
+                Utils.registerClasses(k);
+                kryoMapWriters.add(k);
+            }
 
             this.assignmentReceiver.listen(new ParticleAssignmentHandler());
             this.particleMapReceiver.listen(new MapHandler());
@@ -130,7 +148,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         // set the initial particles
-        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
+
         int taskId = topologyContext.getThisTaskIndex();
         int noOfParticles = computeParticlesForTask(cfg, totalTasks, taskId);
 
@@ -546,8 +564,8 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private void distributeAssignments(ParticleAssignments assignments) {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
-        int taskId = topologyContext.getThisTaskIndex();
-        Map<Integer, ParticleMapsList> values = new HashMap<Integer, ParticleMapsList>();
+        final int taskId = topologyContext.getThisTaskIndex();
+        final Map<Integer, ParticleMapsList> values = new HashMap<Integer, ParticleMapsList>();
         for (int i = 0; i < assignmentList.size(); i++) {
             ParticleAssignment assignment = assignmentList.get(i);
             if (assignment.getPreviousTask() == taskId) {
@@ -587,16 +605,34 @@ public class ScanMatchBolt extends BaseRichBolt {
             }
         }
 
-        for (Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
-            byte[] b = Utils.serialize(kryoMapWriting, listEntry.getValue());
-            Message message = new Message(b, new HashMap<String, Object>());
-            LOG.info("Sending particle map to {}", listEntry.getKey());
-            try {
-                particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + listEntry.getKey());
-            } catch (Exception e) {
-                LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                for (Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
+                    Kryo k = kryoMapWriters.get(listEntry.getKey());
+                    byte[] b = Utils.serialize(k, listEntry.getValue());
+                    Message message = new Message(b, new HashMap<String, Object>());
+                    LOG.info("Sending particle map to {}", listEntry.getKey());
+                    RabbitMQSender particleSender = particleSenders.get(listEntry.getKey());
+                    try {
+                        particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + listEntry.getKey());
+                    } catch (Exception e) {
+                        LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
+                    }
+                }
             }
-        }
+        });
+
+//        for (Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
+//            byte[] b = Utils.serialize(kryoMapWriting, listEntry.getValue());
+//            Message message = new Message(b, new HashMap<String, Object>());
+//            LOG.info("Sending particle map to {}", listEntry.getKey());
+//            try {
+//                particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + listEntry.getKey());
+//            } catch (Exception e) {
+//                LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
+//            }
+//        }
     }
 
     private List<ParticleValue> particleValues = new ArrayList<ParticleValue>();
