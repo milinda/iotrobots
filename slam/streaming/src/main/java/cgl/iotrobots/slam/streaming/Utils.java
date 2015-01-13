@@ -60,8 +60,10 @@ public class Utils {
                 map.getPatchMagnitude(),
                 map.getPatchSize());
 //        LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
-        for (int x = 0; x < map.getMapSizeX(); x++) {
-            for (int y = 0; y < map.getMapSizeY(); y++) {
+        int sizeX = map.getMapSizeX();
+        int sizeY = map.getMapSizeY();
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
                 IntPoint p = new IntPoint(x, y);
                 PointAccumulator pointAccumulator = (PointAccumulator) map.cell(p, false);
