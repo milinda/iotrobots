@@ -247,7 +247,7 @@ public class SimulatorStorm {
 
             time = node.getCurrentTime();
             //send transform
-            sendTransform();
+//            sendTransform();
             //publish scan in frequency of 10Hz
             if (getCounter() % 1 == 0) {
                 pc2.getHeader().setSeq(pc2Seq++);

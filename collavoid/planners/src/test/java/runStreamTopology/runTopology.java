@@ -20,27 +20,19 @@ public class runTopology {
     private static Logger LOG = LoggerFactory.getLogger(runTopology.class);
 
     public static void main(String[] args) throws Exception {
-        TopologyBuilder builder = new TopologyBuilder();
-        int dsMode = 0;
-        boolean local = true;
 
-//        if (dsMode == 0) {
-//            buildTestTopology(builder);
-//        }
 
         Config conf = new Config();
         conf.setDebug(false);
-        // we are not going to track individual messages, message loss is inherent in the decoder
-        // also we cannot replay message because of the decoder
-        //conf.put(Config.TOPOLOGY_ACKER_EXECUTORS, 0);
-
+        conf.put(Config.TOPOLOGY_ACKER_EXECUTORS, 0);
         // add the serializers
         addSerializers(conf);
 
         // we are going to deploy on a real cluster
-        if (!local) {
-            conf.setNumWorkers(5);
-            StormSubmitter.submitTopology("testRMQSpout", conf, builder.createTopology());
+        if (args != null && args.length > 0) {
+            conf.setNumWorkers(3);
+            final BuildTopology topology = new BuildTopology(conf);
+            StormSubmitter.submitTopology(args[0], conf, topology.getStormTopology());
         } else {
             // deploy on a local cluster
             conf.setMaxTaskParallelism(3);
@@ -49,19 +41,7 @@ public class runTopology {
             topology.setTopology();
             topology.submit();
 
-//            List<BuildTopology> topologies = new ArrayList<BuildTopology>();
-//            for (int i = 0; i < Parameters.ROBOT_NUMBER; i++) {
-//                topologies.add(new BuildTopology(cluster, conf, i));
-//                topologies.get(i).setTopology();
-//                topologies.get(i).submit();
-//            }
-
-
             Thread.sleep(1000000);
-//            for (BuildTopology topo : topologies) {
-//                topo.shutdown();
-//            }
-//            topology.shutdown();
             cluster.shutdown();
         }
     }

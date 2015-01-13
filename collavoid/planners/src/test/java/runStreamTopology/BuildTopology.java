@@ -36,7 +36,7 @@ import java.util.Map;
 
 public class BuildTopology {
     private Logger logger = LoggerFactory.getLogger(BuildTopology.class);
-    private LocalCluster localCluster;
+    private LocalCluster localCluster=null;
     private Config config;
     private int id;
     private Map<String, RMQContext> RMQContexts;
@@ -57,10 +57,23 @@ public class BuildTopology {
     private IRichSpout particleSpout;
     private IRichSpout poseShareSpout;
     private IRichSpout startGoalSpout;
-    private TopologyBuilder builder;
+    private TopologyBuilder builder = new TopologyBuilder();;
 
+    public BuildTopology(final Config config){
+        this(null,config,null);
+    }
     public BuildTopology(final LocalCluster localCluster, Config config, String toplogyName) {
-        this.localCluster = localCluster;
+        if (localCluster!=null){
+            this.localCluster = localCluster;
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    try {
+                        localCluster.shutdown();
+                    } catch (Exception e) {
+                    }
+                }
+            });
+        }
         this.config = config;
 
 //        this.id = ID;
@@ -72,23 +85,19 @@ public class BuildTopology {
         RMQContexts.put(Constant_msg.KEY_POSE_SHARE, new RMQContext(Constant_msg.KEY_POSE_SHARE, "*"));
         RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_FANOUT;
 
-        builder = new TopologyBuilder();
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                try {
-                    localCluster.shutdown();
-                } catch (Exception e) {
-
-                }
-
-            }
-        });
     }
 
     public void submit() {
+        if (localCluster==null){
+            logger.error("Not in local mode, localCluster not received!!");
+            return;
+        }
         stormTopology = builder.createTopology();
         localCluster.submitTopology(toplogyName, config, stormTopology);
+    }
+
+    public StormTopology getStormTopology(){
+        return stormTopology=builder.createTopology();
     }
 
     public void shutdown() {
@@ -361,8 +370,8 @@ public class BuildTopology {
             // you're given a RabbitMQ Channel so you're free to wire up your exchange/queue bindings as you see fit
             try {
                 Map<String, Object> args = new HashMap<String, Object>();
-                channel.exchangeDeclare(exchange, exType, true);
-                channel.queueDeclare(queue, true, false, true, args);
+                channel.exchangeDeclare(exchange, exType, false);
+                channel.queueDeclare(queue, false, false, true, args);
                 channel.queueBind(queue, exchange, routingKey);
                 channel.queuePurge(queue);
             } catch (IOException e) {

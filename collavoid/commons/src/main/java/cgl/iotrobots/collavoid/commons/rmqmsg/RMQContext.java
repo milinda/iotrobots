@@ -12,7 +12,7 @@ public class RMQContext {
 
     public Channel CHANNEL = null;
     public String EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_TOPIC;
-    public boolean DURABLE = true;
+    public boolean DURABLE = false;
 
     public RMQContext(String MessageType, String sensorID) {
         this.EXCHANGE_NAME = MessageType;

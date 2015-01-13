@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RabbitMQSender {
-    public static final int DEFAULT_PRE_FETCH = 64;
+    public static final int DEFAULT_PRE_FETCH = 200;
 
     private static Logger LOG = LoggerFactory.getLogger(RabbitMQSender.class);
 
@@ -85,7 +85,7 @@ public class RabbitMQSender {
                 LOG.info("setting basic.qos / prefetch count to " + prefetchCount + " for " + exchangeName);
                 channel.basicQos(prefetchCount);
             }
-            channel.exchangeDeclare(exchangeName, exchangeType, true);//set to true for test
+            channel.exchangeDeclare(exchangeName, exchangeType, false);//set to true for test
 
         } catch (Exception e) {
             reset();

@@ -41,10 +41,10 @@ public class VelCmdPubBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        if (init++ < 10) {
-            collector.ack(tuple);
-            return;
-        }
+//        if (init++ < 50) {
+//            collector.ack(tuple);
+//            return;
+//        }
         sensorID = (String) tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
         routingKey = new RMQContext(Constant_msg.KEY_VELOCITY_CMD, sensorID).ROUTING_KEY;
         Object input = tuple.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);
