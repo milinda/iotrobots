@@ -1,9 +1,9 @@
 package cgl.iotrobots.slam.streaming.msgs;
 
-import cgl.iotrobots.slam.core.grid.StaticMap;
-
 public class ParticleMaps {
-    private StaticMap map;
+//    private StaticMap map;
+
+    private TransferMap map;
 
     private int index;
 
@@ -12,17 +12,17 @@ public class ParticleMaps {
     public ParticleMaps() {
     }
 
-    public ParticleMaps(StaticMap map, int index, int task) {
+    public ParticleMaps(TransferMap map, int index, int task) {
         this.map = map;
         this.index = index;
         this.task = task;
     }
 
-    public StaticMap getMap() {
+    public TransferMap getMap() {
         return map;
     }
 
-    public void setMap(StaticMap map) {
+    public void setMap(TransferMap map) {
         this.map = map;
     }
 
