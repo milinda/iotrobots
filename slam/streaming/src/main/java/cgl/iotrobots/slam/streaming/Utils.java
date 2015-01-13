@@ -59,7 +59,7 @@ public class Utils {
                 map.getMapSizeY(), map.getSizeX2(), map.getSizeY2(),
                 map.getPatchMagnitude(),
                 map.getPatchSize());
-        LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
+//        LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
         for (int x = 0; x < map.getMapSizeX(); x++) {
             for (int y = 0; y < map.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
@@ -182,5 +182,6 @@ public class Utils {
         kryo.register(RangeSensor.class);
         kryo.register(RangeReading.class);
         kryo.register(ParticleValues.class);
+        kryo.register(ParticleMapsList.class);
     }
 }
