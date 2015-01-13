@@ -445,7 +445,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<Object> emit = new ArrayList<Object>();
 
         ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
-        LOG.error("Emit for map, transfermap");
+        LOG.info("Emit for map, transfermap");
 //        TransferMap map = Utils.createTransferMap(best.getMap());
 
         emit.add(particleValue);
@@ -453,8 +453,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);
-        LOG.error("Emit for map, collector");
-        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
+        LOG.info("Emit for map, collector");
+        //outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
         List<Object> emitValue = new ArrayList<Object>();
         emitValue.add(Utils.serialize(kryoBestParticle, ParticleValue.class));
