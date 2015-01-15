@@ -23,9 +23,15 @@ public abstract class Constant_msg {
     public static final String RMQ_ROUTINGKEY_PREFIX = "RoutingKey_";
     public static final String RMQ_QUEUE_SUFFIX = "_Spout";
 
-    //    public static final String RMQ_IP="149.165.159.3";
+    //remote test
+//    public static final String RMQ_IP="149.165.159.3";
+////    public static final String RMQ_IP="10.39.1.105";
 //    public static final int RMQ_PORT=5672;
 //    public static final String RMQ_URL = "amqp://"+RMQ_IP+":"+RMQ_PORT;
+
+    //local test
     public static final String RMQ_URL = "amqp://localhost:5672";
+    public static final int RMQ_PORT = 5672;
+    public static final String RMQ_IP = "localhost";
 
 }

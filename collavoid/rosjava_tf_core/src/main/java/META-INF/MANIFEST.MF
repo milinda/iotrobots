@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: std_msgs-0.5.8.jar tf2_msgs-0.4.9.jar guava-12.0.jar com.s
- pringsource.org.apache.commons.logging-1.1.1.jar rosjava_tf_core.jar 
- geometry_msgs-1.10.2.jar rosjava-0.1.6.jar vecmath-1.5.2.jar message_
- generation-0.1.22.jar jgrapht-core-0.9.0.jar tf-1.10.6.jar
-Main-Class: org.ros.rosjava.tf.test.TransformTreeTest
-

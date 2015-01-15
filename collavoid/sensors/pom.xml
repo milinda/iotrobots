@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>collavoid</artifactId>
+        <artifactId>iotrobots-collavoid-parent</artifactId>
         <groupId>iotrobots</groupId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -18,6 +18,17 @@
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>${rabitmq.verion}</version>
+        </dependency>
+        <dependency>
+            <groupId>iotcloud2</groupId>
+            <artifactId>iotcloud-core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <!--<scope>provided</scope>-->
+        </dependency>
+        <dependency>
+            <groupId>iotrobots</groupId>
+            <artifactId>commons-collavoid</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

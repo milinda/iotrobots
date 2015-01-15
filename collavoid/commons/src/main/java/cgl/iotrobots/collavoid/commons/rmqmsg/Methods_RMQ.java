@@ -10,12 +10,25 @@ import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 /**
  * Created by hjh on 12/21/14.
  */
 public class Methods_RMQ {
+
+    public static void clearQueues(Map<String, RMQContext> RMQContexts) {
+        for (Map.Entry<String, RMQContext> context : RMQContexts.entrySet()) {
+            if (context.getValue().CHANNEL == null || !context.getKey().equals(Constant_msg.KEY_VELOCITY_CMD))
+                continue;
+            try {
+                context.getValue().CHANNEL.queuePurge(context.getValue().QUEUE_NAME);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public static Connection getConnection(Address[] addresses,
                                            String url,

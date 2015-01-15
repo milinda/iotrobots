@@ -39,7 +39,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
 
     private BlockingQueue<Twist_> velQueue = new LinkedBlockingDeque<Twist_>();
 
-    private Map<String, RMQContext> Contexts;
+    private Map<String, RMQContext> rmqContexts;
 
     private BaseConfig_ baseConfig = new BaseConfig_();
 
@@ -58,7 +58,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
         // running controller node need a different node name however topics and other stuffs are
         // using original node name which is also used as the sensorid. So need to get rid of the suffix.
         this.sensorID = new String(nodeName).replace("_rmq", "");
-        Contexts = msgContexts;
+        rmqContexts = msgContexts;
     }
 
     @Override
@@ -81,9 +81,9 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
         }
 
         try {
-            String queueName = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).QUEUE_NAME;
-            String routingKey = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).ROUTING_KEY;
-            final Channel velCmdChannel = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).CHANNEL;
+            String queueName = rmqContexts.get(Constant_msg.KEY_VELOCITY_CMD).QUEUE_NAME;
+            String routingKey = rmqContexts.get(Constant_msg.KEY_VELOCITY_CMD).ROUTING_KEY;
+            final Channel velCmdChannel = rmqContexts.get(Constant_msg.KEY_VELOCITY_CMD).CHANNEL;
             velCmdChannel.basicConsume(queueName, autoAck, routingKey + "Tag",
                     new DefaultConsumer(velCmdChannel) {
                         @Override
@@ -107,6 +107,8 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
         }
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
+            int j = 0;
+            double sum;
             @Override
             protected void loop() throws InterruptedException {
                 Twist_ m = velQueue.take();
@@ -120,6 +122,14 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
                 str.getAngular().setZ(m.getAngular().getZ());
 
                 velcmdPublisher.publish(str);
+
+                double delay = (System.currentTimeMillis() - m.getTime()) / 1000.0;
+                if (delay > 1) {
+                    Methods_RMQ.clearQueues(rmqContexts);
+                    velQueue.clear();
+                    System.out.println("Delay is longer than 1s, " + "queue purged!!");
+                }
+
             }
         });
 
@@ -127,7 +137,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
             @Override
             public void onNewMessage(Odometry odometry) {
                 Methods_RMQ.publishMsg(
-                        Contexts.get(Constant_msg.KEY_ODOMETRY),
+                        rmqContexts.get(Constant_msg.KEY_ODOMETRY),
                         Methods_RMQ.serialize(toOdometry_(odometry)));
             }
         });
@@ -136,7 +146,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
             @Override
             public void onNewMessage(PointCloud2 pointCloud2) {
                 Methods_RMQ.publishMsg(
-                        Contexts.get(Constant_msg.KEY_SCAN),
+                        rmqContexts.get(Constant_msg.KEY_SCAN),
                         Methods_RMQ.serialize(toPointCloud2_(pointCloud2)));
             }
         });
@@ -145,7 +155,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
             @Override
             public void onNewMessage(PoseArray poseArray) {
                 Methods_RMQ.publishMsg(
-                        Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD),
+                        rmqContexts.get(Constant_msg.KEY_PARTICLE_CLOUD),
                         Methods_RMQ.serialize(toPoseArray_(poseArray)));
             }
         });
@@ -166,7 +176,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
                     baseConfig.setId(sensorID);
                     baseConfig.setTime(System.currentTimeMillis());
                     Methods_RMQ.publishMsg(
-                            Contexts.get(Constant_msg.KEY_BASE_CONFIG),
+                            rmqContexts.get(Constant_msg.KEY_BASE_CONFIG),
                             Methods_RMQ.serialize(baseConfig));
                 }
             }
@@ -275,6 +285,10 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
 
         return poseStamped_;
 
+    }
+
+    public BlockingQueue<Twist_> getVelQueue() {
+        return velQueue;
     }
 
     @Override

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,7 @@ public class AgentBolt extends BaseRichBolt {
                                 tuple.getValue(0),
                                 tuple.getValue(1),
                                 Utils.serialize(currentContext.agent)));
+                logger.info("Debug---Send out cal cmd at {}!!", System.currentTimeMillis());
             }
         }
         // what about reset???
@@ -199,8 +201,9 @@ public class AgentBolt extends BaseRichBolt {
         for (Neighbor agent1 : agent.AgentNeighbors) {
             updateAgentState(agent1);
         }
-        agent.AgentNeighbors.sort(new Comparators.NeighborDistComparator(
-                agent.position.getPos()));
+//        agent.AgentNeighbors.sort(new Comparators.NeighborDistComparator(
+//                agent.position.getPos()));
+        Collections.sort(agent.AgentNeighbors, new Comparators.NeighborDistComparator(agent.position.getPos()));
     }
 
     private void updateAgentState(Neighbor agt) {

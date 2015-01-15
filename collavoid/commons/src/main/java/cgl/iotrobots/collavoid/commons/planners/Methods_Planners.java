@@ -165,9 +165,8 @@ public class Methods_Planners implements Serializable {
         int n = P.length, k = 0;
         ConvexHullPoint[] result = new ConvexHullPoint[2 * n];
 
-        // Sort points lexicographically, here use parallel sort
         if (!sorted)
-            Arrays.parallelSort(P, new Comparators.VectorsLexigraphicComparator());
+            Arrays.sort(P, new Comparators.VectorsLexigraphicComparator());
 
         //    ROS_WARN("points length %d", (int)P.size());
 

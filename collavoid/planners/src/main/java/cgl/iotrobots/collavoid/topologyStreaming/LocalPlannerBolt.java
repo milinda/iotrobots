@@ -98,6 +98,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                                 currentContext.pref_vel.copy()
                         ));
                         currentContext.locked = true;
+                        logger.info("Debug---Send out prefvel at {}!!", System.currentTimeMillis());
                     } else {
                         outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, new Values(
                                 input.getValueByField(Constant_storm.FIELDS.TIME_FIELD),

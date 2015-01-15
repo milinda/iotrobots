@@ -16,7 +16,6 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
-import org.ros.rosjava.tf.pubsub.TransformBroadcaster;
 import sensor_msgs.PointCloud2;
 import simbad.gui.Simbad;
 import simbad.sim.*;
@@ -86,8 +85,6 @@ public class SimulatorStorm {
         String ctlCmd;
         AgentControllerStorm agentController;
 
-        //tf broadcaster
-        TransformBroadcaster tfb = null;
         //frame
         String robotFrame;
         String odomFrame;
@@ -216,10 +213,6 @@ public class SimulatorStorm {
                     }
                 });
             }
-
-            if (tfb == null) {
-                tfb = new TransformBroadcaster(node);
-            }
         }
 
         /**
@@ -227,12 +220,13 @@ public class SimulatorStorm {
          */
         public void initBehavior() {
             agentController.clearQueues();
-            float colorvalue = (float) this.id / robotNb;
-            setColor(new Color3f(0, colorvalue, 0));
             this.resetPosition();
             this.rotateY(orientation);
             sgseq = 0;
-
+            vl = 0;
+            vr = 0;
+            float colorvalue = (float) this.id / robotNb;
+            setColor(new Color3f(0, colorvalue, 0));
         }
 
         /**
@@ -246,8 +240,7 @@ public class SimulatorStorm {
                 kinematic.setWheelsVelocity(vl, vr);
 
             time = node.getCurrentTime();
-            //send transform
-//            sendTransform();
+
             //publish scan in frequency of 10Hz
             if (getCounter() % 1 == 0) {
                 pc2.getHeader().setSeq(pc2Seq++);
@@ -335,35 +328,6 @@ public class SimulatorStorm {
             return ori;
         }
 
-        public void sendTransform() {
-            String childFrame = robotFrame;
-            String parentFrame = odomFrame;
-
-            Transform3D tf;
-            Vector3d tft3d = new Vector3d();
-            Quat4d tfrq = new Quat4d();
-
-            tf = getTransform();
-            tf.get(tft3d);
-            tf.get(tfrq);
-
-            utilsSim.toROSCoordinate(tft3d);
-            utilsSim.toROSCoordinate(tfrq);
-
-            tfb.sendTransform(
-                    parentFrame, childFrame,
-                    tft3d.getX(), tft3d.getY(), tft3d.getZ(),
-                    tfrq.getX(), tfrq.getY(), tfrq.getZ(), tfrq.getW()
-            );
-            // currently map frame and odometry frame are the same
-            childFrame = odomFrame;
-            parentFrame = globalFrame;
-            tfb.sendTransform(
-                    parentFrame, childFrame,
-                    0, 0, 0,
-                    0, 0, 0, 1
-            );
-        }
 
         public Transform3D getTransform() {
             Transform3D tf = new Transform3D();

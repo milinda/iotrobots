@@ -41,7 +41,7 @@ public class VelCmdPubBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-//        if (init++ < 50) {
+//        if (init++ < 100) {
 //            collector.ack(tuple);
 //            return;
 //        }
@@ -52,6 +52,7 @@ public class VelCmdPubBolt extends BaseRichBolt {
             throw new IllegalArgumentException("Not a valid velocity command!");
         }
         Twist_ velCmd = (Twist_) input;
+        velCmd.setTime(tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD));
         try {
             msg = new Message(Methods_RMQ.serialize(velCmd), new HashMap<String, Object>());
             msgSender.send(msg, routingKey);

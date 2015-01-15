@@ -93,6 +93,7 @@ public abstract class Constant_storm {
         public static final String VO_AGENT_COMPONENT="voAgent";
         public static final String VO_OBSTACLE_COMPONENT="voObstacle";
         public static final String VO_LINES_JOIN_COMPONENT="voLineJoin";
+        public static final String VO_LINES_COMPUTE_COMPONENT = "voLinesCompute";
         public static final String GET_MINKOWSKI_FOOTPRINT_COMPONENT="getMinkowskiFootprint";
     }
     public static class KeyToComponentMap{

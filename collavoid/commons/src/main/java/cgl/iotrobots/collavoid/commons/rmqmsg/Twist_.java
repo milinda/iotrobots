@@ -10,6 +10,8 @@ import java.io.Serializable;
 
 public class Twist_ implements Serializable {
 
+    private long Time;
+
     private Vector3d_ Angular = new Vector3d_();
 
     private Vector3d_ Linear = new Vector3d_();
@@ -21,12 +23,20 @@ public class Twist_ implements Serializable {
         this.Angular = new Vector3d_(angular);
     }
 
+    public void setTime(long time) {
+        Time = time;
+    }
+
     public void setLinear(Vector3d_ linear) {
         this.Linear = new Vector3d_(linear);
     }
 
     public Vector3d_ getAngular() {
         return Angular;
+    }
+
+    public long getTime() {
+        return Time;
     }
 
     public Vector3d_ getLinear() {

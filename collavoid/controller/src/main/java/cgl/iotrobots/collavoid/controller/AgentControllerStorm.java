@@ -4,6 +4,7 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Contexts;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.RMQContext;
+import cgl.iotrobots.collavoid.commons.storm.Methods_storm;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import org.ros.node.DefaultNodeMainExecutor;
@@ -11,7 +12,6 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class AgentControllerStorm {
@@ -74,17 +74,8 @@ public class AgentControllerStorm {
     }
 
     public void clearQueues() {
-        for (Map.Entry<String, RMQContext> context : RMQContexts.entrySet()) {
-            if (context.getValue().CHANNEL == null || !context.getKey().equals(Constant_msg.KEY_VELOCITY_CMD))
-                continue;
-            try {
-                context.getValue().CHANNEL.queuePurge(context.getValue().QUEUE_NAME);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-
+        Methods_RMQ.clearQueues(RMQContexts);
+        agentROSNode.getVelQueue().clear();
     }
 
     public void stop() {
