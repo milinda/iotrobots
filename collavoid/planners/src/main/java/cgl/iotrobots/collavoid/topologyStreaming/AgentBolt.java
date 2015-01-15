@@ -84,7 +84,6 @@ public class AgentBolt extends BaseRichBolt {
                                 tuple.getValue(0),
                                 tuple.getValue(1),
                                 Utils.serialize(currentContext.agent)));
-                logger.info("Debug---Send out cal cmd at {}!!", System.currentTimeMillis());
             }
         }
         // what about reset???

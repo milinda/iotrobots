@@ -63,7 +63,6 @@ public class AgentStateBolt extends BaseRichBolt {
             Agents = (Map<String, Neighbor>) Utils.deserialize(
                     tuple.getBinaryByField(Constant_storm.FIELDS.ALL_AGENTS_FIELD));
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM)) {
-            logger.info("Debug---Received prefvel at {}!!", System.currentTimeMillis());
             updatePrefVel(tuple);
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM)) {
             updateMeState(tuple);
