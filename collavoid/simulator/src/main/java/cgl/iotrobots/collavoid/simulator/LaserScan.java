@@ -1,5 +1,6 @@
 package cgl.iotrobots.collavoid.simulator;
 
+import cgl.iotrobots.collavoid.commons.rmqmsg.PointCloud2_;
 import sensor_msgs.PointCloud2;
 import simbad.sim.RangeSensorBelt;
 
@@ -94,31 +95,14 @@ public class LaserScan {
         utilsSim.toPointCloud2(pc2, scan);
     }
 
-//    public cgl.iotrobots.collavoid.simulator.LaserScan(double minrange, double angle, int nbsensors, double maxRange, int updateFreq) {
-//        this.minrange = minrange;
-//        this.height = 0;
-//        // angle is arranged symmetrically around x axis
-//        // compute angles ,positions , directions
-//        positions = new Vector3d[nbsensors];
-//        directions = new Vector3d[nbsensors];
-//        double zstart=minrange*Math.tan(angle/2);
-//        double zstep=zstart/(nbsensors/2);
-//        Vector3d frontDir = new Vector3d(maxRange, 0, 0);
-//        angles = new double[nbsensors];
-//        Transform3D transform = new Transform3D();
-//        double step = angle / ((double) nbsensors - 1);
-//        // arranged from right to left
-//        for (int i = 0; i < nbsensors; i++) {
-//            angles[i] = -angle / 2 + i * step;
-//            transform.setIdentity();
-//            transform.rotY(angles[i]);
-//            Vector3d pos = new Vector3d(1.2,0,zstart-i*zstep);
-//            positions[i] = pos;
-//            Vector3d dir = new Vector3d(frontDir);
-//            transform.transform(dir);
-//            directions[i] = dir;
-//        }
-//        sensors = new RangeSensorBelt(positions, directions, RangeSensorBelt.TYPE_LASER, 0);
-//        sensors.setUpdatePerSecond(updateFreq);
-//    }
+    //no ros
+    public void getLaserscanPointCloud2(PointCloud2_ pc2, Transform3D transform3D) {
+        List<Point3d> scan = new ArrayList<Point3d>();
+        getScan(scan);
+        // transform to map or global frame
+        for (int i = 0; i < scan.size(); i++) {
+            transform3D.transform(scan.get(i));
+        }
+        utilsSim.toPointCloud2(pc2, scan);
+    }
 }

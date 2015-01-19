@@ -25,6 +25,7 @@ public class VelocityComputeBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+//        System.out.println("Debug-newv cal:"+System.currentTimeMillis());
         agent = (Agent) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
         newVelocity = Methods_Planners.ClearPath.calculateClearpathVelocity(
                 null,

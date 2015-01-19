@@ -73,6 +73,10 @@ public class AgentControllerStorm {
         }
     }
 
+    public boolean isGoalReached() {
+        return agentROSNode.isGoalReached();
+    }
+
     public void clearQueues() {
         Methods_RMQ.clearQueues(RMQContexts);
         agentROSNode.getVelQueue().clear();
