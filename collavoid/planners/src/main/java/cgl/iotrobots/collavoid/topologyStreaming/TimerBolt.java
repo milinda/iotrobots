@@ -43,8 +43,8 @@ public class TimerBolt extends BaseBasicBolt {
             String sensorID = tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
             BaseConfig_ conf = (BaseConfig_) tuple.getValueByField(Constant_storm.FIELDS.BASE_CONFIG_FIELD);
             TimerboltContext context = new TimerboltContext();
-            context.pubMePeriod = (long) (1 / conf.getPublisMeFreq() * 1000);
-            context.controlPeriod = (long) (1 / conf.getControlFreq() * 1000);
+            context.pubMePeriod = (long) ((1 / conf.getPublisMeFreq() * 1000) - 10);
+            context.controlPeriod = (long) ((1 / conf.getControlFreq() * 1000) - 10);
             contextMap.put(sensorID, context);
         }
     }

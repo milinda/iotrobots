@@ -24,7 +24,7 @@ public class VOLinesComputeBolt_ extends BaseBasicBolt {
     private Agent agent;
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
-        logger.info("Debug---Received cal cmd at {}!!", System.currentTimeMillis());
+//        System.out.println("Debug-cmdc in: "+ System.currentTimeMillis());
         agent = (Agent) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
         agent.addOrcaLines.clear();
         agent.voAgents.clear();

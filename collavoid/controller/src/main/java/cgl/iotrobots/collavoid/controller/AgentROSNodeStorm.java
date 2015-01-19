@@ -37,6 +37,8 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
 
     private boolean autoAck = false;
 
+    private boolean goalReached;
+
     private BlockingQueue<Twist_> velQueue = new LinkedBlockingDeque<Twist_>();
 
     private Map<String, RMQContext> rmqContexts;
@@ -94,6 +96,7 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
                             Twist_ velocity = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
+                            goalReached = velocity.isGoalReached();
                             velQueue.offer(velocity);
                             velCmdChannel.basicAck(deliveryTag, false);
                         }
@@ -123,12 +126,13 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
 
                 velcmdPublisher.publish(str);
 
-                double delay = (System.currentTimeMillis() - m.getTime()) / 1000.0;
-                if (delay > 1) {
-                    Methods_RMQ.clearQueues(rmqContexts);
-                    velQueue.clear();
-                    System.out.println("Delay is longer than 1s, " + "queue purged!!");
-                }
+//                double delay = (System.currentTimeMillis() - m.getTime()) / 1000.0;
+//                System.out.println("Delay for "+nodeName+": "+delay);
+//                if (delay > 1) {
+//                    Methods_RMQ.clearQueues(rmqContexts);
+//                    velQueue.clear();
+//                    System.out.println("Delay is longer than 1s, " + "queue purged!!");
+//                }
 
             }
         });
@@ -285,6 +289,10 @@ public class AgentROSNodeStorm extends AbstractNodeMain {
 
         return poseStamped_;
 
+    }
+
+    public boolean isGoalReached() {
+        return goalReached;
     }
 
     public BlockingQueue<Twist_> getVelQueue() {

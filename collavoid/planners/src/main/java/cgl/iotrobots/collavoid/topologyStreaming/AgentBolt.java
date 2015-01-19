@@ -84,7 +84,8 @@ public class AgentBolt extends BaseRichBolt {
                                 tuple.getValue(0),
                                 tuple.getValue(1),
                                 Utils.serialize(currentContext.agent)));
-                logger.info("Debug---Send out cal cmd at {}!!", System.currentTimeMillis());
+//                System.out.println("Debug-cmdc out:"
+//                        +(System.currentTimeMillis() - tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD))/1000.0);
             }
         }
         // what about reset???

@@ -2,6 +2,7 @@ package cgl.iotrobots.collavoid.simulator;
 
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.controller.AgentControllerStorm;
 import com.rabbitmq.client.Address;
 import geometry_msgs.Pose;
@@ -27,19 +28,68 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class SimulatorStorm {
     static final int robotNb = Parameters.ROBOT_NUMBER;
     static final double posRadius = Parameters.POSE_RADIUS;
     static List<Robot> robots = new ArrayList<Robot>();
 
+    //test
+    static int reachGoalNo;
+    static int startedNo;
+    //test
+
+    public static class WheelVelocity {
+        private double vl;
+        private double vr;
+        private boolean isNew;
+
+        public void setVl(double vl) {
+            this.vl = vl;
+        }
+
+        public void setVr(double vr) {
+            this.vr = vr;
+        }
+
+        public void setIsNew(boolean state) {
+            isNew = state;
+        }
+
+        public double getVl() {
+            return vl;
+        }
+
+        public double getVr() {
+            return vr;
+        }
+
+        public void reset() {
+            vl = 0;
+            vr = 0;
+        }
+
+        public boolean getIsNew() {
+            return isNew;
+        }
+
+    }
+
     /**
      * Describe the robot
      */
     static public class Robot extends Agent {
 
+        //test
+        long lastnewvel;
+        boolean startAgain;
+        //test
+
         //id
         int id;
+        String robotName;
 
         //for shutdown
         AgentNode agentNode;
@@ -53,6 +103,7 @@ public class SimulatorStorm {
         //sensors
         LaserScan laserScan;
         RangeSensorBelt sensors;
+        RangeSensorBelt bumpers;
 
         //node
         private ConnectedNode node;
@@ -76,8 +127,8 @@ public class SimulatorStorm {
 
         //velocity command subscriber
         Subscriber<Twist> velocitySubscriber = null;
-        //        Queue<List<Double>> cmdQueue;
-//        private List<Double> vel_cmd;
+        WheelVelocity wheelVelocity = new WheelVelocity();
+
         private double vl, vr;
 
         // control command subscriber
@@ -102,8 +153,8 @@ public class SimulatorStorm {
         public Robot(Vector3d position, double ori, int id) {
             // initialize position and orientation
             super(position, "robot" + id);
-
             this.id = id;
+            this.robotName = "robot" + id;
             this.radius = (float) Parameters.FOOTPRINT_RADIUS;// loaded from agent parameters
             orientation = ori;
             //use differential model
@@ -118,6 +169,7 @@ public class SimulatorStorm {
                     SimParams.SCAN_MAX_RANGE,
                     SimParams.SCAN_UPDATE_FREQ);
             sensors = laserScan.getSensor();
+            bumpers = RobotFactory.addBumperBeltSensor(this, 12);
             // if sensors are not on the center of the robot then height
             // should be assigned to the laserscan, in the robot frame
             this.addSensorDevice(sensors, new Vector3d(0, 0, 0), 0);
@@ -182,16 +234,33 @@ public class SimulatorStorm {
                 velocitySubscriber.addMessageListener(new MessageListener<Twist>() {
                     @Override
                     public void onNewMessage(Twist msg) {
+
                         double v, w;
                         //in ros coordinate
                         Vector3d vel = new Vector3d(msg.getLinear().getX(), msg.getLinear().getY(), msg.getLinear().getZ());
                         //no need to transform the coordinate
                         v = vel.length();
                         w = msg.getAngular().getZ();
+
                         vl = v - w * wheelDistance / 2;
                         vr = v + w * wheelDistance / 2;
+                        lastnewvel = System.currentTimeMillis();
+
+                        //test
+//                       if (id==0)
+//                      System.out.println("robot"+id+" New cmd delay: "+(System.currentTimeMillis()-lastnewvel));
+//                        wheelVelocity.setVl(v - w * wheelDistance / 2);
+//                        wheelVelocity.setVr(v + w * wheelDistance / 2);
+//                        wheelVelocity.setIsNew(true);
+                        if (agentController.isGoalReached()) {
+                            reachGoalNo++;
+                            startAgain = true;
+                            startedNo = 0;
+                        }
+                        //test
+
                     }
-                });
+                }, 5);
             }
 
             if (startGoalPublisher == null) {
@@ -216,13 +285,14 @@ public class SimulatorStorm {
         }
 
         /**
-         * This method is called by the simulator engine on reset.
+         * This method is called by the simulator engine on startAgain.
          */
         public void initBehavior() {
             agentController.clearQueues();
             this.resetPosition();
             this.rotateY(orientation);
             sgseq = 0;
+            wheelVelocity.reset();
             vl = 0;
             vr = 0;
             float colorvalue = (float) this.id / robotNb;
@@ -236,8 +306,10 @@ public class SimulatorStorm {
             // send out goal
             if (ctlCmd.equals("pause") || sgseq < 10) {
                 kinematic.setWheelsVelocity(0, 0);
-            } else
+            } else {
                 kinematic.setWheelsVelocity(vl, vr);
+//                setKinematic(wheelVelocity);
+            }
 
             time = node.getCurrentTime();
 
@@ -284,6 +356,49 @@ public class SimulatorStorm {
                 sgseq++;
             }
 
+            //test
+            if (reachGoalNo >= robotNb && startAgain) {
+                sgseq = 0;
+                this.startAgain = false;
+                if (++startedNo >= robotNb)
+                    reachGoalNo = 0;
+//                System.out.println(robotName+"reached goal");
+            }
+            if (bumpers.oneHasHit()) {
+                System.out.println("Collision detected: " + robotName);
+            }
+            //test
+
+        }
+
+        private void setKinematic(WheelVelocity wv) {
+            double vln, vrn;
+            if (wheelVelocity.getIsNew()) {
+
+//                vln=Math.max(wv.getVl(), (vl +Math.signum(wv.getVl()-vl)*
+//                        Parameters.ACC_LIM_X / Parameters.CONTROLLER_FREQUENCY));
+//                vrn=Math.max(wv.getVr(), (vr +Math.signum(wv.getVr()-vr)*
+//                        Parameters.ACC_LIM_X / Parameters.CONTROLLER_FREQUENCY));
+                vln = setv(vl, wv.getVl());
+                vrn = setv(vr, wv.getVr());
+                kinematic.setWheelsVelocity(vln, vrn);
+                wheelVelocity.setIsNew(false);
+            } else {
+//                vln=Math.max(0.0, (vl +Math.signum(0-vl)*
+//                        Parameters.ACC_LIM_X / Parameters.CONTROLLER_FREQUENCY));
+//                vrn=Math.max(0.0, (vr +Math.signum(0-vr)*
+//                        Parameters.ACC_LIM_X / Parameters.CONTROLLER_FREQUENCY));
+                vln = setv(vl, vl);
+                vrn = setv(vr, vr);
+                kinematic.setWheelsVelocity(vln, vrn);
+            }
+            vl = vln;
+            vr = vrn;
+        }
+
+        private double setv(double a, double b) {
+            double sign = Math.signum(b - a);
+            return sign * Math.min(b * sign, sign * (a + sign * Parameters.ACC_LIM_X / Parameters.CONTROLLER_FREQUENCY / 5));
         }
 
         private void getStartGoal() {

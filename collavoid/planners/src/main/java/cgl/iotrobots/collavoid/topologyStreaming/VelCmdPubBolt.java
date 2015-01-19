@@ -45,6 +45,7 @@ public class VelCmdPubBolt extends BaseRichBolt {
 //            collector.ack(tuple);
 //            return;
 //        }
+//        System.out.println("Debug-ncmd in: "+System.currentTimeMillis());
         sensorID = (String) tuple.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
         routingKey = new RMQContext(Constant_msg.KEY_VELOCITY_CMD, sensorID).ROUTING_KEY;
         Object input = tuple.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);

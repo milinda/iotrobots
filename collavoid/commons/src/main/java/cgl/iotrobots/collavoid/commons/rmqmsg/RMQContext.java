@@ -19,9 +19,9 @@ public class RMQContext {
         this.ROUTING_KEY = MessageType + "." + sensorID;
         UUID uuid = UUID.randomUUID();
         if (sensorID.equals("*"))
-            this.QUEUE_NAME = MessageType + Constant_msg.RMQ_QUEUE_PREFIX + uuid;
+            this.QUEUE_NAME = MessageType + Constant_msg.RMQ_QUEUE_PREFIX;// + uuid;
         else
-            this.QUEUE_NAME = MessageType + Constant_msg.RMQ_QUEUE_PREFIX + sensorID + "_" + uuid;// queue name should not be the same
+            this.QUEUE_NAME = MessageType + Constant_msg.RMQ_QUEUE_PREFIX + sensorID;// + "_" + uuid;// queue name should not be the same
     }
 
 }

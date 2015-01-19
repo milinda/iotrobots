@@ -88,7 +88,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 currentContext.cmd_vel = null;
                 currentContext.pref_vel = null;
                 if (!computeVelocity()) {
-                    logger.warn("{}: Invalid preferred velocity calculation!!", currentContext.sensorID);
+                    logger.debug("{}: Invalid preferred velocity calculation!!", currentContext.sensorID);
                 } else {
                     if (currentContext.pref_vel != null) {
                         outputCollector.emit(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM, new Values(
@@ -98,7 +98,8 @@ public class LocalPlannerBolt extends BaseRichBolt {
                                 currentContext.pref_vel.copy()
                         ));
                         currentContext.locked = true;
-                        logger.info("Debug---Send out prefvel at {}!!", System.currentTimeMillis());
+//                        System.out.println("Debug-pref out:" +
+//                                (System.currentTimeMillis() - input.getLongByField(Constant_storm.FIELDS.TIME_FIELD))/1000.0);
                     } else {
                         outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM, new Values(
                                 input.getValueByField(Constant_storm.FIELDS.TIME_FIELD),
@@ -126,6 +127,13 @@ public class LocalPlannerBolt extends BaseRichBolt {
             }
 
         }
+
+//        else if (currentContext.reachedGoal){
+//            Twist_ vel=new Twist_();
+//            vel.setStatus("reached_goal");
+//            outputCollector.emit(Constant_storm.Streams.VELOCITY_COMMAND_STREAM,
+//                    new Values(input.getValue(0), input.getValue(1), new Twist_()));
+//        }
 
         outputCollector.ack(input);
     }
@@ -161,11 +169,11 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
     private boolean computeVelocity() {
         if (currentContext.base_odom == null) {
-            logger.warn("{}: No odometry received yet!!", currentContext.sensorID);
+            logger.debug("{}: No odometry received yet!!", currentContext.sensorID);
             return false;
         }
         if (currentContext.global_plan == null) {
-            logger.warn("{}: No global plan received yet!!", currentContext.sensorID);
+            logger.debug("{}: No global plan received yet!!", currentContext.sensorID);
             return false;
         }
 
@@ -203,12 +211,17 @@ public class LocalPlannerBolt extends BaseRichBolt {
 
             currentContext.cmd_vel = new Twist_();
             //check to see if the goal orientation has been reached
+            // in continuous testing such tolerance may accumulate to a large deviation to the original position
             if (Math.abs(angle) <= Parameters.YAW_GOAL_TOLERANCE) {
                 //set the velocity command to zero
-
                 resetPlanner(currentContext);
-                logger.info("{} reached the goal x: {}, y {}, theta {}.", currentContext.sensorID, goal_x, goal_y, goal_th);
+                logger.info("{} reached the goal x: {}, y {}, theta {}.",
+                        currentContext.sensorID,
+                        String.format("%.3f", goal_x),
+                        String.format("%.3f", goal_y),
+                        String.format("%.3f", goal_th));
                 currentContext.reachedGoal = true;
+                currentContext.cmd_vel.setGoalReached(true);
             } else {
                 //if we're not stopped yet... we want to stop... taking into account the acceleration limits of the robot
                 if (!currentContext.rotating_to_goal_ && !Methods_Planners.stopped(
@@ -331,7 +344,7 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 }
             }
         } else {
-            logger.warn("Odometry not received, consider initialization plan!!");
+//            logger.warn("Odometry not received, consider initialization plan!!");
             t = System.currentTimeMillis();
         }
 
