@@ -1,6 +1,5 @@
 package cgl.iotrobots.slam.streaming.msgs;
 
-import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 
 import java.util.List;
@@ -31,13 +30,12 @@ public class ParticleValue {
     /** The index of the previous particle in the trajectory tree */
     private int previousIndex;
 
-    /** Entry to the trajectory tree */
-//    private TNode node;
-
     /** Node tree as a list */
     private List<TNodeValue> nodes;
 
     private int totalTasks;
+
+    private boolean best = false;
 
     public ParticleValue() {
     }
@@ -54,7 +52,6 @@ public class ParticleValue {
         this.weightSum = weightSum;
         this.gweight = gweight;
         this.previousIndex = previousIndex;
-//        this.node = node;
         this.nodes = node;
         this.totalTasks = totalTasks;
     }
@@ -103,10 +100,6 @@ public class ParticleValue {
         return previousIndex;
     }
 
-//    public TNode getNode() {
-//        return node;
-//    }
-
     public void setIndex(int index) {
         this.index = index;
     }
@@ -145,5 +138,13 @@ public class ParticleValue {
 
     public void setNodes(List<TNodeValue> nodes) {
         this.nodes = nodes;
+    }
+
+    public boolean isBest() {
+        return best;
+    }
+
+    public void setBest(boolean best) {
+        this.best = best;
     }
 }

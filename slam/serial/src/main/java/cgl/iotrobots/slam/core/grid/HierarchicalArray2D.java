@@ -31,7 +31,7 @@ public class HierarchicalArray2D {
     }
 
     public int getPatchSize() {
-        return patchMagnitude;
+        return patchSize;
     }
 
     public int getPatchMagnitude() {
@@ -118,7 +118,7 @@ public class HierarchicalArray2D {
 
 
     public int cellState(int x, int y) {
-        IntPoint p = patchIndexes(new IntPoint(x, y));
+        IntPoint p = patchIndexes(x, y);
         if (array2D.isInside(p)) {
             if (isAllocated(p)) {
                 return 0x1 | 0x2;

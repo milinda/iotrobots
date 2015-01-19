@@ -15,6 +15,7 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
 import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
+import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
 import cgl.iotrobots.utils.rabbitmq.Message;
 import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
 import cgl.sensorstream.core.StreamComponents;
@@ -23,6 +24,7 @@ import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,17 +81,31 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
     }
 
+//    long lastMessageTime;
+//    long lastComputationTime;
+
     @Override
     public void execute(Tuple tuple) {
         outputCollector.ack(tuple);
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-        ParticleValue value;
+        List<ParticleValue> pvs;
+        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+        long t0 = System.currentTimeMillis();
+        long currentMessageTime = Long.parseLong(time.toString());
+//        // if this message came within that window, discard it
+//        // this will allow us to keep track of the current interval
+//        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
+//            outputCollector.ack(tuple);
+//            return;
+//        }
 
-        if (val != null && (val instanceof ParticleValue)) {
-            value = (ParticleValue) val;
-            LOG.debug("Received particle with index {}", value.getIndex());
-            addParticleValue(value);
+        if (val != null && (val instanceof List)) {
+            pvs = (List<ParticleValue>) val;
+            for (ParticleValue value : pvs) {
+                LOG.debug("Received particle with index {}", value.getIndex());
+                addParticleValue(value);
+            }
         } else {
             throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
@@ -141,6 +157,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // now distribute the resampled particleValueses
         List<Integer> particles = reSampler.getIndexes();
 
+        int best = reSampler.getBestParticleIndex();
         // we will distribute only if we have reSampled
         if (hasReSampled) {
             // first we will distribute the new assignments
@@ -148,33 +165,59 @@ public class ReSamplingBolt extends BaseRichBolt {
             LOG.info("ReSampled, distributing assignments");
             ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
             assignments.setReSampled(true);
+            assignments.setBestParticle(best);
             distributeAssignments(assignments);
 
+            Map<Integer, List<ParticleValue>> values = new HashMap<Integer, List<ParticleValue>>();
             // distribute the new particle values according to
             for (int i = 0; i < reSampler.getParticles().size(); i++) {
                 Particle p = reSampler.getParticles().get(i);
 //                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
 //                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
                 ParticleValue pv = Utils.createParticleValue(p, -1, i, -1);
-                byte[] b = Utils.serialize(kryo, pv);
-                Message message = new Message(b, new HashMap<String, Object>());
+
                 // we assume there is a direct mapping between particles in the resampler and the indexes
                 ParticleAssignment assignment = assignments.getAssignments().get(i);
+                if (i == best) {
+                    LOG.info("Best node index: {}, sending this to task: {}", i, assignment.getNewTask());
+                    pv.setBest(true);
+                }
+                addParticleValueToMap(values, assignment.getNewTask(), pv);
+            }
+
+            for (Map.Entry<Integer, List<ParticleValue>> e : values.entrySet()) {
                 try {
-                    LOG.info("Sending particle value to: {}", assignment.getNewTask());
-                    valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + assignment.getNewTask());
-                } catch (Exception e) {
-                    LOG.error("Failed to send the message");
+                    ParticleValues particleValues = new ParticleValues(e.getValue());
+                    byte[] b = Utils.serialize(kryo, particleValues);
+                    Message message = new Message(b, new HashMap<String, Object>());
+                    LOG.info("Sending particle value to: {}", e.getKey());
+                    valueSender.send(message, Constants.Messages.PARTICLE_VALUE_ROUTING_KEY + "_" + e.getKey());
+                } catch (Exception e1) {
+                    LOG.error("Failed to send the message", e1);
                 }
             }
         } else {
             LOG.info("NOT ReSampled, distributing assignments");
             ParticleAssignments assignments = new ParticleAssignments();
             assignments.setReSampled(false);
+            assignments.setBestParticle(best);
             distributeAssignments(assignments);
         }
+//        lastComputationTime = System.currentTimeMillis() - t0;
+//        lastMessageTime = Long.parseLong(time.toString());
 
         reading = null;
+    }
+
+    private void addParticleValueToMap(Map<Integer, List<ParticleValue>> map, int task, ParticleValue value) {
+        List<ParticleValue> values = null;
+        if (map.containsKey(task)) {
+            values = map.get(task);
+        } else {
+            values = new ArrayList<ParticleValue>();
+            map.put(task, values);
+        }
+        values.add(value);
     }
 
     @Override
@@ -182,7 +225,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     }
 
-    protected void addParticleValue(ParticleValue value) {
+    protected synchronized void addParticleValue(ParticleValue value) {
         particleValueses[value.getIndex()] = value;
         receivedParticles++;
     }
@@ -210,10 +253,10 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @return an assignment of particles
      */
     protected ParticleAssignments createAssignments(List<Integer> indexes) {
-        for (int i : indexes) {
-            System.out.format("%d ", i);
-        }
-        System.out.format("\n");
+//        for (int i : indexes) {
+//            System.out.format("%d ", i);
+//        }
+//        System.out.format("\n");
         // create a matrix of size noOfParticles x noOfparticles
         int noOfParticles = reSampler.getNoParticles();
         // assume taskIndexes are going from 0
@@ -234,20 +277,20 @@ public class ReSamplingBolt extends BaseRichBolt {
             }
         }
 
-        for (int i = 0; i < cost.length; i++) {
-            for (int j = 0; j < cost[i].length; j++) {
-                System.out.format("%f ", cost[i][j]);
-            }
-            System.out.format("\n");
-        }
+//        for (int i = 0; i < cost.length; i++) {
+//            for (int j = 0; j < cost[i].length; j++) {
+//                System.out.format("%f ", cost[i][j]);
+//            }
+//            System.out.format("\n");
+//        }
 
         HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
         int []assignments = algorithm.execute();
         ParticleAssignments particleAssignments = new ParticleAssignments();
 
-        for (int i : assignments) {
-            System.out.format("%d ", i);
-        }
+//        for (int i : assignments) {
+//            System.out.format("%d ", i);
+//        }
         System.out.println();
 
         // go through the particle indexs and try to find their new assignments
@@ -267,10 +310,10 @@ public class ReSamplingBolt extends BaseRichBolt {
             particleAssignments.addAssignment(assignment);
         }
 
-        for (ParticleAssignment assignment : particleAssignments.getAssignments()) {
-            System.out.format("pre task: %d prev i: %d new task: %d new i %d\n",
-                    assignment.getPreviousTask(), assignment.getPreviousIndex(), assignment.getNewTask(), assignment.getNewIndex());;
-        }
+//        for (ParticleAssignment assignment : particleAssignments.getAssignments()) {
+//            System.out.format("pre task: %d prev i: %d new task: %d new i %d\n",
+//                    assignment.getPreviousTask(), assignment.getPreviousIndex(), assignment.getNewTask(), assignment.getNewIndex());;
+//        }
 
         return particleAssignments;
     }

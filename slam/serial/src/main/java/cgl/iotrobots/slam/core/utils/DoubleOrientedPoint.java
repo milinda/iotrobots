@@ -116,4 +116,13 @@ public class DoubleOrientedPoint {
     public void setY(double y) {
         this.y = y;
     }
+
+    @Override
+    public String toString() {
+        return "DoubleOrientedPoint{" +
+                "theta=" + theta +
+                ", x=" + x +
+                ", y=" + y +
+                '}';
+    }
 }

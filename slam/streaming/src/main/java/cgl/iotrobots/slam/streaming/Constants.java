@@ -4,6 +4,7 @@ public abstract class Constants {
     public static final String ARGS_NAME = "name";
     public static final String ARGS_LOCAL = "local";
     public static final String ARGS_DS_MODE = "ds_mode";
+    public static final String ARGS_PARALLEL = "p";
 
     // configurations
     public static final String MAP_UPDATE_INTERVAL = "map_update_interval";
@@ -41,6 +42,7 @@ public abstract class Constants {
     public abstract class Fields {
         public static final String PARTICLE_STREAM = "particle";
         public static final String MAP_STREAM = "map";
+        public static final String BEST_PARTICLE_STREAM = "best_particle";
         public static final String TIME_FIELD = "time";
         public static final String LASER_SCAN_FIELD = "laser_scan";
         public static final String PARTICLE_MAP_FIELD = "map_tuple";
@@ -63,5 +65,6 @@ public abstract class Constants {
         public static final String RE_SAMPLE_BOLT = "re_sample_bolt";
         public static final String MAP_BOLT = "map_bolt";
         public static final String SEND_BOLD = "send_bolt";
+        public static final String BEST_PARTICLE_SEND_BOLT = "best_send_bolt";
     }
 }

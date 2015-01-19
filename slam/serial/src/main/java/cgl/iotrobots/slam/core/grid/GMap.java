@@ -5,13 +5,17 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
 
-public class GMap {
-    public DoublePoint center;
-    double worldSizeX, worldSizeY, delta;
-    public HierarchicalArray2D storage;
-    public int mapSizeX, mapSizeY;
-    public int sizeX2, sizeY2;
-    public static final int DEFAULT_PATCH = 5;
+import java.util.HashSet;
+import java.util.Set;
+
+public class GMap implements IGMap {
+    private DoublePoint center;
+    private double worldSizeX, worldSizeY, delta;
+    private HierarchicalArray2D storage;
+    private int mapSizeX, mapSizeY;
+    private int sizeX2, sizeY2;
+    private static final int DEFAULT_PATCH = 5;
+    private Set<IntPoint> activeArea = new HashSet<IntPoint>();
 
     public GMap() {
     }
@@ -52,47 +56,71 @@ public class GMap {
         sizeY2 = (int) Math.round((this.center.y - ymin) / this.delta);
     }
 
+    public void setActiveArea(Set<IntPoint> aa, boolean patchCoords) {
+        storage.setActiveArea(aa, patchCoords);
+    }
+
+    public void allocActiveArea() {
+        storage.allocActiveArea();
+    }
+
+    @Override
+    public Object cloneStorage() {
+        return new HierarchicalArray2D(storage);
+    }
+
+    @Override
     public DoublePoint getCenter() {
         return center;
     }
 
+    @Override
     public double getWorldSizeX() {
         return worldSizeX;
     }
 
+    @Override
     public double getMapResolution() {
         return delta;
     }
 
+    @Override
     public double getResolution() {
         return delta;
     }
 
+    @Override
     public Size getSize(double xmin, double ymin, double xmax, double ymax) {
         DoublePoint min = map2world(new IntPoint(0, 0)), max = map2world(new IntPoint(mapSizeX - 1, mapSizeY - 1));
         return new Size(min.x, min.y, max.x, max.y);
     }
 
+    @Override
     public Object cell(int x, int y, boolean c) {
         return cell(new IntPoint(x, y), c);
     }
 
+    @Override
     public Object cell(double x, double y, boolean c) {
         return cell(new IntPoint(new Double(x).intValue(), new Double(y).intValue()), c);
     }
 
+    @Override
     public boolean isInside(int x, int y) {
         return (storage.cellState(new IntPoint(x, y)) & AccessibilityState.Inside.getVal()) > 0;
     }
 
+    @Override
     public boolean isInside(IntPoint p) {
         return (storage.cellState(p) & AccessibilityState.Inside.getVal()) > 0;
     }
 
+    @Override
     public boolean isInsideD(DoublePoint p) {
         return isInside(p.x, p.y);
     }
 
+    @Override
     public boolean isInside(double x, double y) {
         return storage.cellState(
                 world2map(new IntPoint(new Double(x).intValue(), new Double(y).intValue())))
@@ -100,6 +128,7 @@ public class GMap {
     }
 
 
+    @Override
     public void resize(double xmin, double ymin, double xmax, double ymax) {
         IntPoint imin = world2map(xmin, ymin);
         IntPoint imax = world2map(xmax, ymax);
@@ -117,6 +146,7 @@ public class GMap {
         sizeY2 -= pymin * (1 << storage.getPatchMagnitude());
     }
 
+    @Override
     public void grow(double xmin, double ymin, double xmax, double ymax) {
         IntPoint imin = world2map(xmin, ymin);
         IntPoint imax = world2map(xmax, ymax);
@@ -138,27 +168,37 @@ public class GMap {
         sizeY2 -= pymin * (1 << storage.getPatchMagnitude());
     }
 
+    @Override
     public IntPoint world2map(double x, double y) {
-        return new IntPoint((int) Math.round((x - center.x) / delta) + sizeX2, (int) Math.round((y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((x - center.x) / delta) + sizeX2,
+                (int) Math.round((y - center.y) / delta) + sizeY2);
     }
 
+    @Override
     public IntPoint world2map(IntPoint p) {
-        return new IntPoint((int) Math.round(((Integer) p.x - center.x) / delta) + sizeX2, (int) Math.round(((Integer) p.y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((p.x - center.x) / delta) + sizeX2,
+                (int) Math.round((p.y - center.y) / delta) + sizeY2);
     }
 
+    @Override
     public IntPoint world2map(DoublePoint p) {
-        return new IntPoint((int) Math.round(((Double) p.x - center.x) / delta) + sizeX2, (int) Math.round(((Double) p.y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((p.x - center.x) / delta) + sizeX2,
+                (int) Math.round((p.y - center.y) / delta) + sizeY2);
     }
 
+    @Override
     public IntPoint world2map(DoubleOrientedPoint p) {
-        return new IntPoint((int) Math.round(((Double) p.x - center.x) / delta) + sizeX2, (int) Math.round(((Double) p.y - center.y) / delta) + sizeY2);
+        return new IntPoint((int) Math.round((p.x - center.x) / delta) + sizeX2,
+                (int) Math.round((p.y - center.y) / delta) + sizeY2);
     }
 
+    @Override
     public DoublePoint map2world(IntPoint p) {
         return new DoublePoint((p.x - sizeX2) * delta + center.x,
                 (p.y - sizeY2) * delta + center.y);
     }
 
+    @Override
     public Object cell(IntPoint p, boolean c) {
         int s = storage.cellState(p);
         if (c) {
@@ -188,70 +228,105 @@ public class GMap {
         return new PointAccumulator();
     }
 
+    @Override
     public DoublePoint getM_center() {
         return center;
     }
 
+    @Override
     public double getWorldSizeY() {
         return worldSizeY;
     }
 
+    @Override
     public double getDelta() {
         return delta;
     }
 
+    @Override
     public HierarchicalArray2D getStorage() {
         return storage;
     }
 
+    @Override
     public int getMapSizeX() {
         return mapSizeX;
     }
 
+    @Override
     public int getMapSizeY() {
         return mapSizeY;
     }
 
+    @Override
     public int getSizeX2() {
         return sizeX2;
     }
 
+    @Override
     public int getSizeY2() {
         return sizeY2;
     }
 
+    @Override
     public void setM_center(DoublePoint m_center) {
         this.center = m_center;
     }
 
+    @Override
     public void setWorldSizeX(double worldSizeX) {
         this.worldSizeX = worldSizeX;
     }
 
+    @Override
     public void setWorldSizeY(double worldSizeY) {
         this.worldSizeY = worldSizeY;
     }
 
+    @Override
     public void setDelta(double delta) {
         this.delta = delta;
     }
 
-    public void setStorage(HierarchicalArray2D storage) {
-        this.storage = storage;
+    @Override
+    public void setStorage(Object storage) {
+        if (storage instanceof HierarchicalArray2D) {
+            this.storage = (HierarchicalArray2D) storage;
+        } else {
+            throw new IllegalArgumentException("HierarchicalArray2D expected");
+        }
     }
 
+    public Set<IntPoint> getActiveArea() {
+        return activeArea;
+    }
+
+    @Override
+    public int getPatchSize() {
+        return storage.getPatchSize();
+    }
+
+    @Override
+    public int getPatchMagnitude() {
+        return storage.getPatchMagnitude();
+    }
+
+    @Override
     public void setMapSizeX(int mapSizeX) {
         this.mapSizeX = mapSizeX;
     }
 
+    @Override
     public void setMapSizeY(int mapSizeY) {
         this.mapSizeY = mapSizeY;
     }
 
+    @Override
     public void setSizeX2(int sizeX2) {
         this.sizeX2 = sizeX2;
     }
 
+    @Override
     public void setSizeY2(int sizeY2) {
         this.sizeY2 = sizeY2;
     }

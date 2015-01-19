@@ -4,17 +4,21 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SimbardExample {
-    public static final int SENSORS = 180;
+    public static final int SENSORS = 360;
 
     public static final double ANGLE = 2 * Math.PI;
 
@@ -24,6 +28,8 @@ public class SimbardExample {
         GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
         CameraSensor camera;
+
+        PrintWriter pw;
 
         public Robot(Vector3d position, String name) {
             super(position, name);
@@ -39,12 +45,18 @@ public class SimbardExample {
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
 
+            try {
+                pw = new PrintWriter(new FileWriter("out.txt"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
 
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             // nothing particular in this case
-            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngle_increment(ANGLE / SENSORS);
@@ -73,6 +85,7 @@ public class SimbardExample {
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            pw.printf("%s\n", laserScan.getString());
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             // progress at 0.5 m/s

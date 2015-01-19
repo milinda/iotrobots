@@ -6,7 +6,6 @@ import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.streaming.Constants;
 import cgl.iotrobots.slam.streaming.Utils;
 import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
@@ -19,6 +18,9 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.awt.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +28,7 @@ import java.util.Map;
 
 
 public class SimbardDistributed {
-    public static final int SENSORS = 180;
+    public static final int SENSORS = 360;
 
     public static final double ANGLE = 2 * Math.PI;
 
@@ -38,16 +40,24 @@ public class SimbardDistributed {
         CameraSensor camera;
         RabbitMQSender sender;
         RabbitMQReceiver receiver;
+        RabbitMQReceiver bestReceiver;
+
         Kryo kryo = new Kryo();
+
+        PrintWriter pw;
+//        private String url = "amqp://149.165.159.3:5672";
+        private String url = "amqp://localhost:5672";
 
         public Robot(Vector3d position, String name) {
             super(position, name);
 
             try {
-                sender = new RabbitMQSender("amqp://localhost:5672", "simbard_laser");
-                receiver = new RabbitMQReceiver("amqp://localhost:5672", "simbard_map");
+                sender = new RabbitMQSender(url, "simbard_laser");
+                receiver = new RabbitMQReceiver(url, "simbard_map");
+                bestReceiver = new RabbitMQReceiver(url, "simbard_best");
                 sender.open();
                 receiver.listen(new MapReceiver());
+                bestReceiver.listen(new BestParticleReceiver());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -87,6 +97,9 @@ public class SimbardDistributed {
         }
 
         boolean forward = false;
+
+        long lastTime = System.currentTimeMillis();
+
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
             System.out.println("\n\n");
@@ -102,22 +115,51 @@ public class SimbardDistributed {
             props.put("time", System.currentTimeMillis());
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
-            Message message = new Message(body, props);
-            try {
-                sender.send(message, "test.test.laser_scan");
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (System.currentTimeMillis() - lastTime > 3000) {
+                lastTime = System.currentTimeMillis();
+                Message message = new Message(body, props);
+                try {
+                    sender.send(message, "test.test.laser_scan");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // progress at 0.5 m/s
-            if (getCounter() % 50 == 0) {
+            if (getCounter() % 500 == 0) {
                 forward = !forward;
             }
 
             if (forward) {
-                setTranslationalVelocity(5);
+                setTranslationalVelocity(.5);
             } else {
-                setTranslationalVelocity(-5);
+                setTranslationalVelocity(-.5);
+            }
+        }
+
+        private long bestSum;
+        private long mapSum;
+        private long bestCount;
+        private long mapCount;
+
+        private class BestParticleReceiver implements MessageHandler {
+            @Override
+            public Map<String, String> getProperties() {
+                Map<String, String> props = new HashMap<String, String>();
+                props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.best");
+                props.put(MessagingConstants.RABBIT_QUEUE, "test.test.best");
+                return props;
+            }
+
+            @Override
+            public void onMessage(Message message) {
+//                GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
+                Object time = message.getProperties().get("time");
+                Long t = Long.parseLong(time.toString());
+                bestSum += System.currentTimeMillis() - t;
+                bestCount++;
+                System.out.println("*******************Best Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double)(bestSum) / bestCount) +" ***************************");
+//                mapUI.setMap(map);
             }
         }
 
@@ -133,6 +175,11 @@ public class SimbardDistributed {
             @Override
             public void onMessage(Message message) {
                 GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
+                Object time = message.getProperties().get("time");
+                Long t = Long.parseLong(time.toString());
+                mapCount++;
+                mapSum += (System.currentTimeMillis() - t);
+                System.out.println("*******************Map Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double)(mapSum) / mapCount) +" ***************************");
                 mapUI.setMap(map);
             }
         }

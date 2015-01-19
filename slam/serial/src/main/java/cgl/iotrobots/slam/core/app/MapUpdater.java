@@ -1,6 +1,8 @@
 package cgl.iotrobots.slam.core.app;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.IGMap;
+import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
@@ -62,8 +64,8 @@ public class MapUpdater {
         }
 
         DoublePoint center = new DoublePoint((xmin + xmax) / 2.0, (ymin + ymax) / 2.0);
-        GMap smap = new GMap(center, xmin, ymin, xmax, ymax, delta);
-
+        IGMap smap = MapFactory.create(center, xmax - xmin, ymax - ymin, delta);
+        best.setMap(smap);
         map.currentPos.clear();
 
         LOG.debug("Trajectory tree:");
@@ -80,11 +82,12 @@ public class MapUpdater {
 
                 matcher.invalidateActiveArea();
                 double[] readingArray = new double[n.reading.size()];
-                System.out.format("best pose: (%f %f %f) reading: (", n.pose.x, n.pose.y, n.pose.theta);
+                //System.out.format("best pose: (%f %f %f) reading: (", n.pose.x, n.pose.y, n.pose.theta);
                 for (int i = 0; i < n.reading.size(); i++) {
                     readingArray[i] = n.reading.get(i);
+                    //System.out.format("%f ", readingArray[i]);
                 }
-                System.out.format(")\n");
+                //System.out.format(")\n");
 
                 matcher.computeActiveArea(smap, n.pose, readingArray);
                 matcher.registerScan(smap, n.pose, readingArray);

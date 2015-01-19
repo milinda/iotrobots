@@ -1,6 +1,6 @@
 package cgl.iotrobots.slam.core.scanmatcher;
 
-import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,7 +154,7 @@ public class ScanMatcher {
         this.likelihoodSkip = likelihoodSkip;
     }
 
-    public void computeActiveArea(GMap map, DoubleOrientedPoint p, double[] readings) {
+    public void computeActiveArea(IGMap map, DoubleOrientedPoint p, double[] readings) {
         if (m_activeAreaComputed)
             return;
         Set<IntPoint> activeArea = new HashSet<IntPoint>();
@@ -200,7 +200,7 @@ public class ScanMatcher {
 
         readingIndex = initialBeamsSkip;
         angleIndex = initialBeamsSkip;
-        for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++)
+        for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++) {
             if (generateMap) {
                 double d = readings[readingIndex];
                 if (d > laserMaxRange || d == 0.0 || d > Double.MAX_VALUE)
@@ -217,11 +217,11 @@ public class ScanMatcher {
                 line.points = m_linePoints;
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.numPoints - 1; i++) {
-                    IntPoint patch = map.getStorage().patchIndexes(m_linePoints[i]);
+                    IntPoint patch = (m_linePoints[i]);
                     activeArea.add(patch);
                 }
                 if (d <= usableRange) {
-                    IntPoint patch = map.getStorage().patchIndexes(p1);
+                    IntPoint patch = (p1);
                     activeArea.add(patch);
                 }
             } else {
@@ -235,12 +235,13 @@ public class ScanMatcher {
                 phit.y += r * Math.sin(lp.theta + angle);
                 IntPoint p1 = map.world2map(phit);
                 assert (p1.x >= 0 && p1.y >= 0);
-                IntPoint cp = map.getStorage().patchIndexes(p1);
+                IntPoint cp = (p1);
                 assert (cp.x >= 0 && cp.y >= 0);
                 activeArea.add(cp);
             }
+        }
         //this allocates the unallocated cells in the active area of the map
-        map.getStorage().setActiveArea(activeArea, true);
+        map.setActiveArea(activeArea, false);
         m_activeAreaComputed = true;
     }
 
@@ -249,12 +250,12 @@ public class ScanMatcher {
 
     private IntPoint m_linePoints [] = new IntPoint[20000];
 
-    public double registerScan(GMap map, DoubleOrientedPoint p, double[] readings) {
+    public double registerScan(IGMap map, DoubleOrientedPoint p, double[] readings) {
         if (!m_activeAreaComputed)
             computeActiveArea(map, p, readings);
 
         //this operation replicates the cells that will be changed in the registration operation
-        map.getStorage().allocActiveArea();
+        map.allocActiveArea();
 
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * laserPose.x - Math.sin(p.theta) * laserPose.y;
@@ -311,7 +312,7 @@ public class ScanMatcher {
         return esum;
     }
 
-    public double icpOptimize(DoubleOrientedPoint pnew, GMap map, DoubleOrientedPoint init, double[] readings) {
+    public double icpOptimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
         double currentScore;
         double sc = score(map, init, readings);
         DoubleOrientedPoint start = init;
@@ -328,7 +329,7 @@ public class ScanMatcher {
         return currentScore;
     }
 
-    public double optimize(DoubleOrientedPoint _mean, Covariance3 _cov, GMap map, DoubleOrientedPoint init, double[] readings) {
+    public double optimize(DoubleOrientedPoint _mean, Covariance3 _cov, IGMap map, DoubleOrientedPoint init, double[] readings) {
         List<ScoredMove> moveList = new ArrayList<ScoredMove>();
         double bestScore = -1;
         DoubleOrientedPoint currentPose = init;
@@ -441,7 +442,7 @@ public class ScanMatcher {
         return bestScore;
     }
 
-    public double optimize(DoubleOrientedPoint pnew, GMap map, DoubleOrientedPoint init, double[] readings) {
+    public double optimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
         double bestScore = -1;
         DoubleOrientedPoint currentPose = new DoubleOrientedPoint(init.x, init.y, init.theta);
         double currentScore = score(map, currentPose, readings);
@@ -532,7 +533,7 @@ public class ScanMatcher {
     }
 
     public LikeliHood likelihood
-            (GMap map, DoubleOrientedPoint p, double[] readings) {
+            (IGMap map, DoubleOrientedPoint p, double[] readings) {
         List<ScoredMove> moveList = new ArrayList<ScoredMove>();
 
         for (double xx = -llsamplerange; xx <= llsamplerange; xx += llsamplestep) {
@@ -612,7 +613,7 @@ public class ScanMatcher {
         }
     }
 
-    public LikeliHoodAndScore likelihoodAndScore(GMap map, DoubleOrientedPoint p, double[] readings) {
+    public LikeliHoodAndScore likelihoodAndScore(IGMap map, DoubleOrientedPoint p, double[] readings) {
         double l = 0;
         double s = 0;
         int angleIndex = initialBeamsSkip;
@@ -675,7 +676,7 @@ public class ScanMatcher {
         return new LikeliHoodAndScore(s, l, c);
     }
 
-    public double icpStep(DoubleOrientedPoint pret, GMap map, DoubleOrientedPoint p, double[] readings) {
+    public double icpStep(DoubleOrientedPoint pret, IGMap map, DoubleOrientedPoint p, double[] readings) {
         int angleIndex = initialBeamsSkip;
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
 
@@ -740,7 +741,7 @@ public class ScanMatcher {
         return score(map, p, readings);
     }
 
-    double score(GMap map, DoubleOrientedPoint p, double[] readings) {
+    double score(IGMap map, DoubleOrientedPoint p, double[] readings) {
         double s = 0;
         int angleIndex = initialBeamsSkip;
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
@@ -770,8 +771,8 @@ public class ScanMatcher {
                 for (int yy = -kernelSize; yy <= kernelSize; yy++) {
                     IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
                     IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
-                    int ss = map.getStorage().cellState(pr);
-                    if ((ss) > 0) {
+                   // int ss = map.getStorage().cellState(pr);
+//                    if ((ss) > 0) {
                         PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
                         PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
                         if (cell.doubleValue() > fullnessThreshold && fcell.doubleValue() < fullnessThreshold) {
@@ -783,11 +784,11 @@ public class ScanMatcher {
                                 bestMu = DoublePoint.mulD(mu, mu) < DoublePoint.mulD(bestMu, bestMu) ? mu : bestMu;
                             }
                         }
-                    }
+//                    }
                 }
             }
             if (found) {
-                s += Math.exp(-1. / gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
+                s += Math.exp(-1. / (gaussianSigma * DoublePoint.mulD(bestMu, bestMu)));
             }
         }
         return s;

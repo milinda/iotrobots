@@ -10,13 +10,9 @@ import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.MapUpdater;
-import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
-import cgl.iotrobots.slam.streaming.msgs.TransferMap;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
@@ -34,6 +30,8 @@ public class MapBuildingBolt extends BaseRichBolt {
 
     private Kryo kryo;
 
+    long lastMessageTime;
+    long lastComputationTime;
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
@@ -51,6 +49,15 @@ public class MapBuildingBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+        long t0 = System.currentTimeMillis();
+        long currentMessageTime = Long.parseLong(time.toString());
+        // if this message came within that window, discard it
+        // this will allow us to keep track of the current interval
+        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
+            outputCollector.ack(tuple);
+            return;
+        }
+
         Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
@@ -59,11 +66,11 @@ public class MapBuildingBolt extends BaseRichBolt {
         }
         ParticleValue particleValue = (ParticleValue) val;
 
-        val = tuple.getValueByField(Constants.Fields.PARTICLE_MAP_FIELD);
-        if (!(val instanceof TransferMap)) {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
-        }
-        TransferMap transferMap = (TransferMap) val;
+//        val = tuple.getValueByField(Constants.Fields.PARTICLE_MAP_FIELD);
+//        if (!(val instanceof TransferMap)) {
+//            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+//        }
+//        TransferMap transferMap = (TransferMap) val;
 
         val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (!(val instanceof LaserScan)) {
@@ -71,34 +78,22 @@ public class MapBuildingBolt extends BaseRichBolt {
         }
         LaserScan scan = (LaserScan) val;
 
-        RangeReading reading;
-        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
-        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
-                scan.getRanges().size(),
-                Math.abs(scan.getAngle_increment()),
-                new DoubleOrientedPoint(0, 0, 0),
-                0.0,
-                scan.getRangeMax());
-
-        reading = new RangeReading(scan.getRanges().size(),
-                ranges_double,
-                sensor,
-                scan.getTimestamp());
-
-        reading.setPose(scan.getPose());
-
-        double []plainReading = new double[scan.getRanges().size()];
-        for (int i = 0; i < scan.getRanges().size(); i++) {
-            plainReading[i] = reading.get(i);
-        }
-
         Particle p = new Particle();
         Utils.createParticle(particleValue, p);
-        GMap m = Utils.createGMap(transferMap);
-        p.setMap(m);
+        //GMap m = Utils.createGMap(transferMap);
+        //p.setMap(m);
 
-        GFSMap map = mapUpdater.updateMap(p, plainReading, new DoubleOrientedPoint(0, 0, 0));
+        double[] laser_angles = new double[scan.getRanges().size()];
+        double theta = scan.getAngle_min();
+        for (int i = 0; i < scan.getRanges().size(); i++) {
+            if (scan.getAngle_increment() < 0)
+                laser_angles[scan.getRanges().size() - i - 1] = theta;
+            else
+                laser_angles[i] = theta;
+            theta += scan.getAngle_increment();
+        }
+
+        GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
 
         this.outputCollector.ack(tuple);
 
@@ -109,6 +104,8 @@ public class MapBuildingBolt extends BaseRichBolt {
         emit.add(time);
 
         outputCollector.emit(emit);
+        lastComputationTime = System.currentTimeMillis() - t0;
+        lastMessageTime = Long.parseLong(time.toString());
     }
 
     @Override

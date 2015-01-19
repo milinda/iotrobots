@@ -1,6 +1,8 @@
 package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.grid.GMap;
+import cgl.iotrobots.slam.core.grid.IGMap;
+import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
@@ -206,7 +208,7 @@ public class DistributedScanMatcher {
         particles.clear();
 
         for (int i = 0; i < size; i++) {
-            GMap lmap = new GMap(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            IGMap lmap = MapFactory.create(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
             Particle p = new Particle(lmap);
 
             p.pose = new DoubleOrientedPoint(initialPose);
@@ -232,7 +234,7 @@ public class DistributedScanMatcher {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-            p.pose = relPose;
+//            p.pose = relPose;
         }
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
@@ -309,6 +311,7 @@ public class DistributedScanMatcher {
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
         //    it->pose=corrected;
         if (score > minimumScore) {
+            // LOG.info("Correcting the position from {} to {}", it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
             LOG.info("Scan Matching Failed, using odometry. Likelihood=");

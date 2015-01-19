@@ -111,10 +111,10 @@ public class GFSAlgorithm {
         throttle_scans_ = 1;
 
         // gmapping parameters
-        maxUrange_ = 0.0;
-        maxRange_ = 0.0;
+        maxUrange_ = 100.0;
+        maxRange_ = 100.0;
         minimum_score_ = 0;
-        sigma_ = 0.05;
+        sigma_ = 0.005;
         kernelSize_ = 1;
         lstep_ = 0.05;
         astep_ = 0.05;
@@ -127,7 +127,7 @@ public class GFSAlgorithm {
         str_ = 0.1;
         stt_ = 0.2;
         linearUpdate_ = .05;
-        angularUpdate_ = 0.05;
+        angularUpdate_ = 0.005;
         temporalUpdate_ = 0.0;
         resampleThreshold_ = .5;
         particles_ = 30;
@@ -213,7 +213,8 @@ public class GFSAlgorithm {
         return true;
     }
 
-    double totalScanTime = 0;
+    double totalTime = 0;
+    double scanTime = 0;
     int count = 0;
 
     public void laserScan(LaserScan scan) {
@@ -238,6 +239,7 @@ public class GFSAlgorithm {
         }
 
         if (addScan(scan)) {
+            scanTime += System.currentTimeMillis() - t0;
             System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
@@ -255,11 +257,11 @@ public class GFSAlgorithm {
             }
             System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
-        long scanTime = System.currentTimeMillis() - t0;
-        System.out.println("Total Scan Time: " + scanTime);
+        totalTime += System.currentTimeMillis() - t0;
+        System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0));
         count++;
-        totalScanTime += scanTime;
-        System.out.println("Average: " + totalScanTime / count);
+        System.out.println("Average scan time: " + scanTime / count);
+        System.out.println("Average total time: " + totalTime / count);
     }
 
     public boolean addScan(LaserScan scan) {

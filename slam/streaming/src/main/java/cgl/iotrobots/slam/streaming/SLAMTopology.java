@@ -7,6 +7,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.Position;
 import cgl.iotrobots.slam.core.grid.Array2D;
 import cgl.iotrobots.slam.core.grid.GMap;
@@ -14,12 +15,12 @@ import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
+import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
-import cgl.iotrobots.slam.streaming.msgs.MapCell;
-import cgl.iotrobots.slam.streaming.msgs.ParticleMaps;
-import cgl.iotrobots.slam.streaming.msgs.TransferMap;
+import cgl.iotrobots.slam.streaming.msgs.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import cgl.sensorstream.core.rabbitmq.DefaultRabbitMQMessageBuilder;
@@ -47,6 +48,7 @@ public class SLAMTopology {
         options.addOption(Constants.ARGS_NAME, true, "Name of the topology");
         options.addOption(Constants.ARGS_LOCAL, false, "Weather we want run locally");
         options.addOption(Constants.ARGS_DS_MODE, true, "The distributed mode, specify 0, 1, 2, 3 etc");
+        options.addOption(Constants.ARGS_PARALLEL, true, "No of parallel nodes");
 
         CommandLineParser commandLineParser = new BasicParser();
         CommandLine cmd = commandLineParser.parse(options, args);
@@ -54,11 +56,13 @@ public class SLAMTopology {
         boolean local = cmd.hasOption(Constants.ARGS_LOCAL);
         String dsModeValue = cmd.getOptionValue(Constants.ARGS_DS_MODE);
         int dsMode = Integer.parseInt(dsModeValue);
+        String pValue = cmd.getOptionValue(Constants.ARGS_PARALLEL);
+        int p = Integer.parseInt(pValue);
 
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildTestTopology(builder, streamTopologyBuilder);
+            buildTestTopology(builder, streamTopologyBuilder, p);
         }
 
         Config conf = new Config();
@@ -72,11 +76,11 @@ public class SLAMTopology {
 
         // we are going to deploy on a real cluster
         if (!local) {
-            conf.setNumWorkers(5);
+            conf.setNumWorkers(10);
             StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
             // deploy on a local cluster
-            conf.setMaxTaskParallelism(3);
+            conf.setMaxTaskParallelism(10);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("drone", conf, builder.createTopology());
             Thread.sleep(1000000);
@@ -88,7 +92,7 @@ public class SLAMTopology {
         StreamComponents components = streamTopologyBuilder.buildComponents();
     }
 
-    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
+    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder, int parallel) {
 
         // first create a rabbitmq Spout
         ErrorReporter reporter = new ErrorReporter() {
@@ -98,17 +102,19 @@ public class SLAMTopology {
             }
         };
         RabbitMQSpout spout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(), reporter);
-        RabbitMQBolt sendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(), reporter);
+        RabbitMQBolt mapSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(1), reporter);
+        RabbitMQBolt valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
 
         ScanMatchBolt scanMatchBolt = new ScanMatchBolt();
         ReSamplingBolt reSamplingBolt = new ReSamplingBolt();
         MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, 2).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
-        builder.setBolt(Constants.Topology.SEND_BOLD, sendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
+        builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
+        builder.setBolt(Constants.Topology.BEST_PARTICLE_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.BEST_PARTICLE_STREAM);
     }
 
     private static void addSerializers(Config config) {
@@ -129,9 +135,20 @@ public class SLAMTopology {
         config.registerSerialization(TransferMap.class);
         config.registerSerialization(ParticleMaps.class);
         config.registerSerialization(MapCell.class);
+        config.registerSerialization(LaserScan.class);
+        config.registerSerialization(ParticleValue.class);
+        config.registerSerialization(TNodeValue.class);
+        config.registerSerialization(RangeSensor.class);
+        config.registerSerialization(RangeReading.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {
+
+        int bolt;
+
+        private RabbitMQStaticBoltConfigurator(int bolt) {
+            this.bolt = bolt;
+        }
 
         @Override
         public MessageBuilder getMessageBuilder() {
@@ -164,7 +181,7 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations(true);
+            return new StaticDestinations(bolt);
         }
     }
 
@@ -191,16 +208,16 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations(false);
+            return new StaticDestinations(0);
         }
     }
 
     private static class StaticDestinations implements DestinationChanger {
         private DestinationChangeListener dstListener;
 
-        private boolean sender;
+        private int sender;
 
-        private StaticDestinations(boolean sender) {
+        private StaticDestinations(int sender) {
             this.sender = sender;
         }
 
@@ -212,14 +229,18 @@ public class SLAMTopology {
             String url = (String) conf.get(Constants.RABBITMQ_URL);
             DestinationConfiguration configuration = new DestinationConfiguration("rabbitmq", url, "test", "test");
             configuration.setGrouped(true);
-            if (!sender) {
+            if (sender == 0) {
                 configuration.addProperty("queueName", "laser_scan");
                 configuration.addProperty("routingKey", "laser_scan");
                 configuration.addProperty("exchange", "simbard_laser");
-            } else {
+            } else if (sender == 1){
                 configuration.addProperty("queueName", "map");
                 configuration.addProperty("routingKey", "map");
                 configuration.addProperty("exchange", "simbard_map");
+            } else {
+                configuration.addProperty("queueName", "best");
+                configuration.addProperty("routingKey", "best");
+                configuration.addProperty("exchange", "simbard_best");
             }
 
             dstListener.addDestination("rabbitmq", configuration);

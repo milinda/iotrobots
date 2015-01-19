@@ -1,6 +1,8 @@
 package cgl.iotrobots.slam.streaming.msgs;
 
 public class ParticleMaps {
+//    private StaticMap map;
+
     private TransferMap map;
 
     private int index;

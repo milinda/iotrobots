@@ -35,6 +35,7 @@ public class ProcessorFactory {
         reSampler.setMotionModelParameters(cfg.getSrr(), cfg.getSrt(), cfg.getStr(), cfg.getStt());
         reSampler.setUpdatePeriod_(cfg.getUpdatePeriod());
         reSampler.setMinimumScore(cfg.getMinimumScore());
+        reSampler.setUpdateDistances(cfg.getLinearThresholdDistance(), cfg.getAngularThresholdDistance(), cfg.getResampleThreshold());
         reSampler.init(cfg.getNoOfParticles(), cfg.getXmin(), cfg.getYmin(),
                 cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0));
 

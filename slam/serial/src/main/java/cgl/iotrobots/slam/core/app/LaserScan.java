@@ -85,4 +85,37 @@ public class LaserScan {
     public void setRanges(List<Double> ranges) {
         this.ranges = ranges;
     }
+
+    public String getString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(rangeMax).append(",");
+        builder.append(range_min).append(",");
+        builder.append(angle_min).append(",");
+        builder.append(angle_max).append(",");
+        builder.append(angle_increment).append(",");
+        builder.append(pose.getX()).append(",");
+        builder.append(pose.getY()).append(",");
+        builder.append(pose.getTheta());
+        for (Double range : ranges) {
+            builder.append(",").append(range);
+
+        }
+        return builder.toString();
+    }
+
+    public void loadFromString(String laserScan) {
+        String vals[] = laserScan.split(",");
+        rangeMax = Double.parseDouble(vals[0]);
+        range_min = Double.parseDouble(vals[1]);
+        angle_min = Double.parseDouble(vals[2]);
+        angle_max = Double.parseDouble(vals[3]);
+        angle_increment = Double.parseDouble(vals[4]);
+        pose = new DoubleOrientedPoint();
+        pose.setX(Double.parseDouble(vals[5]));
+        pose.setY(Double.parseDouble(vals[6]));
+        pose.setTheta(Double.parseDouble(vals[7]));
+        for (int i = 8; i < vals.length; i++) {
+            ranges.add(Double.parseDouble(vals[i]));
+        }
+    }
 }

@@ -1,12 +1,13 @@
 package cgl.iotrobots.slam.streaming;
 
+import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.Position;
-import cgl.iotrobots.slam.core.grid.Array2D;
-import cgl.iotrobots.slam.core.grid.GMap;
-import cgl.iotrobots.slam.core.grid.HierarchicalArray2D;
+import cgl.iotrobots.slam.core.grid.*;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.scanmatcher.PointAccumulator;
+import cgl.iotrobots.slam.core.sensor.RangeReading;
+import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import cgl.iotrobots.slam.core.utils.IntPoint;
@@ -52,15 +53,17 @@ public class Utils {
         return kryo.readObject(new Input(new ByteArrayInputStream(b)), e);
     }
 
-    public static TransferMap createTransferMap(GMap map) {
+    public static TransferMap createTransferMap(IGMap map) {
         TransferMap transferMap = new TransferMap(map.getCenter(), map.getWorldSizeX(),
                 map.getWorldSizeY(), map.getDelta(), map.getMapSizeX(),
                 map.getMapSizeY(), map.getSizeX2(), map.getSizeY2(),
-                map.getStorage().getPatchMagnitude(),
-                map.getStorage().getPatchSize());
-        LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
-        for (int x = 0; x < map.getMapSizeX(); x++) {
-            for (int y = 0; y < map.getMapSizeY(); y++) {
+                map.getPatchMagnitude(),
+                map.getPatchSize());
+//        LOG.info("Transfer map x {} y {}", map.getMapSizeX(), map.getMapSizeY());
+        int sizeX = map.getMapSizeX();
+        int sizeY = map.getMapSizeY();
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
                 IntPoint p = new IntPoint(x, y);
                 PointAccumulator pointAccumulator = (PointAccumulator) map.cell(p, false);
@@ -71,12 +74,12 @@ public class Utils {
             }
         }
 
-        transferMap.setActiveArea(map.getStorage().getActiveArea());
+        transferMap.setActiveArea(map.getActiveArea());
         return transferMap;
     }
 
-    public static GMap createGMap(TransferMap tMap) {
-        GMap gMap = new GMap(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+    public static IGMap createGMap(TransferMap tMap) {
+        IGMap gMap = MapFactory.create(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
@@ -86,7 +89,29 @@ public class Utils {
         }
 
         if (tMap.getActiveArea() != null) {
-            gMap.getStorage().setActiveArea(tMap.getActiveArea());
+            gMap.setActiveArea(tMap.getActiveArea(), true);
+        }
+
+        return gMap;
+    }
+
+    public static IGMap createGMap(TransferMap tMap, int type) {
+        IGMap gMap;
+        if (type == IGMap.HIERARCHICAL_MAP) {
+            gMap = MapFactory.create(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+        } else {
+            gMap = MapFactory.create(tMap.getCenter(), tMap.getWorldSizeX(), tMap.getWorldSizeY(), tMap.getDelta());
+        }
+
+        for (MapCell cell : tMap.getMapCells()) {
+            PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
+            accumulator.setAcc(cell.getAcc());
+            accumulator.setN(cell.getN());
+            accumulator.setVisits(cell.getVisits());
+        }
+
+        if (tMap.getActiveArea() != null) {
+            gMap.setActiveArea(tMap.getActiveArea(), true);
         }
 
         return gMap;
@@ -154,5 +179,12 @@ public class Utils {
         kryo.register(TNodeValue.class);
         kryo.register(ParticleAssignment.class);
         kryo.register(ParticleAssignments.class);
+        kryo.register(LaserScan.class);
+        kryo.register(ParticleValue.class);
+        kryo.register(RangeSensor.class);
+        kryo.register(RangeReading.class);
+        kryo.register(ParticleValues.class);
+        kryo.register(ParticleMapsList.class);
+        kryo.register(StaticMap.class);
     }
 }
