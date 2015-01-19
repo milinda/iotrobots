@@ -1,6 +1,6 @@
 package test;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.JsonConverter;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import com.rabbitmq.client.*;
 
@@ -37,7 +37,7 @@ public class Listener {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Odometry_ odometry_ = JsonConverter.JSONToOdometry_(body);
+                            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deserialize(body, Odometry_.class);
                             System.out.println(odometry_);
                             channel.basicAck(deliveryTag, false);
                         }

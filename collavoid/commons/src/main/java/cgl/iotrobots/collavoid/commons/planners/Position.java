@@ -1,6 +1,8 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-public class Position {
+import java.io.Serializable;
+
+public class Position implements Serializable {
 
     private Vector2 pos=new Vector2();
     private double heading;//heading
@@ -41,6 +43,18 @@ public class Position {
 
     public void setHeading(double hd){
         this.heading=hd;
+    }
+
+    public void setPos(Vector2 pos) {
+        this.pos = pos;
+    }
+
+    public Position copy() {
+        Position res = new Position();
+        res.setHeading(heading);
+        res.setPos(pos.copy());
+        return res;
+        
     }
 
 

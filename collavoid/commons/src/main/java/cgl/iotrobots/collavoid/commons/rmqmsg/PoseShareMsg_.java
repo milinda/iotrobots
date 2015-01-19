@@ -1,5 +1,6 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
+import cgl.iotrobots.collavoid.commons.planners.Vector2;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,12 +10,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class PoseShareMsg_ implements Serializable {
 
     private Header_ Header = new Header_();
 
-    private String RobotId = "";
+    private String Name = "";
 
     private double Radius;
 
@@ -22,13 +25,14 @@ public class PoseShareMsg_ implements Serializable {
 
     private boolean Controlled;
 
-    private Vector3d_ HolonomicVelocity = new Vector3d_();
+    private double ControlPeriod;
 
     private Pose_ Pose = new Pose_();
 
     private Twist_ Twist = new Twist_();
 
-    private List<Vector3d_> FootPrint_Minkowski = new ArrayList<Vector3d_>();    // footprint minkowski
+    private List<Vector2> FootPrint_Minkowski = new ArrayList<Vector2>();    // footprint minkowski
+
 
     public Header_ getHeader() {
         return Header;
@@ -46,7 +50,11 @@ public class PoseShareMsg_ implements Serializable {
         return Controlled;
     }
 
-    public List<Vector3d_> getFootPrint_Minkowski() {
+    public double getControlPeriod() {
+        return ControlPeriod;
+    }
+
+    public List<Vector2> getFootPrint_Minkowski() {
         return FootPrint_Minkowski;
     }
 
@@ -54,16 +62,12 @@ public class PoseShareMsg_ implements Serializable {
         return Pose;
     }
 
-    public String getRobotId() {
-        return RobotId;
+    public String getName() {
+        return Name;
     }
 
     public Twist_ getTwist() {
         return Twist;
-    }
-
-    public Vector3d_ getHolonomicVelocity() {
-        return HolonomicVelocity;
     }
 
     public void setHeader(Header_ header) {
@@ -82,12 +86,8 @@ public class PoseShareMsg_ implements Serializable {
         Controlled = controlled;
     }
 
-    public void setFootPrint_Minkowski(List<Vector3d_> footPrint_Minkowski) {
+    public void setFootPrint_Minkowski(List<Vector2> footPrint_Minkowski) {
         FootPrint_Minkowski = footPrint_Minkowski;
-    }
-
-    public void setHolonomicVelocity(Vector3d_ holonomicVelocity) {
-        HolonomicVelocity = holonomicVelocity;
     }
 
     public void setHoloRobot(boolean holoRobot) {
@@ -98,15 +98,12 @@ public class PoseShareMsg_ implements Serializable {
         Radius = radius;
     }
 
-    public void setRobotId(String robotId) {
-        RobotId = robotId;
+    public void setName(String robotId) {
+        Name = robotId;
     }
 
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
+    public void setControlPeriod(double controlPeriod) {
+        this.ControlPeriod = controlPeriod;
     }
+
 }

@@ -10,6 +10,8 @@ import java.io.Serializable;
 
 public class Odometry_ implements Serializable {
 
+    private String id = "";
+
     private Header_ Header = new Header_();
 
     private String ChildFrameId = "";
@@ -20,6 +22,10 @@ public class Odometry_ implements Serializable {
 
     public void setHeader(Header_ header) {
         Header = header;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setChildFrameId(String childFrameId) {
@@ -46,6 +52,10 @@ public class Odometry_ implements Serializable {
         return ChildFrameId;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public Twist_ getTwist() {
         return Twist;
     }
@@ -57,14 +67,6 @@ public class Odometry_ implements Serializable {
         odometry_.setTwist(Twist.copy());
         odometry_.setPose(Pose.copy());
         return odometry_;
-    }
-
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
     }
 
     @Override

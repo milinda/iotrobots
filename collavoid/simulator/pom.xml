@@ -4,31 +4,24 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>iotrobots</groupId>
-        <artifactId>collavoid</artifactId>
+        <artifactId>iotrobots-collavoid-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>simulator</artifactId>
+    <artifactId>simulator-collavoid</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>simulator</name>
 
     <build>
         <plugins>
-
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>cgl.iotrobots.collavoid.simulator.MainSimulatorWithPlanner</mainClass>
-                        </manifest>
-                    </archive>
                 </configuration>
                 <executions>
                     <execution>
@@ -40,7 +33,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
@@ -74,18 +66,18 @@
             <systemPath>${project.basedir}/lib/vecmath-1.5.2.jar</systemPath>
         </dependency>
 
-
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>rosplanners</artifactId>
+            <artifactId>commons-collavoid</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>iotrobots</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>controller-collavoid</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
 
     </dependencies>
 

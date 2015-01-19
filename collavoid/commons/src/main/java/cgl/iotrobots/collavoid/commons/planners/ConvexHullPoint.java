@@ -1,6 +1,8 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-public class ConvexHullPoint {
+import java.io.Serializable;
+
+public class ConvexHullPoint implements Serializable {
 
     private double x;
     private double y;
