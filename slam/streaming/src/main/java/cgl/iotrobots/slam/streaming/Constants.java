@@ -43,6 +43,7 @@ public abstract class Constants {
         public static final String PARTICLE_STREAM = "particle";
         public static final String MAP_STREAM = "map";
         public static final String BEST_PARTICLE_STREAM = "best_particle";
+        public static final String CONTROL_STREAM = "control";
         public static final String TIME_FIELD = "time";
         public static final String LASER_SCAN_FIELD = "laser_scan";
         public static final String PARTICLE_MAP_FIELD = "map_tuple";
@@ -66,5 +67,6 @@ public abstract class Constants {
         public static final String MAP_BOLT = "map_bolt";
         public static final String SEND_BOLD = "send_bolt";
         public static final String BEST_PARTICLE_SEND_BOLT = "best_send_bolt";
+        public static final String CONTROL_SPOUT = "control_spout";
     }
 }

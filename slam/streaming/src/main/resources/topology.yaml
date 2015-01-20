@@ -8,6 +8,13 @@ spouts:
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"
+    control_receive:
+        broker: "rabbitmq"
+        sensor: "data_sensor"
+        channel: "control_sender"
+        fields: ["body", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
 bolts:
     data_send:
         broker: "rabbitmq"

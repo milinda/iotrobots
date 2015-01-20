@@ -55,6 +55,8 @@ public class ReSamplingBolt extends BaseRichBolt {
     private Kryo kryo;
 
     private int receivedParticles = 0;
+    private StreamTopologyBuilder streamTopologyBuilder;
+    private StreamComponents components;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -63,12 +65,11 @@ public class ReSamplingBolt extends BaseRichBolt {
         this.kryo = new Kryo();
         Utils.registerClasses(kryo);
         // read the configuration of the scanmatcher from topology.xml
-        StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
-        StreamComponents components = streamTopologyBuilder.buildComponents();
+        streamTopologyBuilder = new StreamTopologyBuilder();
+        components = streamTopologyBuilder.buildComponents();
         // use the configuration to create the resampler
-        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
-        reSampler = ProcessorFactory.createReSampler(cfg);
-        particleValueses = new ParticleValue[reSampler.getParticles().size()];
+        inti();
+
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
@@ -81,24 +82,23 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
     }
 
-//    long lastMessageTime;
-//    long lastComputationTime;
+    /**
+     * Initialize the resampler
+     */
+    private void inti() {
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        reSampler = ProcessorFactory.createReSampler(cfg);
+        particleValueses = new ParticleValue[reSampler.getParticles().size()];
+    }
 
     @Override
     public void execute(Tuple tuple) {
         outputCollector.ack(tuple);
 
+
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         List<ParticleValue> pvs;
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-        long t0 = System.currentTimeMillis();
-        long currentMessageTime = Long.parseLong(time.toString());
-//        // if this message came within that window, discard it
-//        // this will allow us to keep track of the current interval
-//        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
-//            outputCollector.ack(tuple);
-//            return;
-//        }
 
         if (val != null && (val instanceof List)) {
             pvs = (List<ParticleValue>) val;
@@ -172,8 +172,6 @@ public class ReSamplingBolt extends BaseRichBolt {
             // distribute the new particle values according to
             for (int i = 0; i < reSampler.getParticles().size(); i++) {
                 Particle p = reSampler.getParticles().get(i);
-//                ParticleValue pv = new ParticleValue(-1, i, -1, p.getPose(), p.getPreviousPose(),
-//                        p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), p.getNode());
                 ParticleValue pv = Utils.createParticleValue(p, -1, i, -1);
 
                 // we assume there is a direct mapping between particles in the resampler and the indexes
@@ -203,14 +201,12 @@ public class ReSamplingBolt extends BaseRichBolt {
             assignments.setBestParticle(best);
             distributeAssignments(assignments);
         }
-//        lastComputationTime = System.currentTimeMillis() - t0;
-//        lastMessageTime = Long.parseLong(time.toString());
 
         reading = null;
     }
 
     private void addParticleValueToMap(Map<Integer, List<ParticleValue>> map, int task, ParticleValue value) {
-        List<ParticleValue> values = null;
+        List<ParticleValue> values;
         if (map.containsKey(task)) {
             values = map.get(task);
         } else {

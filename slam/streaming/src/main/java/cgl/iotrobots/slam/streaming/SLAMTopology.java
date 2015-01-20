@@ -88,10 +88,6 @@ public class SLAMTopology {
         }
     }
 
-    private static void buildAllInOneTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder) {
-        StreamComponents components = streamTopologyBuilder.buildComponents();
-    }
-
     private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder, int parallel) {
 
         // first create a rabbitmq Spout
@@ -101,7 +97,8 @@ public class SLAMTopology {
                 LOG.error("error occured", throwable);
             }
         };
-        RabbitMQSpout spout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(), reporter);
+        RabbitMQSpout dataSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(0), reporter);
+        RabbitMQSpout controlSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(3), reporter);
         RabbitMQBolt mapSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(1), reporter);
         RabbitMQBolt valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
 
@@ -109,9 +106,10 @@ public class SLAMTopology {
         ReSamplingBolt reSamplingBolt = new ReSamplingBolt();
         MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
 
-        builder.setSpout(Constants.Topology.RECEIVE_SPOUT, spout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT);
-        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM);
+        builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
+        builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT).allGrouping(Constants.Topology.CONTROL_SPOUT);
+        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT);
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
         builder.setBolt(Constants.Topology.BEST_PARTICLE_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.BEST_PARTICLE_STREAM);
@@ -186,6 +184,12 @@ public class SLAMTopology {
     }
 
     private static class RabbitMQStaticSpoutConfigurator implements SpoutConfigurator {
+        int spout;
+
+        private RabbitMQStaticSpoutConfigurator(int spout) {
+            this.spout = spout;
+        }
+
         @Override
         public MessageBuilder getMessageBuilder() {
             return new DefaultRabbitMQMessageBuilder();
@@ -208,7 +212,7 @@ public class SLAMTopology {
 
         @Override
         public DestinationChanger getDestinationChanger() {
-            return new StaticDestinations(0);
+            return new StaticDestinations(spout);
         }
     }
 
@@ -237,10 +241,14 @@ public class SLAMTopology {
                 configuration.addProperty("queueName", "map");
                 configuration.addProperty("routingKey", "map");
                 configuration.addProperty("exchange", "simbard_map");
-            } else {
+            } else if (sender == 2) {
                 configuration.addProperty("queueName", "best");
                 configuration.addProperty("routingKey", "best");
                 configuration.addProperty("exchange", "simbard_best");
+            } else if (sender == 3) {
+                configuration.addProperty("queueName", "control");
+                configuration.addProperty("routingKey", "control");
+                configuration.addProperty("exchange", "simbard_control");
             }
 
             dstListener.addDestination("rabbitmq", configuration);
