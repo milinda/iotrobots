@@ -126,7 +126,7 @@ public class AgentSensor extends AbstractSensor {
             context.addProperty(Constant_storm.IotCloud.VELOCITY_QUEUE,velqueue);
 
             // self defined contexts
-            msgContexts=new Constant_storm.IotMsgContexts(context.getSensorID()).Contexts;
+            msgContexts=new Constant_storm.IotMsgContexts(context.getName()).Contexts;
             for (Map.Entry<String,IotRMQContext> e:msgContexts.entrySet()){
                 Map Props = new HashMap();
                 Props.put("exchange", e.getValue().EXCHANGE_NAME);

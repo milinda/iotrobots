@@ -316,7 +316,7 @@ public class BuildIotTopology {
                         Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD));
 //
-        builder.setBolt(Constant_storm.Components.AGENT_COMPONENT, new AgentBolt(), 1)
+        builder.setBolt(Constant_storm.Components.AGENT_COMPONENT, new AgentBolt_(), 1)
                 .fieldsGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,
                         Constant_storm.Streams.PUBLISHME_STREAM,
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))

@@ -80,7 +80,7 @@ public abstract class Constant_storm {
         public static final String AGENT_COMPONENT="agent";
         public static final String SCAN_COMPONENT="scan_receiver";
         public static final String GET_ALL_AGENTS_COMPONENT ="getAgents";
-        public static final String POSE_SHARE_COMPONENT="poseShare";
+        public static final String POSE_SHARE_COMPONENT="pose_share_receiver";
         public static final String POSE_ARRAY_COMPONENT ="pose_array_receiver";
         public static final String GET_OBSTACLES_COMPONENT="getObstacles";
         public static final String ODOMETRY_TRANSFORM_COMPONENT="odometryTransform";
@@ -98,7 +98,7 @@ public abstract class Constant_storm {
         public static final String VO_LINES_JOIN_COMPONENT="voLineJoin";
         public static final String VO_LINES_COMPUTE_COMPONENT = "voLinesCompute";
         public static final String GET_MINKOWSKI_FOOTPRINT_COMPONENT="getMinkowskiFootprint";
-        public static final String POSE_SHARE_PUB_COMPONENT="pose_share_sender";
+        public static final String POSE_SHARE_PUB_COMPONENT="pose_share_sender";// iotcloud component
     }
     public static class KeyToComponentMap{
         public final Map<String,String> map=new HashMap<String, String>();
@@ -133,8 +133,8 @@ public abstract class Constant_storm {
             Contexts.put(Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT,
                     new IotRMQContext(Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT, sensorID));
             Contexts.put(Components.BASE_CONFIG_COMPONENT, new IotRMQContext(Components.BASE_CONFIG_COMPONENT, sensorID));
-            Contexts.put(Components.POSE_SHARE_PUB_COMPONENT, new IotRMQContext(Components.POSE_SHARE_PUB_COMPONENT, "*"));
-            Contexts.put(Components.POSE_SHARE_COMPONENT, new IotRMQContext(Components.POSE_SHARE_COMPONENT, "*"));
+            Contexts.put(Components.POSE_SHARE_PUB_COMPONENT, new IotRMQContext(Components.POSE_SHARE_COMPONENT, sensorID));
+            Contexts.put(Components.POSE_SHARE_COMPONENT, new IotRMQContext(Components.POSE_SHARE_COMPONENT, sensorID));
         }
 
     }

@@ -20,6 +20,8 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sensor_msgs.PointCloud2;
 
 import java.util.ArrayList;
@@ -29,6 +31,8 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 public class AgentROSNodeIot extends AbstractNodeMain {
+
+    private Logger logger= LoggerFactory.getLogger(AgentROSNodeIot.class);
 
     private String AgentID = "robot";
 

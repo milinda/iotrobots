@@ -67,16 +67,16 @@ public class AgentBolt extends BaseRichBolt {
 
         if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
             if (updateAgentToPub(tuple)) {
-                collector.emit(new Values(tuple.getValue(0),tuple.getValue(1),Utils.serialize(poseShareMsg_)));
-//                Message msg;
-//                try {
-//                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
-//                    poseShareSender.send(msg, "");
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
+                
+                Message msg;
+                try {
+                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
+                    poseShareSender.send(msg, "");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
             if (updateAgentToCalVel(tuple)) {
@@ -126,13 +126,6 @@ public class AgentBolt extends BaseRichBolt {
                         Constant_storm.FIELDS.TIME_FIELD,
                         Constant_storm.FIELDS.SENSOR_ID_FIELD,
                         Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD));
-        outputFieldsDeclarer.declareStream(Constant_storm.Streams.PUBLISHME_STREAM,
-                new Fields(
-                        Constant_storm.FIELDS.TIME_FIELD,
-                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
-                        Constant_storm.FIELDS.POSE_SHARE_FIELD
-                )
-        );
 
     }
 
