@@ -41,6 +41,11 @@ public class RabbitMQReceiver {
 
         try {
             connection = createConnection();
+            if (connection == null) {
+                String msg = "Failed to create connection to URL " + url;
+                LOG.error(msg);
+                throw new Exception(msg);
+            }
             channel = connection.createChannel();
             if (!topic) {
                 channel.exchangeDeclare(exchangeName, "direct", false);
