@@ -7,6 +7,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
+import geometry_msgs.PoseStamped;
 import geometry_msgs.Twist;
 import nav_msgs.Odometry;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -39,18 +40,36 @@ public class AgentROSNode extends AbstractNodeMain {
 
     private Map<String, RMQContext> Contexts;
 
+    private BaseConfig_ startGoal = new BaseConfig_();
+
+    private Publisher<Twist> velcmdPublisher;
+
+    private Subscriber<Odometry> odometrySubscriber;
+
+    private Subscriber<PointCloud2> laserScanSubscriber;
+
+    private Subscriber<PoseArray> poseArraySubscriber;
+
+    private Subscriber<PoseStamped> startGoalSubscriber;
+
     public AgentROSNode(String name, Channel channel, Map<String, RMQContext> msgContexts) {
         this.nodeName = name;
         this.channel = channel;
-        Contexts=msgContexts;
+        Contexts = msgContexts;
         BindQueue(Contexts);
     }
 
     private void BindQueue(Map<String, RMQContext> RMQParams) {
         try {
-            for (Map.Entry<String,RMQContext> e : RMQParams.entrySet()) {
-                e.getValue().QUEUE_NAME=channel.queueDeclare().getQueue();
-                channel.queueBind(e.getValue().QUEUE_NAME,e.getValue().EXCHANGE_NAME,e.getValue().ROUTING_KEY);
+            for (Map.Entry<String, RMQContext> e : RMQParams.entrySet()) {
+                e.getValue().CHANNEL = channel;
+                e.getValue().CHANNEL.exchangeDeclare(
+                        e.getValue().EXCHANGE_NAME,
+                        e.getValue().EXCHANGE_TYPE,
+                        e.getValue().DURABLE
+                );
+                channel.queueDeclare(e.getValue().QUEUE_NAME, false, false, false, null);
+                channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,15 +78,17 @@ public class AgentROSNode extends AbstractNodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
-        String robotNodeName = new String(nodeName).replace("_rmq", "");
-        final Publisher<Twist> velcmdPublisher =
+        final String robotNodeName = new String(nodeName).replace("_rmq", "");
+        velcmdPublisher =
                 connectedNode.newPublisher(robotNodeName + "/cmd_vel", Twist._TYPE);
-        final Subscriber<Odometry> odometrySubscriber =
+        odometrySubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/odometry", Odometry._TYPE);
-        final Subscriber<PointCloud2> laserScanSubscriber =
+        laserScanSubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/scan/point_cloud2", PointCloud2._TYPE);
-        final Subscriber<PoseArray> poseArraySubscriber =
+        poseArraySubscriber =
                 connectedNode.newSubscriber(robotNodeName + "/particlecloud", PoseArray._TYPE);
+        startGoalSubscriber =
+                connectedNode.newSubscriber(robotNodeName + "/start_goal", PoseStamped._TYPE);
 
         try {
             Thread.sleep(1000);
@@ -76,8 +97,8 @@ public class AgentROSNode extends AbstractNodeMain {
         }
 
         try {
-            String queueName=Contexts.get(Constant.KEY_VELOCITY_CMD).QUEUE_NAME;
-            String routingKey=Contexts.get(Constant.KEY_VELOCITY_CMD).ROUTING_KEY;
+            String queueName = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).QUEUE_NAME;
+            String routingKey = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).ROUTING_KEY;
             channel.basicConsume(queueName, autoAck, routingKey + "Tag",
                     new DefaultConsumer(channel) {
                         @Override
@@ -87,7 +108,7 @@ public class AgentROSNode extends AbstractNodeMain {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Twist_ velocity = JsonConverter.JSONToTwist_(body);
+                            Twist_ velocity = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
                             velQueue.offer(velocity);
                             channel.basicAck(deliveryTag, false);
                         }
@@ -120,12 +141,13 @@ public class AgentROSNode extends AbstractNodeMain {
         odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
             @Override
             public void onNewMessage(Odometry odometry) {
+                if (channel.isOpen())
                 try {
-                                        channel.basicPublish(
-                            Contexts.get(Constant.KEY_ODOMETRY).EXCHANGE_NAME,
-                            Contexts.get(Constant.KEY_ODOMETRY).ROUTING_KEY,
+                    channel.basicPublish(
+                            Contexts.get(Constant_msg.KEY_ODOMETRY).EXCHANGE_NAME,
+                            Contexts.get(Constant_msg.KEY_ODOMETRY).ROUTING_KEY,
                             null,
-                            toOdometry_(odometry).toJSON());
+                            Methods_RMQ.serialize(toOdometry_(odometry)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -135,13 +157,13 @@ public class AgentROSNode extends AbstractNodeMain {
         laserScanSubscriber.addMessageListener(new MessageListener<PointCloud2>() {
             @Override
             public void onNewMessage(PointCloud2 pointCloud2) {
-
+                if (channel.isOpen())
                 try {
                     channel.basicPublish(
-                            Contexts.get(Constant.KEY_SCAN).EXCHANGE_NAME,
-                            Contexts.get(Constant.KEY_SCAN).ROUTING_KEY,
-                            null, 
-                            toPointCloud2_(pointCloud2).toJSON());
+                            Contexts.get(Constant_msg.KEY_SCAN).EXCHANGE_NAME,
+                            Contexts.get(Constant_msg.KEY_SCAN).ROUTING_KEY,
+                            null,
+                            Methods_RMQ.serialize(toPointCloud2_(pointCloud2)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -153,85 +175,102 @@ public class AgentROSNode extends AbstractNodeMain {
             public void onNewMessage(PoseArray poseArray) {
                 PoseArray_ pa = new PoseArray_();
                 pa.getHeader().setFrameId(poseArray.getHeader().getFrameId());
-                pa.getHeader().setStamp(poseArray.getHeader().getStamp().totalNsecs()/1000000);
+                pa.getHeader().setStamp(poseArray.getHeader().getStamp().totalNsecs() / 1000000);
 
                 List<Pose_> poses = new ArrayList<Pose_>();
                 for (Pose pose : poseArray.getPoses()) {
                     poses.add(toPose_(pose));
                 }
                 pa.setPoses(poses);
-
+                if (channel.isOpen())
                 try {
                     channel.basicPublish(
-                            Contexts.get(Constant.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
-                            Contexts.get(Constant.KEY_PARTICLE_CLOUD).ROUTING_KEY,
-                            null, 
-                            pa.toJSON());
+                            Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
+                            Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).ROUTING_KEY,
+                            null,
+                            Methods_RMQ.serialize(pa));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
+
+        startGoalSubscriber.addMessageListener(new MessageListener<PoseStamped>() {
+            RMQContext startGoalContext = Contexts.get(Constant_msg.KEY_START_GOAL);
+            @Override
+            public void onNewMessage(PoseStamped msg) {
+                PoseStamped_ poseStamped_ = toPoseStamped_(msg);
+                if (msg.getHeader().getSeq() % 2 == 0) {
+                    startGoal.setStart(poseStamped_);
+                } else {
+                    startGoal.setGoal(poseStamped_);
+                }
+
+                if (msg.getHeader().getSeq() >= 9) {
+                    Methods_RMQ.publishMsg(startGoalContext, Methods_RMQ.serialize(startGoal));
+                }
+            }
+        });
     }
 
-    private Odometry_ toOdometry_(Odometry odometry){
-        Pose_ pose_=toPose_(odometry.getPose().getPose());
+    private Odometry_ toOdometry_(Odometry odometry) {
+        Pose_ pose_ = toPose_(odometry.getPose().getPose());
 
-        Vector3d_ angular= new Vector3d_(
+        Vector3d_ angular = new Vector3d_(
                 odometry.getTwist().getTwist().getAngular().getX(),
                 odometry.getTwist().getTwist().getAngular().getY(),
                 odometry.getTwist().getTwist().getAngular().getZ()
         );
-        Vector3d_ linear=new Vector3d_(
+        Vector3d_ linear = new Vector3d_(
                 odometry.getTwist().getTwist().getLinear().getX(),
                 odometry.getTwist().getTwist().getLinear().getY(),
                 odometry.getTwist().getTwist().getLinear().getZ()
         );
-        Twist_ twist_=new Twist_();
+        Twist_ twist_ = new Twist_();
         twist_.setLinear(linear);
         twist_.setAngular(angular);
-        
+
         Odometry_ odometry_ = new Odometry_();
         odometry_.setPose(pose_);
         odometry_.setTwist(twist_);
         odometry_.setChildFrameId(odometry.getChildFrameId());
         odometry_.getHeader().setFrameId(odometry.getHeader().getFrameId());
-        odometry_.getHeader().setStamp(odometry.getHeader().getStamp().totalNsecs()/1000000);
-                
+        odometry_.getHeader().setStamp(odometry.getHeader().getStamp().totalNsecs() / 1000000);
+
         return odometry_;
     }
 
-    private PointCloud2_ toPointCloud2_(PointCloud2 pointCloud2){
+    private PointCloud2_ toPointCloud2_(PointCloud2 pointCloud2) {
         PointCloud2_ pts = new PointCloud2_();
         pts.setWidth(pointCloud2.getWidth());
         pts.setHeight(pointCloud2.getHeight());
         pts.setDimension(pointCloud2.getFields().size());
-        int pointNumber=pts.getWidth()*pts.getHeight();
+        int pointNumber = pts.getWidth() * pts.getHeight();
         double[] data;
-        if (pointNumber==0)
-            data=new double[0];
+        if (pointNumber == 0)
+            data = new double[0];
         else {
-            data = new double[pointNumber*3];
-            int i=0;
-            ChannelBuffer databuffer=pointCloud2.getData().copy();
-            while (databuffer.readableBytes()>0)
-                data[i++]=(double)databuffer.readFloat();
+            data = new double[pointNumber * 3];
+            int i = 0;
+            ChannelBuffer databuffer = pointCloud2.getData().copy();
+            while (databuffer.readableBytes() > 0)
+                data[i++] = (double) databuffer.readFloat();
         }
         pts.setData(data);
-        pts.getHeader().setStamp(pointCloud2.getHeader().getStamp().totalNsecs()/1000000);
+        pts.getHeader().setStamp(pointCloud2.getHeader().getStamp().totalNsecs() / 1000000);
         pts.getHeader().setFrameId(pointCloud2.getHeader().getFrameId());
 
         return pts;
     }
-    
-    private Pose_ toPose_(Pose pose){
-        Pose_ pose_=new Pose_();
-        Vector3d_ position=new Vector3d_(
+
+    private Pose_ toPose_(Pose pose) {
+        Pose_ pose_ = new Pose_();
+        Vector3d_ position = new Vector3d_(
                 pose.getPosition().getX(),
                 pose.getPosition().getY(),
                 pose.getPosition().getZ()
         );
-        Vector4d_ orientation= new Vector4d_(
+        Vector4d_ orientation = new Vector4d_(
                 pose.getOrientation().getX(),
                 pose.getOrientation().getY(),
                 pose.getOrientation().getZ(),
@@ -242,8 +281,35 @@ public class AgentROSNode extends AbstractNodeMain {
         return pose_;
     }
 
+    private PoseStamped_ toPoseStamped_(PoseStamped msg) {
+        PoseStamped_ poseStamped_ = new PoseStamped_();
+        poseStamped_.getHeader().setFrameId(msg.getHeader().getFrameId());
+        poseStamped_.getHeader().setStamp(msg.getHeader().getStamp().totalNsecs() / 1000000);
+        Vector3d_ position = new Vector3d_(
+                msg.getPose().getPosition().getX(),
+                msg.getPose().getPosition().getY(),
+                msg.getPose().getPosition().getZ()
+        );
+        Vector4d_ orientation = new Vector4d_(
+                msg.getPose().getOrientation().getX(),
+                msg.getPose().getOrientation().getY(),
+                msg.getPose().getOrientation().getZ(),
+                msg.getPose().getOrientation().getW()
+        );
+        poseStamped_.getPose().setPosition(position);
+        poseStamped_.getPose().setOrientation(orientation);
+
+        return poseStamped_;
+
+    }
+
     @Override
     public void onShutdown(Node node) {
+        velcmdPublisher.shutdown();
+        odometrySubscriber.shutdown();
+        poseArraySubscriber.shutdown();
+        startGoalSubscriber.shutdown();
+        laserScanSubscriber.shutdown();
         node.shutdown();
     }
 

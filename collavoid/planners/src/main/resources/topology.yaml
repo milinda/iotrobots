@@ -1,0 +1,20 @@
+zk.servers: ["localhost:2181"]
+zk.root: "/iot/sensors"
+spouts:
+    odom_receiver:
+        broker: "rabbitmq"
+        sensor: "robot0"
+        channel: "odometry"
+        fields: ["body"]
+        properties:
+          ackMode: "auto"
+bolts:
+    data_send:
+        broker: "rabbitmq"
+        sensor: "data_sensor"
+        channel: "data_receiver"
+        fields: ["body", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
+conf:
+    rabbitmq_url: "amqp://localhost:5672"

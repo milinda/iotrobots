@@ -1,5 +1,7 @@
 package cgl.iotrobots.collavoid.simulator;
 
+import cgl.iotrobots.collavoid.commons.rmqmsg.PointCloud2_;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 import geometry_msgs.Pose;
 import geometry_msgs.Vector3;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -43,8 +45,10 @@ public class utilsSim {
         // set z to zero, previously this is the z position of the robot center
         pose.getPosition().setZ(0);
 
-        pose.getOrientation().setZ(quat4d.getY());
-        pose.getOrientation().setW(quat4d.getW());
+        Quat4d q = new Quat4d(quat4d);
+        toROSCoordinate(q);
+        pose.getOrientation().setZ(q.getZ());
+        pose.getOrientation().setW(q.getW());
         return pose;
     }
 
@@ -57,7 +61,6 @@ public class utilsSim {
         twist.setZ(velROS.getZ());
         return twist;
     }
-
 
     public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan) {
         List<PointField> lPointField = new ArrayList<PointField>();
@@ -98,14 +101,27 @@ public class utilsSim {
             pc2.setData(buffer);
     }
 
-    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan, MainSimulator.Robot robot) {
-        pc2.getHeader().setFrameId(robot.globalFrame);
-        toPointCloud2(pc2,scan);
-    }
-
-    public static void toPointCloud2(PointCloud2 pc2, List<Point3d> scan, MainSimulatorWithPlanner.Robot robot) {
-        pc2.getHeader().setFrameId(robot.globalFrame);
-        toPointCloud2(pc2,scan);
+    //no ros
+    public static void toPointCloud2(PointCloud2_ pc2, List<Point3d> scan) {
+        pc2.setHeight(1);
+        pc2.setWidth(scan.size());
+        pc2.setDimension(3);
+        Point3d p3d;
+        int idx = 0;
+        double[] data = new double[3 * scan.size()];
+        for (int i = 0; i < scan.size(); i++) {
+            //in ros coordinate
+            double[] pt = new double[3];
+            p3d = toROSCoordinate(scan.get(i));
+            p3d.get(pt);
+            for (int j = 0; j < 3; j++) {
+                data[idx++] = pt[j];
+            }
+        }
+        if (scan.size() == 0)
+            pc2.setData(null);
+        else
+            pc2.setData(data);
     }
 
     public static void Vector3ToPoint3d(Vector3 in, Point3d out) {

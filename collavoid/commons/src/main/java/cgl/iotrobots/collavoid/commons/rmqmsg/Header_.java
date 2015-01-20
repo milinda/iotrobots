@@ -45,12 +45,4 @@ public class Header_ implements Serializable {
         return "{FrameId:" + FrameId + "," + "Stamp:" + Stamp + "}";
     }
 
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
-    }
-
 }

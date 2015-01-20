@@ -12,6 +12,8 @@ import java.io.Serializable;
 
 public class PointCloud2_ implements Serializable {
 
+    private String id;
+
     private Header_ Header = new Header_();
 
     private int Width;
@@ -32,6 +34,10 @@ public class PointCloud2_ implements Serializable {
 
     public int getDimension() {
         return Dimension;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public int getHeight() {
@@ -62,6 +68,10 @@ public class PointCloud2_ implements Serializable {
         Data = data;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public PointCloud2_ copy() {
         PointCloud2_ pointCloud2_ = new PointCloud2_();
         pointCloud2_.setHeader(Header.copy());
@@ -74,11 +84,4 @@ public class PointCloud2_ implements Serializable {
         return pointCloud2_;
     }
 
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
-    }
 }

@@ -1,8 +1,11 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-public class Line {
+import java.io.Serializable;
+
+public class Line implements Serializable {
     private Vector2 point;
     private Vector2 dir;
+    private String type;// to record orca line type
 
     public Line(Vector2 point, Vector2 dir) {
         this.point = new Vector2(point);
@@ -30,6 +33,17 @@ public class Line {
         this.dir=new Vector2(d);
     }
 
+    public String getType() {
+        return type;
+    }
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "{Point: " + point.toString() + ";" + dir.toString() + "}";
+    }
 }
 

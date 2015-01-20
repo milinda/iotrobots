@@ -10,9 +10,13 @@ import java.io.Serializable;
 
 public class Twist_ implements Serializable {
 
+    private long Time;
+
     private Vector3d_ Angular = new Vector3d_();
 
     private Vector3d_ Linear = new Vector3d_();
+
+    private boolean goalReached;
 
     public Twist_() {
     }
@@ -21,22 +25,39 @@ public class Twist_ implements Serializable {
         this.Angular = new Vector3d_(angular);
     }
 
+    public void setTime(long time) {
+        Time = time;
+    }
+
     public void setLinear(Vector3d_ linear) {
         this.Linear = new Vector3d_(linear);
+    }
+
+    public void setGoalReached(boolean goalReached) {
+        this.goalReached = goalReached;
     }
 
     public Vector3d_ getAngular() {
         return Angular;
     }
 
+    public long getTime() {
+        return Time;
+    }
+
     public Vector3d_ getLinear() {
         return Linear;
+    }
+
+    public boolean isGoalReached() {
+        return goalReached;
     }
 
     public Twist_ copy() {
         Twist_ twist_ = new Twist_();
         twist_.setAngular(Angular.copy());
         twist_.setLinear(Linear.copy());
+        twist_.setGoalReached(goalReached);
         return twist_;
     }
 
@@ -48,11 +69,5 @@ public class Twist_ implements Serializable {
                 '}';
     }
 
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
-    }
+
 }

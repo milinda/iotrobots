@@ -2,7 +2,9 @@ package cgl.iotrobots.collavoid.commons.planners;
 
 import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 
-public class PoseWeighted {
+import java.io.Serializable;
+
+public class PoseWeighted implements Serializable {
     private double w;
     private Pose_ Pose;
 

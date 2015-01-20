@@ -1,6 +1,6 @@
 package cgl.iotrobots.collavoid.controller;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.Constant;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.RMQContext;
 import com.rabbitmq.client.*;
@@ -8,6 +8,7 @@ import org.ros.node.DefaultNodeMainExecutor;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class AgentController {
 
     private NodeMainExecutor nodeMainExecutor;
 
-    private Channel channel;
+    private Channel channel = null;
     
     private Address[] addresses;
 
@@ -36,34 +37,56 @@ public class AgentController {
         this.nodeName = Name;
         this.addresses = addresses;
         this.url = url;
-        
-        RMQContexts.put(Constant.KEY_ODOMETRY, new RMQContext(exchangeName, Constant.KEY_ODOMETRY));
-        RMQContexts.put(Constant.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant.KEY_PARTICLE_CLOUD));
-        RMQContexts.put(Constant.KEY_SCAN, new RMQContext(exchangeName, Constant.KEY_SCAN));
-        RMQContexts.put(Constant.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant.KEY_VELOCITY_CMD));
+
+        // information from robot use the same exchange
+        RMQContexts.put(Constant_msg.KEY_ODOMETRY, new RMQContext(exchangeName, Constant_msg.KEY_ODOMETRY));
+        RMQContexts.put(Constant_msg.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant_msg.KEY_PARTICLE_CLOUD));
+        RMQContexts.put(Constant_msg.KEY_SCAN, new RMQContext(exchangeName, Constant_msg.KEY_SCAN));
+        RMQContexts.put(Constant_msg.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant_msg.KEY_VELOCITY_CMD));
+        RMQContexts.put(Constant_msg.KEY_START_GOAL, new RMQContext(exchangeName, Constant_msg.KEY_START_GOAL));
     }
 
     public void start(NodeConfiguration configuration) {
-        channel= Methods_RMQ.getChannel(addresses, url, null, exchangeName, Constant.TYPE_EXCHANGE_DIRECT);
+        channel = Methods_RMQ.getChannel(addresses, url, null);
         agentROSNode = new AgentROSNode(nodeName, channel, RMQContexts);
         nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
         nodeMainExecutor.execute(agentROSNode, configuration);
+        clearQueues();
+    }
+
+    public void clearQueues() {
+        if (channel != null) {
+            for (Map.Entry<String, RMQContext> context : RMQContexts.entrySet()) {
+                try {
+                    channel.queuePurge(context.getValue().QUEUE_NAME);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
     }
 
     public void stop() {
-//        try {
-//            if (channel != null) {
-//                channel.close();
-//            }
-//            if (connection != null) {
-//                connection.close();
-//            }
+        try {
             if (agentROSNode != null) {
                 nodeMainExecutor.shutdown();
             }
-//        } catch (IOException e) {
-//            System.out.println("Error closing the rabbit MQ connection" + e);
-//        }
+            if (channel != null) {
+                for (Map.Entry<String, RMQContext> context : RMQContexts.entrySet()) {
+                    channel.queueDelete(context.getValue().QUEUE_NAME);
+                }
+                channel.exchangeDelete(exchangeName);
+            }
+
+
+//            if (connection != null) {
+//                connection.close();
+//            }
+
+        } catch (IOException e) {
+            System.out.println("Error closing the rabbit MQ connection" + e);
+        }
     }
 
 }
