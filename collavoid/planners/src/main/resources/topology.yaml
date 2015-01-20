@@ -1,18 +1,58 @@
 zk.servers: ["localhost:2181"]
-zk.root: "/iot/sensors"
+zk.root: "/iot/sensors/collavoid"
 spouts:
     odom_receiver:
         broker: "rabbitmq"
-        sensor: "robot0"
+        sensor: "collisionAvoid"
         channel: "odometry"
-        fields: ["body"]
+        fields: ["body","sensorID","time"]
         properties:
           ackMode: "auto"
-bolts:
-    data_send:
+          prefectCount: "10"
+    scan_receiver:
         broker: "rabbitmq"
-        sensor: "data_sensor"
-        channel: "data_receiver"
+        sensor: "collisionAvoid"
+        channel: "scan"
+        fields: ["body","sensorID","time"]
+        properties:
+          ackMode: "auto"
+          prefectCount: "10"
+    pose_array_receiver:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "pose_array"
+        fields: ["body","sensorID","time"]
+        properties:
+          ackMode: "auto"
+          prefectCount: "10"
+    base_config_receiver:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "base_config"
+        fields: ["body","sensorID","time"]
+        properties:
+          ackMode: "auto"
+          prefectCount: "10"
+    pose_share_receiver:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "pose_share"
+        fields: ["body","sensorID","time"]
+        properties:
+          ackMode: "auto"
+          prefectCount: "10"
+bolts:
+    cmd_sender:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "vel_cmd"
+        fields: ["body", "sensorID", "time"]
+        properties:
+          ackMode: "auto"
+    pose_share_sender:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "pose_share"
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"

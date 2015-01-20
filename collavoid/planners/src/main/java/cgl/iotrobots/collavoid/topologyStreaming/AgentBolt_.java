@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AgentBolt extends BaseRichBolt {
+public class AgentBolt_ extends BaseRichBolt {
     private OutputCollector collector;
     private Logger logger = LoggerFactory.getLogger(AgentBolt.class);
 
@@ -67,15 +67,16 @@ public class AgentBolt extends BaseRichBolt {
 
         if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
             if (updateAgentToPub(tuple)) {
-                Message msg;
-                try {
-                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
-                    poseShareSender.send(msg, "");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                collector.emit(new Values(tuple.getValue(0),tuple.getValue(1),Utils.serialize(poseShareMsg_)));
+//                Message msg;
+//                try {
+//                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
+//                    poseShareSender.send(msg, "");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
             }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
             if (updateAgentToCalVel(tuple)) {
@@ -84,11 +85,6 @@ public class AgentBolt extends BaseRichBolt {
                                 tuple.getValue(0),
                                 tuple.getValue(1),
                                 Utils.serialize(currentContext.agent)));
-<<<<<<< HEAD
-=======
-//                System.out.println("Debug-cmdc out:"
-//                        +(System.currentTimeMillis() - tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD))/1000.0);
->>>>>>> dev
             }
         }
         // what about reset???
@@ -110,12 +106,12 @@ public class AgentBolt extends BaseRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         collector = outputCollector;
-        poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, Constant_msg.KEY_POSE_SHARE);
-        try {
-            poseShareSender.open(Constant_msg.TYPE_EXCHANGE_FANOUT);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, Constant_msg.KEY_POSE_SHARE);
+//        try {
+//            poseShareSender.open(Constant_msg.TYPE_EXCHANGE_FANOUT);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override
@@ -130,6 +126,13 @@ public class AgentBolt extends BaseRichBolt {
                         Constant_storm.FIELDS.TIME_FIELD,
                         Constant_storm.FIELDS.SENSOR_ID_FIELD,
                         Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD));
+        outputFieldsDeclarer.declareStream(Constant_storm.Streams.PUBLISHME_STREAM,
+                new Fields(
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.POSE_SHARE_FIELD
+                )
+        );
 
     }
 
