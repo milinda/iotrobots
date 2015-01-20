@@ -57,11 +57,12 @@
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-core</artifactId>
             <version>${storm.version}</version>
-            <!--<scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
-        <!--dependency>
+        <dependency>
             <groupId>sensorstream</groupId>
             <artifactId>sensorstream-core</artifactId>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>
@@ -72,7 +73,7 @@
                     <artifactId>storm-core</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency-->
+        </dependency>
     </dependencies>
 
 </project>

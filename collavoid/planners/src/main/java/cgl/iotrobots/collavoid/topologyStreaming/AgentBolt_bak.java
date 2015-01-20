@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AgentBolt extends BaseRichBolt {
+public class AgentBolt_bak extends BaseRichBolt {
     private OutputCollector collector;
     private Logger logger = LoggerFactory.getLogger(AgentBolt.class);
 
@@ -84,11 +84,6 @@ public class AgentBolt extends BaseRichBolt {
                                 tuple.getValue(0),
                                 tuple.getValue(1),
                                 Utils.serialize(currentContext.agent)));
-<<<<<<< HEAD
-=======
-//                System.out.println("Debug-cmdc out:"
-//                        +(System.currentTimeMillis() - tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD))/1000.0);
->>>>>>> dev
             }
         }
         // what about reset???

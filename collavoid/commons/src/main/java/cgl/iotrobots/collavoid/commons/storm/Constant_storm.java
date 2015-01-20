@@ -1,7 +1,10 @@
 package cgl.iotrobots.collavoid.commons.storm;
 
+import backtype.storm.topology.IRichSpout;
 import backtype.storm.tuple.Fields;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
+import cgl.iotrobots.collavoid.commons.rmqmsg.IotRMQContext;
+import cgl.iotrobots.collavoid.commons.rmqmsg.RMQContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,18 +75,18 @@ public abstract class Constant_storm {
 
     public abstract class Components{
         public static final String GLOBAL_PLANNER_COMPONENT="globalPlanner";
-        public static final String ODOMETRY_COMPONENT="odometry";
+        public static final String ODOMETRY_COMPONENT="odom_receiver";
         public static final String LOCAL_PLANNER_COMPONENT="localPlanner";
         public static final String AGENT_COMPONENT="agent";
-        public static final String SCAN_COMPONENT="scan";
+        public static final String SCAN_COMPONENT="scan_receiver";
         public static final String GET_ALL_AGENTS_COMPONENT ="getAgents";
         public static final String POSE_SHARE_COMPONENT="poseShare";
-        public static final String POSE_ARRAY_COMPONENT ="poseArray";
+        public static final String POSE_ARRAY_COMPONENT ="pose_array_receiver";
         public static final String GET_OBSTACLES_COMPONENT="getObstacles";
         public static final String ODOMETRY_TRANSFORM_COMPONENT="odometryTransform";
-        public static final String BASE_CONFIG_COMPONENT ="baseConfig";// in streaming
+        public static final String BASE_CONFIG_COMPONENT ="base_config_receiver";// in streaming
         public static final String START_GOAL_COMPONENT="startGoal";// may be deprecated
-        public static final String VELOCITY_COMMAND_PUBLISHER_COMPONENT="velCmdPub";
+        public static final String VELOCITY_COMMAND_PUBLISHER_COMPONENT="cmd_sender";
         public static final String VELOCITY_COMPUTE_COMPONENT="velocityCompute";
         public static final String AGENT_STATE_COMPONENT="agentState";
         public static final String TIMER_SPOUT_COMPONENT ="timerSpout";//in streaming
@@ -95,6 +98,7 @@ public abstract class Constant_storm {
         public static final String VO_LINES_JOIN_COMPONENT="voLineJoin";
         public static final String VO_LINES_COMPUTE_COMPONENT = "voLinesCompute";
         public static final String GET_MINKOWSKI_FOOTPRINT_COMPONENT="getMinkowskiFootprint";
+        public static final String POSE_SHARE_PUB_COMPONENT="pose_share_sender";
     }
     public static class KeyToComponentMap{
         public final Map<String,String> map=new HashMap<String, String>();
@@ -106,5 +110,43 @@ public abstract class Constant_storm {
             map.put(Constant_msg.KEY_PARTICLE_CLOUD,Components.POSE_ARRAY_COMPONENT);
         }
     }
+
+    public abstract class IotCloud{
+        public static final String SENSOR_NAME="collisionAvoid";
+        public static final String AGENT_INDEX="agentIndex";
+        public static final String TRANSPORT="rabbitmq";
+        public static final String VELOCITY_QUEUE="velocityQueue";
+
+        public static final String LOCAL_IP_ARG="localIP";
+        public static final String ROS_MASTER_URI="rosMasterUri";
+        public static final String NO_SENSORS_ARG="numberSensors";
+        public static final String SITES_ARG="sites";
+    }
+
+    public static class IotMsgContexts {
+        public Map<String, IotRMQContext> Contexts = new HashMap<String, IotRMQContext>();
+
+        public IotMsgContexts(String sensorID) {
+            Contexts.put(Components.ODOMETRY_COMPONENT, new IotRMQContext(Components.ODOMETRY_COMPONENT, sensorID));
+            Contexts.put(Components.POSE_ARRAY_COMPONENT, new IotRMQContext(Components.POSE_ARRAY_COMPONENT, sensorID));
+            Contexts.put(Components.SCAN_COMPONENT, new IotRMQContext(Components.SCAN_COMPONENT, sensorID));
+            Contexts.put(Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT,
+                    new IotRMQContext(Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT, sensorID));
+            Contexts.put(Components.BASE_CONFIG_COMPONENT, new IotRMQContext(Components.BASE_CONFIG_COMPONENT, sensorID));
+            Contexts.put(Components.POSE_SHARE_PUB_COMPONENT, new IotRMQContext(Components.POSE_SHARE_PUB_COMPONENT, "*"));
+            Contexts.put(Components.POSE_SHARE_COMPONENT, new IotRMQContext(Components.POSE_SHARE_COMPONENT, "*"));
+        }
+
+    }
+//    public static class SpoutsMap{
+//        public final Map<String,IRichSpout> map=new HashMap<String, IRichSpout>();
+//        public SpoutsMap(){
+//            map.put(Components.SCAN_COMPONENT,null);
+//            map.put(Components.BASE_CONFIG_COMPONENT,null);
+//            map.put(Components.POSE_SHARE_COMPONENT,null);
+//            map.put(Components.ODOMETRY_COMPONENT,null);
+//            map.put(Components.POSE_ARRAY_COMPONENT,null);
+//        }
+//    }
 
 }
