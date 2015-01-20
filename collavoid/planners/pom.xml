@@ -59,7 +59,7 @@
             <version>${storm.version}</version>
             <!--<scope>provided</scope>-->
         </dependency>
-        <!--dependency>
+        <dependency>
             <groupId>sensorstream</groupId>
             <artifactId>sensorstream-core</artifactId>
             <exclusions>
@@ -72,7 +72,8 @@
                     <artifactId>storm-core</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency-->
+            <!--<scope>provided</scope>-->
+        </dependency>
     </dependencies>
 
 </project>

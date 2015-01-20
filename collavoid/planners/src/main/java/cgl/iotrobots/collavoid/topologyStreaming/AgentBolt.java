@@ -67,6 +67,7 @@ public class AgentBolt extends BaseRichBolt {
 
         if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
             if (updateAgentToPub(tuple)) {
+                
                 Message msg;
                 try {
                     msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());

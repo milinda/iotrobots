@@ -10,12 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class runTopology {
+public class runIotTopology {
 
-    private static Logger LOG = LoggerFactory.getLogger(runTopology.class);
+    private static Logger LOG = LoggerFactory.getLogger(runIotTopology.class);
 
     public static void main(String[] args) throws Exception {
-
 
         Config conf = new Config();
         conf.setDebug(false);
@@ -25,16 +24,16 @@ public class runTopology {
         // we are going to deploy on a real cluster
         if (args != null && args.length > 0) {
             conf.setNumWorkers(3);
-            final BuildTopology topology = new BuildTopology(conf);
-//            final BuildIotTopology topology = new BuildIotTopology(conf);
+//            final BuildTopology topology = new BuildTopology(conf);
+            final BuildIotTopology topology = new BuildIotTopology(conf);
             StormSubmitter.submitTopology(args[0], conf, topology.getStormTopology());
             LOG.info("Planner started. Running on the cluster!!");
         } else {
             // deploy on a local cluster
             conf.setMaxTaskParallelism(3);
             final LocalCluster cluster = new LocalCluster();
-            final BuildTopology topology = new BuildTopology(cluster, conf, "Collavoid");
-//            final BuildIotTopology topology = new BuildIotTopology(cluster,conf,"Collavoid");
+//            final BuildTopology topology = new BuildTopology(cluster, conf, "Collavoid");
+            final BuildIotTopology topology = new BuildIotTopology(cluster,conf,"Collavoid");
             topology.setTopology();
             topology.submit();
 
