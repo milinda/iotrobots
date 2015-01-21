@@ -68,7 +68,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         streamTopologyBuilder = new StreamTopologyBuilder();
         components = streamTopologyBuilder.buildComponents();
         // use the configuration to create the resampler
-        inti();
+        init();
 
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
@@ -85,7 +85,8 @@ public class ReSamplingBolt extends BaseRichBolt {
     /**
      * Initialize the resampler
      */
-    private void inti() {
+    private void init() {
+        LOG.info("Initializing resampling bolt");
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
         reSampler = ProcessorFactory.createReSampler(cfg);
         particleValueses = new ParticleValue[reSampler.getParticles().size()];
@@ -94,7 +95,12 @@ public class ReSamplingBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         outputCollector.ack(tuple);
-
+        String stream = tuple.getSourceStreamId();
+        // if we receive a control message init and return
+        if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
+            init();
+            return;
+        }
 
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         List<ParticleValue> pvs;

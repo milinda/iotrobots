@@ -89,7 +89,6 @@ public class SLAMTopology {
     }
 
     private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder, int parallel) {
-
         // first create a rabbitmq Spout
         ErrorReporter reporter = new ErrorReporter() {
             @Override
@@ -108,8 +107,8 @@ public class SLAMTopology {
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT).allGrouping(Constants.Topology.CONTROL_SPOUT);
-        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
+        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);;
         builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
         builder.setBolt(Constants.Topology.BEST_PARTICLE_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.BEST_PARTICLE_STREAM);
@@ -197,7 +196,14 @@ public class SLAMTopology {
 
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-            outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_FIELD, Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
+            if (spout == 0) {
+                outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_FIELD,
+                        Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
+            } else {
+                outputFieldsDeclarer.declareStream(Constants.Fields.CONTROL_STREAM,
+                        new Fields(Constants.Fields.LASER_SCAN_FIELD,
+                                Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
+            }
         }
 
         @Override
@@ -213,6 +219,15 @@ public class SLAMTopology {
         @Override
         public DestinationChanger getDestinationChanger() {
             return new StaticDestinations(spout);
+        }
+
+        @Override
+        public String getStream() {
+            if (spout == 0) {
+                return null;
+            } else {
+                return Constants.Fields.CONTROL_STREAM;
+            }
         }
     }
 

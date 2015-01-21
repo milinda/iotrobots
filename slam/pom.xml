@@ -14,5 +14,6 @@
         <module>serial</module>
         <module>streaming</module>
         <module>slam-threading</module>
+        <module>slam-sensor</module>
     </modules>
 </project>

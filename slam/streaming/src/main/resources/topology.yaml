@@ -12,6 +12,7 @@ spouts:
         broker: "rabbitmq"
         sensor: "data_sensor"
         channel: "control_sender"
+        strem: "control"
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"

@@ -14,7 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FileBasedDistributedSimulator {
-    RabbitMQSender sender;
+    RabbitMQSender dataSender;
+    RabbitMQSender controlSender;
     RabbitMQReceiver receiver;
     RabbitMQReceiver bestReceiver;
 //    private String url = "amqp://localhost:5672";
@@ -23,11 +24,13 @@ public class FileBasedDistributedSimulator {
 //    private String url = "amqp://149.165.159.3:5672";
     public FileBasedDistributedSimulator(String url) {
         try {
-            sender = new RabbitMQSender(url, "simbard_laser");
+            dataSender = new RabbitMQSender(url, "simbard_laser");
+            controlSender = new RabbitMQSender(url, "simbard_control");
             receiver = new RabbitMQReceiver(url, "simbard_map");
             bestReceiver = new RabbitMQReceiver(url, "simbard_best");
 
-            sender.open();
+            dataSender.open();
+            controlSender.open();
             receiver.listen(new MapReceiver());
             bestReceiver.listen(new BestParticleReceiver());
 
@@ -38,9 +41,20 @@ public class FileBasedDistributedSimulator {
     }
 
     public void start() throws InterruptedException {
+        byte[] body = "start".getBytes();
+        Map<String, Object> props = new HashMap<String, Object>();
+        props.put("time", System.currentTimeMillis());
+        props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
+        Message message = new Message(body, props);
+        try {
+            controlSender.send(message, "test.test.control");
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Thread t = new Thread(new SendWorker());
         t.start();
-
         t.join();
     }
 
@@ -66,7 +80,7 @@ public class FileBasedDistributedSimulator {
                         props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
                         Message message = new Message(body, props);
                         try {
-                            sender.send(message, "test.test.laser_scan");
+                            dataSender.send(message, "test.test.laser_scan");
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

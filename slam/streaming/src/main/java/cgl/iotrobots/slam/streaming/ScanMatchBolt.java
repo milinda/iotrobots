@@ -52,15 +52,9 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private RabbitMQReceiver particleValueReceiver;
 
-    private RabbitMQSender particleSender;
-
-    private String url = "amqp://localhost:5672";
-
     private Kryo kryoPVReading;
 
     private Kryo kryoMapReading;
-
-    private Kryo kryoMapWriting;
 
     private Kryo kryoAssignReading;
 
@@ -82,6 +76,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private List<RabbitMQSender> particleSenders = new ArrayList<RabbitMQSender>();
 
     private List<Kryo> kryoMapWriters = new ArrayList<Kryo>();
+    private StreamComponents components;
 
     private enum MatchState {
         WAITING_FOR_READING,
@@ -94,33 +89,29 @@ public class ScanMatchBolt extends BaseRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         executor = Executors.newFixedThreadPool(5);
-        gfsp = new DistributedScanMatcher();
+
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
         this.kryoAssignReading = new Kryo();
         this.kryoPVReading = new Kryo();
-        this.kryoMapWriting = new Kryo();
         this.kryoMapReading = new Kryo();
         this.kryoLaserReading = new Kryo();
         this.kryoBestParticle = new Kryo();
 
         Utils.registerClasses(kryoAssignReading);
         Utils.registerClasses(kryoPVReading);
-        Utils.registerClasses(kryoMapWriting);
         Utils.registerClasses(kryoMapReading);
         Utils.registerClasses(kryoLaserReading);
         Utils.registerClasses(kryoBestParticle);
 
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
-        StreamComponents components = streamTopologyBuilder.buildComponents();
-        // use the configuration to create the scanmatcher
-        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
-        gfsp = ProcessorFactory.createMatcher(cfg);
+        components = streamTopologyBuilder.buildComponents();
+        // init the bolt
+        init();
 
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-
-        this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
+        String url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             // we use broadcast to receive assignments
             this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
@@ -146,10 +137,18 @@ public class ScanMatchBolt extends BaseRichBolt {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private void init() {
+        int taskId = topologyContext.getThisTaskIndex();
+        LOG.info("taskId {}: Initializing scan match bolt", taskId);
 
         // set the initial particles
+        // use the configuration to create the scanmatcher
+        GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        gfsp = ProcessorFactory.createMatcher(cfg);
 
-        int taskId = topologyContext.getThisTaskIndex();
+        int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
         int noOfParticles = computeParticlesForTask(cfg, totalTasks, taskId);
 
         int previousTotal = 0;
@@ -192,6 +191,14 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        String stream = tuple.getSourceStreamId();
+
+        // if we receive a control message init and return
+        if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
+            init();
+            return;
+        }
+
         if (state != MatchState.WAITING_FOR_READING) {
             // we ack the tuple and discard it, because we cannot process the tuple at this moment
             outputCollector.ack(tuple);
