@@ -41,21 +41,24 @@ public class SimbardDistributed {
         RabbitMQSender sender;
         RabbitMQReceiver receiver;
         RabbitMQReceiver bestReceiver;
+        RabbitMQSender controlSender;
 
         Kryo kryo = new Kryo();
 
         PrintWriter pw;
-//        private String url = "amqp://149.165.159.3:5672";
-        private String url = "amqp://localhost:5672";
+        private String url = "amqp://149.165.159.12:5672";
+//        private String url = "amqp://localhost:5672";
 
         public Robot(Vector3d position, String name) {
             super(position, name);
 
             try {
+                controlSender = new RabbitMQSender(url, "simbard_control");
                 sender = new RabbitMQSender(url, "simbard_laser");
                 receiver = new RabbitMQReceiver(url, "simbard_map");
                 bestReceiver = new RabbitMQReceiver(url, "simbard_best");
                 sender.open();
+                controlSender.open();
                 receiver.listen(new MapReceiver());
                 bestReceiver.listen(new BestParticleReceiver());
             } catch (Exception e) {
@@ -94,6 +97,8 @@ public class SimbardDistributed {
             scanI.setTimestamp(System.currentTimeMillis());
 
             gfsAlgorithm.initMapper(scanI);
+
+            SimUtils.sendControl(controlSender);
         }
 
         boolean forward = false;

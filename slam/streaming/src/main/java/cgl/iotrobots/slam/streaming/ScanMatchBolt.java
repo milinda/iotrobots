@@ -485,7 +485,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(sensorId);
         emit.add(time);
         LOG.info("Emit for map, collector");
-        //outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
+        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
         List<Object> emitValue = new ArrayList<Object>();
         emitValue.add(Utils.serialize(kryoBestParticle, ParticleValue.class));
