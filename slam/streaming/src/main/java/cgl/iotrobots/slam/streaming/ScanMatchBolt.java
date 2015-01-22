@@ -62,7 +62,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private Kryo kryoBestParticle;
 
-    private volatile MatchState state = MatchState.WAITING_FOR_READING;
+    private volatile MatchState state = MatchState.INIT;
 
     private int expectingParticleMaps = 0;
     private int expectingParticleValues = 0;
@@ -79,6 +79,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private StreamComponents components;
 
     private enum MatchState {
+        INIT,
         WAITING_FOR_READING,
         COMPUTING_INIT_READINGS,
         WAITING_FOR_PARTICLE_ASSIGNMENTS,
@@ -107,8 +108,6 @@ public class ScanMatchBolt extends BaseRichBolt {
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
         components = streamTopologyBuilder.buildComponents();
-        // init the bolt
-        init();
 
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
         String url = (String) components.getConf().get(Constants.RABBITMQ_URL);
@@ -137,9 +136,14 @@ public class ScanMatchBolt extends BaseRichBolt {
             LOG.error("failed to create the message assignmentReceiver", e);
             throw new RuntimeException(e);
         }
+
+        // init the bolt
+        init();
     }
 
     private void init() {
+        state = MatchState.INIT;
+
         int taskId = topologyContext.getThisTaskIndex();
         LOG.info("taskId {}: Initializing scan match bolt", taskId);
 
@@ -162,6 +166,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
+
+        state = MatchState.WAITING_FOR_READING;
     }
 
     /**
