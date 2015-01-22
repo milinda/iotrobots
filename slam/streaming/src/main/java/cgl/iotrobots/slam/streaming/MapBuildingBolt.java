@@ -20,23 +20,32 @@ import com.esotericsoftware.kryo.Kryo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MapBuildingBolt extends BaseRichBolt {
     private MapUpdater mapUpdater;
 
     private OutputCollector outputCollector;
 
-    private TopologyContext topologyContext;
-
     private Kryo kryo;
 
     long lastMessageTime;
     long lastComputationTime;
+    private ExecutorService executor;
+
+    private enum State {
+        WAITING_INPUT,
+        EXECUTING
+    }
+
+    private State stat = State.WAITING_INPUT;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.outputCollector = outputCollector;
-        this.topologyContext = topologyContext;
         this.kryo = new Kryo();
+        executor = Executors.newFixedThreadPool(2);
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
         StreamComponents components = streamTopologyBuilder.buildComponents();
@@ -44,68 +53,133 @@ public class MapBuildingBolt extends BaseRichBolt {
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
 
         this.mapUpdater = ProcessorFactory.createMapBuilder(cfg);
+
+        this.stat = State.WAITING_INPUT;
     }
 
     @Override
     public void execute(Tuple tuple) {
-        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-        long t0 = System.currentTimeMillis();
-        long currentMessageTime = Long.parseLong(time.toString());
-        // if this message came within that window, discard it
-        // this will allow us to keep track of the current interval
-        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
-            outputCollector.ack(tuple);
+        this.outputCollector.ack(tuple);
+
+        if (stat == State.WAITING_INPUT) {
+            stat = State.EXECUTING;
+            Worker worker = new Worker(tuple);
+            executor.submit(worker);
+        } else {
             return;
         }
 
-        Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
-
-        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-        if (!(val instanceof ParticleValue)) {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
-        }
-        ParticleValue particleValue = (ParticleValue) val;
-
-//        val = tuple.getValueByField(Constants.Fields.PARTICLE_MAP_FIELD);
-//        if (!(val instanceof TransferMap)) {
+//        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+//        long t0 = System.currentTimeMillis();
+//        long currentMessageTime = Long.parseLong(time.toString());
+//        // if this message came within that window, discard it
+//        // this will allow us to keep track of the current interval
+//        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
+//            outputCollector.ack(tuple);
+//            return;
+//        }
+//
+//        Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
+//
+//        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
+//        if (!(val instanceof ParticleValue)) {
 //            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
 //        }
-//        TransferMap transferMap = (TransferMap) val;
+//        ParticleValue particleValue = (ParticleValue) val;
+//
+//        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
+//        if (!(val instanceof LaserScan)) {
+//            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+//        }
+//        LaserScan scan = (LaserScan) val;
+//
+//        Particle p = new Particle();
+//        Utils.createParticle(particleValue, p);
+//
+//        double[] laser_angles = new double[scan.getRanges().size()];
+//        double theta = scan.getAngle_min();
+//        for (int i = 0; i < scan.getRanges().size(); i++) {
+//            if (scan.getAngle_increment() < 0)
+//                laser_angles[scan.getRanges().size() - i - 1] = theta;
+//            else
+//                laser_angles[i] = theta;
+//            theta += scan.getAngle_increment();
+//        }
+//
+//        GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
+//
+//        byte []body = Utils.serialize(kryo, map);
+//        List<Object> emit = new ArrayList<Object>();
+//        emit.add(body);
+//        emit.add(sensorId);
+//        emit.add(time);
+//
+//        outputCollector.emit(emit);
+//        lastComputationTime = System.currentTimeMillis() - t0;
+//        lastMessageTime = Long.parseLong(time.toString());
+    }
 
-        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
-        if (!(val instanceof LaserScan)) {
-            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+    public class Worker implements Runnable {
+        Tuple tuple;
+
+        public Worker(Tuple tuple) {
+            this.tuple = tuple;
         }
-        LaserScan scan = (LaserScan) val;
 
-        Particle p = new Particle();
-        Utils.createParticle(particleValue, p);
-        //GMap m = Utils.createGMap(transferMap);
-        //p.setMap(m);
+        @Override
+        public void run() {
+            Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+//            long t0 = System.currentTimeMillis();
+//            long currentMessageTime = Long.parseLong(time.toString());
+            // if this message came within that window, discard it
+            // this will allow us to keep track of the current interval
+//            if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
+//                outputCollector.ack(tuple);
+//                return;
+//            }
 
-        double[] laser_angles = new double[scan.getRanges().size()];
-        double theta = scan.getAngle_min();
-        for (int i = 0; i < scan.getRanges().size(); i++) {
-            if (scan.getAngle_increment() < 0)
-                laser_angles[scan.getRanges().size() - i - 1] = theta;
-            else
-                laser_angles[i] = theta;
-            theta += scan.getAngle_increment();
+            Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
+
+            Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
+            if (!(val instanceof ParticleValue)) {
+                throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+            }
+            ParticleValue particleValue = (ParticleValue) val;
+
+            val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
+            if (!(val instanceof LaserScan)) {
+                throw new IllegalArgumentException("The laser scan should be of type RangeReading");
+            }
+            LaserScan scan = (LaserScan) val;
+
+            Particle p = new Particle();
+            Utils.createParticle(particleValue, p);
+
+            double[] laser_angles = new double[scan.getRanges().size()];
+            double theta = scan.getAngle_min();
+            for (int i = 0; i < scan.getRanges().size(); i++) {
+                if (scan.getAngle_increment() < 0)
+                    laser_angles[scan.getRanges().size() - i - 1] = theta;
+                else
+                    laser_angles[i] = theta;
+                theta += scan.getAngle_increment();
+            }
+
+            GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
+
+
+
+            byte []body = Utils.serialize(kryo, map);
+            List<Object> emit = new ArrayList<Object>();
+            emit.add(body);
+            emit.add(sensorId);
+            emit.add(time);
+
+            outputCollector.emit(emit);
+            stat = State.WAITING_INPUT;
+//            lastComputationTime = System.currentTimeMillis() - t0;
+//            lastMessageTime = Long.parseLong(time.toString());
         }
-
-        GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
-
-        this.outputCollector.ack(tuple);
-
-        byte []body = Utils.serialize(kryo, map);
-        List<Object> emit = new ArrayList<Object>();
-        emit.add(body);
-        emit.add(sensorId);
-        emit.add(time);
-
-        outputCollector.emit(emit);
-        lastComputationTime = System.currentTimeMillis() - t0;
-        lastMessageTime = Long.parseLong(time.toString());
     }
 
     @Override
