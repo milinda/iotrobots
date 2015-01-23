@@ -52,7 +52,6 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-//            p.pose = relPose;
         }
 
         LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
@@ -129,7 +128,16 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
                 updateTreeWeights(false);
 
                 LOG.info("neff = " + neff);
+
+                for (Particle p1 : particles) {
+                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
+                }
+
                 resample(plainReading, adaptParticles, reading_copy);
+                LOG.info("After resampling.................");
+                for (Particle p1 : particles) {
+                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
+                }
             } else {
                 LOG.info("Registering First Scan");
                 for (Particle it : particles) {

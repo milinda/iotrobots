@@ -6,13 +6,11 @@ import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.core.utils.DoublePoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractGridSlamProcessor {
     private Logger LOG = LoggerFactory.getLogger(AbstractGridSlamProcessor.class);
@@ -58,7 +56,7 @@ public abstract class AbstractGridSlamProcessor {
     protected double obsSigmaGain;
 
     public AbstractGridSlamProcessor() {
-        period_ = 0.0;
+        period_ = 100.0;
         obsSigmaGain = 1;
         resampleThreshold = 0.5;
         minimumScore = 0.;
@@ -253,17 +251,23 @@ public abstract class AbstractGridSlamProcessor {
         double wcum = 0;
         neff = 0;
         for (Particle particle : particles) {
-            double w = Math.exp(gain * (particle.weight - lmax));
+//            double w = Math.exp(gain * (particle.weight - lmax));
+            double w = particle.weight;
             weights.add(w);
             wcum += w;
         }
 
         neff = 0;
-        for (Double weight : weights) {
+        List<Double> temp = new ArrayList<Double>();
+        for (int i = 0; i < weights.size(); i++) {
+            double weight = weights.get(i);
             weight = weight / wcum;
+            temp.add(weight);
             double w = weight;
             neff += w * w;
         }
+        weights.clear();
+        weights.addAll(temp);
         neff = 1. / neff;
     }
 

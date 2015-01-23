@@ -670,7 +670,7 @@ public class ScanMatcher {
                 s += Math.exp(-1.0 / gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
                 c++;
             }
-            double f = (-1./ likelihoodSigma) * (DoublePoint.mulD(bestMu, bestMu));
+            double f = (1./ likelihoodSigma) * (DoublePoint.mulD(bestMu, bestMu));
             l += (found) ? f : noHit;
         }
         return new LikeliHoodAndScore(s, l, c);
