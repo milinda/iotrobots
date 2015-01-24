@@ -344,7 +344,7 @@ public abstract class AbstractGridSlamProcessor {
                 //create a new node in the particle tree and add it to the old tree
                 TNode node = null;
                 node = new TNode(it.pose, 0.0, node_it.next(), 0);
-
+//                it.weight = 0;
                 node.reading = reading;
                 it.node = node;
 

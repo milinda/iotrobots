@@ -3,7 +3,7 @@ package cgl.iotrobots.slam.core.utils;
 import java.util.Random;
 
 public class Stat {
-    static Random random = new Random();
+//    static Random random = new Random();
     public static double sampleGaussian(double sigma, long S) {
       /*
         static gsl_rng * r = NULL;
@@ -29,13 +29,13 @@ public class Stat {
 
         do {
             do {
-                r = Stat.random.nextDouble();
+                r = Math.random();
             } while (r == 0.0);
             x1 = 2.0 * r - 1.0;
             do {
-                r = Stat.random.nextDouble();
+                r = Math.random();
             } while (r == 0.0);
-            x2 = 2.0 * Stat.random.nextDouble() - 1.0;
+            x2 = 2.0 * Math.random() - 1.0;
             w = x1 * x1 + x2 * x2;
         } while (w > 1.0 || w == 0.0);
 

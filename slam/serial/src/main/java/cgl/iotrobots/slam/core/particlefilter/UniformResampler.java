@@ -23,7 +23,7 @@ public class UniformResampler {
         double interval = cweight / n;
 
         //compute the initial target weight
-        double target = interval * (new Random().nextDouble());
+        double target = interval * (Math.random());
         //compute the resampled indexes
         cweight = 0;
         List<Integer> indexes = new ArrayList<Integer>(n);

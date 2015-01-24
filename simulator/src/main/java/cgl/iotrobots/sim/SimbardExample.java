@@ -86,10 +86,11 @@ public class SimbardExample {
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
             pw.printf("%s\n", laserScan.getString());
+            System.out.println(laserScan.getString());
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             // progress at 0.5 m/s
-            if (getCounter() % 50 == 0) {
+            if (getCounter() % 60 == 0) {
                 if (forward) {
                     forward = false;
                 } else {
@@ -172,7 +173,7 @@ public class SimbardExample {
                     this);
             add(b4);
             add(new Arch(new Vector3d(3, 0, -3), this));
-            add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
+            add(new Robot(new Vector3d(-5, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
         }
     }

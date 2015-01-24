@@ -16,8 +16,8 @@ public class RangeSensor extends Sensor {
     public RangeSensor(String name, int beams_num, double res, DoubleOrientedPoint position, double span, double maxrange) {
         super(name);
         this.m_pose = position;
-        double angle = -.5 * res * beams_num;
-//        double angle = 0;
+//        double angle = -.5 * res * beams_num;
+        double angle = 0;
         for (int i = 0; i < beams_num; i++, angle += res) {
             Beam beam = new Beam();
             beam.span = span;

@@ -648,7 +648,7 @@ public class ScanMatcher {
             IntPoint ipfree = map.world2map(pfree);
             boolean found = false;
             DoublePoint bestMu = new DoublePoint(0.0, 0.0);
-            for (int xx = -kernelSize; xx <= kernelSize; xx++)
+            for (int xx = -kernelSize; xx <= kernelSize; xx++) {
                 for (int yy = -kernelSize; yy <= kernelSize; yy++) {
                     IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
                     IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
@@ -666,6 +666,7 @@ public class ScanMatcher {
                         }
                     }
                 }
+            }
             if (found) {
                 s += Math.exp(-1.0 / gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
                 c++;
