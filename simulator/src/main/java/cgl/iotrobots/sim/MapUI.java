@@ -64,26 +64,17 @@ public class MapUI extends JFrame {
                 e.printStackTrace();
             }
 
-//            map.currentPos.clear();
-
             for (int x = 0; x < map.width; x++) {
                 for (int y = 0; y < map.height; y++) {
-                    int occ = map.data[GFSAlgorithm.MAP_IDX(map.width, x, y)];
-
-                    Random rand = new Random();
-                    float r = rand.nextFloat();
-                    float gg = rand.nextFloat();
-                    float b = rand.nextFloat();
-                    Color randomColor = new Color(r, gg, b);
-                    // image.setRGB(x, y, randomColor.getRGB());
+                    int mapX = x;
+                    int mapY = map.height - y - 1;
+                    int occ = map.data[GFSAlgorithm.MAP_IDX(map.width, mapX, mapY)];
                     if (occ == 100) {
                         count++;
                         colorArea(image, x, y, map.width, map.height, 1);
                     }
                 }
             }
-            // System.out.println("One scan completed: " + count);
-
 
             try {
                 image = getScaledImage(image, 800, 800);

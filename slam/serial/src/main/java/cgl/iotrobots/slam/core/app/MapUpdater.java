@@ -121,8 +121,7 @@ public class MapUpdater {
         for (int x = 0; x < smap.getMapSizeX(); x++) {
             for (int y = 0; y < smap.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
-                IntPoint p = new IntPoint(x, y);
-                PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
+                PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(x, y, false);
                 double occ = pointAccumulator.doubleValue();
                 assert (occ <= 1.0);
                 //System.out.println("threshold: "  + occThresh  + " occ: "  + occ);

@@ -46,8 +46,8 @@ public class SimbardDistributed {
         Kryo kryo = new Kryo();
 
         PrintWriter pw;
-        private String url = "amqp://149.165.159.12:5672";
-//        private String url = "amqp://localhost:5672";
+//        private String url = "amqp://149.165.159.12:5672";
+        private String url = "amqp://localhost:5672";
 
         public Robot(Vector3d position, String name) {
             super(position, name);

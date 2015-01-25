@@ -127,9 +127,9 @@ public class SimbardExample {
 
             int angle = 0;
             List<Double> ranges  = new ArrayList<Double>();
-            for (int i = angle; i < n + angle; i++) {
-                if (sonars.hasHit(i % n)) {
-                    ranges.add(sonars.getMeasurement(i % n));
+            for (int i = angle; i < n; i++) {
+                if (sonars.hasHit(i)) {
+                    ranges.add(sonars.getMeasurement(i));
                 } else {
                     ranges.add(0.0);
                 }

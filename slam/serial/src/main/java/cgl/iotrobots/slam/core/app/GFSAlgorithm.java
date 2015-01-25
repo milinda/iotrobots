@@ -277,8 +277,6 @@ public class GFSAlgorithm {
             return false;
         }
         Double[] ranges_double = Utils.getDoubles(scan, gspLaserAngleIncrement);
-
-
         RangeReading reading = new RangeReading(scan.ranges.size(),
                 ranges_double,
                 gsp_laser_,
