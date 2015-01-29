@@ -3,6 +3,8 @@ package cgl.iotrobots.slam.streaming;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
+import backtype.storm.spout.ISpout;
+import backtype.storm.task.IBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
@@ -62,7 +64,7 @@ public class SLAMTopology {
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildTestTopology(builder, streamTopologyBuilder, p);
+            buildTestTopology(builder, streamTopologyBuilder, p, false);
         }
 
         Config conf = new Config();
@@ -88,7 +90,7 @@ public class SLAMTopology {
         }
     }
 
-    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder, int parallel) {
+    private static void buildTestTopology(TopologyBuilder builder, StreamTopologyBuilder streamTopologyBuilder, int parallel, boolean iotCloud) {
         // first create a rabbitmq Spout
         ErrorReporter reporter = new ErrorReporter() {
             @Override
@@ -96,10 +98,22 @@ public class SLAMTopology {
                 LOG.error("error occured", throwable);
             }
         };
-        RabbitMQSpout dataSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(0), reporter);
-        RabbitMQSpout controlSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(3), reporter);
-        RabbitMQBolt mapSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(1), reporter);
-        RabbitMQBolt valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
+        ISpout dataSpout;
+        ISpout controlSpout;
+        IBolt mapSendBolt;
+        IBolt valueSendBolt;
+        if (!iotCloud) {
+            dataSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(0), reporter);
+            controlSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(3), reporter);
+            mapSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(1), reporter);
+            valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
+        } else {
+            StreamComponents components = streamTopologyBuilder.buildComponents();
+            dataSpout = components.getSpouts().get(Constants.Topology.RECEIVE_SPOUT);
+            controlSpout = components.getSpouts().get(Constants.Topology.CONTROL_SPOUT);
+            mapSendBolt = components.getBolts().get(Constants.)
+            valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
+        }
 
         ScanMatchBolt scanMatchBolt = new ScanMatchBolt();
         ReSamplingBolt reSamplingBolt = new ReSamplingBolt();

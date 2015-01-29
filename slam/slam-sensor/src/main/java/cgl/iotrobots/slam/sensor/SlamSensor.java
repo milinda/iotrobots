@@ -5,6 +5,8 @@ import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
+import cgl.iotrobots.utils.rabbitmq.RabbitMQReceiver;
+import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +19,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class SlamSensor extends AbstractSensor {
-    public static final String FRAME_SENDER = "laseScanSender";
-    public static final String CMD_RECEIVER = "mapReceiver";
-    public static final String SLAM_EXCHANGE = "slam_drone";
-    public static final String STORM_DRONE_FRAME_QUEUE = "storm_drone_frame";
-    public static final String STORM_DRONE_FRAME_ROUTING_KEY = "storm_drone_frame";
-    public static final String STORM_DRONE_NAV_DATA_ROUTING_KEY = "storm_drone_nav_data";
-    public static final String STORM_DRONE_NAV_DATA_QUEUE = "storm_drone_nav_data";
-    public static final String STORM_CONTROL_QEUUE = "storm_control";
-    public static final String STORM_CONTROL_ROUTING_KEY = "storm_control";
+    public static final String LASE_SCAN_SENDER = "laseScanSender";
+    public static final String MAP_RECEIVER = "mapReceiver";
+    public static final String BEST_PARTICLE_RECEIVER = "bestParticleReceiver";
+    public static final String SLAM_EXCHANGE = "slam_turtlebot";
+
+    public static final String STORM_LASER_SCAN = "storm_laser_scan";
+    public static final String STORM_MAP = "storm_map";
+    public static final String STORM_BEST_PARTICLE = "storm_best_particle";
+
     public static final String URL_ARG = "url";
     public static final String SITES_ARG = "s";
     private static Logger LOG = LoggerFactory.getLogger(SlamSensor.class);
@@ -41,15 +43,21 @@ public class SlamSensor extends AbstractSensor {
 
     private boolean run = true;
 
+    private boolean simulator = true;
+
+    private RabbitMQReceiver laserScanReceiver;
+    private RabbitMQSender mapSender;
+    private RabbitMQSender bestParticleSender;
+
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
         String sites = properties.get(SITES_ARG);
         String []s = sites.split(" ");
 
-        String jarName = new File(STSensor.class.getProtectionDomain()
+        String jarName = new File(SlamSensor.class.getProtectionDomain()
                 .getCodeSource().getLocation().getPath()).getName();
         SensorSubmitter.submitSensor(properties, jarName,
-                STSensor.class.getCanonicalName(), Arrays.asList(s));
+                SlamSensor.class.getCanonicalName(), Arrays.asList(s));
     }
 
     @Override
@@ -59,24 +67,17 @@ public class SlamSensor extends AbstractSensor {
 
     @Override
     public void open(SensorContext context) {
-        final Channel sendChannel = context.getChannel("rabbitmq", FRAME_SENDER);
-        final Channel navChannel = context.getChannel("rabbitmq", NAV_SENDER);
-        final Channel receiveChannel = context.getChannel("rabbitmq", CMD_RECEIVER);
+        final Channel sendChannel = context.getChannel("rabbitmq", LASE_SCAN_SENDER);
+        final Channel bestChannel = context.getChannel("rabbitmq", BEST_PARTICLE_RECEIVER);
+        final Channel mapChannel = context.getChannel("rabbitmq", MAP_RECEIVER);
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
 
-        videoReceiver = new DroneMessageReceiver(frameReceivingQueue, "drone_frame", null, null, brokerURL);
-        videoReceiver.setExchangeName("drone");
-        videoReceiver.setRoutingKey("drone_frame");
-        videoReceiver.start();
-
-        navReceiver = new DroneMessageReceiver(navDataReceivingQueue, "drone_nav_data", null, null, brokerURL);
-        navReceiver.setExchangeName("drone");
-        navReceiver.setRoutingKey("drone_nav_data");
-        navReceiver.start();
-
-        controlSender = new DroneMessageSender(sendingQueue, "drone", "control", "control", null, null, brokerURL);
-        controlSender.start();
+        if (simulator) {
+            laserScanReceiver = new RabbitMQReceiver(frameReceivingQueue, "drone_frame", null, null, brokerURL);
+            mapSender = new RabbitMQSender(navDataReceivingQueue, "drone_nav_data", null, null, brokerURL);
+            bestParticleSender = new RabbitMQSender(sendingQueue, "drone", "control", "control", null, null, brokerURL);
+        }
 
         Thread t = new Thread(new Runnable() {
             @Override
@@ -100,7 +101,7 @@ public class SlamSensor extends AbstractSensor {
                 while (run) {
                     try {
                         MessageContext messageContext = (MessageContext) navDataReceivingQueue.take();
-                        navChannel.publish(messageContext);
+                        bestChannel.publish(messageContext);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -109,7 +110,7 @@ public class SlamSensor extends AbstractSensor {
         });
         t2.start();
 
-        startListen(receiveChannel, new MessageReceiver() {
+        startListen(mapChannel, new MessageReceiver() {
             @Override
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
@@ -153,20 +154,20 @@ public class SlamSensor extends AbstractSensor {
             Map sendProps = new HashMap();
             sendProps.put("exchange", SLAM_EXCHANGE);
             sendProps.put("routingKey", STORM_DRONE_FRAME_ROUTING_KEY);
-            sendProps.put("queueName", STORM_DRONE_FRAME_QUEUE);
-            Channel sendChannel = createChannel(FRAME_SENDER, sendProps, Direction.OUT, 1024);
+            sendProps.put("queueName", STORM_LASER_SCAN);
+            Channel sendChannel = createChannel(LASE_SCAN_SENDER, sendProps, Direction.OUT, 1024);
 
             Map navSendProps = new HashMap();
             navSendProps.put("exchange", SLAM_EXCHANGE);
             navSendProps.put("routingKey", STORM_DRONE_NAV_DATA_ROUTING_KEY);
-            navSendProps.put("queueName", STORM_DRONE_NAV_DATA_QUEUE);
+            navSendProps.put("queueName", STORM_MAP);
             Channel navSendChannel = createChannel(NAV_SENDER, navSendProps, Direction.OUT, 1024);
 
             Map receiveProps = new HashMap();
-            receiveProps.put("queueName", STORM_CONTROL_QEUUE);
+            receiveProps.put("queueName", STORM_BEST_PARTICLE);
             receiveProps.put("exchange", SLAM_EXCHANGE);
             receiveProps.put("routingKey", STORM_CONTROL_ROUTING_KEY);
-            Channel receiveChannel = createChannel(CMD_RECEIVER, receiveProps, Direction.IN, 1024);
+            Channel receiveChannel = createChannel(MAP_RECEIVER, receiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
