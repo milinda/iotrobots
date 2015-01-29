@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PoseArray_ implements Serializable {
+
     private String id;
-
     private Header_ Header = new Header_();
-
     private List<Pose_> Poses = new ArrayList<Pose_>();
+
 
     public Header_ getHeader() {
         return Header;

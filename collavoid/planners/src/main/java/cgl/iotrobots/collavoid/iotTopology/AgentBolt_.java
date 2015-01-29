@@ -1,4 +1,4 @@
-package cgl.iotrobots.collavoid.topologyStreaming;
+package cgl.iotrobots.collavoid.iotTopology;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -9,17 +9,14 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import cgl.iotrobots.collavoid.commons.planners.*;
-import cgl.iotrobots.collavoid.commons.rabbitmq.Message;
-import cgl.iotrobots.collavoid.commons.rabbitmq.RabbitMQSender;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseShareMsg_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,13 +24,14 @@ import java.util.Map;
 
 public class AgentBolt_ extends BaseRichBolt {
     private OutputCollector collector;
-    private Logger logger = LoggerFactory.getLogger(AgentBolt.class);
+    private Logger logger = LoggerFactory.getLogger(AgentBolt_.class);
 
     private PoseShareMsg_ poseShareMsg_ = new PoseShareMsg_();
-    private RabbitMQSender poseShareSender;
+    //    private RabbitMQSender poseShareSender;
     private String id;
     private Map<String, AgentBoltContext> contexts = new HashMap<String, AgentBoltContext>();
     private AgentBoltContext currentContext;
+//    private Kryo kryo;
 
     private class AgentBoltContext {
         private Agent agent;
@@ -67,16 +65,10 @@ public class AgentBolt_ extends BaseRichBolt {
 
         if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
             if (updateAgentToPub(tuple)) {
-                collector.emit(new Values(tuple.getValue(0),tuple.getValue(1),Utils.serialize(poseShareMsg_)));
-//                Message msg;
-//                try {
-//                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
-//                    poseShareSender.send(msg, "");
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
+                collector.emit(Constant_storm.Streams.PUBLISHME_STREAM,
+//                        new Values(tuple.getValue(0),tuple.getValue(1),Methods_RMQ.serialize(kryo, poseShareMsg_)));
+                        new Values(tuple.getValue(0), tuple.getValue(1), Utils.serialize(poseShareMsg_)));
+
             }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
             if (updateAgentToCalVel(tuple)) {
@@ -84,6 +76,7 @@ public class AgentBolt_ extends BaseRichBolt {
                         new Values(
                                 tuple.getValue(0),
                                 tuple.getValue(1),
+//                                Methods_RMQ.serialize(kryo,currentContext.agent)));
                                 Utils.serialize(currentContext.agent)));
             }
         }
@@ -106,12 +99,7 @@ public class AgentBolt_ extends BaseRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         collector = outputCollector;
-//        poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, Constant_msg.KEY_POSE_SHARE);
-//        try {
-//            poseShareSender.open(Constant_msg.TYPE_EXCHANGE_FANOUT);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+//        kryo= Methods_RMQ.getKryo();
     }
 
     @Override

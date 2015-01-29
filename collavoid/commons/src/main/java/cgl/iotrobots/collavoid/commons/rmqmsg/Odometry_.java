@@ -11,14 +11,11 @@ import java.io.Serializable;
 public class Odometry_ implements Serializable {
 
     private String id = "";
-
     private Header_ Header = new Header_();
-
     private String ChildFrameId = "";
-
     private Pose_ Pose = new Pose_();
-
     private Twist_ Twist = new Twist_();
+
 
     public void setHeader(Header_ header) {
         Header = header;

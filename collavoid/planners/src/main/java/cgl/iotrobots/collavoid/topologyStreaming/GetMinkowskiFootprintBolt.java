@@ -1,12 +1,18 @@
 package cgl.iotrobots.collavoid.topologyStreaming;
 
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
+import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseArray_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 
@@ -15,17 +21,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
+public class GetMinkowskiFootprintBolt extends BaseRichBolt {
     private List<Vector2> ownFootprint;
     private Map<String, List<Vector2>> contexts = new HashMap<String, List<Vector2>>();
     private String sensorID;
+    private OutputCollector collector;
+    TimeDelayRecorder poseArrayDelayRecorder;
 
     @Override
-    public void execute(Tuple input, BasicOutputCollector collector) {
+    public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        collector = outputCollector;
+        poseArrayDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_POSE_ARRAY,
+                topologyContext.getThisComponentId());
+        poseArrayDelayRecorder.open(false);
+    }
+
+    @Override
+    public void execute(Tuple input) {
         sensorID = (String) input.getValueByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
         ownFootprint = contexts.get(sensorID);
         if (input.getSourceComponent().equals(Constant_storm.Components.POSE_ARRAY_COMPONENT)) {
             if (ownFootprint != null) {
+                poseArrayDelayRecorder.append(
+                        input.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                        input.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                        System.currentTimeMillis());
                 PoseArray_ poseArray_ = (PoseArray_) input.getValueByField(Constant_storm.FIELDS.POSE_ARRAY_FIELD);
                 List<Object> emit = new ArrayList<Object>();
                 emit.add(input.getValue(0));
@@ -39,6 +61,7 @@ public class GetMinkowskiFootprintBolt extends BaseBasicBolt {
             contexts.put(sensorID,
                     (List<Vector2>) input.getValueByField(Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD));
         }
+        collector.ack(input);
     }
 
     @Override

@@ -8,6 +8,8 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.*;
 import cgl.iotrobots.collavoid.commons.rabbitmq.Message;
 import cgl.iotrobots.collavoid.commons.rabbitmq.RabbitMQSender;
@@ -16,6 +18,7 @@ import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PoseShareMsg_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +33,12 @@ public class AgentBolt extends BaseRichBolt {
     private Logger logger = LoggerFactory.getLogger(AgentBolt.class);
 
     private PoseShareMsg_ poseShareMsg_ = new PoseShareMsg_();
-    private RabbitMQSender poseShareSender;
+    //    private RabbitMQSender poseShareSender;
     private String id;
     private Map<String, AgentBoltContext> contexts = new HashMap<String, AgentBoltContext>();
     private AgentBoltContext currentContext;
+    private Kryo kryo;
+    TimeDelayRecorder poseShareDelayRecorder, cmdDelayRecorder;
 
     private class AgentBoltContext {
         private Agent agent;
@@ -66,25 +71,37 @@ public class AgentBolt extends BaseRichBolt {
         String streamId = tuple.getSourceStreamId();
 
         if (streamId.equals(Constant_storm.Streams.PUBLISHME_STREAM)) {
+            poseShareDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             if (updateAgentToPub(tuple)) {
-                
-                Message msg;
-                try {
-                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
-                    poseShareSender.send(msg, "");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                collector.emit(Constant_storm.Streams.PUBLISHME_STREAM, new Values(
+                        tuple.getValue(0),
+                        tuple.getValue(1),
+                        Methods_RMQ.serialize(kryo, poseShareMsg_)
+                ));
+//                Message msg;
+//                try {
+//                    msg = new Message(Methods_RMQ.serialize(poseShareMsg_), new HashMap<String, Object>());
+//                    poseShareSender.send(msg, "");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
             }
         } else if (streamId.equals(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM)) {
+            cmdDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             if (updateAgentToCalVel(tuple)) {
                 collector.emit(Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM,
                         new Values(
                                 tuple.getValue(0),
                                 tuple.getValue(1),
-                                Utils.serialize(currentContext.agent)));
+                                Methods_RMQ.serialize(kryo, currentContext.agent)));
             }
         }
         // what about reset???
@@ -106,12 +123,23 @@ public class AgentBolt extends BaseRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         collector = outputCollector;
-        poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, Constant_msg.KEY_POSE_SHARE);
-        try {
-            poseShareSender.open(Constant_msg.TYPE_EXCHANGE_FANOUT);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        kryo = Methods_RMQ.getKryo();
+//        poseShareSender = new RabbitMQSender(Constant_msg.RMQ_URL, Constant_msg.KEY_POSE_SHARE);
+//        try {
+//            poseShareSender.open(Constant_msg.TYPE_EXCHANGE_FANOUT);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        poseShareDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_POSE_SHARE,
+                topologyContext.getThisComponentId());
+        poseShareDelayRecorder.open(false);
+        cmdDelayRecorder = new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                topologyContext.getThisComponentId());
+        cmdDelayRecorder.open(false);
     }
 
     @Override
@@ -126,7 +154,13 @@ public class AgentBolt extends BaseRichBolt {
                         Constant_storm.FIELDS.TIME_FIELD,
                         Constant_storm.FIELDS.SENSOR_ID_FIELD,
                         Constant_storm.FIELDS.FOOTPRINT_OWN_FIELD));
-
+        outputFieldsDeclarer.declareStream(Constant_storm.Streams.PUBLISHME_STREAM,
+                new Fields(
+                        Constant_storm.FIELDS.TIME_FIELD,
+                        Constant_storm.FIELDS.SENSOR_ID_FIELD,
+                        Constant_storm.FIELDS.POSE_SHARE_FIELD
+                )
+        );
     }
 
 

@@ -37,7 +37,7 @@ public class Listener {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deserialize(body, Odometry_.class);
+                            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deSerialize(body, Odometry_.class);
                             System.out.println(odometry_);
                             channel.basicAck(deliveryTag, false);
                         }

@@ -1,4 +1,4 @@
-package cgl.iotrobots.collavoid.controller;
+package cgl.iotrobots.collavoid.controller.original;
 
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import org.ros.node.NodeConfiguration;

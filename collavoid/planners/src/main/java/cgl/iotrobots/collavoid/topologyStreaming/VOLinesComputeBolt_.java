@@ -1,30 +1,58 @@
 package cgl.iotrobots.collavoid.topologyStreaming;
 
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
+import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.*;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 /**
  * Created by hjh on 1/13/15.
  */
-public class VOLinesComputeBolt_ extends BaseBasicBolt {
+public class VOLinesComputeBolt_ extends BaseRichBolt {
     private Logger logger = LoggerFactory.getLogger(VOLinesComputeBolt_.class);
     private Agent agent;
+    private OutputCollector collector;
+    private Kryo kryo;
+    TimeDelayRecorder cmdDelayRecorder;
+
     @Override
-    public void execute(Tuple tuple, BasicOutputCollector collector) {
-        agent = (Agent) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
+    public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        collector = outputCollector;
+        kryo = Methods_RMQ.getKryo();
+        cmdDelayRecorder = new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                topologyContext.getThisComponentId());
+        cmdDelayRecorder.open(false);
+    }
+
+    @Override
+    public void execute(Tuple tuple) {
+        cmdDelayRecorder.append(
+                tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                System.currentTimeMillis());
+        agent = (Agent) Methods_RMQ.deSerialize(kryo, tuple.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
         agent.addOrcaLines.clear();
         agent.voAgents.clear();
 //        List<Line> ConstraintLines = new ArrayList<Line>();
@@ -46,6 +74,7 @@ public class VOLinesComputeBolt_ extends BaseBasicBolt {
         if (agent.controlled)
             computeAgentVOs(agent.voAgents);
         collector.emit(new Values(tuple.getValue(0), tuple.getValue(1), Utils.serialize(agent)));
+        collector.ack(tuple);
     }
 
     @Override

@@ -5,6 +5,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import com.esotericsoftware.kryo.Kryo;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,15 +17,22 @@ public class Schemes {
     public Schemes() {
         schemeMap.put(Constant_msg.KEY_ODOMETRY, new OdometryScheme());
         schemeMap.put(Constant_msg.KEY_SCAN, new ScanScheme());
-        schemeMap.put(Constant_msg.KEY_PARTICLE_CLOUD, new ParticleScheme());
-        schemeMap.put(Constant_msg.KEY_POSE_SHARE, new PoseShareScheme());
+        schemeMap.put(Constant_msg.KEY_POSE_ARRAY, new ParticleScheme());
+//        schemeMap.put(Constant_msg.KEY_POSE_SHARE, new PoseShareScheme());
         schemeMap.put(Constant_msg.KEY_BASE_CONFIG, new BaseConfigScheme());
     }
 
     public static class OdometryScheme implements Scheme {
+        private Kryo odometrySchemeKryo;
+        private boolean initedOdomkryo = false;
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deserialize(bytes, Odometry_.class);
+            if (!initedOdomkryo) {
+                odometrySchemeKryo = Methods_RMQ.getKryo();
+                initedOdomkryo = true;
+            }
+//            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deSerialize(bytes, Odometry_.class);
+            Odometry_ odometry_ = (Odometry_) Methods_RMQ.deSerialize(odometrySchemeKryo, bytes);
             return new Values(
                     odometry_.getHeader().getStamp(),
                     odometry_.getId(),
@@ -42,9 +50,16 @@ public class Schemes {
     }
 
     public static class ScanScheme implements Scheme {
+        private Kryo scanSchemeKryo;
+        private boolean initedScankryo = false;
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            PointCloud2_ data = (PointCloud2_) Methods_RMQ.deserialize(bytes, PointCloud2_.class);
+            if (!initedScankryo) {
+                scanSchemeKryo = Methods_RMQ.getKryo();
+                initedScankryo = true;
+            }
+//            PointCloud2_ data = (PointCloud2_) Methods_RMQ.deSerialize(bytes, PointCloud2_.class);
+            PointCloud2_ data = (PointCloud2_) Methods_RMQ.deSerialize(scanSchemeKryo, bytes);
             return new Values(
                     data.getHeader().getStamp(),
                     data.getId(),
@@ -61,10 +76,16 @@ public class Schemes {
     }
 
     public static class ParticleScheme implements Scheme {
-
+        private Kryo particleSchemeKryo;
+        private boolean initedkryo = false;
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            PoseArray_ data = (PoseArray_) Methods_RMQ.deserialize(bytes, PoseArray_.class);
+            if (!initedkryo) {
+                particleSchemeKryo = Methods_RMQ.getKryo();
+                initedkryo = true;
+            }
+//            PoseArray_ data = (PoseArray_) Methods_RMQ.deSerialize(bytes, PoseArray_.class);
+            PoseArray_ data = (PoseArray_) Methods_RMQ.deSerialize(particleSchemeKryo, bytes);
             return new Values(
                     data.getHeader().getStamp(),
                     data.getId(),
@@ -86,7 +107,7 @@ public class Schemes {
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            PoseShareMsg_ data = (PoseShareMsg_) Methods_RMQ.deserialize(bytes, PoseShareMsg_.class);
+            PoseShareMsg_ data = (PoseShareMsg_) Methods_RMQ.deSerialize(bytes, PoseShareMsg_.class);
             return new Values(
                     data.getHeader().getStamp(),
                     data);
@@ -104,7 +125,7 @@ public class Schemes {
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            BaseConfig_ data = (BaseConfig_) Methods_RMQ.deserialize(bytes, BaseConfig_.class);
+            BaseConfig_ data = (BaseConfig_) Methods_RMQ.deSerialize(bytes, BaseConfig_.class);
             return new Values(
                     data.getTime(),
                     data.getId(),

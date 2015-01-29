@@ -8,6 +8,8 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
@@ -28,6 +30,8 @@ public class LocalPlannerBolt extends BaseRichBolt {
     private Map<String, LocalPlannerContext> contexts = new HashMap<String, LocalPlannerContext>();
     private LocalPlannerContext currentContext;
     private String id;
+    TimeDelayRecorder odomDelayRecorder;
+    TimeDelayRecorder cmdDelayRecorder, cmdCheckDelayRecorder;
 
     private class LocalPlannerContext {
         public String sensorID = null;
@@ -85,6 +89,10 @@ public class LocalPlannerBolt extends BaseRichBolt {
                     outputCollector.ack(input);
                     return;
                 }
+                cmdDelayRecorder.append(
+                        input.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                        input.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                        System.currentTimeMillis());
                 currentContext.cmd_vel = null;
                 currentContext.pref_vel = null;
                 if (!computeVelocity()) {
@@ -108,9 +116,17 @@ public class LocalPlannerBolt extends BaseRichBolt {
                 }
             } else {
                 if (input.getSourceComponent().equals(Constant_storm.Components.ODOMETRY_TRANSFORM_COMPONENT)) {
+                    odomDelayRecorder.append(
+                            input.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                            input.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                            System.currentTimeMillis());
                     currentContext.base_odom = (Odometry_) input.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
                 } else if (currentContext.locked &&
                         input.getSourceComponent().equals(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT)) {
+                    cmdCheckDelayRecorder.append(
+                            input.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                            input.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                            System.currentTimeMillis());
                     currentContext.cmd_vel_cal = (Twist_) input.getValueByField(Constant_storm.FIELDS.VELOCITY_COMMAND_FIELD);
                     currentContext.locked = false;
                     if (!checkVelocityCommand(currentContext.cmd_vel_cal)) {
@@ -139,6 +155,21 @@ public class LocalPlannerBolt extends BaseRichBolt {
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         outputCollector = collector;
+        odomDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_ODOMETRY,
+                context.getThisComponentId());
+        odomDelayRecorder.open(false);
+        cmdDelayRecorder = new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                context.getThisComponentId());
+        cmdDelayRecorder.open(false);
+        cmdCheckDelayRecorder = new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                context.getThisComponentId() + "Check");
+        cmdCheckDelayRecorder.open(false);
     }
 
     @Override

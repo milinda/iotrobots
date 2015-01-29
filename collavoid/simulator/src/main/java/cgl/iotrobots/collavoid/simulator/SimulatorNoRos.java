@@ -6,8 +6,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -154,7 +152,7 @@ public class SimulatorNoRos {
                                                        byte[] body)
                                     throws IOException {
                                 long deliveryTag = envelope.getDeliveryTag();
-                                Twist_ velocity = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
+                                Twist_ velocity = (Twist_) Methods_RMQ.deSerialize(body, Twist_.class);
                                 double v, w;
                                 //in ros coordinate do not need to transform the coordinate
                                 v = velocity.getLinear().length();
@@ -242,7 +240,7 @@ public class SimulatorNoRos {
                     this.getCoords(previousPosition);
                     setPoseArrayMsg();
                 }
-                Methods_RMQ.publishMsg(RMQContexts.get(Constant_msg.KEY_PARTICLE_CLOUD),
+                Methods_RMQ.publishMsg(RMQContexts.get(Constant_msg.KEY_POSE_ARRAY),
                         Methods_RMQ.serialize(poseArray));
             }
 

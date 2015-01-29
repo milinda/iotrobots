@@ -1,4 +1,4 @@
-package cgl.iotrobots.collavoid.topologyStreaming;
+package cgl.iotrobots.collavoid.iotTopology;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -6,59 +6,32 @@ import backtype.storm.generated.KillOptions;
 import backtype.storm.generated.Nimbus;
 import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.StormTopology;
-import backtype.storm.spout.Scheme;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.utils.NimbusClient;
 import backtype.storm.utils.Utils;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Contexts;
-import cgl.iotrobots.collavoid.commons.rmqmsg.RMQContext;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
-import io.latent.storm.rabbitmq.Declarator;
-import io.latent.storm.rabbitmq.RabbitMQSpout;
-import io.latent.storm.rabbitmq.config.ConnectionConfig;
-import io.latent.storm.rabbitmq.config.ConsumerConfig;
-import io.latent.storm.rabbitmq.config.ConsumerConfigBuilder;
 import org.apache.thrift7.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class BuildIotTopology {
-    private Logger logger = LoggerFactory.getLogger(BuildTopology.class);
+    private Logger logger = LoggerFactory.getLogger(BuildIotTopology.class);
     private LocalCluster localCluster=null;
     private Config config;
-    private int id;
-    private Map<String, RMQContext> RMQContexts;
+
     private Map<String,IRichSpout> spoutMap=new HashMap<>();
     private Map<String,IRichBolt> boltMap=new HashMap<>();
-    private Map<String, String> KeyToComponentMap = new Constant_storm.KeyToComponentMap().map;
-    private Map<String, Scheme> schemeMap = new Schemes().schemeMap;
-    private String sensorid;
 
-    private ConnectionConfig connectionConfig;
-    private ConsumerConfig spoutConfig;
     private StormTopology stormTopology;
     private String toplogyName;
 
-    private Map<String, RabbitMQSpout> spoutMapFormer = new HashMap<String, RabbitMQSpout>();
-    private Map<String, StormDeclarator> declaratorMap = new HashMap<String, StormDeclarator>();
-
-    private IRichSpout odomSpout;
-    private IRichSpout scanSpout;
-    private IRichSpout particleSpout;
-    private IRichSpout poseShareSpout;
-    private IRichSpout startGoalSpout;
     private TopologyBuilder builder = new TopologyBuilder();;
 
     public BuildIotTopology(final Config config){
@@ -116,21 +89,7 @@ public class BuildIotTopology {
     }
 
     public void setTopology() {
-//        connectionConfig = new ConnectionConfig(
-//                Constant_msg.RMQ_IP,
-//                Constant_msg.RMQ_PORT,
-//                "guest",
-//                "guest",
-//                ConnectionFactory.DEFAULT_VHOST,
-//                10); // host, port, username, password, virtualHost, heartBeat
-//        spoutConfig = new ConsumerConfigBuilder().connection(connectionConfig)
-//                .queue("")
-//                .prefetch(10)
-//                .requeueOnFail()
-//                .build();
-
         buidSpouts();
-//        setAttachBolts();
         buildTopology();
     }
 
@@ -142,104 +101,7 @@ public class BuildIotTopology {
         builder.setSpout(Constant_storm.Components.TIMER_SPOUT_COMPONENT, new TimerSpout());
 
 
-//        for (Map.Entry<String, RMQContext> e : RMQContexts.entrySet()) {
-//            Scheme scheme = schemeMap.get(e.getKey());
-//            StormDeclarator declarator = new StormDeclarator(e.getValue());
-//            RabbitMQSpout spout = new RabbitMQSpout(scheme, declarator);
-//            declaratorMap.put(e.getKey(), declarator);
-//            spoutMapFormer.put(e.getKey(), spout);
-//            builder.setSpout(KeyToComponentMap.get(e.getKey()),
-//                    spoutMapFormer.get(e.getKey()))
-//                    .addConfigurations(spoutConfig.asMap())
-//                    .setMaxSpoutPending(10);
-//            ;
-//        }
-
-
-//        odomSpout = new RabbitMQSpout(
-//                new Schemes.OdometryScheme(),
-//                new StormDeclarator(
-//                        exchange,
-//                        exchange + Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_ODOMETRY + Constant_msg.RMQ_QUEUE_SUFFIX,
-//                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_ODOMETRY,
-//                        "")
-//        );
-//
-//        scanSpout = new RabbitMQSpout(
-//                new Schemes.ScanScheme(),
-//                new StormDeclarator(
-//                        exchange,
-//                        exchange + Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_SCAN + Constant_msg.RMQ_QUEUE_SUFFIX,
-//                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_SCAN,
-//                        "")
-//        );
-//
-//        particleSpout = new RabbitMQSpout(
-//                new Schemes.ParticleScheme(),
-//                new StormDeclarator(
-//                        exchange,
-//                        exchange + Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_PARTICLE_CLOUD + Constant_msg.RMQ_QUEUE_SUFFIX,
-//                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_PARTICLE_CLOUD,
-//                        "")
-//        );
-//
-//        startGoalSpout = new RabbitMQSpout(
-//                new Schemes.startGoalScheme(),
-//                new StormDeclarator(
-//                        exchange,
-//                        exchange + Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_START_GOAL + Constant_msg.RMQ_QUEUE_SUFFIX,
-//                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_START_GOAL,
-//                        "")
-//        );
-//        // queue name can not be empty
-//        poseShareSpout = new RabbitMQSpout(
-//                new Schemes.PoseShareScheme(),
-//                new StormDeclarator(
-//                        Constant_msg.KEY_POSE_SHARE,
-//                        Constant_msg.KEY_POSE_SHARE,
-//                        "",
-//                        Constant_msg.TYPE_EXCHANGE_FANOUT)
-//        );
     }
-
-//    private void setAttachBolts() {
-//        builder.setSpout(Constant_storm.Components.TIMER_SPOUT_COMPONENT, new TimerSpout());
-//
-//        builder.setSpout(Constant_storm.Components.ODOMETRY_COMPONENT + "Spout", odomSpout, 1)
-//                .addConfigurations(spoutConfig.asMap())
-//                .setMaxSpoutPending(200);
-//        builder.setBolt(Constant_storm.Components.ODOMETRY_COMPONENT,
-//                new AttachTimeID(sensorid, Constant_storm.FIELDS.ODOMETRY_FIELD), 1)
-//                .shuffleGrouping(Constant_storm.Components.ODOMETRY_COMPONENT + "Spout");//???? no sensor id at all
-//
-//        builder.setSpout(Constant_storm.Components.SCAN_COMPONENT + "Spout", scanSpout, 1)
-//                .addConfigurations(spoutConfig.asMap())
-//                .setMaxSpoutPending(200);
-//        builder.setBolt(Constant_storm.Components.SCAN_COMPONENT,
-//                new AttachTimeID(sensorid, Constant_storm.FIELDS.SCAN_FIELD), 1)
-//                .shuffleGrouping(Constant_storm.Components.SCAN_COMPONENT + "Spout");
-//
-//        builder.setSpout(Constant_storm.Components.POSE_ARRAY_COMPONENT + "Spout", particleSpout, 1)
-//                .addConfigurations(spoutConfig.asMap())
-//                .setMaxSpoutPending(200);
-//        builder.setBolt(Constant_storm.Components.POSE_ARRAY_COMPONENT,
-//                new AttachTimeID(sensorid, Constant_storm.FIELDS.POSE_ARRAY_FIELD), 1)
-//                .shuffleGrouping(Constant_storm.Components.POSE_ARRAY_COMPONENT + "Spout");
-//
-//        builder.setSpout(Constant_storm.Components.BASE_CONFIG_COMPONENT + "Spout", startGoalSpout, 1)
-//                .addConfigurations(spoutConfig.asMap())
-//                .setMaxSpoutPending(200);
-//        builder.setBolt(Constant_storm.Components.BASE_CONFIG_COMPONENT,
-//                new AttachTimeID(sensorid, Constant_storm.FIELDS.START_GOAL_FIELD), 1)
-//                .shuffleGrouping(Constant_storm.Components.BASE_CONFIG_COMPONENT + "Spout");
-//
-//        builder.setSpout(Constant_storm.Components.POSE_SHARE_COMPONENT + "Spout", poseShareSpout, 1)
-//                .addConfigurations(spoutConfig.asMap())
-//                .setMaxSpoutPending(200);
-//        builder.setBolt(Constant_storm.Components.POSE_SHARE_COMPONENT,
-//                new AttachTimeID("", Constant_storm.FIELDS.POSE_SHARE_FIELD), 1)
-//                .shuffleGrouping(Constant_storm.Components.POSE_SHARE_COMPONENT + "Spout");
-//    }
 
 
     private void buildTopology() {
@@ -284,12 +146,18 @@ public class BuildIotTopology {
         builder.setBolt(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT, new GetAllAgentsBolt(), 1)
                 .shuffleGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,
                         Constant_storm.Streams.RESET_STREAM)
-                .shuffleGrouping(Constant_storm.Components.POSE_SHARE_COMPONENT);
-
-        builder.setBolt(Constant_storm.Components.POSE_SHARE_PUB_COMPONENT,
-                boltMap.get(Constant_storm.Components.POSE_SHARE_PUB_COMPONENT),1)
                 .shuffleGrouping(Constant_storm.Components.AGENT_COMPONENT,
                         Constant_storm.Streams.PUBLISHME_STREAM);
+//
+//        builder.setBolt(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT, new GetAllAgentsBolt(), 1)
+//                .shuffleGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,
+//                        Constant_storm.Streams.RESET_STREAM)
+//                .shuffleGrouping(Constant_storm.Components.POSE_SHARE_COMPONENT);
+//
+//        builder.setBolt(Constant_storm.Components.POSE_SHARE_PUB_COMPONENT,
+//                boltMap.get(Constant_storm.Components.POSE_SHARE_PUB_COMPONENT),1)
+//                .shuffleGrouping(Constant_storm.Components.AGENT_COMPONENT,
+//                        Constant_storm.Streams.PUBLISHME_STREAM);
 
         builder.setBolt(Constant_storm.Components.GET_MINKOWSKI_FOOTPRINT_COMPONENT, new GetMinkowskiFootprintBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.POSE_ARRAY_COMPONENT,
@@ -361,45 +229,5 @@ public class BuildIotTopology {
                 .shuffleGrouping(Constant_storm.Components.AGENT_COMPONENT, Constant_storm.Streams.CALCULATE_VELOCITY_CMD_STREAM);
         builder.setBolt(Constant_storm.Components.VELOCITY_COMPUTE_COMPONENT, new VelocityComputeBolt(), 2)
                 .shuffleGrouping(Constant_storm.Components.VO_LINES_COMPUTE_COMPONENT);
-    }
-
-    private static class StormDeclarator implements Declarator {
-        private final String exchange;
-        private final String queue;
-        private final String routingKey;
-        private final String exType;
-
-        public StormDeclarator(RMQContext context) {
-            this.exchange = context.EXCHANGE_NAME;
-            this.routingKey = context.ROUTING_KEY;
-            this.exType = context.EXCHANGE_TYPE;
-            this.queue = context.QUEUE_NAME;
-        }
-
-        public StormDeclarator(String exchange, String queueName, String routingKey, String exType) {
-            this.exchange = exchange;
-            this.routingKey = routingKey;
-            this.queue = queueName;
-            if (exType.equals(""))
-                this.exType = "direct";
-            else
-                this.exType = exType;
-        }
-
-        @Override
-        public void execute(Channel channel) {
-            // you're given a RabbitMQ Channel so you're free to wire up your exchange/queue bindings as you see fit
-            try {
-                Map<String, Object> args = new HashMap<String, Object>();
-                args.put("x-max-length", 3);
-                channel.exchangeDeclare(exchange, exType, false);
-                channel.queueDeclare(queue, false, false, true, args);
-                channel.queueBind(queue, exchange, routingKey);
-                channel.queuePurge(queue);
-            } catch (IOException e) {
-                throw new RuntimeException("Error executing rabbitmq declarations.", e);
-            }
-        }
-
     }
 }

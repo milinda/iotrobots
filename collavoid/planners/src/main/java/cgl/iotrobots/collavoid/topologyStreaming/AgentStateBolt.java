@@ -8,9 +8,12 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.Neighbor;
 import cgl.iotrobots.collavoid.commons.planners.Obstacle;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import org.slf4j.Logger;
@@ -28,6 +31,7 @@ public class AgentStateBolt extends BaseRichBolt {
     private Map<String, AgentStateContext> contexts = new HashMap<String, AgentStateContext>();
     private AgentStateContext currentContext;
     private String id;
+    TimeDelayRecorder odomDelayRecorder, scanDelayRecorder, poseShareDelayRecorder, poseArrayDelayRecorder, cmdDelayRecorder;
 
     private class AgentStateContext {
         String sensorID = null;
@@ -44,6 +48,31 @@ public class AgentStateBolt extends BaseRichBolt {
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
+        odomDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_ODOMETRY,
+                context.getThisComponentId());
+        odomDelayRecorder.open(false);
+        scanDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_SCAN,
+                context.getThisComponentId());
+        scanDelayRecorder.open(false);
+        poseShareDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_POSE_SHARE,
+                context.getThisComponentId());
+        poseShareDelayRecorder.open(false);
+        poseArrayDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_POSE_ARRAY,
+                context.getThisComponentId());
+        poseArrayDelayRecorder.open(false);
+        cmdDelayRecorder = new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                context.getThisComponentId());
+        cmdDelayRecorder.open(false);
     }
 
     @Override
@@ -58,17 +87,37 @@ public class AgentStateBolt extends BaseRichBolt {
 
         String sourceComp = tuple.getSourceComponent();
         if (sourceComp.equals(Constant_storm.Components.ODOMETRY_TRANSFORM_COMPONENT)) {
+            odomDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             currentContext.odometry_ = (Odometry_) tuple.getValueByField(Constant_storm.FIELDS.ODOMETRY_FIELD);
         } else if (sourceComp.equals(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)) {
             Agents = (Map<String, Neighbor>) Utils.deserialize(
                     tuple.getBinaryByField(Constant_storm.FIELDS.ALL_AGENTS_FIELD));
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.PREFERRED_VELOCITY_STREAM)) {
+            cmdDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             updatePrefVel(tuple);
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.PUBLISH_ME_TIMER_STREAM)) {
+            poseShareDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             updateMeState(tuple);
         } else if (sourceComp.equals(Constant_storm.Components.GET_OBSTACLES_COMPONENT)) {
+            scanDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             currentContext.obstacles = (List<Obstacle>) tuple.getValueByField(Constant_storm.FIELDS.OBSTACLE_FIELD);
         } else if (sourceComp.equals(Constant_storm.Components.GET_MINKOWSKI_FOOTPRINT_COMPONENT)) {
+            poseArrayDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             currentContext.MinkowskiFootprint = (List<Vector2>) tuple.getValueByField(Constant_storm.FIELDS.FOOTPRINT_MINKOWSK_FIELD);
             currentContext.minkowskiFootprintChanged = true;
         } else if (tuple.getSourceStreamId().equals(Constant_storm.Streams.RESET_STREAM)) {

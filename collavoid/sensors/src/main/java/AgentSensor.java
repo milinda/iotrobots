@@ -5,16 +5,15 @@ import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
 import cgl.iotrobots.collavoid.commons.rmqmsg.IotRMQContext;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
-import cgl.iotrobots.collavoid.commons.rmqmsg.RMQContext;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
-import cgl.iotrobots.collavoid.controller.AgentControllerIot;
+import cgl.iotrobots.collavoid.controller.iot.AgentControllerIot;
+import com.esotericsoftware.kryo.Kryo;
 import org.ros.node.NodeConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -24,7 +23,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class AgentSensor extends AbstractSensor {
-    public AgentControllerIot controllerIot;
 
     private static Logger LOG = LoggerFactory.getLogger(AgentSensor.class);
 
@@ -62,8 +60,10 @@ public class AgentSensor extends AbstractSensor {
 
     @Override
     public void open(final SensorContext sensorContext) {
+        AgentControllerIot controllerIot;
         controllerIot=new AgentControllerIot(sensorContext);
         NodeConfiguration nodeConfiguration = null;
+
         String localIp = (String) sensorContext.getProperty(Constant_storm.IotCloud.LOCAL_IP_ARG);
         String rosMaster = (String) sensorContext.getProperty(Constant_storm.IotCloud.ROS_MASTER_URI);
         try {
@@ -76,27 +76,17 @@ public class AgentSensor extends AbstractSensor {
 
         startListen(sensorContext.getChannel(
                         Constant_storm.IotCloud.TRANSPORT,
-                        Constant_storm.Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT),
+                        Constant_storm.IotCloud.channels.VELOCITY_PUBLISHER_CHANNEL),
                 new MessageReceiver() {
                     BlockingQueue<Twist_> velqueue = (BlockingQueue<Twist_>) sensorContext.getProperty(Constant_storm.IotCloud.VELOCITY_QUEUE);
+                    Kryo kryo = Methods_RMQ.getKryo();
                     @Override
                     public void onMessage(Object message) {
                         if (message instanceof MessageContext) {
                             byte[] body = ((MessageContext) message).getBody();
-                            Twist_ vel = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
-
-//                        String time = (String) ((MessageContext) message).getProperties().get("time");
-//                        try {
-//                            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("/home/supun/dev/projects/LatencyTest.txt", true)));
-//                            writer.println(System.currentTimeMillis() + " " + (System.currentTimeMillis() - Long.parseLong(time)));
-//                            writer.close();
-//                        } catch (FileNotFoundException e) {
-//                            e.printStackTrace();
-//                        }
-
-
+                            Twist_ vel = (Twist_) Methods_RMQ.deSerialize(kryo, body, Twist_.class);
                             velqueue.offer(vel);
-//                        LOG.info("Message received " + message.toString());
+//                        LOG.info("Cmd Message received " + message.toString());
 
                         } else {
                             LOG.error("Unexpected message");
@@ -126,21 +116,24 @@ public class AgentSensor extends AbstractSensor {
             context.addProperty(Constant_storm.IotCloud.VELOCITY_QUEUE,velqueue);
 
             // self defined contexts
-            msgContexts=new Constant_storm.IotMsgContexts(context.getName()).Contexts;
+            msgContexts = new Constant_storm.IotMsgContexts().Contexts;
             for (Map.Entry<String,IotRMQContext> e:msgContexts.entrySet()){
                 Map Props = new HashMap();
                 Props.put("exchange", e.getValue().EXCHANGE_NAME);
                 Props.put("routingKey", e.getValue().ROUTING_KEY);
                 Props.put("queueName", e.getValue().QUEUE_NAME);
                 Channel channel;
-                if (e.getKey().equals(Constant_storm.Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT)||
-                        e.getKey().equals(Constant_storm.Components.POSE_SHARE_PUB_COMPONENT)){
-                    channel = createChannel(e.getKey(), Props, Direction.IN, 1024);
+                if (e.getKey().equals(Constant_storm.Components.VELOCITY_COMMAND_PUBLISHER_COMPONENT)) {
+                    channel = createChannel(e.getValue().CHANNEL, Props, Direction.IN, 1024);
+                    channel.setGrouped(false);
+//                } else if (e.getKey().equals(Constant_storm.Components.POSE_SHARE_PUB_COMPONENT)) {
+//                    channel = createChannel(e.getValue().CHANNEL, Props, Direction.IN, 1024);
+//                    channel.setGrouped(true);
+                } else {
+                    channel = createChannel(e.getValue().CHANNEL, Props, Direction.OUT, 1024);
+                    channel.setGrouped(true);
                 }
-                else{
-                    channel = createChannel(e.getKey(), Props, Direction.OUT, 1024);
-                }
-                channel.setGrouped(true);
+
                 context.addChannel(Constant_storm.IotCloud.TRANSPORT, channel);
             }
 

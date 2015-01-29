@@ -1,11 +1,11 @@
-package cgl.iotrobots.collavoid.controller;
+package test;
 
 import cgl.iotcloud.core.SensorContext;
 import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
-//import com.rabbitmq.client.Channel;
+import com.esotericsoftware.kryo.Kryo;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
 import geometry_msgs.PoseStamped;
@@ -30,9 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-public class AgentROSNodeIot extends AbstractNodeMain {
+//import com.rabbitmq.client.Channel;
 
-    private Logger logger= LoggerFactory.getLogger(AgentROSNodeIot.class);
+public class AgentROSNodeIotTest extends AbstractNodeMain {
+
+    private Logger logger = LoggerFactory.getLogger(AgentROSNodeIotTest.class);
 
     private String AgentID = "robot";
 
@@ -46,8 +48,6 @@ public class AgentROSNodeIot extends AbstractNodeMain {
 
     private SensorContext contexts;
 
-    private BaseConfig_ baseConfig = new BaseConfig_();
-
     private Publisher<Twist> velcmdPublisher;
 
     private Subscriber<Odometry> odometrySubscriber;
@@ -58,13 +58,13 @@ public class AgentROSNodeIot extends AbstractNodeMain {
 
     private Subscriber<PoseStamped> startGoalSubscriber;
 
-    public AgentROSNodeIot(String nodeName, SensorContext contexts) {
+    public AgentROSNodeIotTest(String nodeName, SensorContext contexts) {
         this.nodeName = nodeName;
         // running controller node need a different node name however topics and other stuffs are
         // using original node name which is also used as the sensorid. So need to get rid of the suffix.
         this.AgentID = new String(nodeName).replace("_rmq", "");
         this.contexts = contexts;
-        this.velQueue=(BlockingQueue<Twist_>)contexts.getProperty(Constant_storm.IotCloud.VELOCITY_QUEUE);
+        this.velQueue = (BlockingQueue<Twist_>) contexts.getProperty(Constant_storm.IotCloud.VELOCITY_QUEUE);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class AgentROSNodeIot extends AbstractNodeMain {
 //                                                   byte[] body)
 //                                throws IOException {
 //                            long deliveryTag = envelope.getDeliveryTag();
-//                            Twist_ velocity = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
+//                            Twist_ velocity = (Twist_) Methods_RMQ.deSerialize(body, Twist_.class);
 //                            goalReached = velocity.isGoalReached();
 //                            velQueue.offer(velocity);
 //                            velCmdChannel.basicAck(deliveryTag, false);
@@ -115,8 +115,9 @@ public class AgentROSNodeIot extends AbstractNodeMain {
 //        }
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
-            int j = 0;
+            long j = 0;
             double sum;
+
             @Override
             protected void loop() throws InterruptedException {
                 Twist_ m = velQueue.take();
@@ -130,61 +131,74 @@ public class AgentROSNodeIot extends AbstractNodeMain {
                 str.getAngular().setZ(m.getAngular().getZ());
 
                 velcmdPublisher.publish(str);
-
-//                double delay = (System.currentTimeMillis() - m.getTime()) / 1000.0;
-//                System.out.println("Delay for "+nodeName+": "+delay);
-//                if (delay > 1) {
-//                    Methods_RMQ.clearQueues(rmqContexts);
-//                    velQueue.clear();
-//                    System.out.println("Delay is longer than 1s, " + "queue purged!!");
-//                }
+                if (AgentID.equals("robot0"))
+                    logger.info("received twist_ msg {}: {}", j++, m.toString());
 
             }
         });
 
         odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
+            private Kryo kryo = Methods_RMQ.getKryo();
+            private long index;
+
             @Override
             public void onNewMessage(Odometry odometry) {
-                Map<String,Object> prop=new HashMap<String, Object>();
-                Odometry_ odometry_=toOdometry_(odometry);
-                prop.put(Constant_storm.FIELDS.TIME_FIELD,odometry_.getHeader().getStamp());
-                MessageContext msg=new MessageContext(contexts.getSensorID(),Methods_RMQ.serialize(odometry_),prop);
+                Map<String, Object> prop = new HashMap<String, Object>();
+                Odometry_ odometry_ = toOdometry_(odometry);
+                prop.put(Constant_storm.FIELDS.TIME_FIELD, odometry_.getHeader().getStamp());
+                prop.put("name", AgentID);
+                prop.put("seq", index);
+                byte[] body = Methods_RMQ.serialize(kryo, odometry_);
+//                byte[] body=Methods_RMQ.serialize(odometry_);
+                MessageContext msg = new MessageContext(contexts.getSensorID(), body, prop);
+//                MessageContext msg = new MessageContext(contexts.getSensorID(), Methods_RMQ.serialize(odometry_), prop);
                 contexts.getChannel(Constant_storm.IotCloud.TRANSPORT,
-                        Constant_storm.Components.ODOMETRY_COMPONENT)
+                        Constant_storm.IotCloud.channels.ODOMETRY_CHANNEL)
                         .publish(msg);
+                if (AgentID.equals("robot0"))
+                    logger.info("odometry published " + index++);
             }
         });
 
         laserScanSubscriber.addMessageListener(new MessageListener<PointCloud2>() {
+            private Kryo kryo = Methods_RMQ.getKryo();
+
             @Override
             public void onNewMessage(PointCloud2 pointCloud2) {
-                Map<String,Object> prop=new HashMap<String, Object>();
-                PointCloud2_ pointCloud2_=toPointCloud2_(pointCloud2);
-                prop.put(Constant_storm.FIELDS.TIME_FIELD,pointCloud2_.getHeader().getStamp());
-                MessageContext msg=new MessageContext(contexts.getSensorID(),Methods_RMQ.serialize(pointCloud2_),prop);
+                Map<String, Object> prop = new HashMap<String, Object>();
+                PointCloud2_ pointCloud2_ = toPointCloud2_(pointCloud2);
+                prop.put(Constant_storm.FIELDS.TIME_FIELD, pointCloud2_.getHeader().getStamp());
+//                MessageContext msg = new MessageContext(contexts.getSensorID(), Methods_RMQ.serialize( pointCloud2_), prop);
+                MessageContext msg = new MessageContext(contexts.getSensorID(), Methods_RMQ.serialize(kryo, pointCloud2_), prop);
                 contexts.getChannel(Constant_storm.IotCloud.TRANSPORT,
-                        Constant_storm.Components.SCAN_COMPONENT)
+                        Constant_storm.IotCloud.channels.SCAN_CHANNEL)
                         .publish(msg);
             }
         });
 
         poseArraySubscriber.addMessageListener(new MessageListener<PoseArray>() {
+            private Kryo kryo = Methods_RMQ.getKryo();
+
             @Override
             public void onNewMessage(PoseArray poseArray) {
-                Map<String,Object> prop=new HashMap<String, Object>();
-                PoseArray_ poseArray_=toPoseArray_(poseArray);
-                prop.put(Constant_storm.FIELDS.TIME_FIELD,poseArray_.getHeader().getStamp());
-                MessageContext msg=new MessageContext(contexts.getSensorID(),Methods_RMQ.serialize(poseArray_),prop);
+                Map<String, Object> prop = new HashMap<String, Object>();
+                PoseArray_ poseArray_ = toPoseArray_(poseArray);
+                prop.put(Constant_storm.FIELDS.TIME_FIELD, poseArray_.getHeader().getStamp());
+//                MessageContext msg = new MessageContext(contexts.getSensorID(), Methods_RMQ.serialize(poseArray_), prop);
+                MessageContext msg = new MessageContext(contexts.getSensorID(), Methods_RMQ.serialize(kryo, poseArray_), prop);
                 contexts.getChannel(Constant_storm.IotCloud.TRANSPORT,
-                        Constant_storm.Components.POSE_ARRAY_COMPONENT)
+                        Constant_storm.IotCloud.channels.POSE_ARRAY_CHANNEL)
                         .publish(msg);
             }
         });
 
         startGoalSubscriber.addMessageListener(new MessageListener<PoseStamped>() {
+            private Kryo kryo = Methods_RMQ.getKryo();
+            private BaseConfig_ baseConfig = new BaseConfig_();
+
             @Override
             public void onNewMessage(PoseStamped msg) {
-                Map<String,Object> prop=new HashMap<String, Object>();
+                Map<String, Object> prop = new HashMap<String, Object>();
                 PoseStamped_ poseStamped_ = toPoseStamped_(msg);
                 if (msg.getHeader().getSeq() % 2 == 0) {
                     baseConfig.setStart(poseStamped_);
@@ -197,11 +211,11 @@ public class AgentROSNodeIot extends AbstractNodeMain {
                     baseConfig.setPublisMeFreq(Parameters.PUBLISH_ME_FREQUENCY);
 //                    baseConfig.setId(AgentID);
                     baseConfig.setTime(System.currentTimeMillis());
-                    prop.put(Constant_storm.FIELDS.TIME_FIELD,baseConfig.getTime());
-                    MessageContext msgContext=new MessageContext(contexts.getSensorID(),
-                            Methods_RMQ.serialize(baseConfig),prop);
+                    prop.put(Constant_storm.FIELDS.TIME_FIELD, baseConfig.getTime());
+                    MessageContext msgContext = new MessageContext(contexts.getSensorID(), Methods_RMQ.serialize(kryo, baseConfig), prop);
+//                    MessageContext msgContext=new MessageContext(contexts.getSensorID(),Methods_RMQ.serialize(baseConfig), prop);
                     contexts.getChannel(Constant_storm.IotCloud.TRANSPORT,
-                            Constant_storm.Components.BASE_CONFIG_COMPONENT)
+                            Constant_storm.IotCloud.channels.BASE_CONFIG_CHANNEL)
                             .publish(msgContext);
                 }
             }

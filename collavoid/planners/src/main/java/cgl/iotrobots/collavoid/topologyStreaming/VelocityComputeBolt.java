@@ -1,31 +1,55 @@
 package cgl.iotrobots.collavoid.topologyStreaming;
 
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
+import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.Agent;
 import cgl.iotrobots.collavoid.commons.planners.Methods_Planners;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VelocityComputeBolt extends BaseBasicBolt {
+import java.util.Map;
+
+public class VelocityComputeBolt extends BaseRichBolt {
     private Twist_ cmdVel = new Twist_();
     private Vector2 newVelocity = new Vector2();// calculated new holo velocity
     private Agent agent;
     private Logger logger = LoggerFactory.getLogger(VelocityComputeBolt.class);
+    private OutputCollector collector;
+    TimeDelayRecorder cmdDelayRecorder;
 
     @Override
-    public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+        this.collector = collector;
+        cmdDelayRecorder = new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                context.getThisComponentId());
+        cmdDelayRecorder.open(false);
+    }
+
+    @Override
+    public void execute(Tuple tuple) {
 //        System.out.println("Debug-newv cal:"+System.currentTimeMillis());
+        cmdDelayRecorder.append(
+                tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                System.currentTimeMillis());
         agent = (Agent) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.AGENT_FIELD));
         newVelocity = Methods_Planners.ClearPath.calculateClearpathVelocity(
                 null,
@@ -36,7 +60,8 @@ public class VelocityComputeBolt extends BaseBasicBolt {
                 agent.useTruancation);
 //        logger.warn("{}+++++++++++++++cal new vel {}",agent.Name,newVelocity);
         getVelocityCmd();
-        basicOutputCollector.emit(new Values(tuple.getValue(0), tuple.getValue(1), cmdVel.copy()));
+        collector.emit(new Values(tuple.getValue(0), tuple.getValue(1), cmdVel.copy()));
+        collector.ack(tuple);
     }
 
     @Override

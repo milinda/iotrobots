@@ -79,8 +79,8 @@ public class BuildTopology {
 
         RMQContexts = new Contexts("*").getRMQContexts();
         RMQContexts.remove(Constant_msg.KEY_VELOCITY_CMD);
-        RMQContexts.put(Constant_msg.KEY_POSE_SHARE, new RMQContext(Constant_msg.KEY_POSE_SHARE, "*"));
-        RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_FANOUT;
+//        RMQContexts.put(Constant_msg.KEY_POSE_SHARE, new RMQContext(Constant_msg.KEY_POSE_SHARE, "*"));
+//        RMQContexts.get(Constant_msg.KEY_POSE_SHARE).EXCHANGE_TYPE = Constant_msg.TYPE_EXCHANGE_FANOUT;
 
     }
 
@@ -144,7 +144,6 @@ public class BuildTopology {
                     spoutMap.get(e.getKey()))
                     .addConfigurations(spoutConfig.asMap())
                     .setMaxSpoutPending(10);
-            ;
         }
         builder.setSpout(Constant_storm.Components.TIMER_SPOUT_COMPONENT, new TimerSpout());
 
@@ -170,8 +169,8 @@ public class BuildTopology {
 //                new Schemes.ParticleScheme(),
 //                new StormDeclarator(
 //                        exchange,
-//                        exchange + Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_PARTICLE_CLOUD + Constant_msg.RMQ_QUEUE_SUFFIX,
-//                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_PARTICLE_CLOUD,
+//                        exchange + Constant_msg.RMQ_QUEUE_PREFIX + Constant_msg.KEY_POSE_ARRAY + Constant_msg.RMQ_QUEUE_SUFFIX,
+//                        Constant_msg.RMQ_ROUTINGKEY_PREFIX + Constant_msg.KEY_POSE_ARRAY,
 //                        "")
 //        );
 //
@@ -269,11 +268,12 @@ public class BuildTopology {
                         new Fields(Constant_storm.FIELDS.SENSOR_ID_FIELD))
                 .allGrouping(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT);
 
-        // each topology has only one
-        builder.setBolt(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT, new GetAllAgentsBolt(), 2)
+        // each topology has only one, to enable multiple bolts a join bolt should be implemented
+        builder.setBolt(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT, new GetAllAgentsBolt(), 1)
                 .shuffleGrouping(Constant_storm.Components.AGENT_STATE_COMPONENT,
                         Constant_storm.Streams.RESET_STREAM)
-                .shuffleGrouping(Constant_storm.Components.POSE_SHARE_COMPONENT);
+                .shuffleGrouping(Constant_storm.Components.AGENT_COMPONENT,
+                        Constant_storm.Streams.PUBLISHME_STREAM);
 
         builder.setBolt(Constant_storm.Components.GET_MINKOWSKI_FOOTPRINT_COMPONENT, new GetMinkowskiFootprintBolt(), 1)
                 .fieldsGrouping(Constant_storm.Components.POSE_ARRAY_COMPONENT,

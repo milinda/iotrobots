@@ -1,10 +1,9 @@
-package cgl.iotrobots.collavoid.controller;
+package cgl.iotrobots.collavoid.controller.storm;
 
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Contexts;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
 import cgl.iotrobots.collavoid.commons.rmqmsg.RMQContext;
-import cgl.iotrobots.collavoid.commons.storm.Methods_storm;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import org.ros.node.DefaultNodeMainExecutor;
