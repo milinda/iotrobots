@@ -5,6 +5,8 @@ import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.spout.ISpout;
 import backtype.storm.task.IBolt;
+import backtype.storm.topology.IRichBolt;
+import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
@@ -98,10 +100,10 @@ public class SLAMTopology {
                 LOG.error("error occured", throwable);
             }
         };
-        ISpout dataSpout;
-        ISpout controlSpout;
-        IBolt mapSendBolt;
-        IBolt valueSendBolt;
+        IRichSpout dataSpout;
+        IRichSpout controlSpout;
+        IRichBolt mapSendBolt;
+        IRichBolt valueSendBolt;
         if (!iotCloud) {
             dataSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(0), reporter);
             controlSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(3), reporter);
@@ -111,8 +113,8 @@ public class SLAMTopology {
             StreamComponents components = streamTopologyBuilder.buildComponents();
             dataSpout = components.getSpouts().get(Constants.Topology.RECEIVE_SPOUT);
             controlSpout = components.getSpouts().get(Constants.Topology.CONTROL_SPOUT);
-            mapSendBolt = components.getBolts().get(Constants.)
-            valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
+            mapSendBolt = components.getBolts().get(Constants.Topology.MAP_BOLT);
+            valueSendBolt = components.getBolts().get(Constants.Topology.BEST_PARTICLE_SEND_BOLT);
         }
 
         ScanMatchBolt scanMatchBolt = new ScanMatchBolt();

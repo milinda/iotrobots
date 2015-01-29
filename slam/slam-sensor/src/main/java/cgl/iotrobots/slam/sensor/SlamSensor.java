@@ -30,6 +30,8 @@ public class SlamSensor extends AbstractSensor {
 
     public static final String URL_ARG = "url";
     public static final String SITES_ARG = "s";
+    public static final String SIMULATOR_ARG = "sim";
+
     private static Logger LOG = LoggerFactory.getLogger(SlamSensor.class);
 
     public static final String BROKER_URL = "broker_url";
@@ -153,21 +155,21 @@ public class SlamSensor extends AbstractSensor {
             context.addProperty(BROKER_URL, brokerUrl);
             Map sendProps = new HashMap();
             sendProps.put("exchange", SLAM_EXCHANGE);
-            sendProps.put("routingKey", STORM_DRONE_FRAME_ROUTING_KEY);
+            sendProps.put("routingKey", STORM_LASER_SCAN);
             sendProps.put("queueName", STORM_LASER_SCAN);
             Channel sendChannel = createChannel(LASE_SCAN_SENDER, sendProps, Direction.OUT, 1024);
 
-            Map navSendProps = new HashMap();
-            navSendProps.put("exchange", SLAM_EXCHANGE);
-            navSendProps.put("routingKey", STORM_DRONE_NAV_DATA_ROUTING_KEY);
-            navSendProps.put("queueName", STORM_MAP);
-            Channel navSendChannel = createChannel(NAV_SENDER, navSendProps, Direction.OUT, 1024);
+            Map mapReceiveProps = new HashMap();
+            mapReceiveProps.put("exchange", SLAM_EXCHANGE);
+            mapReceiveProps.put("routingKey", STORM_MAP);
+            mapReceiveProps.put("queueName", STORM_MAP);
+            Channel navSendChannel = createChannel(MAP_RECEIVER, mapReceiveProps, Direction.OUT, 1024);
 
-            Map receiveProps = new HashMap();
-            receiveProps.put("queueName", STORM_BEST_PARTICLE);
-            receiveProps.put("exchange", SLAM_EXCHANGE);
-            receiveProps.put("routingKey", STORM_CONTROL_ROUTING_KEY);
-            Channel receiveChannel = createChannel(MAP_RECEIVER, receiveProps, Direction.IN, 1024);
+            Map bestReceiveProps = new HashMap();
+            bestReceiveProps.put("queueName", STORM_BEST_PARTICLE);
+            bestReceiveProps.put("exchange", SLAM_EXCHANGE);
+            bestReceiveProps.put("routingKey", STORM_BEST_PARTICLE);
+            Channel receiveChannel = createChannel(BEST_PARTICLE_RECEIVER, bestReceiveProps, Direction.IN, 1024);
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
@@ -182,6 +184,7 @@ public class SlamSensor extends AbstractSensor {
         Options options = new Options();
         options.addOption(URL_ARG, true, "URL of the AMQP Broker");
         options.addOption(SITES_ARG, true, "list of sites");
+        options.addOption(SIMULATOR_ARG, false, "Weather to use simulator");
 
         CommandLineParser commandLineParser = new BasicParser();
         try {
@@ -189,9 +192,11 @@ public class SlamSensor extends AbstractSensor {
 
             String url = cmd.getOptionValue(URL_ARG);
             String sites = cmd.getOptionValue(SITES_ARG);
+            boolean sim = cmd.hasOption(SIMULATOR_ARG);
 
             conf.put(BROKER_URL, url);
             conf.put(SITES_ARG, sites);
+            conf.put(SIMULATOR_ARG, Boolean.toString(sim));
 
             return conf;
         } catch (ParseException e) {
