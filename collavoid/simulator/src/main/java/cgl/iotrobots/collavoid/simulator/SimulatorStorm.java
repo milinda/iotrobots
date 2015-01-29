@@ -2,8 +2,7 @@ package cgl.iotrobots.collavoid.simulator;
 
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
-import cgl.iotrobots.collavoid.controller.AgentControllerStorm;
+import cgl.iotrobots.collavoid.controller.storm.AgentControllerStorm;
 import com.rabbitmq.client.Address;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
@@ -28,8 +27,6 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 public class SimulatorStorm {
     static final int robotNb = Parameters.ROBOT_NUMBER;
@@ -292,6 +289,7 @@ public class SimulatorStorm {
             this.resetPosition();
             this.rotateY(orientation);
             sgseq = 0;
+            startAgain = false;
             wheelVelocity.reset();
             vl = 0;
             vr = 0;
@@ -356,13 +354,17 @@ public class SimulatorStorm {
                 sgseq++;
             }
 
-            //test
-            if (reachGoalNo >= robotNb && startAgain) {
+            //test start again when all reached goal
+//            if (reachGoalNo >= robotNb && startAgain) {
+//                sgseq = 0;
+//                this.startAgain = false;
+//                if (++startedNo >= robotNb)
+//                    reachGoalNo = 0;
+//            }
+            //test start again once me reached goal
+            if (startAgain) {
                 sgseq = 0;
                 this.startAgain = false;
-                if (++startedNo >= robotNb)
-                    reachGoalNo = 0;
-//                System.out.println(robotName+"reached goal");
             }
             if (bumpers.oneHasHit()) {
                 System.out.println("Collision detected: " + robotName);

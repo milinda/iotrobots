@@ -1,6 +1,11 @@
-package cgl.iotrobots.collavoid.controller;
+package cgl.iotrobots.collavoid.controller.storm;
 
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
+import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.rmqmsg.*;
+import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
+import com.esotericsoftware.kryo.Kryo;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
@@ -23,24 +28,27 @@ import sensor_msgs.PointCloud2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class AgentROSNode extends AbstractNodeMain {
+public class AgentROSNodeStorm extends AbstractNodeMain {
 
-    private String nodeName = "robot";
+    private String sensorID = "robot";
 
-    private Channel channel;
+    private String nodeName = "";
 
     private boolean autoAck = false;
 
+    private boolean goalReached;
+
     private BlockingQueue<Twist_> velQueue = new LinkedBlockingDeque<Twist_>();
 
-    private Map<String, RMQContext> Contexts;
+    private Map<String, RMQContext> rmqContexts;
 
-    private BaseConfig_ startGoal = new BaseConfig_();
+    private BaseConfig_ baseConfig = new BaseConfig_();
 
     private Publisher<Twist> velcmdPublisher;
 
@@ -52,43 +60,28 @@ public class AgentROSNode extends AbstractNodeMain {
 
     private Subscriber<PoseStamped> startGoalSubscriber;
 
-    public AgentROSNode(String name, Channel channel, Map<String, RMQContext> msgContexts) {
-        this.nodeName = name;
-        this.channel = channel;
-        Contexts = msgContexts;
-        BindQueue(Contexts);
-    }
+    final Map<String, TimeDelayRecorder> delayRecorders = new HashMap<>();
 
-    private void BindQueue(Map<String, RMQContext> RMQParams) {
-        try {
-            for (Map.Entry<String, RMQContext> e : RMQParams.entrySet()) {
-                e.getValue().CHANNEL = channel;
-                e.getValue().CHANNEL.exchangeDeclare(
-                        e.getValue().EXCHANGE_NAME,
-                        e.getValue().EXCHANGE_TYPE,
-                        e.getValue().DURABLE
-                );
-                channel.queueDeclare(e.getValue().QUEUE_NAME, false, false, false, null);
-                channel.queueBind(e.getValue().QUEUE_NAME, e.getValue().EXCHANGE_NAME, e.getValue().ROUTING_KEY);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public AgentROSNodeStorm(String nodeName, Map<String, RMQContext> msgContexts) {
+        this.nodeName = nodeName;
+        // running controller node need a different node name however topics and other stuffs are
+        // using original node name which is also used as the sensorid. So need to get rid of the suffix.
+        this.sensorID = new String(nodeName).replace("_rmq", "");
+        rmqContexts = msgContexts;
     }
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
-        final String robotNodeName = new String(nodeName).replace("_rmq", "");
         velcmdPublisher =
-                connectedNode.newPublisher(robotNodeName + "/cmd_vel", Twist._TYPE);
+                connectedNode.newPublisher(sensorID + "/cmd_vel", Twist._TYPE);
         odometrySubscriber =
-                connectedNode.newSubscriber(robotNodeName + "/odometry", Odometry._TYPE);
+                connectedNode.newSubscriber(sensorID + "/odometry", Odometry._TYPE);
         laserScanSubscriber =
-                connectedNode.newSubscriber(robotNodeName + "/scan/point_cloud2", PointCloud2._TYPE);
+                connectedNode.newSubscriber(sensorID + "/scan/point_cloud2", PointCloud2._TYPE);
         poseArraySubscriber =
-                connectedNode.newSubscriber(robotNodeName + "/particlecloud", PoseArray._TYPE);
+                connectedNode.newSubscriber(sensorID + "/particlecloud", PoseArray._TYPE);
         startGoalSubscriber =
-                connectedNode.newSubscriber(robotNodeName + "/start_goal", PoseStamped._TYPE);
+                connectedNode.newSubscriber(sensorID + "/start_goal", PoseStamped._TYPE);
 
         try {
             Thread.sleep(1000);
@@ -96,11 +89,16 @@ public class AgentROSNode extends AbstractNodeMain {
             ie.printStackTrace();
         }
 
+        getTimeDelayRecorders();
+
         try {
-            String queueName = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).QUEUE_NAME;
-            String routingKey = Contexts.get(Constant_msg.KEY_VELOCITY_CMD).ROUTING_KEY;
-            channel.basicConsume(queueName, autoAck, routingKey + "Tag",
-                    new DefaultConsumer(channel) {
+            String queueName = rmqContexts.get(Constant_msg.KEY_VELOCITY_CMD).QUEUE_NAME;
+            String routingKey = rmqContexts.get(Constant_msg.KEY_VELOCITY_CMD).ROUTING_KEY;
+            final Channel velCmdChannel = rmqContexts.get(Constant_msg.KEY_VELOCITY_CMD).CHANNEL;
+            velCmdChannel.basicConsume(queueName, autoAck, routingKey + "Tag",
+                    new DefaultConsumer(velCmdChannel) {
+                        TimeDelayRecorder delayRecorder_ = delayRecorders.get(Constant_msg.KEY_VELOCITY_CMD);
+                        Kryo kryo = Methods_RMQ.getKryo();
                         @Override
                         public void handleDelivery(String consumerTag,
                                                    Envelope envelope,
@@ -108,9 +106,14 @@ public class AgentROSNode extends AbstractNodeMain {
                                                    byte[] body)
                                 throws IOException {
                             long deliveryTag = envelope.getDeliveryTag();
-                            Twist_ velocity = (Twist_) Methods_RMQ.deserialize(body, Twist_.class);
+                            Twist_ velocity = (Twist_) Methods_RMQ.deSerialize(kryo, body);
+                            delayRecorder_.append(
+                                    sensorID,
+                                    velocity.getTime(),
+                                    System.currentTimeMillis());
+                            goalReached = velocity.isGoalReached();
                             velQueue.offer(velocity);
-                            channel.basicAck(deliveryTag, false);
+                            velCmdChannel.basicAck(deliveryTag, false);
                         }
                     });
         } catch (IOException e) {
@@ -122,6 +125,8 @@ public class AgentROSNode extends AbstractNodeMain {
         }
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
+            int j = 0;
+            double sum;
             @Override
             protected void loop() throws InterruptedException {
                 Twist_ m = velQueue.take();
@@ -135,82 +140,126 @@ public class AgentROSNode extends AbstractNodeMain {
                 str.getAngular().setZ(m.getAngular().getZ());
 
                 velcmdPublisher.publish(str);
+
+//                double delay = (System.currentTimeMillis() - m.getTime()) / 1000.0;
+//                System.out.println("Delay for "+nodeName+": "+delay);
+//                if (delay > 1) {
+//                    Methods_RMQ.clearQueues(rmqContexts);
+//                    velQueue.clear();
+//                    System.out.println("Delay is longer than 1s, " + "queue purged!!");
+//                }
+
             }
         });
 
         odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
+            private Kryo kryo = Methods_RMQ.getKryo();
+            TimeDelayRecorder delayRecorder_ = delayRecorders.get(Constant_msg.KEY_ODOMETRY);
             @Override
             public void onNewMessage(Odometry odometry) {
-                if (channel.isOpen())
-                try {
-                    channel.basicPublish(
-                            Contexts.get(Constant_msg.KEY_ODOMETRY).EXCHANGE_NAME,
-                            Contexts.get(Constant_msg.KEY_ODOMETRY).ROUTING_KEY,
-                            null,
-                            Methods_RMQ.serialize(toOdometry_(odometry)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                delayRecorder_.append(
+                        sensorID,
+                        odometry.getHeader().getStamp().totalNsecs() / 1000000,
+                        System.currentTimeMillis());
+                Methods_RMQ.publishMsg(
+                        rmqContexts.get(Constant_msg.KEY_ODOMETRY),
+//                        Methods_RMQ.serialize(toOdometry_(odometry)));
+                        Methods_RMQ.serialize(kryo, toOdometry_(odometry)));
             }
         });
 
         laserScanSubscriber.addMessageListener(new MessageListener<PointCloud2>() {
+            private Kryo kryo = Methods_RMQ.getKryo();
+            TimeDelayRecorder delayRecorder_ = delayRecorders.get(Constant_msg.KEY_SCAN);
             @Override
             public void onNewMessage(PointCloud2 pointCloud2) {
-                if (channel.isOpen())
-                try {
-                    channel.basicPublish(
-                            Contexts.get(Constant_msg.KEY_SCAN).EXCHANGE_NAME,
-                            Contexts.get(Constant_msg.KEY_SCAN).ROUTING_KEY,
-                            null,
-                            Methods_RMQ.serialize(toPointCloud2_(pointCloud2)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                delayRecorder_.append(
+                        sensorID,
+                        pointCloud2.getHeader().getStamp().totalNsecs() / 1000000,
+                        System.currentTimeMillis());
+
+                Methods_RMQ.publishMsg(
+                        rmqContexts.get(Constant_msg.KEY_SCAN),
+//                        Methods_RMQ.serialize(toPointCloud2_(pointCloud2)));
+                        Methods_RMQ.serialize(kryo, toPointCloud2_(pointCloud2)));
             }
         });
 
         poseArraySubscriber.addMessageListener(new MessageListener<PoseArray>() {
+            TimeDelayRecorder delayRecorder_ = delayRecorders.get(Constant_msg.KEY_POSE_ARRAY);
+            private Kryo kryo = Methods_RMQ.getKryo();
             @Override
             public void onNewMessage(PoseArray poseArray) {
-                PoseArray_ pa = new PoseArray_();
-                pa.getHeader().setFrameId(poseArray.getHeader().getFrameId());
-                pa.getHeader().setStamp(poseArray.getHeader().getStamp().totalNsecs() / 1000000);
+                delayRecorder_.append(
+                        sensorID,
+                        poseArray.getHeader().getStamp().totalNsecs() / 1000000,
+                        System.currentTimeMillis());
 
-                List<Pose_> poses = new ArrayList<Pose_>();
-                for (Pose pose : poseArray.getPoses()) {
-                    poses.add(toPose_(pose));
-                }
-                pa.setPoses(poses);
-                if (channel.isOpen())
-                try {
-                    channel.basicPublish(
-                            Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).EXCHANGE_NAME,
-                            Contexts.get(Constant_msg.KEY_PARTICLE_CLOUD).ROUTING_KEY,
-                            null,
-                            Methods_RMQ.serialize(pa));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                Methods_RMQ.publishMsg(
+                        rmqContexts.get(Constant_msg.KEY_POSE_ARRAY),
+//                        Methods_RMQ.serialize(toPoseArray_(poseArray)));
+                        Methods_RMQ.serialize(kryo, toPoseArray_(poseArray)));
             }
         });
 
         startGoalSubscriber.addMessageListener(new MessageListener<PoseStamped>() {
-            RMQContext startGoalContext = Contexts.get(Constant_msg.KEY_START_GOAL);
+            TimeDelayRecorder delayRecorder_ = delayRecorders.get(Constant_msg.KEY_BASE_CONFIG);
             @Override
             public void onNewMessage(PoseStamped msg) {
                 PoseStamped_ poseStamped_ = toPoseStamped_(msg);
                 if (msg.getHeader().getSeq() % 2 == 0) {
-                    startGoal.setStart(poseStamped_);
+                    baseConfig.setStart(poseStamped_);
                 } else {
-                    startGoal.setGoal(poseStamped_);
+                    baseConfig.setGoal(poseStamped_);
                 }
 
                 if (msg.getHeader().getSeq() >= 9) {
-                    Methods_RMQ.publishMsg(startGoalContext, Methods_RMQ.serialize(startGoal));
+                    delayRecorder_.append(
+                            sensorID,
+                            msg.getHeader().getStamp().totalNsecs() / 1000000,
+                            System.currentTimeMillis());
+
+                    baseConfig.setControlFreq(Parameters.CONTROLLER_FREQUENCY);
+                    baseConfig.setPublisMeFreq(Parameters.PUBLISH_ME_FREQUENCY);
+                    baseConfig.setId(sensorID);
+                    baseConfig.setTime(poseStamped_.getHeader().getStamp());
+                    Methods_RMQ.publishMsg(
+                            rmqContexts.get(Constant_msg.KEY_BASE_CONFIG),
+                            Methods_RMQ.serialize(baseConfig));
                 }
             }
         });
+    }
+
+    // delay test
+    private void getTimeDelayRecorders() {
+        delayRecorders.put(Constant_msg.KEY_ODOMETRY, new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_ODOMETRY,
+                Constant_storm.Components.CONTROLLER_COMPONENT
+        ));
+        delayRecorders.put(Constant_msg.KEY_BASE_CONFIG, new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_BASE_CONFIG,
+                Constant_storm.Components.CONTROLLER_COMPONENT
+        ));
+        delayRecorders.put(Constant_msg.KEY_SCAN, new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_SCAN,
+                Constant_storm.Components.CONTROLLER_COMPONENT
+        ));
+        delayRecorders.put(Constant_msg.KEY_POSE_ARRAY, new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_POSE_ARRAY,
+                Constant_storm.Components.CONTROLLER_COMPONENT
+        ));
+        delayRecorders.put(Constant_msg.KEY_VELOCITY_CMD, new TimeDelayRecorder(
+                Constants.COMPUTATION_DELAY,
+                Constant_msg.KEY_VELOCITY_CMD,
+                Constant_storm.Components.CONTROLLER_COMPONENT
+        ));
+        for (Map.Entry<String, TimeDelayRecorder> e : delayRecorders.entrySet())
+            e.getValue().open(false);
     }
 
     private Odometry_ toOdometry_(Odometry odometry) {
@@ -236,7 +285,7 @@ public class AgentROSNode extends AbstractNodeMain {
         odometry_.setChildFrameId(odometry.getChildFrameId());
         odometry_.getHeader().setFrameId(odometry.getHeader().getFrameId());
         odometry_.getHeader().setStamp(odometry.getHeader().getStamp().totalNsecs() / 1000000);
-
+        odometry_.setId(sensorID);
         return odometry_;
     }
 
@@ -259,8 +308,22 @@ public class AgentROSNode extends AbstractNodeMain {
         pts.setData(data);
         pts.getHeader().setStamp(pointCloud2.getHeader().getStamp().totalNsecs() / 1000000);
         pts.getHeader().setFrameId(pointCloud2.getHeader().getFrameId());
-
+        pts.setId(sensorID);
         return pts;
+    }
+
+    private PoseArray_ toPoseArray_(PoseArray poseArray) {
+        PoseArray_ pa = new PoseArray_();
+        pa.getHeader().setFrameId(poseArray.getHeader().getFrameId());
+        pa.getHeader().setStamp(poseArray.getHeader().getStamp().totalNsecs() / 1000000);
+
+        List<Pose_> poses = new ArrayList<Pose_>();
+        for (Pose pose : poseArray.getPoses()) {
+            poses.add(toPose_(pose));
+        }
+        pa.setPoses(poses);
+        pa.setId(sensorID);
+        return pa;
     }
 
     private Pose_ toPose_(Pose pose) {
@@ -303,8 +366,18 @@ public class AgentROSNode extends AbstractNodeMain {
 
     }
 
+    public boolean isGoalReached() {
+        return goalReached;
+    }
+
+    public BlockingQueue<Twist_> getVelQueue() {
+        return velQueue;
+    }
+
     @Override
     public void onShutdown(Node node) {
+        for (Map.Entry<String, TimeDelayRecorder> e : delayRecorders.entrySet())
+            e.getValue().close();
         velcmdPublisher.shutdown();
         odometrySubscriber.shutdown();
         poseArraySubscriber.shutdown();
@@ -315,6 +388,7 @@ public class AgentROSNode extends AbstractNodeMain {
 
     @Override
     public GraphName getDefaultNodeName() {
+        // should be the same as node name or will not work right
         return GraphName.of(nodeName);
     }
 }

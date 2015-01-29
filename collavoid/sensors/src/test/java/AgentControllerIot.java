@@ -1,5 +1,3 @@
-package cgl.iotrobots.collavoid.controller;
-
 import cgl.iotcloud.core.SensorContext;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
 import org.ros.node.DefaultNodeMainExecutor;
@@ -12,9 +10,9 @@ public class AgentControllerIot {
     private String AgentID;
     private NodeMainExecutor nodeMainExecutor;
 
-    public AgentControllerIot(SensorContext context){
-        this.context=context;
-        this.AgentID ="robot"+context.getProperty(Constant_storm.IotCloud.AGENT_INDEX);
+    public AgentControllerIot(SensorContext context) {
+        this.context = context;
+        this.AgentID = "robot1";
     }
 
     public void start(NodeConfiguration configuration) {

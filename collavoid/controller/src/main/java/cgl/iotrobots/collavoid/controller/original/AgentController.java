@@ -1,4 +1,4 @@
-package cgl.iotrobots.collavoid.controller;
+package cgl.iotrobots.collavoid.controller.original;
 
 import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Methods_RMQ;
@@ -40,7 +40,7 @@ public class AgentController {
 
         // information from robot use the same exchange
         RMQContexts.put(Constant_msg.KEY_ODOMETRY, new RMQContext(exchangeName, Constant_msg.KEY_ODOMETRY));
-        RMQContexts.put(Constant_msg.KEY_PARTICLE_CLOUD, new RMQContext(exchangeName, Constant_msg.KEY_PARTICLE_CLOUD));
+        RMQContexts.put(Constant_msg.KEY_POSE_ARRAY, new RMQContext(exchangeName, Constant_msg.KEY_POSE_ARRAY));
         RMQContexts.put(Constant_msg.KEY_SCAN, new RMQContext(exchangeName, Constant_msg.KEY_SCAN));
         RMQContexts.put(Constant_msg.KEY_VELOCITY_CMD, new RMQContext(exchangeName, Constant_msg.KEY_VELOCITY_CMD));
         RMQContexts.put(Constant_msg.KEY_START_GOAL, new RMQContext(exchangeName, Constant_msg.KEY_START_GOAL));

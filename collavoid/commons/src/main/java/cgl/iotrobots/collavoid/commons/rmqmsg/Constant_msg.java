@@ -5,7 +5,7 @@ public abstract class Constant_msg {
     public static final String KEY_VELOCITY_CMD = "VelocityCMD";
     public static final String KEY_ODOMETRY = "Odometry";
     public static final String KEY_SCAN = "Scan";
-    public static final String KEY_PARTICLE_CLOUD = "ParticleCloud";
+    public static final String KEY_POSE_ARRAY = "PoseArray";
     public static final String KEY_POSE_SHARE = "PoseShare";
     public static final String KEY_START_GOAL = "startGoal";
     public static final String KEY_BASE_CONFIG = "baseConfig";

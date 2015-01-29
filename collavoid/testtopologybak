@@ -1,0 +1,22 @@
+zk.servers: ["localhost:2181"]
+zk.root: "/iot/sensors/collisionAvoid"
+spouts:
+    odometry_receiver:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "odometry"
+        fields: ["time","sensorID","odometry"]
+        builder: test.OdometrySpoutMessageBuilderTest
+        properties:
+          ackMode: "auto"
+          prefectCount: "10"
+
+bolts:
+    vel_cmd_sender:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "vel_cmd"
+        fields: ["time","sensorID","velocityCommand"]
+        builder: test.VelocityPublisherBoltMessageBuilder
+        properties:
+          ackMode: "auto"

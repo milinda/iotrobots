@@ -57,31 +57,31 @@ public class Serializers {
         return mapper.readValue(data, Agent.class);
     }
 
-    public static class StartGoalSerializer {
-        private static final Kryo kryo = new Kryo();
-
-        public StartGoalSerializer() {
-            MapSerializer serializer = new MapSerializer();
-            kryo.register(HashMap.class, serializer);
-            serializer.setKeyClass(String.class, serializer);
-            serializer.setValueClass(PoseStamped_.class, serializer);
-
-        }
-
-        public static byte[] serialize(Object object) {
-
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            Output output = new Output(byteArrayOutputStream);
-            kryo.writeObject(output, object);
-            output.flush();
-            return byteArrayOutputStream.toByteArray();
-        }
-
-        public static Object deSerialize(byte[] b, Class e) {
-            return kryo.readObject(new Input(b), e);
-        }
-
-    }
+//    public static class StartGoalSerializer {
+//        private static final Kryo kryo = new Kryo();
+//
+//        public StartGoalSerializer() {
+//            MapSerializer serializer = new MapSerializer();
+//            kryo.register(HashMap.class, serializer);
+//            serializer.setKeyClass(String.class, serializer);
+//            serializer.setValueClass(PoseStamped_.class, serializer);
+//
+//        }
+//
+//        public static byte[] serialize(Object object) {
+//
+//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//            Output output = new Output(byteArrayOutputStream);
+//            kryo.writeObject(output, object);
+//            output.flush();
+//            return byteArrayOutputStream.toByteArray();
+//        }
+//
+//        public static Object deSerialize(byte[] b, Class e) {
+//            return kryo.readObject(new Input(b), e);
+//        }
+//
+//    }
 
     /**
      * Serialize an object using kryo and return the bytes

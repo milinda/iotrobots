@@ -1,15 +1,21 @@
 package cgl.iotrobots.collavoid.topologyStreaming;
 
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
+import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.utils.Utils;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.Constants;
+import cgl.iotrobots.collavoid.commons.TimeDelayAnalysis.TimeDelayRecorder;
 import cgl.iotrobots.collavoid.commons.planners.Neighbor;
 import cgl.iotrobots.collavoid.commons.planners.Obstacle;
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
 import cgl.iotrobots.collavoid.commons.rmqmsg.PointCloud2_;
 import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
 import cgl.iotrobots.collavoid.commons.storm.Constant_storm;
@@ -21,19 +27,44 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GetObstacleBolt extends BaseBasicBolt {
+public class GetObstacleBolt extends BaseRichBolt {
     private Logger logger = LoggerFactory.getLogger(GetObstacleBolt.class);
     private Map<String, Neighbor> agents = new HashMap<String, Neighbor>();
     private String sensorID = null;//use sensor Id as robot id
+    private OutputCollector collector;
+    private TimeDelayRecorder scanDelayRecorder, poseShareDelayRecorder;
 
     @Override
-    public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+    public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        collector = outputCollector;
+        scanDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_SCAN,
+                topologyContext.getThisComponentId());
+        scanDelayRecorder.open(false);
+        poseShareDelayRecorder = new TimeDelayRecorder(
+                Constants.PARAMETER_DELAY,
+                Constant_msg.KEY_POSE_SHARE,
+                topologyContext.getThisComponentId());
+        poseShareDelayRecorder.open(false);
+    }
+
+    @Override
+    public void execute(Tuple tuple) {
         if (tuple.contains(Constant_storm.FIELDS.SENSOR_ID_FIELD)) {
             sensorID = tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD);
         }
         if (tuple.getSourceComponent().equals(Constant_storm.Components.GET_ALL_AGENTS_COMPONENT)) {
+            poseShareDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             agents = (Map<String, Neighbor>) Utils.deserialize(tuple.getBinaryByField(Constant_storm.FIELDS.ALL_AGENTS_FIELD));
         } else if (tuple.getSourceComponent().equals(Constant_storm.Components.SCAN_COMPONENT)) {
+            scanDelayRecorder.append(
+                    tuple.getStringByField(Constant_storm.FIELDS.SENSOR_ID_FIELD),
+                    tuple.getLongByField(Constant_storm.FIELDS.TIME_FIELD),
+                    System.currentTimeMillis());
             List<Object> emit = new ArrayList<Object>();
             List<Obstacle> obstacles = new ArrayList<Obstacle>();
             PointCloud2_ pointCloud2_ = (PointCloud2_) tuple.getValueByField(Constant_storm.FIELDS.SCAN_FIELD);
@@ -41,9 +72,11 @@ public class GetObstacleBolt extends BaseBasicBolt {
             emit.add(tuple.getValue(0));
             emit.add(sensorID);
             emit.add(obstacles);
-            basicOutputCollector.emit(emit);
+            collector.emit(emit);
         }
+        collector.ack(tuple);
     }
+
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
@@ -160,5 +193,6 @@ public class GetObstacleBolt extends BaseBasicBolt {
         }
         return false;
     }
+
 
 }

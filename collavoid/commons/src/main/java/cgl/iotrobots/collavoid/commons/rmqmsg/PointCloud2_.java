@@ -13,16 +13,12 @@ import java.io.Serializable;
 public class PointCloud2_ implements Serializable {
 
     private String id;
-
     private Header_ Header = new Header_();
-
     private int Width;
-
     private int Height;
-
     private double[] Data;
-
     private int Dimension;
+
 
     public Header_ getHeader() {
         return Header;

@@ -1,9 +1,6 @@
 package cgl.iotrobots.collavoid.simulator;
 
 import cgl.iotrobots.collavoid.commons.planners.Parameters;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Constant_msg;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
-import cgl.iotrobots.collavoid.controller.AgentControllerStorm;
 import com.rabbitmq.client.Address;
 import geometry_msgs.Pose;
 import geometry_msgs.PoseArray;
@@ -13,7 +10,6 @@ import nav_msgs.Odometry;
 import org.ros.message.MessageListener;
 import org.ros.message.Time;
 import org.ros.node.ConnectedNode;
-import org.ros.node.NodeConfiguration;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
@@ -28,8 +24,6 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 public class SimulatorIot {
     static final int robotNb = Parameters.ROBOT_NUMBER;

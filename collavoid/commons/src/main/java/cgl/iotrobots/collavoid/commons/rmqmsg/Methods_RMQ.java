@@ -1,5 +1,11 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
+import backtype.storm.Config;
+import cgl.iotrobots.collavoid.commons.planners.*;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +14,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
@@ -89,6 +96,55 @@ public class Methods_RMQ {
 
     }
 
+    public static Kryo getKryo() {
+        Kryo res = new Kryo();
+        registerSerialization(res);
+        return res;
+    }
+
+    public static void registerSerialization(Kryo kryo) {
+        kryo.register(Vector3d_.class, 101);
+        kryo.register(Vector4d_.class, 102);
+        kryo.register(Vector2.class, 103);
+        kryo.register(Header_.class, 104);
+        kryo.register(Twist_.class, 105);
+        kryo.register(Pose_.class, 106);
+        kryo.register(PoseShareMsg_.class, 107);
+        kryo.register(PoseStamped_.class, 108);
+        kryo.register(BaseConfig_.class, 109);
+        kryo.register(PointCloud2_.class, 110);
+        kryo.register(Odometry_.class, 111);
+        kryo.register(PoseArray_.class, 112);
+
+        kryo.register(Position.class, 113);
+        kryo.register(Agent.class, 114);
+        kryo.register(Neighbor.class, 115);
+        kryo.register(VO.class, 116);
+        kryo.register(Line.class, 117);
+        kryo.register(LinePair.class, 118);
+        kryo.register(Obstacle.class, 119);
+    }
+
+    public static byte[] serialize(Kryo kryo, Object object) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        Output output = new Output(byteArrayOutputStream);
+//        kryo.writeObject(output, object);
+        kryo.writeClassAndObject(output, object);
+//        output.flush();
+        output.close();
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    public static Object deSerialize(Kryo kryo, byte[] b, Class e) {
+//        return kryo.readObject(new Input(new ByteArrayInputStream(b)), e);
+        return kryo.readClassAndObject(new Input(new ByteArrayInputStream(b)));
+    }
+
+    public static Object deSerialize(Kryo kryo, byte[] b) {
+        return kryo.readClassAndObject(new Input(new ByteArrayInputStream(b)));
+    }
+
+
     public static byte[] serialize(Object value) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
@@ -101,7 +157,7 @@ public class Methods_RMQ {
         return outputStream.toByteArray();
     }
 
-    public static Object deserialize(byte[] data, Class c) {
+    public static Object deSerialize(byte[] data, Class c) {
         Object res = new Object();
         ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
