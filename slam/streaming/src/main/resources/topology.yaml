@@ -12,12 +12,12 @@ spouts:
         broker: "rabbitmq"
         sensor: "data_sensor"
         channel: "controlSender"
-        strem: "control"
+        stream: "control"
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"
 bolts:
-    send_bolt:
+    map_send_bolt:
         broker: "rabbitmq"
         sensor: "data_sensor"
         channel: "mapReceiver"

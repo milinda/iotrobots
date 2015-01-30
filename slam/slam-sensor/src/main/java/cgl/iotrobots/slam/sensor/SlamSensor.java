@@ -20,7 +20,7 @@ public class SlamSensor extends AbstractSensor {
     public static final String CONTROL_SENDER = "controlSender";
     public static final String MAP_RECEIVER = "mapReceiver";
     public static final String BEST_PARTICLE_RECEIVER = "bestParticleReceiver";
-    public static final String SLAM_EXCHANGE = "slam_turtlebot";
+    public static final String SLAM_EXCHANGE = "slam_sensor";
 
     public static final String STORM_LASER_SCAN = "storm_laser_scan";
     public static final String STORM_MAP = "storm_map";
@@ -131,8 +131,8 @@ public class SlamSensor extends AbstractSensor {
         @Override
         public Map<String, String> getProperties() {
             Map<String, String> props = new HashMap<String, String>();
-            props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.laser");
-            props.put(MessagingConstants.RABBIT_QUEUE, "test.test.laser");
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.laser_scan");
+            props.put(MessagingConstants.RABBIT_QUEUE, "test.test.laser_scan");
             return props;
         }
 

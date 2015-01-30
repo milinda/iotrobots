@@ -3,8 +3,6 @@ package cgl.iotrobots.slam.streaming;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.spout.ISpout;
-import backtype.storm.task.IBolt;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -66,7 +64,7 @@ public class SLAMTopology {
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildTestTopology(builder, streamTopologyBuilder, p, false);
+            buildTestTopology(builder, streamTopologyBuilder, p, true);
         }
 
         Config conf = new Config();
@@ -113,7 +111,7 @@ public class SLAMTopology {
             StreamComponents components = streamTopologyBuilder.buildComponents();
             dataSpout = components.getSpouts().get(Constants.Topology.RECEIVE_SPOUT);
             controlSpout = components.getSpouts().get(Constants.Topology.CONTROL_SPOUT);
-            mapSendBolt = components.getBolts().get(Constants.Topology.MAP_BOLT);
+            mapSendBolt = components.getBolts().get(Constants.Topology.MAP_SEND_BOLD);
             valueSendBolt = components.getBolts().get(Constants.Topology.BEST_PARTICLE_SEND_BOLT);
         }
 
@@ -125,8 +123,8 @@ public class SLAMTopology {
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
         builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);;
-        builder.setBolt(Constants.Topology.MAP_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
-        builder.setBolt(Constants.Topology.SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_BOLT);
+        builder.setBolt(Constants.Topology.MAP_COMPUTE_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
+        builder.setBolt(Constants.Topology.MAP_SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_COMPUTE_BOLT);
         builder.setBolt(Constants.Topology.BEST_PARTICLE_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.BEST_PARTICLE_STREAM);
     }
 

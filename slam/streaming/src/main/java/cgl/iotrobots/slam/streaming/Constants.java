@@ -40,6 +40,7 @@ public abstract class Constants {
     public static final String OCC_THRESH = "occ_threshold";
 
     public abstract class Fields {
+        public static final String BODY = "body";
         public static final String PARTICLE_STREAM = "particle";
         public static final String MAP_STREAM = "map";
         public static final String BEST_PARTICLE_STREAM = "best_particle";
@@ -64,8 +65,8 @@ public abstract class Constants {
         public static final String RECEIVE_SPOUT = "receive_spout";
         public static final String SCAN_MATCH_BOLT = "scan_match_bolt";
         public static final String RE_SAMPLE_BOLT = "re_sample_bolt";
-        public static final String MAP_BOLT = "map_bolt";
-        public static final String SEND_BOLD = "send_bolt";
+        public static final String MAP_COMPUTE_BOLT = "map_bolt";
+        public static final String MAP_SEND_BOLD = "map_send_bolt";
         public static final String BEST_PARTICLE_SEND_BOLT = "best_send_bolt";
         public static final String CONTROL_SPOUT = "control_spout";
     }

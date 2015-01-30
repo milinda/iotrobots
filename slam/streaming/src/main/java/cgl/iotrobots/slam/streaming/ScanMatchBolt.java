@@ -227,7 +227,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             return;
         }
 
-        Object val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
+        Object val = tuple.getValueByField(Constants.Fields.BODY);
         if (!(val instanceof byte [])) {
             throw new IllegalArgumentException("The laser scan should be of type RangeReading");
         }
