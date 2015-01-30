@@ -44,7 +44,7 @@ public class FileBasedDistributedSimulator {
         byte[] body = "start".getBytes();
         Map<String, Object> props = new HashMap<String, Object>();
         props.put("time", System.currentTimeMillis());
-        props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
+//        props.put(TransportConstants.SENSOR_ID, "hellloooo2");
         Message message = new Message(body, props);
         try {
             controlSender.send(message, "test.test.control");
@@ -77,7 +77,7 @@ public class FileBasedDistributedSimulator {
                         byte []body = Utils.serialize(kryo, laserScan);
                         Map<String, Object> props = new HashMap<String, Object>();
                         props.put("time", System.currentTimeMillis());
-                        props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
+//                        props.put(TransportConstants.SENSOR_ID, "hellllo");
                         Message message = new Message(body, props);
                         try {
                             dataSender.send(message, "test.test.laser_scan");

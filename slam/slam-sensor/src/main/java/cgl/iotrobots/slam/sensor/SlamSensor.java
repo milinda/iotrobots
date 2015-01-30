@@ -23,6 +23,7 @@ public class SlamSensor extends AbstractSensor {
     public static final String SLAM_EXCHANGE = "slam_sensor";
 
     public static final String STORM_LASER_SCAN = "storm_laser_scan";
+    public static final String STORM_CONTROL = "storm_control";
     public static final String STORM_MAP = "storm_map";
     public static final String STORM_BEST_PARTICLE = "storm_best_particle";
 
@@ -138,8 +139,7 @@ public class SlamSensor extends AbstractSensor {
 
         @Override
         public void onMessage(Message message) {
-            MessageContext messageContext = new MessageContext("default", message.getBody(), message.getProperties());
-            this.sendChannel.publish(messageContext);
+            this.sendChannel.publish(message.getBody(), message.getProperties());
         }
     }
 
@@ -160,8 +160,7 @@ public class SlamSensor extends AbstractSensor {
 
         @Override
         public void onMessage(Message message) {
-            MessageContext messageContext = new MessageContext("default", message.getBody(), message.getProperties());
-            this.sendChannel.publish(messageContext);
+            this.sendChannel.publish(message.getBody(), message.getProperties());
         }
     }
 
@@ -188,15 +187,15 @@ public class SlamSensor extends AbstractSensor {
 
             Map controlProps = new HashMap();
             controlProps.put("exchange", SLAM_EXCHANGE);
-            controlProps.put("routingKey", STORM_LASER_SCAN);
-            controlProps.put("queueName", STORM_LASER_SCAN);
+            controlProps.put("routingKey", STORM_CONTROL);
+            controlProps.put("queueName", STORM_CONTROL);
             Channel controlChannel = createChannel(CONTROL_SENDER, controlProps, Direction.OUT, 1024);
 
             Map mapReceiveProps = new HashMap();
             mapReceiveProps.put("exchange", SLAM_EXCHANGE);
             mapReceiveProps.put("routingKey", STORM_MAP);
             mapReceiveProps.put("queueName", STORM_MAP);
-            Channel navSendChannel = createChannel(MAP_RECEIVER, mapReceiveProps, Direction.OUT, 1024);
+            Channel mapReceiveChannel = createChannel(MAP_RECEIVER, mapReceiveProps, Direction.IN, 1024);
 
             Map bestReceiveProps = new HashMap();
             bestReceiveProps.put("queueName", STORM_BEST_PARTICLE);
@@ -206,7 +205,7 @@ public class SlamSensor extends AbstractSensor {
 
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
-            context.addChannel("rabbitmq", navSendChannel);
+            context.addChannel("rabbitmq", mapReceiveChannel);
             context.addChannel("rabbitmq", controlChannel);
 
             return context;
