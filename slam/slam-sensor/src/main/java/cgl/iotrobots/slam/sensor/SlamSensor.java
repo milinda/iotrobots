@@ -5,8 +5,7 @@ import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
-import cgl.iotrobots.utils.rabbitmq.RabbitMQReceiver;
-import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
+import cgl.iotrobots.utils.rabbitmq.*;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +14,10 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class SlamSensor extends AbstractSensor {
     public static final String LASE_SCAN_SENDER = "laseScanSender";
+    public static final String CONTROL_SENDER = "controlSender";
     public static final String MAP_RECEIVER = "mapReceiver";
     public static final String BEST_PARTICLE_RECEIVER = "bestParticleReceiver";
     public static final String SLAM_EXCHANGE = "slam_turtlebot";
@@ -27,6 +25,8 @@ public class SlamSensor extends AbstractSensor {
     public static final String STORM_LASER_SCAN = "storm_laser_scan";
     public static final String STORM_MAP = "storm_map";
     public static final String STORM_BEST_PARTICLE = "storm_best_particle";
+
+    public static final String SIMULATOR_EXCHANGE = "simulator";
 
     public static final String URL_ARG = "url";
     public static final String SITES_ARG = "s";
@@ -36,18 +36,13 @@ public class SlamSensor extends AbstractSensor {
 
     public static final String BROKER_URL = "broker_url";
 
-    private BlockingQueue frameReceivingQueue = new LinkedBlockingQueue();
-    private BlockingQueue navDataReceivingQueue = new LinkedBlockingQueue();
-
-    private BlockingQueue sendingQueue = new LinkedBlockingQueue();
-
     private int commandRecvCount = 0;
-
     private boolean run = true;
 
     private boolean simulator = true;
 
     private RabbitMQReceiver laserScanReceiver;
+    private RabbitMQReceiver controlReceiver;
     private RabbitMQSender mapSender;
     private RabbitMQSender bestParticleSender;
 
@@ -70,79 +65,110 @@ public class SlamSensor extends AbstractSensor {
     @Override
     public void open(SensorContext context) {
         final Channel sendChannel = context.getChannel("rabbitmq", LASE_SCAN_SENDER);
+        final Channel controlChannel = context.getChannel("rabbitmq", CONTROL_SENDER);
         final Channel bestChannel = context.getChannel("rabbitmq", BEST_PARTICLE_RECEIVER);
         final Channel mapChannel = context.getChannel("rabbitmq", MAP_RECEIVER);
 
         String brokerURL = (String) context.getProperty(BROKER_URL);
+        simulator = Boolean.parseBoolean(context.getProperty(SIMULATOR_ARG).toString());
 
         if (simulator) {
-            laserScanReceiver = new RabbitMQReceiver(frameReceivingQueue, "drone_frame", null, null, brokerURL);
-            mapSender = new RabbitMQSender(navDataReceivingQueue, "drone_nav_data", null, null, brokerURL);
-            bestParticleSender = new RabbitMQSender(sendingQueue, "drone", "control", "control", null, null, brokerURL);
+            try {
+                laserScanReceiver = new RabbitMQReceiver(brokerURL, "simbard_laser");
+                controlReceiver = new RabbitMQReceiver(brokerURL, "simbard_control");
+                mapSender = new RabbitMQSender(brokerURL, "simbard_map");
+                bestParticleSender = new RabbitMQSender(brokerURL, "simbard_best");
+                mapSender.open();
+                bestParticleSender.open();
+
+                laserScanReceiver.listen(new LaserScanReceiver(sendChannel));
+                controlReceiver.listen(new ControlReceiver(controlChannel));
+            } catch (Exception e) {
+                LOG.error("Failed to create rabbitmq receiver", e);
+            }
         }
-
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (run) {
-                    try {
-                        MessageContext messageContext = (MessageContext) frameReceivingQueue.take();
-                        sendChannel.publish(messageContext);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        t.start();
-
-
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (run) {
-                    try {
-                        MessageContext messageContext = (MessageContext) navDataReceivingQueue.take();
-                        bestChannel.publish(messageContext);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        t2.start();
 
         startListen(mapChannel, new MessageReceiver() {
             @Override
             public void onMessage(Object message) {
                 if (message instanceof MessageContext) {
+                    Message m = new Message(((MessageContext) message).getBody(), ((MessageContext) message).getProperties());
+                    commandRecvCount++;
+                    System.out.println("Map received count: " + commandRecvCount);
                     try {
-                        commandRecvCount++;
-                        System.out.println("Command received count: " + commandRecvCount);
-                        sendingQueue.put(message);
-                    } catch (InterruptedException e) {
-                        LOG.error("Failed to put the message for sending", e);
+                        mapSender.send(m, "test.test.map");
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
         });
 
+        startListen(bestChannel, new MessageReceiver() {
+            @Override
+            public void onMessage(Object message) {
+                if (message instanceof MessageContext) {
+                    Message m = new Message(((MessageContext) message).getBody(), ((MessageContext) message).getProperties());
+                    commandRecvCount++;
+                    System.out.println("Best received count: " + commandRecvCount);
+                    try {
+                        bestParticleSender.send(m, "test.test.best");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    private class LaserScanReceiver implements MessageHandler {
+        private Channel sendChannel;
+
+        private LaserScanReceiver(Channel sendChannel) {
+            this.sendChannel = sendChannel;
+        }
+
+        @Override
+        public Map<String, String> getProperties() {
+            Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.laser");
+            props.put(MessagingConstants.RABBIT_QUEUE, "test.test.laser");
+            return props;
+        }
+
+        @Override
+        public void onMessage(Message message) {
+            MessageContext messageContext = new MessageContext("default", message.getBody(), message.getProperties());
+            this.sendChannel.publish(messageContext);
+        }
+    }
+
+    private class ControlReceiver implements MessageHandler {
+        private Channel sendChannel;
+
+        private ControlReceiver(Channel sendChannel) {
+            this.sendChannel = sendChannel;
+        }
+
+        @Override
+        public Map<String, String> getProperties() {
+            Map<String, String> props = new HashMap<String, String>();
+            props.put(MessagingConstants.RABBIT_ROUTING_KEY, "test.test.control");
+            props.put(MessagingConstants.RABBIT_QUEUE, "test.test.control");
+            return props;
+        }
+
+        @Override
+        public void onMessage(Message message) {
+            MessageContext messageContext = new MessageContext("default", message.getBody(), message.getProperties());
+            this.sendChannel.publish(messageContext);
+        }
     }
 
     @Override
     public void close() {
         run = false;
         super.close();
-        if (videoReceiver != null) {
-            videoReceiver.stop();
-        }
-        if (navReceiver != null) {
-            navReceiver.stop();
-        }
-
-        if (controlSender != null) {
-            controlSender.stop();
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -151,13 +177,20 @@ public class SlamSensor extends AbstractSensor {
         public SensorContext configure(SiteContext siteContext, Map conf) {
             String brokerUrl = (String) conf.get(BROKER_URL);
 
-            SensorContext context = new SensorContext("drone_sensor");
+            SensorContext context = new SensorContext("data_sensor");
             context.addProperty(BROKER_URL, brokerUrl);
+            context.addProperty(SIMULATOR_ARG, conf.get(SIMULATOR_ARG));
             Map sendProps = new HashMap();
             sendProps.put("exchange", SLAM_EXCHANGE);
             sendProps.put("routingKey", STORM_LASER_SCAN);
             sendProps.put("queueName", STORM_LASER_SCAN);
             Channel sendChannel = createChannel(LASE_SCAN_SENDER, sendProps, Direction.OUT, 1024);
+
+            Map controlProps = new HashMap();
+            controlProps.put("exchange", SLAM_EXCHANGE);
+            controlProps.put("routingKey", STORM_LASER_SCAN);
+            controlProps.put("queueName", STORM_LASER_SCAN);
+            Channel controlChannel = createChannel(CONTROL_SENDER, controlProps, Direction.OUT, 1024);
 
             Map mapReceiveProps = new HashMap();
             mapReceiveProps.put("exchange", SLAM_EXCHANGE);
@@ -174,6 +207,7 @@ public class SlamSensor extends AbstractSensor {
             context.addChannel("rabbitmq", sendChannel);
             context.addChannel("rabbitmq", receiveChannel);
             context.addChannel("rabbitmq", navSendChannel);
+            context.addChannel("rabbitmq", controlChannel);
 
             return context;
         }

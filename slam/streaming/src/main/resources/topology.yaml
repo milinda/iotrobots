@@ -4,14 +4,14 @@ spouts:
     receive_spout:
         broker: "rabbitmq"
         sensor: "data_sensor"
-        channel: "data_sender"
+        channel: "laseScanSender"
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"
     control_spout:
         broker: "rabbitmq"
         sensor: "data_sensor"
-        channel: "control_sender"
+        channel: "controlSender"
         strem: "control"
         fields: ["body", "sensorID", "time"]
         properties:
@@ -20,14 +20,14 @@ bolts:
     send_bolt:
         broker: "rabbitmq"
         sensor: "data_sensor"
-        channel: "data_receiver"
+        channel: "mapReceiver"
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"
     best_send_bolt:
         broker: "rabbitmq"
         sensor: "data_sensor"
-        channel: "data_receiver"
+        channel: "bestParticleReceiver"
         fields: ["body", "sensorID", "time"]
         properties:
           ackMode: "auto"
