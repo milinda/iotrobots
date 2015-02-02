@@ -35,7 +35,7 @@ public class RosTurtle extends AbstractNodeMain {
     public void onStart(final ConnectedNode connectedNode) {
         System.out.println("Starting....");
         final Publisher<Twist> publisher =
-                connectedNode.newPublisher("/cmd_vel", Twist._TYPE);
+                connectedNode.newPublisher("/turtlebot_node/cmd_vel", Twist._TYPE);
 
         try {
             Thread.sleep(1000);
