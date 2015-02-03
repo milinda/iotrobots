@@ -34,8 +34,6 @@ public class TurtleSimulator {
 
     MapUI mapUI;
 
-
-
     public TurtleSimulator() {
         mapUI = new MapUI();
     }
@@ -127,9 +125,13 @@ public class TurtleSimulator {
             odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
                 @Override
                 public void onNewMessage(Odometry odometry) {
+                    double rot = odometry.getPose().getPose().getOrientation().getZ();
+                    double rad = rot * Math.PI * 2;
+                    if (rad < 0) {
+                        rad = 4 * Math.PI - rad;
+                    }
                     lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
-                            odometry.getPose().getPose().getPosition().getX(),
-                            odometry.getPose().getPose().getOrientation().getZ());
+                            odometry.getPose().getPose().getPosition().getX(), rad);
                 }
             });
 
