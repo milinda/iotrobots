@@ -16,7 +16,7 @@ public class Utils {
             int num_ranges = scan.getRanges().size();
             for (int i = 0; i < num_ranges; i++) {
                 // Must filter out short readings, because the mapper won't
-                if (scan.getRanges().get(i) < scan.getRange_min()) {
+                if (scan.getRanges().get(i) < scan.getRangeMin()) {
                     ranges_double[i] = scan.getRangeMax();
                 } else {
                     ranges_double[i] = scan.getRanges().get(num_ranges - i - 1);
@@ -25,7 +25,7 @@ public class Utils {
         } else {
             for (int i = 0; i < scan.getRanges().size(); i++) {
                 // Must filter out short readings, because the mapper won't
-                if (scan.getRanges().get(i) < scan.getRange_min()) {
+                if (scan.getRanges().get(i) < scan.getRangeMin()) {
                     ranges_double[i] = scan.getRangeMax();
                 } else {
                     ranges_double[i] = scan.getRanges().get(i);

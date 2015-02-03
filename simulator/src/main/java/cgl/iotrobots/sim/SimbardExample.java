@@ -2,7 +2,6 @@ package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
-import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
@@ -59,15 +58,15 @@ public class SimbardExample {
             gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
-            scanI.setAngle_increment(ANGLE / SENSORS);
-            scanI.setAngle_max(ANGLE);
-            scanI.setAngle_min(0);
+            scanI.setAngleIncrement(ANGLE / SENSORS);
+            scanI.setAngleMax(ANGLE);
+            scanI.setAngleMin(0);
             List<Double> ranges  = new ArrayList<Double>();
             for (int i = 0; i < SENSORS; i++) {
                 ranges.add(100.0);
             }
             scanI.setRanges(ranges);
-            scanI.setRange_min(0);
+            scanI.setRangeMin(0);
             scanI.setRangeMax(100);
             scanI.setTimestamp(System.currentTimeMillis());
 
@@ -119,11 +118,11 @@ public class SimbardExample {
             int n = sonars.getNumSensors();
 
             LaserScan laserScan = new LaserScan();
-            laserScan.setAngle_max(ANGLE);
-            laserScan.setAngle_min(0);
+            laserScan.setAngleMax(ANGLE);
+            laserScan.setAngleMin(0);
             laserScan.setRangeMax(100);
-            laserScan.setRange_min(0);
-            laserScan.setAngle_increment(ANGLE/ SENSORS);
+            laserScan.setRangeMin(0);
+            laserScan.setAngleIncrement(ANGLE / SENSORS);
 
             int angle = 0;
             List<Double> ranges  = new ArrayList<Double>();

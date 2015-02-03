@@ -241,10 +241,10 @@ public class ScanMatchBolt extends BaseRichBolt {
 
 
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
+        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngleIncrement());
         RangeSensor sensor = new RangeSensor("ROBOTLASER1",
                 scan.getRanges().size(),
-                Math.abs(scan.getAngle_increment()),
+                Math.abs(scan.getAngleIncrement()),
                 new DoubleOrientedPoint(0, 0, 0),
                 0.0,
                 scan.getRangeMax());

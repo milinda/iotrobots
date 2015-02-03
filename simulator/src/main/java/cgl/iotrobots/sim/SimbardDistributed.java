@@ -18,8 +18,6 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.awt.*;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,15 +82,15 @@ public class SimbardDistributed {
             gfsAlgorithm.gsp_ = new GridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
-            scanI.setAngle_increment(ANGLE / SENSORS);
-            scanI.setAngle_max(ANGLE);
-            scanI.setAngle_min(0);
+            scanI.setAngleIncrement(ANGLE / SENSORS);
+            scanI.setAngleMax(ANGLE);
+            scanI.setAngleMin(0);
             List<Double> ranges  = new ArrayList<Double>();
             for (int i = 0; i < SENSORS; i++) {
                 ranges.add(100.0);
             }
             scanI.setRanges(ranges);
-            scanI.setRange_min(0);
+            scanI.setRangeMin(0);
             scanI.setRangeMax(100);
             scanI.setTimestamp(System.currentTimeMillis());
 
@@ -193,11 +191,11 @@ public class SimbardDistributed {
             int n = sonars.getNumSensors();
 
             LaserScan laserScan = new LaserScan();
-            laserScan.setAngle_max(ANGLE);
-            laserScan.setAngle_min(0);
+            laserScan.setAngleMax(ANGLE);
+            laserScan.setAngleMin(0);
             laserScan.setRangeMax(100);
-            laserScan.setRange_min(0);
-            laserScan.setAngle_increment(ANGLE/ SENSORS);
+            laserScan.setRangeMin(0);
+            laserScan.setAngleIncrement(ANGLE / SENSORS);
 
             int angle = 0;
             List<Double> ranges  = new ArrayList<Double>();

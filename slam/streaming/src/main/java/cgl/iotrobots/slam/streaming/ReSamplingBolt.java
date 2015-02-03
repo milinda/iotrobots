@@ -121,10 +121,10 @@ public class ReSamplingBolt extends BaseRichBolt {
             throw new IllegalArgumentException("The laser scan should be of type LaserScan");
         }
         LaserScan scan = (LaserScan) val;
-        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngle_increment());
+        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getDoubles(scan, scan.getAngleIncrement());
         RangeSensor sensor = new RangeSensor("ROBOTLASER1",
                 scan.getRanges().size(),
-                Math.abs(scan.getAngle_increment()),
+                Math.abs(scan.getAngleIncrement()),
                 new DoubleOrientedPoint(0, 0, 0),
                 0.0,
                 scan.getRangeMax());

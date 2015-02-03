@@ -18,8 +18,7 @@ public class MapUI extends JFrame {
     private ImagePanel im = new ImagePanel();
 
     public MapUI() throws HeadlessException {
-        ImagePanel panel = new ImagePanel();
-        setTitle("AAA");
+        setTitle("MAP UI");
         setSize(800, 800);
         setResizable(true);
         add(im);
@@ -42,6 +41,10 @@ public class MapUI extends JFrame {
             // super.paintComponent(g);
 
             if (map == null) {
+                return;
+            }
+
+            if (map.width <= 0 || map.height <= 0) {
                 return;
             }
 

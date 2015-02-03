@@ -97,13 +97,13 @@ public class MapBuildingBolt extends BaseRichBolt {
 //        Utils.createParticle(particleValue, p);
 //
 //        double[] laser_angles = new double[scan.getRanges().size()];
-//        double theta = scan.getAngle_min();
+//        double theta = scan.getAngleMin();
 //        for (int i = 0; i < scan.getRanges().size(); i++) {
-//            if (scan.getAngle_increment() < 0)
+//            if (scan.getAngleIncrement() < 0)
 //                laser_angles[scan.getRanges().size() - i - 1] = theta;
 //            else
 //                laser_angles[i] = theta;
-//            theta += scan.getAngle_increment();
+//            theta += scan.getAngleIncrement();
 //        }
 //
 //        GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
@@ -156,13 +156,13 @@ public class MapBuildingBolt extends BaseRichBolt {
             Utils.createParticle(particleValue, p);
 
             double[] laser_angles = new double[scan.getRanges().size()];
-            double theta = scan.getAngle_min();
+            double theta = scan.getAngleMin();
             for (int i = 0; i < scan.getRanges().size(); i++) {
-                if (scan.getAngle_increment() < 0)
+                if (scan.getAngleIncrement() < 0)
                     laser_angles[scan.getRanges().size() - i - 1] = theta;
                 else
                     laser_angles[i] = theta;
-                theta += scan.getAngle_increment();
+                theta += scan.getAngleIncrement();
             }
 
             GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));

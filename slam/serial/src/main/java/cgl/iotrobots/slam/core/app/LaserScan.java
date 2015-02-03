@@ -10,13 +10,13 @@ public class LaserScan {
 
     protected double rangeMax;
 
-    protected double range_min;
+    protected double rangeMin;
 
-    protected double angle_min;
+    protected double angleMin;
 
-    protected double angle_max;
+    protected double angleMax;
 
-    protected double angle_increment;
+    protected double angleIncrement;
 
     protected List<Double> ranges = new ArrayList<Double>();
 
@@ -38,20 +38,20 @@ public class LaserScan {
         return rangeMax;
     }
 
-    public double getRange_min() {
-        return range_min;
+    public double getRangeMin() {
+        return rangeMin;
     }
 
-    public double getAngle_min() {
-        return angle_min;
+    public double getAngleMin() {
+        return angleMin;
     }
 
-    public double getAngle_max() {
-        return angle_max;
+    public double getAngleMax() {
+        return angleMax;
     }
 
-    public double getAngle_increment() {
-        return angle_increment;
+    public double getAngleIncrement() {
+        return angleIncrement;
     }
 
     public List<Double> getRanges() {
@@ -66,20 +66,20 @@ public class LaserScan {
         this.rangeMax = rangeMax;
     }
 
-    public void setRange_min(double range_min) {
-        this.range_min = range_min;
+    public void setRangeMin(double rangeMin) {
+        this.rangeMin = rangeMin;
     }
 
-    public void setAngle_min(double angle_min) {
-        this.angle_min = angle_min;
+    public void setAngleMin(double angleMin) {
+        this.angleMin = angleMin;
     }
 
-    public void setAngle_max(double angle_max) {
-        this.angle_max = angle_max;
+    public void setAngleMax(double angleMax) {
+        this.angleMax = angleMax;
     }
 
-    public void setAngle_increment(double angle_increment) {
-        this.angle_increment = angle_increment;
+    public void setAngleIncrement(double angleIncrement) {
+        this.angleIncrement = angleIncrement;
     }
 
     public void setRanges(List<Double> ranges) {
@@ -89,10 +89,10 @@ public class LaserScan {
     public String getString() {
         StringBuilder builder = new StringBuilder();
         builder.append(rangeMax).append(",");
-        builder.append(range_min).append(",");
-        builder.append(angle_min).append(",");
-        builder.append(angle_max).append(",");
-        builder.append(angle_increment).append(",");
+        builder.append(rangeMin).append(",");
+        builder.append(angleMin).append(",");
+        builder.append(angleMax).append(",");
+        builder.append(angleIncrement).append(",");
         builder.append(pose.getX()).append(",");
         builder.append(pose.getY()).append(",");
         builder.append(pose.getTheta());
@@ -106,10 +106,10 @@ public class LaserScan {
     public void loadFromString(String laserScan) {
         String vals[] = laserScan.split(",");
         rangeMax = Double.parseDouble(vals[0]);
-        range_min = Double.parseDouble(vals[1]);
-        angle_min = Double.parseDouble(vals[2]);
-        angle_max = Double.parseDouble(vals[3]);
-        angle_increment = Double.parseDouble(vals[4]);
+        rangeMin = Double.parseDouble(vals[1]);
+        angleMin = Double.parseDouble(vals[2]);
+        angleMax = Double.parseDouble(vals[3]);
+        angleIncrement = Double.parseDouble(vals[4]);
         pose = new DoubleOrientedPoint();
         pose.setX(Double.parseDouble(vals[5]));
         pose.setY(Double.parseDouble(vals[6]));

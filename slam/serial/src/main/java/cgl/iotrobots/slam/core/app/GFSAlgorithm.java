@@ -80,28 +80,28 @@ public class GFSAlgorithm {
         GFSAlgorithm.init();
 
         LaserScan scanI = new LaserScan();
-        scanI.angle_increment = Math.PI / 10;
-        scanI.angle_max = Math.PI ;
-        scanI.angle_min = 0;
+        scanI.angleIncrement = Math.PI / 10;
+        scanI.angleMax = Math.PI ;
+        scanI.angleMin = 0;
         scanI.ranges = new ArrayList<Double>();
         scanI.ranges.add(10.0);
         scanI.ranges.add(10.0);
         scanI.ranges.add(10.0);
-        scanI.range_min = 0;
+        scanI.rangeMin = 0;
         scanI.rangeMax = 100;
         GFSAlgorithm.initMapper(scanI);
 
         for (int i = 0; i < 1000; i++) {
             LaserScan scan = new LaserScan();
 
-            scan.angle_increment = Math.PI / 100;
-            scan.angle_max = Math.PI ;
-            scan.angle_min = 0;
+            scan.angleIncrement = Math.PI / 100;
+            scan.angleMax = Math.PI ;
+            scan.angleMin = 0;
             scan.ranges = new ArrayList<Double>();
             for (int j = 0; j < 1000; j ++) {
                 scan.ranges.add(10.0);
             }
-            scan.range_min = 0;
+            scan.rangeMin = 0;
             scan.rangeMax = 100;
             GFSAlgorithm.laserScan(scan);
         }
@@ -151,9 +151,9 @@ public class GFSAlgorithm {
 
         int orientationFactor = 1;
 
-        angle_min_ = orientationFactor * scan.angle_min;
-        angle_max_ = orientationFactor * scan.angle_max;
-        gspLaserAngleIncrement = orientationFactor * scan.angle_increment;
+        angle_min_ = orientationFactor * scan.angleMin;
+        angle_max_ = orientationFactor * scan.angleMax;
+        gspLaserAngleIncrement = orientationFactor * scan.angleIncrement;
         LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angle_min_, angle_max_, gspLaserAngleIncrement);
 
         DoubleOrientedPoint gmap_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
@@ -268,12 +268,10 @@ public class GFSAlgorithm {
         DoubleOrientedPoint pose = scan.getPose();
 
         if (getOdomPose(pose, scan.timestamp) == null) {
-            System.out.println("False 1");
             return false;
         }
 
         if (scan.ranges.size() != gspLaserBeamCount) {
-            System.out.println("False 2");
             return false;
         }
         Double[] ranges_double = Utils.getDoubles(scan, gspLaserAngleIncrement);

@@ -32,15 +32,15 @@ public class FileBasedSimulator {
         }
         gfsAlgorithm.init();
         LaserScan scanI = new LaserScan();
-        scanI.setAngle_increment(ANGLE / SENSORS);
-        scanI.setAngle_max(ANGLE);
-        scanI.setAngle_min(0);
+        scanI.setAngleIncrement(ANGLE / SENSORS);
+        scanI.setAngleMax(ANGLE);
+        scanI.setAngleMin(0);
         List<Double> ranges  = new ArrayList<Double>();
         for (int i = 0; i < SENSORS; i++) {
             ranges.add(100.0);
         }
         scanI.setRanges(ranges);
-        scanI.setRange_min(0);
+        scanI.setRangeMin(0);
         scanI.setRangeMax(100);
         scanI.setTimestamp(System.currentTimeMillis());
 

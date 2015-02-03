@@ -45,7 +45,7 @@ public class TransformBroadcaster {
 	protected void advertise() {
 		this.pub = node.newPublisher("/tf", tfMessage._TYPE);
 		this.pub.setLatchMode(true);
-		node.getLog().debug("TransformBroadcaster advertised on /tf.");
+		//node.getLog().debug("TransformBroadcaster advertised on /tf.");
 	}
 
 	public void sendTransform(
