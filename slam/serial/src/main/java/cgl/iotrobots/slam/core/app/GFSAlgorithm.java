@@ -131,10 +131,10 @@ public class GFSAlgorithm {
         temporalUpdate_ = 0.0;
         resampleThreshold_ = .5;
         particles_ = 30;
-        xmin_ = -20.0;
-        ymin_ = -20.0;
-        xmax_ = 20.0;
-        ymax_ = 20.0;
+        xmin_ = -5.0;
+        ymin_ = -5.0;
+        xmax_ = 5.0;
+        ymax_ = 5.0;
         delta_ = 0.05;
         occ_thresh_ = 0.25;
         llsamplerange_ = 0.01;

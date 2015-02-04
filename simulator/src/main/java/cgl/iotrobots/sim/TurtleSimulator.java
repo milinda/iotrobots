@@ -59,7 +59,8 @@ public class TurtleSimulator {
         // register with ros_java
         NodeConfiguration nodeConfiguration;
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
+//            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
             NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
             RosTurtle turtle = new RosTurtle();
             nodeMainExecutor.execute(turtle, nodeConfiguration);
