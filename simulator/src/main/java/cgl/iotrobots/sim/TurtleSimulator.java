@@ -68,13 +68,16 @@ public class TurtleSimulator {
         }
 
         connectToRos();
+
+        Thread t = new Thread(new Worker());
+        t.start();
     }
 
     private void connectToRos() {
         // register with ros_java
         NodeConfiguration nodeConfiguration;
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("localhost", new URI("http://localhost:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
             NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
             RosTurtle turtle = new RosTurtle();
             nodeMainExecutor.execute(turtle, nodeConfiguration);
@@ -94,11 +97,7 @@ public class TurtleSimulator {
     }
 
     public class RosTurtle extends AbstractNodeMain {
-        private boolean stop = false;
-
         private String name = "/ts_controller";
-
-        DoubleOrientedPoint lastPose;
 
         public RosTurtle() {
         }
@@ -138,12 +137,18 @@ public class TurtleSimulator {
             laserScanSubscriber.addMessageListener(new MessageListener<sensor_msgs.LaserScan>() {
                 @Override
                 public void onNewMessage(sensor_msgs.LaserScan laserScanMsg) {
-                    LaserScan scan = turtleScanToLaserScan(laserScanMsg);
+//                    LaserScan scan = turtleScanToLaserScan(laserScanMsg);
                     // update this with odomentry
-                    if (lastPose != null) {
-                        scan.setPose(lastPose);
-                        gfsAlgorithm.laserScan(scan);
-                        mapUI.setMap(gfsAlgorithm.getMap());
+//                    if (lastPose != null) {
+//                        scan.setPose(lastPose);
+//                        gfsAlgorithm.laserScan(scan);
+//                        mapUI.setMap(gfsAlgorithm.getMap());
+//                    }
+
+                    if (state == State.WAITING_LASER_SCAN) {
+                        state = State.UPDATING_LASER_SCAN;
+                        scan = turtleScanToLaserScan(laserScanMsg);
+                        state = State.WAITING_COMPUTING;
                     }
                 }
             });
@@ -160,11 +165,42 @@ public class TurtleSimulator {
         public void onShutdown(Node node) {
             node.shutdown();
         }
+    }
 
-        public void stop() {
-            stop = true;
+    DoubleOrientedPoint lastPose;
+    enum State {
+        UPDATING_LASER_SCAN,
+        WAITING_COMPUTING,
+        COMPUTING,
+        WAITING_LASER_SCAN,
+    }
+    LaserScan scan;
+    State state = State.WAITING_LASER_SCAN;
+
+    private class Worker implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                if (state == State.WAITING_COMPUTING) {
+                    state = State.COMPUTING;
+                    System.out.println("Start computing......................");
+                    if (scan != null && lastPose != null) {
+                        scan.setPose(lastPose);
+                        gfsAlgorithm.laserScan(scan);
+                        mapUI.setMap(gfsAlgorithm.getMap());
+                    }
+                    state = State.WAITING_LASER_SCAN;
+                    System.out.println("End computing......................");
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
+
 
     private LaserScan turtleScanToLaserScan(sensor_msgs.LaserScan ls) {
         LaserScan laserScan = new LaserScan();
@@ -177,6 +213,9 @@ public class TurtleSimulator {
             List<Double> ranges = new ArrayList<Double>();
             float[] floats = ls.getRanges();
             for (float r : floats) {
+                if (Float.isNaN(r)) {
+                    ranges.add((double) ls.getRangeMax());
+                }
                 ranges.add((double) r);
             }
             laserScan.setRanges(ranges);

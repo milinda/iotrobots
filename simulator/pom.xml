@@ -10,7 +10,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>simulator</artifactId>
-
+    <repositories>
+        <repository>
+            <id>ros</id>
+            <name>ros</name>
+            <url>https://github.com/stonier/rosjava_mvn_repo/raw/master</url>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>simbard</groupId>
@@ -384,6 +390,7 @@
             <artifactId>commons-httpclient</artifactId>
             <version>3.1</version>
         </dependency>
+
     </dependencies>
     <build>
         <plugins>

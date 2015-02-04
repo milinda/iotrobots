@@ -163,7 +163,7 @@ public abstract class AbstractGridSlamProcessor {
             LOG.info("Correcting the position from {} to {}", it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
-            LOG.info("Scan Matching Failed, using odometry. Likelihood=");
+            LOG.info("Scan Matching Failed, score {}, using odometry. Likelihood=", score);
             LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
             LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
         }
