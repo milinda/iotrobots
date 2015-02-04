@@ -298,7 +298,7 @@ public class ScanMatcher {
 
             } else {
                 double r = readings[readingIndex];
-                if (r > laserMaxRange || r > usableRange || r == 0) {
+                if (r >= laserMaxRange || r >= usableRange || r == 0) {
                     continue;
                 }
                 DoublePoint phit = new DoublePoint(lp.x, lp.y);
