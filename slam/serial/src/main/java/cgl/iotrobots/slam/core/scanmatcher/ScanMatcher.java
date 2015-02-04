@@ -268,9 +268,9 @@ public class ScanMatcher {
         for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++) {
             if (generateMap) {
                 double d = readings[readingIndex];
-                if (d > laserMaxRange)
+                if (d >= laserMaxRange)
                     continue;
-                if (d > usableRange)
+                if (d >= usableRange)
                     d = usableRange;
                 DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.y);
                 IntPoint p1 = map.world2map(phit);
