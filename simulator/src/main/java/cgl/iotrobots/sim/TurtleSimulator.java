@@ -5,6 +5,7 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
+import geometry_msgs.Quaternion;
 import nav_msgs.Odometry;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.MessageListener;
@@ -46,26 +47,7 @@ public class TurtleSimulator {
             gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
         }
         gfsAlgorithm.init();
-        LaserScan scanI = new LaserScan();
-        scanI.setAngleIncrement(ANGLE / SENSORS);
-        scanI.setAngleMax(ANGLE);
-        scanI.setAngleMin(0);
-        List<Double> ranges  = new ArrayList<Double>();
-        for (int i = 0; i < SENSORS; i++) {
-            ranges.add(100.0);
-        }
-        scanI.setRanges(ranges);
-        scanI.setRangeMin(0);
-        scanI.setRangeMax(100);
-        scanI.setTimestamp(System.currentTimeMillis());
 
-        gfsAlgorithm.initMapper(scanI);
-
-        try {
-            br = new BufferedReader(new FileReader("out.txt"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
 
         connectToRos();
 
@@ -124,13 +106,11 @@ public class TurtleSimulator {
             odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
                 @Override
                 public void onNewMessage(Odometry odometry) {
-                    double rot = odometry.getPose().getPose().getOrientation().getZ();
-                    double rad = rot * Math.PI * 2;
-                    if (rad < 0) {
-                        rad = 4 * Math.PI - rad;
+                    double rad = quantarianToRad(odometry.getPose().getPose().getOrientation());
+                    if (state == State.WAITING_LASER_SCAN) {
+                        lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
+                                odometry.getPose().getPose().getPosition().getY(), rad);
                     }
-                    lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
-                            odometry.getPose().getPose().getPosition().getX(), rad);
                 }
             });
 
@@ -176,6 +156,15 @@ public class TurtleSimulator {
     }
     LaserScan scan;
     State state = State.WAITING_LASER_SCAN;
+    boolean init = false;
+
+    private void init(LaserScan scanI) {
+        gfsAlgorithm.initMapper(scanI);
+    }
+
+    private double quantarianToRad(Quaternion q) {
+        return Math.atan2(2.0 * (q.getY() * q.getZ() + q.getW() * q.getX()), q.getW() * q.getW() - q.getX() * q.getX() - q.getY() * q.getY() + q.getZ() * q.getZ());
+    }
 
     private class Worker implements Runnable {
         @Override
@@ -185,9 +174,14 @@ public class TurtleSimulator {
                     state = State.COMPUTING;
                     System.out.println("Start computing......................");
                     if (scan != null && lastPose != null) {
-                        scan.setPose(lastPose);
-                        gfsAlgorithm.laserScan(scan);
-                        mapUI.setMap(gfsAlgorithm.getMap());
+                        if (!init) {
+                            init(scan);
+                            init = true;
+                        } else {
+                            scan.setPose(lastPose);
+                            gfsAlgorithm.laserScan(scan);
+                            mapUI.setMap(gfsAlgorithm.getMap());
+                        }
                     }
                     state = State.WAITING_LASER_SCAN;
                     System.out.println("End computing......................");
@@ -209,6 +203,7 @@ public class TurtleSimulator {
         laserScan.setAngleMax(ls.getAngleMax());
         laserScan.setRangeMax(ls.getRangeMax());
         laserScan.setRangeMin(ls.getRangeMin());
+        laserScan.setTimestamp((long) ls.getScanTime());
         if (ls.getRanges() != null) {
             List<Double> ranges = new ArrayList<Double>();
             float[] floats = ls.getRanges();
