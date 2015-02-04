@@ -751,7 +751,6 @@ public class ScanMatcher {
         lp.theta += laserPose.theta;
         int skip = 0;
         double freeDelta = map.getDelta() * freeCellRatio;
-        long time = System.currentTimeMillis();
         for (int rIndex = initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
             skip = skip > likelihoodSkip ? 0 : skip;
@@ -793,7 +792,6 @@ public class ScanMatcher {
                 s += Math.exp(-1. / (gaussianSigma * DoublePoint.mulD(bestMu, bestMu)));
             }
         }
-        LOG.info("Score computing time: {}", System.currentTimeMillis() - time);
         return s;
     }
 
