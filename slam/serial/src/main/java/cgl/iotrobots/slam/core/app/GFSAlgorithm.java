@@ -19,7 +19,6 @@ public class GFSAlgorithm {
 
     public AbstractGridSlamProcessor gsp_;
     RangeSensor gsp_laser_;
-    OdometrySensor gsp_odom_;
 
     double gspLaserAngleIncrement;
     double angle_min_;
@@ -68,44 +67,7 @@ public class GFSAlgorithm {
 
     double tf_delay_;
 
-    String base_frame_;
-    String laser_frame_;
-    String map_frame_;
-    String odom_frame_;
-
     private MapUpdater mapUpdater;
-
-    public static void main(String[] args) {
-        GFSAlgorithm GFSAlgorithm = new GFSAlgorithm();
-        GFSAlgorithm.init();
-
-        LaserScan scanI = new LaserScan();
-        scanI.angleIncrement = Math.PI / 10;
-        scanI.angleMax = Math.PI ;
-        scanI.angleMin = 0;
-        scanI.ranges = new ArrayList<Double>();
-        scanI.ranges.add(10.0);
-        scanI.ranges.add(10.0);
-        scanI.ranges.add(10.0);
-        scanI.rangeMin = 0;
-        scanI.rangeMax = 100;
-        GFSAlgorithm.initMapper(scanI);
-
-        for (int i = 0; i < 1000; i++) {
-            LaserScan scan = new LaserScan();
-
-            scan.angleIncrement = Math.PI / 100;
-            scan.angleMax = Math.PI ;
-            scan.angleMin = 0;
-            scan.ranges = new ArrayList<Double>();
-            for (int j = 0; j < 1000; j ++) {
-                scan.ranges.add(10.0);
-            }
-            scan.rangeMin = 0;
-            scan.rangeMax = 100;
-            GFSAlgorithm.laserScan(scan);
-        }
-    }
 
     public void init() {
         throttle_scans_ = 1;
@@ -131,10 +93,10 @@ public class GFSAlgorithm {
         temporalUpdate_ = 0.0;
         resampleThreshold_ = .5;
         particles_ = 30;
-        xmin_ = -5.0;
-        ymin_ = -5.0;
-        xmax_ = 5.0;
-        ymax_ = 5.0;
+        xmin_ = -20.0;
+        ymin_ = -20.0;
+        xmax_ = 20.0;
+        ymax_ = 20.0;
         delta_ = 0.05;
         occ_thresh_ = 0.25;
         llsamplerange_ = 0.01;
@@ -177,8 +139,6 @@ public class GFSAlgorithm {
         Map<String, Sensor> smap = new HashMap<String, Sensor>();
         smap.put(gsp_laser_.getName(), gsp_laser_);
         gsp_.setSensorMap(smap);
-
-        gsp_odom_ = new OdometrySensor(odom_frame_, false);
 
         /// @todo Expose setting an initial pose
         DoubleOrientedPoint initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
@@ -303,108 +263,17 @@ public class GFSAlgorithm {
             theta += gspLaserAngleIncrement;
         }
 
-
-
-//        matcher.setLaserParameters(scan.ranges.size(), laser_angles,
-//                gsp_laser_.getPose());
-//
-//        matcher.setLaserMaxRange(maxRange_);
-//        matcher.setUsableRange(maxUrange_);
-//        matcher.setgenerateMap(true);
+//        double angle = Math.PI * 2 -.5 * res * beams_num;
+        double angle = -.5 * gspLaserAngleIncrement * gspLaserBeamCount;
+        // double angle = 0;
+        for (int i = 0; i < gspLaserBeamCount; i++, angle += gspLaserAngleIncrement) {
+            laser_angles[i] = angle;
+        }
 
         Particle best =
                 gsp_.getParticles().get(gsp_.getBestParticleIndex());
 
         mapUpdater.updateMap(best, laser_angles, gsp_laser_.getPose());
-
-//        if (!got_map_) {
-//            map_.resolution = delta_;
-//            map_.origin.x = 0.0;
-//            map_.origin.y = 0.0;
-//            map_.origin.z = 0.0;
-//            map_.originOrientation.x = 0.0;
-//            map_.originOrientation.y = 0.0;
-//            map_.originOrientation.z = 0.0;
-//            map_.originOrientation.w = 1.0;
-//        }
-//
-//        DoublePoint center = new DoublePoint((xmin_ + xmax_) / 2.0, (ymin_ + ymax_) / 2.0);
-//        GMap smap = new GMap(center, xmin_, ymin_, xmax_, ymax_, delta_);
-//
-//        map_.currentPos.clear();
-//
-//        LOG.debug("Trajectory tree:");
-//        synchronized (map_.currentPos) {
-//            for (TNode n = best.node; n != null; n = n.parent) {
-//                LOG.debug("{} {} {}", n.pose.x, n.pose.y, n.pose.theta);
-//                if (n.reading == null) {
-//                    LOG.debug("Reading is NULL");
-//                    continue;
-//                }
-//
-//                IntPoint p = best.map.world2map(n.pose);
-//                map_.currentPos.add(p);
-//
-//                matcher.invalidateActiveArea();
-//                double[] readingArray = new double[n.reading.size()];
-//                System.out.format("best pose: (%f %f %f) reading: (", n.pose.x, n.pose.y, n.pose.theta);
-//                for (int i = 0; i < n.reading.size(); i++) {
-//                    readingArray[i] = n.reading.get(i);
-////                    System.out.format("%f,", readingArray[i]);
-//                }
-//                System.out.format(")\n");
-//
-//                matcher.computeActiveArea(smap, n.pose, readingArray);
-//                matcher.registerScan(smap, n.pose, readingArray);
-//            }
-//        }
-//        System.out.println();
-//
-//        // the map may have expanded, so resize ros message as well
-//        if (map_.width != smap.getMapSizeX() || map_.height != smap.getMapSizeY()) {
-//
-//            // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
-//            // so we must obtain the bounding box in a different way
-//            DoublePoint wmin = smap.map2world(new IntPoint(0, 0));
-//            DoublePoint wmax = smap.map2world(new IntPoint(smap.getMapSizeX(), smap.getMapSizeY()));
-//
-//            ymin_ = wmin.y;
-//            xmax_ = wmax.x;
-//            ymax_ = wmax.y;
-//
-//            LOG.debug("map size is now {} x {} pixels ({},{})-({}, {})", smap.getMapSizeX(), smap.getMapSizeY(),
-//                    xmin_, ymin_, xmax_, ymax_);
-//
-//            map_.width = smap.getMapSizeX();
-//            map_.height = smap.getMapSizeY();
-//            map_.origin.x = xmin_;
-//            map_.origin.y = ymin_;
-//            map_.resize(map_.width * map_.height);
-//
-//            LOG.debug("map origin: (%f, %f)", map_.origin.x, map_.origin.y);
-//        }
-//        int count = 0;
-//        for (int x = 0; x < smap.getMapSizeX(); x++) {
-//            for (int y = 0; y < smap.getMapSizeY(); y++) {
-//                /// @todo Sort out the unknown vs. free vs. obstacle thresholding
-//                IntPoint p = new IntPoint(x, y);
-//                PointAccumulator pointAccumulator = (PointAccumulator) smap.cell(p, false);
-//                double occ = pointAccumulator.doubleValue();
-//                assert (occ <= 1.0);
-//                //System.out.println("threshold: "  + occThresh  + " occ: "  + occ);
-//                if (occ < 0) {
-//                    map_.data[MAP_IDX(map_.width, x, y)] = -1;
-//                } else if (occ > occ_thresh_) {
-//                    //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
-//                    map_.data[MAP_IDX(map_.width, x, y)] = 100;
-//                    count++;
-//                } else {
-//                    map_.data[MAP_IDX(map_.width, x, y)] = 0;
-//                }
-//            }
-//        }
-//        System.out.println("count " + count);
-//        got_map_ = true;
     }
 
     public static int MAP_IDX(int sx, int i, int j) {

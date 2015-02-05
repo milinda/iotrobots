@@ -138,7 +138,7 @@ public class StaticMap implements IGMap {
     }
 
     public void resize(double xmin, double ymin, double xmax, double ymax) {
-        LOG.info("Resizing map ************************************************************ ");
+//        LOG.info("Resizing map ************************************************************ ");
         IntPoint imin = world2map(xmin, ymin);
         IntPoint imax = world2map(xmax, ymax);
         int pxmin, pymin, pxmax, pymax;

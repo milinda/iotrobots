@@ -56,9 +56,9 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
         LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
         LOG.info("ODO_UPDATE " + particles.size() + " ");
-        for (Particle p : particles) {
-            LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.pose.theta, p.weight);
-        }
+//        for (Particle p : particles) {
+//            LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.pose.theta, p.weight);
+//        }
         LOG.info("ODO_UPDATE Time {}", reading.getTime());
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
@@ -101,6 +101,13 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
             for (int i = 0; i < beams; i++) {
                 plainReading[i] = reading.get(i);
             }
+
+//            System.out.format("Reading: ");
+//            for (int i = 0; i < plainReading.length; i++) {
+//                System.out.format("%f ", plainReading[i]);
+//            }
+//            System.out.format("\n");
+
             LOG.info("count " + count);
 
             RangeReading reading_copy =
@@ -129,15 +136,15 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
                 LOG.info("neff = " + neff);
 
-                for (Particle p1 : particles) {
-                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
-                }
+//                for (Particle p1 : particles) {
+//                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
+//                }
 
                 resample(plainReading, adaptParticles, reading_copy);
                 LOG.info("After resampling.................");
-                for (Particle p1 : particles) {
-                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
-                }
+//                for (Particle p1 : particles) {
+//                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
+//                }
             } else {
                 LOG.info("Registering First Scan");
                 for (Particle it : particles) {

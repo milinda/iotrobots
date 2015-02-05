@@ -21,28 +21,24 @@ public class SimbardExample {
 
     public static final int SENSORS = 640;
 
-    public static final double ANGLE = 4 * Math.PI;
+    public static final double ANGLE = 2 * Math.PI;
 
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
         GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
-        CameraSensor camera;
-
         PrintWriter pw;
 
         int totalSensors = 0;
 
         public Robot(Vector3d position, String name) {
             super(position, name);
-            // Add camera
-            camera = RobotFactory.addCameraSensor(this);
             // Add sonars
             double agentHeight = this.getHeight();
             double agentRadius = this.getRadius();
 
-            totalSensors = (int) Math.floor(4 * Math.PI * SENSORS / (ANGLE_RANGE_SIDE * 2));
+            totalSensors = (int) Math.floor(2 * Math.PI * SENSORS / (ANGLE_RANGE_SIDE * 2));
             sonars = new RangeSensorBelt((float) agentRadius,
                     .1f, 100.0f, totalSensors, RangeSensorBelt.TYPE_SONAR,0);
             sonars.setUpdatePerSecond(100);
@@ -58,9 +54,7 @@ public class SimbardExample {
 
         }
 
-        /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
-            // nothing particular in this case
             gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
@@ -90,11 +84,8 @@ public class SimbardExample {
             System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
-//            pw.printf("%s\n", laserScan.getString());
-//            System.out.println(laserScan.getString());
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
-            // progress at 0.5 m/s
             if (getCounter() % 60 == 0) {
                 if (forward) {
                     forward = false;
@@ -109,15 +100,10 @@ public class SimbardExample {
                 setTranslationalVelocity(-5);
             }
 //            frequently change orientation
-            if ((getCounter() % 100) == 0)
+            if ((getCounter() % 10) == 0)
                 setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
 
             mapUI.setMap(gfsAlgorithm.getMap());
-
-            // print front sonar every 100 frames
-//            if (getCounter() % 100 == 0)
-//                System.out
-//                        .println("Sonar num 0  = " + sonars.getMeasurement(0));
         }
 
         private LaserScan getLaserScan() {
@@ -132,14 +118,14 @@ public class SimbardExample {
 
             int angle = totalSensors - SENSORS / 2;
             List<Double> ranges  = new ArrayList<Double>();
-            for (int i = angle; i >= 0; i--) {
+            for (int i = angle; i < totalSensors; i++) {
                 if (sonars.hasHit(i)) {
                     ranges.add(sonars.getMeasurement(i));
                 } else {
                     ranges.add(0.0);
                 }
             }
-            for (int i = 1; i < SENSORS / 2; i++) {
+            for (int i = 0; i < SENSORS / 2; i++) {
                 if (sonars.hasHit(i)) {
                     ranges.add(sonars.getMeasurement(i));
                 } else {
