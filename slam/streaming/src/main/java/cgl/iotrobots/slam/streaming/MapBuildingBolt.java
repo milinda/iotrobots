@@ -155,20 +155,24 @@ public class MapBuildingBolt extends BaseRichBolt {
             Particle p = new Particle();
             Utils.createParticle(particleValue, p);
 
-            double[] laser_angles = new double[scan.getRanges().size()];
+            int size = scan.getRanges().size();
+            double[] laser_angles = new double[size];
             double theta = scan.getAngleMin();
-            for (int i = 0; i < scan.getRanges().size(); i++) {
-                if (scan.getAngleIncrement() < 0)
-                    laser_angles[scan.getRanges().size() - i - 1] = theta;
+            double angleIncrement = scan.getAngleIncrement();
+            for (int i = 0; i < size; i++) {
+                if (angleIncrement < 0)
+                    laser_angles[size - i - 1] = theta;
                 else
                     laser_angles[i] = theta;
-                theta += scan.getAngleIncrement();
+                theta += angleIncrement;
             }
 
+            double angle = -.5 * angleIncrement * size;
+            // double angle = 0;
+            for (int i = 0; i < size; i++, angle += angleIncrement) {
+                laser_angles[i] = angle;
+            }
             GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
-
-
-
             byte []body = Utils.serialize(kryo, map);
             List<Object> emit = new ArrayList<Object>();
             emit.add(body);
