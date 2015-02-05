@@ -2,6 +2,7 @@ package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
+import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import simbad.gui.Simbad;
@@ -55,7 +56,7 @@ public class SimbardExample {
         }
 
         public void initBehavior() {
-            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
+            gfsAlgorithm.gsp_ = new GridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngleIncrement(ANGLE / totalSensors);
@@ -81,9 +82,9 @@ public class SimbardExample {
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
-            System.out.format("%f, %f, %f\n", point3D.x, point3D.y, point3D.z);
+            System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             LaserScan laserScan = getLaserScan();
-            laserScan.setPose(new DoubleOrientedPoint(point3D.x, 0.0, 0.0));
+            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, 0.0));
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             if (getCounter() % 60 == 0) {
@@ -100,8 +101,8 @@ public class SimbardExample {
                 setTranslationalVelocity(-5);
             }
 //            frequently change orientation
-            if ((getCounter() % 10) == 0)
-                setRotationalVelocity(Math.PI / 2 * (0.5 - Math.random()));
+            if ((getCounter() % 2) == 0)
+                setRotationalVelocity(Math.PI / 2 * (- Math.random()));
 
             mapUI.setMap(gfsAlgorithm.getMap());
         }

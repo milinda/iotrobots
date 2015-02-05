@@ -60,7 +60,9 @@ public class MapUI extends JFrame {
             try {
                 synchronized (map.currentPos) {
                     for (IntPoint p : map.currentPos) {
-                        colorArea(image, p.x, p.y, map.width, map.height, 1);
+                        int mapX = p.x;
+                        int mapY = map.height - p.y - 1;
+                        colorArea(image, mapX, mapY, map.width, map.height, 1);
                     }
                 }
             } catch (Throwable e) {
