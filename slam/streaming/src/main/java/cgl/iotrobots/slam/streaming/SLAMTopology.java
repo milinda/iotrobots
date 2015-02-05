@@ -64,7 +64,7 @@ public class SLAMTopology {
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildTestTopology(builder, streamTopologyBuilder, p, true);
+            buildTestTopology(builder, streamTopologyBuilder, p, false);
         }
 
         Config conf = new Config();
@@ -211,11 +211,11 @@ public class SLAMTopology {
         @Override
         public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
             if (spout == 0) {
-                outputFieldsDeclarer.declare(new Fields(Constants.Fields.LASER_SCAN_FIELD,
+                outputFieldsDeclarer.declare(new Fields(Constants.Fields.BODY,
                         Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
             } else {
                 outputFieldsDeclarer.declareStream(Constants.Fields.CONTROL_STREAM,
-                        new Fields(Constants.Fields.LASER_SCAN_FIELD,
+                        new Fields(Constants.Fields.BODY,
                                 Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
             }
         }

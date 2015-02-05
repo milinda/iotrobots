@@ -28,14 +28,15 @@ import java.util.Map;
 
 
 public class SimbardDistributed {
-    public static final int SENSORS = 360;
+    public static final double ANGLE_RANGE_SIDE = 0.521567881107;
+
+    public static final int SENSORS = 640;
 
     public static final double ANGLE = 2 * Math.PI;
 
     static MapUI mapUI;
     /** Describe the robot */
     static public class Robot extends Agent {
-        GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
         CameraSensor camera;
         RabbitMQSender sender;
@@ -48,6 +49,8 @@ public class SimbardDistributed {
         PrintWriter pw;
 //        private String url = "amqp://149.165.159.12:5672";
         private String url = "amqp://localhost:5672";
+
+        int totalSensors = 0;
 
         public Robot(Vector3d position, String name) {
             super(position, name);
@@ -69,9 +72,10 @@ public class SimbardDistributed {
             // Add sonars
             double agentHeight = this.getHeight();
             double agentRadius = this.getRadius();
+            totalSensors = (int) Math.floor(2 * Math.PI * SENSORS / (ANGLE_RANGE_SIDE * 2));
             sonars = new RangeSensorBelt((float) agentRadius,
-                    0f, 100.0f, SENSORS, RangeSensorBelt.TYPE_SONAR,0);
-            sonars.setUpdatePerSecond(1000);
+                    .1f, 100.0f, totalSensors, RangeSensorBelt.TYPE_SONAR,0);
+            sonars.setUpdatePerSecond(100);
 
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
@@ -80,24 +84,6 @@ public class SimbardDistributed {
 
         /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
-            // nothing particular in this case
-            gfsAlgorithm.gsp_ = new GridSlamProcessor();
-            gfsAlgorithm.init();
-            LaserScan scanI = new LaserScan();
-            scanI.setAngleIncrement(ANGLE / SENSORS);
-            scanI.setAngleMax(ANGLE);
-            scanI.setAngleMin(0);
-            List<Double> ranges  = new ArrayList<Double>();
-            for (int i = 0; i < SENSORS; i++) {
-                ranges.add(100.0);
-            }
-            scanI.setRanges(ranges);
-            scanI.setRangeMin(0);
-            scanI.setRangeMax(100);
-            scanI.setTimestamp(System.currentTimeMillis());
-
-            gfsAlgorithm.initMapper(scanI);
-
             SimUtils.sendControl(controlSender);
         }
 
@@ -144,19 +130,6 @@ public class SimbardDistributed {
             } else {
                 setTranslationalVelocity(-.5);
             }
-        }
-
-        private double quantarianToRad(Quaternion q) {
-            return new Matrix3(q).getEulerYPR().yaw;
-        }
-
-        public Quat4d getOrientation() {
-            //get orientation
-            Transform3D tfr = new Transform3D();
-            Quat4d ori = new Quat4d();
-            this.getRotationTransform(tfr);
-            tfr.get(ori);
-            return ori;
         }
 
         private long bestSum;
@@ -206,25 +179,44 @@ public class SimbardDistributed {
             }
         }
 
-        private LaserScan getLaserScan() {
-            int n = sonars.getNumSensors();
+        private double quantarianToRad(Quaternion q) {
+            return new Matrix3(q).getEulerYPR().yaw;
+        }
 
+        public Quat4d getOrientation() {
+            //get orientation
+            Transform3D tfr = new Transform3D();
+            Quat4d ori = new Quat4d();
+            this.getRotationTransform(tfr);
+            tfr.get(ori);
+            return ori;
+        }
+
+        private LaserScan getLaserScan() {
             LaserScan laserScan = new LaserScan();
             laserScan.setAngleMax(ANGLE);
             laserScan.setAngleMin(0);
             laserScan.setRangeMax(100);
-            laserScan.setRangeMin(0);
-            laserScan.setAngleIncrement(ANGLE / SENSORS);
+            laserScan.setRangeMin(.1);
+            laserScan.setAngleIncrement(ANGLE / totalSensors);
 
-            int angle = 0;
+            int angle = totalSensors - SENSORS / 2;
             List<Double> ranges  = new ArrayList<Double>();
-            for (int i = angle; i < n + angle; i++) {
-                if (sonars.hasHit(i % n)) {
-                    ranges.add(sonars.getMeasurement(i % n));
+            for (int i = angle; i < totalSensors; i++) {
+                if (sonars.hasHit(i)) {
+                    ranges.add(sonars.getMeasurement(i));
                 } else {
                     ranges.add(0.0);
                 }
             }
+            for (int i = 0; i < SENSORS / 2; i++) {
+                if (sonars.hasHit(i)) {
+                    ranges.add(sonars.getMeasurement(i));
+                } else {
+                    ranges.add(0.0);
+                }
+            }
+
             laserScan.setRanges(ranges);
             laserScan.setTimestamp(System.currentTimeMillis());
             return laserScan;

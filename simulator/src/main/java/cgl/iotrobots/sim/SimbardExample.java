@@ -130,8 +130,6 @@ public class SimbardExample {
         }
 
         private LaserScan getLaserScan() {
-            int n = sonars.getNumSensors();
-
             LaserScan laserScan = new LaserScan();
             laserScan.setAngleMax(ANGLE);
             laserScan.setAngleMin(0);
