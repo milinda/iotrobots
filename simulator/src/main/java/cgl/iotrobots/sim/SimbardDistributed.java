@@ -48,7 +48,8 @@ public class SimbardDistributed {
 
         PrintWriter pw;
 //        private String url = "amqp://149.165.159.12:5672";
-        private String url = "amqp://localhost:5672";
+//        private String url = "amqp://localhost:5672";
+        private String url = "amqp://156.56.93.59:5672";
 
         int totalSensors = 0;
 
@@ -93,15 +94,16 @@ public class SimbardDistributed {
 
         /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
-            System.out.println("\n\n");
+//            System.out.println("\n\n");
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
-            System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
+            //System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             Quat4d trs = getOrientation();
-            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ(), trs.getW());
+            //System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ(), trs.getW());
             double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
-            System.out.format("theta %f\n", theta);
+            //System.out.format("theta %f\n", theta);
+            System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta * 2);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta * 2));
 
@@ -130,6 +132,9 @@ public class SimbardDistributed {
             } else {
                 setTranslationalVelocity(-.5);
             }
+
+            if ((getCounter() % 2) == 0)
+                setRotationalVelocity(Math.PI / 2 * (- Math.random()));
         }
 
         private long bestSum;
