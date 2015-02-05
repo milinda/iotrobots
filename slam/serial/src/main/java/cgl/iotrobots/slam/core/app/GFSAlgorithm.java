@@ -92,7 +92,7 @@ public class GFSAlgorithm {
         angularUpdate_ = 0.05;
         temporalUpdate_ = 0.0;
         resampleThreshold_ = .5;
-        particles_ = 30;
+        particles_ = 50;
         xmin_ = -20.0;
         ymin_ = -20.0;
         xmax_ = 20.0;
@@ -272,7 +272,7 @@ public class GFSAlgorithm {
 
         Particle best =
                 gsp_.getParticles().get(gsp_.getBestParticleIndex());
-
+        System.out.format("best particle pose: %f %f %f", best.getPose().getX(), best.getPose().getY(), best.getPose().getTheta());
         mapUpdater.updateMap(best, laser_angles, gsp_laser_.getPose());
     }
 

@@ -5,10 +5,13 @@ import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
+import geometry_msgs.Quaternion;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
+import javax.media.j3d.Transform3D;
 import javax.vecmath.Point3d;
+import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 import java.io.FileWriter;
@@ -83,8 +86,14 @@ public class SimbardExample {
             getCoords(point3D);
 
             System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
+            Quat4d trs = getOrientation();
+            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ(), trs.getW());
+            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
+            System.out.format("theta %f\n", theta);
+//            Transform3D trs = getTransform();
+//            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ());
             LaserScan laserScan = getLaserScan();
-            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, 0.0));
+            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta * 2));
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             if (getCounter() % 60 == 0) {
@@ -105,6 +114,19 @@ public class SimbardExample {
                 setRotationalVelocity(Math.PI / 2 * (- Math.random()));
 
             mapUI.setMap(gfsAlgorithm.getMap());
+        }
+
+        private double quantarianToRad(Quaternion q) {
+            return new Matrix3(q).getEulerYPR().yaw;
+        }
+
+        public Quat4d getOrientation() {
+            //get orientation
+            Transform3D tfr = new Transform3D();
+            Quat4d ori = new Quat4d();
+            this.getRotationTransform(tfr);
+            tfr.get(ori);
+            return ori;
         }
 
         private LaserScan getLaserScan() {
@@ -175,7 +197,7 @@ public class SimbardExample {
                     this);
             add(b4);
             add(new Arch(new Vector3d(3, 0, -3), this));
-            add(new Robot(new Vector3d(-5, 0, 0), "robot 1"));
+            add(new Robot(new Vector3d(0, 0, 0), "robot 1"));
             //add(new Robot(new Vector3d(0, 0, 0), "robot 2"));
         }
     }
@@ -186,6 +208,138 @@ public class SimbardExample {
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
         mapUI = new MapUI();
+    }
+
+    public static class Quaternion {
+        double x, y, z, w;
+
+        private Quaternion() {
+        }
+
+        private Quaternion(double x, double y, double z, double w) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public double getZ() {
+            return z;
+        }
+
+        public double getW() {
+            return w;
+        }
+    }
+
+    public static class Matrix3 {
+        double [][]m_el = new double[3][3];
+
+        private Matrix3(Quaternion q) {
+            setRotation(q);
+        }
+
+        void setRotation(Quaternion q) {
+            double d = 2;
+            double s = 2.0 / d;
+            double xs = q.getX() * s,   ys = q.getY() * s,   zs = q.getZ() * s;
+            double wx = q.getW() * xs,  wy = q.getW() * ys,  wz = q.getW() * zs;
+            double xx = q.getX() * xs,  xy = q.getX() * ys,  xz = q.getX() * zs;
+            double yy = q.getY() * ys,  yz = q.getY() * zs,  zz = q.getZ() * zs;
+
+            setValue((1.0) - (yy + zz), xy - wz, xz + wy,
+                    xy + wz, (1.0) - (xx + zz), yz - wx,
+                    xz - wy, yz + wx, (1.0) - (xx + yy));
+        }
+
+        void setValue(double xx, double xy, double xz,
+                      double yx, double yy, double yz,
+                      double zx, double zy, double zz) {
+            m_el[0][0] = xx;
+            m_el[0][1] = xy;
+            m_el[0][2] = xz;
+            m_el[1][0] = yx;
+            m_el[1][1] = yy;
+            m_el[1][2] = yz;
+            m_el[2][0] = zx;
+            m_el[2][1] = zy;
+            m_el[2][2] = zz;
+        }
+
+        Euler getEulerYPR()
+        {
+            Euler euler_out = new Euler();
+            Euler euler_out2 = new Euler(); //second solution
+            //get the pointer to the raw data
+
+            // Check that pitch is not at a singularity
+            // Check that pitch is not at a singularity
+            if (Math.abs(m_el[2][0]) >= 1)
+            {
+                euler_out.yaw = 0;
+                euler_out2.yaw = 0;
+
+                // From difference of angles formula
+                if (m_el[2][0] < 0)  //gimbal locked down
+                {
+                    double delta = Math.atan2(m_el[0][1],m_el[0][2]);
+                    euler_out.pitch = Math.PI / 2.0;
+                    euler_out2.pitch = Math.PI / 2.0;
+                    euler_out.roll = delta;
+                    euler_out2.roll = delta;
+                }
+                else {
+                    double delta = Math.atan2(-m_el[0][1],-m_el[0][2]);
+                    euler_out.pitch = -Math.PI / 2.0;
+                    euler_out2.pitch = -Math.PI / 2.0;
+                    euler_out.roll = delta;
+                    euler_out2.roll = delta;
+                }
+            }
+            else
+            {
+                euler_out.pitch = - Math.asin(m_el[2][0]);
+                euler_out2.pitch = Math.PI - euler_out.pitch;
+
+                euler_out.roll = Math.atan2(m_el[2][1]/Math.cos(euler_out.pitch),
+                        m_el[2][2]/Math.cos(euler_out.pitch));
+                euler_out2.roll = Math.atan2(m_el[2][1]/Math.cos(euler_out2.pitch),
+                        m_el[2][2]/Math.cos(euler_out2.pitch));
+
+                euler_out.yaw = Math.atan2(m_el[1][0]/Math.cos(euler_out.pitch),
+                        m_el[0][0]/Math.cos(euler_out.pitch));
+                euler_out2.yaw = Math.atan2(m_el[1][0]/Math.cos(euler_out2.pitch),
+                        m_el[0][0]/Math.cos(euler_out2.pitch));
+            }
+
+            Euler e = new Euler();
+
+            e.yaw = euler_out.yaw;
+            e.pitch = euler_out.pitch;
+            e.roll = euler_out.roll;
+
+            return e;
+        }
+    }
+
+    static class Euler {
+        double yaw;
+        double pitch;
+        double roll;
+    }
+
+    private double quantarianToRad(Quaternion q) {
+        //return Math.atan2(2.0 * (q.getY() * q.getZ() + q.getW() * q.getX()), q.getW() * q.getW() - q.getX() * q.getX() - q.getY() * q.getY() + q.getZ() * q.getZ());
+//        return Math.atan2(2.0 * (q.getX() * q.getZ() + q.getY() * q.getW()), 1 - 2 * (q.getZ() * q.getZ() + q.getW() * q.getW()));
+        return new Matrix3(q).getEulerYPR().yaw;
     }
 
 }
