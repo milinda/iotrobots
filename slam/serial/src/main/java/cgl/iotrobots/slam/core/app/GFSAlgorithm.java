@@ -272,7 +272,6 @@ public class GFSAlgorithm {
 
         Particle best =
                 gsp_.getParticles().get(gsp_.getBestParticleIndex());
-        System.out.format("best particle pose: %f %f %f", best.getPose().getX(), best.getPose().getY(), best.getPose().getTheta());
         mapUpdater.updateMap(best, laser_angles, gsp_laser_.getPose());
     }
 

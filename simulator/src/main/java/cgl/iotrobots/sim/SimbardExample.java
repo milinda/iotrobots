@@ -59,7 +59,7 @@ public class SimbardExample {
         }
 
         public void initBehavior() {
-            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngleIncrement(ANGLE / totalSensors);
@@ -85,15 +85,14 @@ public class SimbardExample {
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
 
-            System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             Quat4d trs = getOrientation();
-            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ(), trs.getW());
-            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
-            System.out.format("theta %f\n", theta);
+//            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
+            double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
+            System.out.format("actual position: %f, %f, %f\n", point3D.x, -point3D.z, theta);
 //            Transform3D trs = getTransform();
 //            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ());
             LaserScan laserScan = getLaserScan();
-            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta * 2));
+            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta));
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             if (getCounter() % 60 == 0) {
@@ -157,6 +156,16 @@ public class SimbardExample {
             laserScan.setRanges(ranges);
             laserScan.setTimestamp(System.currentTimeMillis());
             return laserScan;
+        }
+
+        // local planner related
+        public static double getYaw(Quaternion q) {
+            double q0 = q.getX();
+            double q1 = q.getY();
+            double q2 = q.getZ();
+            double q3 = q.getW();
+            //refer to roll in http://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
+            return Math.atan2(2.0 * (q0 * q1 + q3 * q2), q3 * q3 + q0 * q0 - q1 * q1 - q2 * q2);
         }
     }
 

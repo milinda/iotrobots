@@ -134,7 +134,7 @@ public class SimbardDistributed {
             }
 
             if ((getCounter() % 2) == 0)
-                setRotationalVelocity(Math.PI / 2 * (- Math.random()));
+                setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 2);
         }
 
         private long bestSum;
