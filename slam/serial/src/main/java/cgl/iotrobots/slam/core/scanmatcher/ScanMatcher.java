@@ -468,7 +468,7 @@ public class ScanMatcher {
                         move = Move.Back;
                         break;
                     case Back:
-                        localPose.x -= 2 * ldelta;
+                        localPose.x -= ldelta;
                         move = Move.Left;
                         break;
                     case Left:
@@ -476,7 +476,7 @@ public class ScanMatcher {
                         move = Move.Right;
                         break;
                     case Right:
-                        localPose.y += 2 * ldelta;
+                        localPose.y += ldelta;
                         move = Move.TurnLeft;
                         break;
                     case TurnLeft:
@@ -484,7 +484,7 @@ public class ScanMatcher {
                         move = Move.TurnRight;
                         break;
                     case TurnRight:
-                        localPose.theta -= 2 * adelta;
+                        localPose.theta -= adelta;
                         move = Move.Done;
                         break;
                     default:

@@ -115,7 +115,7 @@ public class SimbardExample {
             }
 //            frequently change orientation
             if ((getCounter() % 2) == 0)
-                setRotationalVelocity(Math.PI / 2 * (- Math.random()));
+                setRotationalVelocity(Math.PI / 2 * (- Math.random() * 4));
 
             mapUI.setMap(gfsAlgorithm.getMap());
         }
