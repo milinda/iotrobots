@@ -136,9 +136,9 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
                 LOG.info("neff = " + neff);
 
-//                for (Particle p1 : particles) {
-//                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
-//                }
+                for (Particle p1 : particles) {
+                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
+                }
 
                 resample(plainReading, adaptParticles, reading_copy);
                 LOG.info("After resampling.................");

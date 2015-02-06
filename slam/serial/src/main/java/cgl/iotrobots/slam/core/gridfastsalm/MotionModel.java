@@ -58,7 +58,7 @@ public class MotionModel {
         double s = Math.sin(p1.theta);
         double c = Math.cos(p1.theta);
         double x = c * p2.x - s * p2.y + p1.x;
-        double y = s * p2.x + c * p2.y + p2.y;
+        double y = s * p2.x + c * p2.y + p1.y;
         double theta = p2.theta + p1.theta;
         return new DoubleOrientedPoint(x, y, theta);
     }
