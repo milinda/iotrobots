@@ -51,7 +51,8 @@ public class MotionModel {
         noisypoint.theta = noisypoint.theta % (2 * Math.PI);
         if (noisypoint.theta > Math.PI)
             noisypoint.theta -= 2 * Math.PI;
-        return absoluteSum(p, noisypoint);
+        DoubleOrientedPoint point = absoluteSum(p, noisypoint);
+        return point;
     }
 
     public static DoubleOrientedPoint absoluteSum(DoubleOrientedPoint p1, DoubleOrientedPoint p2) {
@@ -59,7 +60,8 @@ public class MotionModel {
         double c = Math.cos(p1.theta);
         double x = c * p2.x - s * p2.y + p1.x;
         double y = s * p2.x + c * p2.y + p1.y;
-        double theta = p2.theta + p1.theta;
+//        double theta = p2.theta + p1.theta;
+        double theta = Math.atan2(Math.sin(p2.theta + p1.theta), Math.cos(p2.theta + p1.theta));
         return new DoubleOrientedPoint(x, y, theta);
     }
 

@@ -59,7 +59,7 @@ public class SimbardExample {
         }
 
         public void initBehavior() {
-            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
+            gfsAlgorithm.gsp_ = new GridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngleIncrement(ANGLE / totalSensors);
@@ -93,6 +93,11 @@ public class SimbardExample {
 //            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ());
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta));
+            for (int i = 0; i < laserScan.getRanges().size(); i++) {
+                System.out.format("%f ", laserScan.getRanges().get(i));
+            }
+            System.out.format("\n");
+
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
             if (getCounter() % 60 == 0) {
@@ -106,7 +111,7 @@ public class SimbardExample {
             if (forward) {
                 setTranslationalVelocity(5);
             } else {
-                setTranslationalVelocity(-5);
+                setTranslationalVelocity(5);
             }
 //            frequently change orientation
             if ((getCounter() % 2) == 0)
