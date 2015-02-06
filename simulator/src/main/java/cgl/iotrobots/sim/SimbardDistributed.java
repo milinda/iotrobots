@@ -101,11 +101,12 @@ public class SimbardDistributed {
             //System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             Quat4d trs = getOrientation();
             //System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ(), trs.getW());
-            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
+//            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
+            double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
             //System.out.format("theta %f\n", theta);
-            System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta * 2);
+            System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta);
             LaserScan laserScan = getLaserScan();
-            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta * 2));
+            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta));
 
             byte []body = Utils.serialize(kryo, laserScan);
             Map<String, Object> props = new HashMap<String, Object>();
@@ -128,9 +129,9 @@ public class SimbardDistributed {
             }
 
             if (forward) {
-                setTranslationalVelocity(.5);
+                setTranslationalVelocity(.05);
             } else {
-                setTranslationalVelocity(-.5);
+                setTranslationalVelocity(-.05);
             }
 
             if ((getCounter() % 2) == 0)
@@ -184,6 +185,16 @@ public class SimbardDistributed {
             }
         }
 
+        // local planner related
+        public static double getYaw(Quaternion q) {
+            double q0 = q.getX();
+            double q1 = q.getY();
+            double q2 = q.getZ();
+            double q3 = q.getW();
+            //refer to roll in http://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
+            return Math.atan2(2.0 * (q0 * q1 + q3 * q2), q3 * q3 + q0 * q0 - q1 * q1 - q2 * q2);
+        }
+
         private double quantarianToRad(Quaternion q) {
             return new Matrix3(q).getEulerYPR().yaw;
         }
@@ -199,8 +210,8 @@ public class SimbardDistributed {
 
         private LaserScan getLaserScan() {
             LaserScan laserScan = new LaserScan();
-            laserScan.setAngleMax(ANGLE);
-            laserScan.setAngleMin(0);
+            laserScan.setAngleMax(ANGLE_RANGE_SIDE);
+            laserScan.setAngleMin(-ANGLE_RANGE_SIDE);
             laserScan.setRangeMax(100);
             laserScan.setRangeMin(.1);
             laserScan.setAngleIncrement(ANGLE / totalSensors);

@@ -108,14 +108,18 @@ public class SimbardExample {
                 }
             }
 
+            if (getCounter() % 500 == 0) {
+                forward = !forward;
+            }
+
             if (forward) {
                 setTranslationalVelocity(5);
             } else {
-                setTranslationalVelocity(5);
+                setTranslationalVelocity(-5);
             }
-//            frequently change orientation
+
             if ((getCounter() % 2) == 0)
-                setRotationalVelocity(Math.PI / 2 * (- Math.random() * 4));
+                setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 2);
 
             mapUI.setMap(gfsAlgorithm.getMap());
         }
@@ -136,7 +140,7 @@ public class SimbardExample {
         private LaserScan getLaserScan() {
             LaserScan laserScan = new LaserScan();
             laserScan.setAngleMax(ANGLE);
-            laserScan.setAngleMin(0);
+            laserScan.setAngleMin(-ANGLE);
             laserScan.setRangeMax(100);
             laserScan.setRangeMin(.1);
             laserScan.setAngleIncrement(ANGLE / totalSensors);
