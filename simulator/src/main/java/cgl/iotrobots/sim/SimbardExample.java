@@ -139,8 +139,8 @@ public class SimbardExample {
 
         private LaserScan getLaserScan() {
             LaserScan laserScan = new LaserScan();
-            laserScan.setAngleMax(ANGLE);
-            laserScan.setAngleMin(-ANGLE);
+            laserScan.setAngleMax(ANGLE_RANGE_SIDE);
+            laserScan.setAngleMin(-ANGLE_RANGE_SIDE);
             laserScan.setRangeMax(100);
             laserScan.setRangeMin(.1);
             laserScan.setAngleIncrement(ANGLE / totalSensors);
