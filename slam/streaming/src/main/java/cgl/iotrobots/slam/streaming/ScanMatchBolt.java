@@ -202,6 +202,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         // if we receive a control message init and return
         if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
             init();
+            outputCollector.ack(tuple);
             return;
         }
 
