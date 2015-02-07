@@ -106,9 +106,9 @@ public class SimbardExample {
             }
 
             if (forward) {
-                setTranslationalVelocity(.5);
+                setTranslationalVelocity(.25);
             } else {
-                setTranslationalVelocity(-.5);
+                setTranslationalVelocity(-.25);
             }
 
             if ((getCounter() % 2) == 0)
