@@ -48,8 +48,8 @@ public class SimbardDistributed {
 
         PrintWriter pw;
 //        private String url = "amqp://149.165.159.12:5672";
-//        private String url = "amqp://localhost:5672";
-        private String url = "amqp://156.56.93.59:5672";
+        private String url = "amqp://localhost:5672";
+//        private String url = "amqp://156.56.93.59:5672";
 
         int totalSensors = 0;
 
@@ -113,7 +113,7 @@ public class SimbardDistributed {
             props.put("time", System.currentTimeMillis());
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
-            if (System.currentTimeMillis() - lastTime > 3000) {
+            if (System.currentTimeMillis() - lastTime > 1000) {
                 lastTime = System.currentTimeMillis();
                 Message message = new Message(body, props);
                 try {
@@ -129,9 +129,9 @@ public class SimbardDistributed {
             }
 
             if (forward) {
-                setTranslationalVelocity(.05);
+                setTranslationalVelocity(.5);
             } else {
-                setTranslationalVelocity(-.05);
+                setTranslationalVelocity(-.5);
             }
 
             if ((getCounter() % 2) == 0)

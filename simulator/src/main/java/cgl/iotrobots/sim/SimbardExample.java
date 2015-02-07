@@ -100,22 +100,15 @@ public class SimbardExample {
 
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
-            if (getCounter() % 60 == 0) {
-                if (forward) {
-                    forward = false;
-                } else {
-                    forward = true;
-                }
-            }
 
             if (getCounter() % 500 == 0) {
                 forward = !forward;
             }
 
             if (forward) {
-                setTranslationalVelocity(5);
+                setTranslationalVelocity(.5);
             } else {
-                setTranslationalVelocity(-5);
+                setTranslationalVelocity(-.5);
             }
 
             if ((getCounter() % 2) == 0)
