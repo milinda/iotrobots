@@ -227,7 +227,7 @@ public class TurtleSimulator {
     }
 
     private class Matrix3 {
-        double [][]m_el = new double[3][3];
+        double[][] m_el = new double[3][3];
 
         private Matrix3(Quaternion q) {
             setRotation(q);
@@ -236,10 +236,10 @@ public class TurtleSimulator {
         void setRotation(Quaternion q) {
             double d = 2;
             double s = 2.0 / d;
-            double xs = q.getX() * s,   ys = q.getY() * s,   zs = q.getZ() * s;
-            double wx = q.getW() * xs,  wy = q.getW() * ys,  wz = q.getW() * zs;
-            double xx = q.getX() * xs,  xy = q.getX() * ys,  xz = q.getX() * zs;
-            double yy = q.getY() * ys,  yz = q.getY() * zs,  zz = q.getZ() * zs;
+            double xs = q.getX() * s, ys = q.getY() * s, zs = q.getZ() * s;
+            double wx = q.getW() * xs, wy = q.getW() * ys, wz = q.getW() * zs;
+            double xx = q.getX() * xs, xy = q.getX() * ys, xz = q.getX() * zs;
+            double yy = q.getY() * ys, yz = q.getY() * zs, zz = q.getZ() * zs;
 
             setValue((1.0) - (yy + zz), xy - wz, xz + wy,
                     xy + wz, (1.0) - (xx + zz), yz - wx,
@@ -260,50 +260,45 @@ public class TurtleSimulator {
             m_el[2][2] = zz;
         }
 
-        Euler getEulerYPR()
-        {
+        Euler getEulerYPR() {
             Euler euler_out = new Euler();
             Euler euler_out2 = new Euler(); //second solution
             //get the pointer to the raw data
 
             // Check that pitch is not at a singularity
             // Check that pitch is not at a singularity
-            if (Math.abs(m_el[2][0]) >= 1)
-            {
+            if (Math.abs(m_el[2][0]) >= 1) {
                 euler_out.yaw = 0;
                 euler_out2.yaw = 0;
 
                 // From difference of angles formula
                 if (m_el[2][0] < 0)  //gimbal locked down
                 {
-                    double delta = Math.atan2(m_el[0][1],m_el[0][2]);
+                    double delta = Math.atan2(m_el[0][1], m_el[0][2]);
                     euler_out.pitch = Math.PI / 2.0;
                     euler_out2.pitch = Math.PI / 2.0;
                     euler_out.roll = delta;
                     euler_out2.roll = delta;
-                }
-                else {
-                    double delta = Math.atan2(-m_el[0][1],-m_el[0][2]);
+                } else {
+                    double delta = Math.atan2(-m_el[0][1], -m_el[0][2]);
                     euler_out.pitch = -Math.PI / 2.0;
                     euler_out2.pitch = -Math.PI / 2.0;
                     euler_out.roll = delta;
                     euler_out2.roll = delta;
                 }
-            }
-            else
-            {
-                euler_out.pitch = - Math.asin(m_el[2][0]);
+            } else {
+                euler_out.pitch = -Math.asin(m_el[2][0]);
                 euler_out2.pitch = Math.PI - euler_out.pitch;
 
-                euler_out.roll = Math.atan2(m_el[2][1]/Math.cos(euler_out.pitch),
-                        m_el[2][2]/Math.cos(euler_out.pitch));
-                euler_out2.roll = Math.atan2(m_el[2][1]/Math.cos(euler_out2.pitch),
-                        m_el[2][2]/Math.cos(euler_out2.pitch));
+                euler_out.roll = Math.atan2(m_el[2][1] / Math.cos(euler_out.pitch),
+                        m_el[2][2] / Math.cos(euler_out.pitch));
+                euler_out2.roll = Math.atan2(m_el[2][1] / Math.cos(euler_out2.pitch),
+                        m_el[2][2] / Math.cos(euler_out2.pitch));
 
-                euler_out.yaw = Math.atan2(m_el[1][0]/Math.cos(euler_out.pitch),
-                        m_el[0][0]/Math.cos(euler_out.pitch));
-                euler_out2.yaw = Math.atan2(m_el[1][0]/Math.cos(euler_out2.pitch),
-                        m_el[0][0]/Math.cos(euler_out2.pitch));
+                euler_out.yaw = Math.atan2(m_el[1][0] / Math.cos(euler_out.pitch),
+                        m_el[0][0] / Math.cos(euler_out.pitch));
+                euler_out2.yaw = Math.atan2(m_el[1][0] / Math.cos(euler_out2.pitch),
+                        m_el[0][0] / Math.cos(euler_out2.pitch));
             }
 
             Euler e = new Euler();
