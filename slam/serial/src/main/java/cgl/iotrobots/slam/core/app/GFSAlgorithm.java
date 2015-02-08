@@ -36,7 +36,7 @@ public class GFSAlgorithm {
     double maxRange_;
     double maxUrange_;
     double maxrange_;
-    double minimum_score_;
+    double minimum_score_ = 200;
     double sigma_;
     int kernelSize_;
     double lstep_;
@@ -75,8 +75,8 @@ public class GFSAlgorithm {
         // gmapping parameters
         maxUrange_ = 100.0;
         maxRange_ = 100.0;
-        minimum_score_ = 0;
-        sigma_ = 0.005;
+        minimum_score_ = 200;
+        sigma_ = 0.05;
         kernelSize_ = 1;
         lstep_ = 0.05;
         astep_ = 0.05;
@@ -88,9 +88,9 @@ public class GFSAlgorithm {
         srt_ = 0.2;
         str_ = 0.1;
         stt_ = 0.2;
-        linearUpdate_ = .05;
-        angularUpdate_ = 0.05;
-        temporalUpdate_ = 0.0;
+        linearUpdate_ = 1;
+        angularUpdate_ = 0.5;
+        temporalUpdate_ = 3;
         resampleThreshold_ = .5;
         particles_ = 50;
         xmin_ = -20.0;

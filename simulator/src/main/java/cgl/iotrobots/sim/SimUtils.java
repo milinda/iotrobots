@@ -6,8 +6,11 @@ import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class SimUtils {
+    private static Random r = new Random();
+
     public static void sendControl(RabbitMQSender sender) {
         byte[] body = "start".getBytes();
         Map<String, Object> props = new HashMap<String, Object>();
@@ -20,5 +23,10 @@ public class SimUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static double gausianNoise(double variance, double mean) {
+        double noise = r.nextGaussian() * Math.sqrt(variance) + mean;
+        return noise;
     }
 }
