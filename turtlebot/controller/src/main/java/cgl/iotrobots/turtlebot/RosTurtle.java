@@ -35,7 +35,8 @@ public class RosTurtle extends AbstractNodeMain {
     public void onStart(final ConnectedNode connectedNode) {
         System.out.println("Starting....");
         final Publisher<Twist> publisher =
-                connectedNode.newPublisher("/cmd_vel_mux/input/teleop", Twist._TYPE);
+//                connectedNode.newPublisher("/cmd_vel_mux/input/teleop", Twist._TYPE);
+                connectedNode.newPublisher("/cmd_vel", Twist._TYPE);
 
         try {
             Thread.sleep(1000);

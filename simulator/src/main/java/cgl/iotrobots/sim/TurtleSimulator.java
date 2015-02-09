@@ -1,20 +1,30 @@
 package cgl.iotrobots.sim;
 
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
+import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import geometry_msgs.Quaternion;
+import geometry_msgs.Transform;
+import geometry_msgs.TransformStamped;
+import geometry_msgs.Vector3;
 import nav_msgs.Odometry;
+import org.apache.commons.lang3.tuple.Pair;
+import org.ros.concurrent.CancellableLoop;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
+import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
+import tf.tfMessage;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class TurtleSimulator {
     public static final int SENSORS = 360;
@@ -44,13 +54,8 @@ public class TurtleSimulator {
         }
         gfsAlgorithm.init();
 
-
         SimUtils.connectToRos(new RosTurtle());
-
         SimUtils.connectToRos(node);
-
-        Thread t = new Thread(new Worker());
-        t.start();
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -66,9 +71,12 @@ public class TurtleSimulator {
     public class RosTurtle extends AbstractNodeMain {
         private String name = "/ts_controller";
 
-        private RosMapPublisher rosMapPublisher;
+        private BlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>> queue = new ArrayBlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>>(64);
+
+        private MessageFilter filter = new MessageFilter(100, queue);
 
         public RosTurtle() {
+
         }
 
         public GraphName getDefaultNodeName() {
@@ -84,20 +92,24 @@ public class TurtleSimulator {
             final Subscriber<sensor_msgs.LaserScan> laserScanSubscriber =
                     connectedNode.newSubscriber("/scan", sensor_msgs.LaserScan._TYPE);
 
+            final Publisher<tfMessage> transformPublisher = connectedNode.newPublisher("/tf", tfMessage._TYPE);
+
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             }
 
+            Thread t = new Thread(new Worker(queue));
+            t.start();
+
             odometrySubscriber.addMessageListener(new MessageListener<Odometry>() {
                 @Override
                 public void onNewMessage(Odometry odometry) {
-                    double rad = quantarianToRad(odometry.getPose().getPose().getOrientation());
-                    if (state == State.WAITING_LASER_SCAN) {
-                        System.out.format("received odometry: x = %f, y = %f, theta = %f\n", odometry.getPose().getPose().getPosition().getX(), odometry.getPose().getPose().getPosition().getY(), rad);
-                        lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
-                                odometry.getPose().getPose().getPosition().getY(), rad);
+                    try {
+                        filter.addOdometry(odometry);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             });
@@ -105,13 +117,55 @@ public class TurtleSimulator {
             laserScanSubscriber.addMessageListener(new MessageListener<sensor_msgs.LaserScan>() {
                 @Override
                 public void onNewMessage(sensor_msgs.LaserScan laserScanMsg) {
-                    if (state == State.WAITING_LASER_SCAN) {
-                        state = State.UPDATING_LASER_SCAN;
-                        scan = turtleScanToLaserScan(laserScanMsg);
-                        state = State.WAITING_COMPUTING;
+                    try {
+                        filter.addLaserScan(laserScanMsg);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             });
+
+            connectedNode.executeCancellableLoop(new CancellableLoop() {
+                @Override
+                protected void loop() throws InterruptedException {
+                    sendTransform(connectedNode, transformPublisher, "map", "odom", System.currentTimeMillis() + 5000, 0, 0, 0, 0, 0, 0, 1);
+                    Thread.sleep(100);
+                }
+            });
+        }
+
+        public void sendTransform(ConnectedNode node, Publisher<tfMessage> pub,
+                                  String parentFrame, String childFrame,
+                                  long t,
+                                  double v_x, double v_y, double v_z,
+                                  double q_x, double q_y, double q_z, double q_w) {
+
+            TransformStamped txMsg = node.getTopicMessageFactory().newFromType(TransformStamped._TYPE);
+            txMsg.getHeader().setStamp(org.ros.message.Time.fromNano(t));
+            txMsg.getHeader().setFrameId(parentFrame);
+            txMsg.setChildFrameId(childFrame);
+
+            Vector3 vector3 = node.getTopicMessageFactory().newFromType(Vector3._TYPE);
+            vector3.setY(v_y);
+            vector3.setX(v_x);
+            vector3.setZ(v_z);
+            txMsg.getTransform().setTranslation(vector3);
+
+            Quaternion quaternion = node.getTopicMessageFactory().newFromType(Quaternion._TYPE);
+            quaternion.setX(q_x);
+            quaternion.setY(q_y);
+            quaternion.setZ(q_z);
+            quaternion.setW(q_w);
+            txMsg.getTransform().setRotation(quaternion);
+
+            tfMessage msg = node.getTopicMessageFactory().newFromType(tfMessage._TYPE);
+            msg.setTransforms(new ArrayList<TransformStamped>(1));
+            msg.getTransforms().add(txMsg);
+
+            Transform transform = node.getTopicMessageFactory().newFromType(Transform._TYPE);
+            transform.setRotation(quaternion);
+
+            pub.publish(msg);
         }
 
         public void onShutdown(Node node) {
@@ -119,15 +173,6 @@ public class TurtleSimulator {
         }
     }
 
-    DoubleOrientedPoint lastPose;
-    enum State {
-        UPDATING_LASER_SCAN,
-        WAITING_COMPUTING,
-        COMPUTING,
-        WAITING_LASER_SCAN,
-    }
-    LaserScan scan;
-    State state = State.WAITING_LASER_SCAN;
     boolean init = false;
 
     private void init(LaserScan scanI) {
@@ -141,28 +186,34 @@ public class TurtleSimulator {
     }
 
     private class Worker implements Runnable {
+        private BlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>> queue;
+
+        private Worker(BlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>> queue) {
+            this.queue = queue;
+        }
+
         @Override
         public void run() {
             while (true) {
-                if (state == State.WAITING_COMPUTING) {
-                    state = State.COMPUTING;
-                    System.out.println("Start computing......................");
-                    if (scan != null && lastPose != null) {
-                        if (!init) {
-                            init(scan);
-                            init = true;
-                        } else {
-                            scan.setPose(lastPose);
-                            gfsAlgorithm.laserScan(scan);
-                            mapUI.setMap(gfsAlgorithm.getMap());
-                            node.addMap(gfsAlgorithm.getMap());
-                        }
-                    }
-                    state = State.WAITING_LASER_SCAN;
-                    System.out.println("End computing......................");
-                }
                 try {
-                    Thread.sleep(1);
+                    Pair<Odometry, sensor_msgs.LaserScan> pair = null;
+                    while (queue.size() > 0) {
+                        pair = queue.take();
+                    }
+                    if (pair != null) {
+                        LaserScan scan = turtleScanToLaserScan(pair.getRight());
+                        Odometry odometry = pair.getLeft();
+                        double rad = quantarianToRad(odometry.getPose().getPose().getOrientation());
+                        System.out.format("received odometry: x = %f, y = %f, theta = %f\n", odometry.getPose().getPose().getPosition().getX(), odometry.getPose().getPose().getPosition().getY(), rad);
+                        DoubleOrientedPoint lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
+                                odometry.getPose().getPose().getPosition().getY(), rad);
+
+                        scan.setPose(lastPose);
+                        gfsAlgorithm.laserScan(scan);
+
+                        mapUI.setMap(gfsAlgorithm.getMap());
+                        node.addMap(gfsAlgorithm.getMap());
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -41,8 +41,8 @@ public class SimUtils {
         NodeConfiguration nodeConfiguration;
         try {
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
-//            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
-            nodeConfiguration = NodeConfiguration.newPublic("192.168.1.6", new URI("http://192.168.1.6:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
+//            nodeConfiguration = NodeConfiguration.newPublic("192.168.1.6", new URI("http://192.168.1.6:11311"));
             NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
             nodeMainExecutor.execute(node, nodeConfiguration);
         } catch (URISyntaxException e) {

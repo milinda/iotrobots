@@ -9,12 +9,14 @@ import nav_msgs.OccupancyGrid;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.ros.concurrent.CancellableLoop;
+import org.ros.internal.message.field.ChannelBufferField;
 import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 
+import java.nio.ByteOrder;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -25,7 +27,7 @@ public class RosMapPublisher extends AbstractNodeMain {
 
     private String name = "slam_map";
 
-    private BlockingQueue<GFSMap> maps = new ArrayBlockingQueue<GFSMap>(64);
+    private BlockingQueue<GFSMap> maps = new ArrayBlockingQueue<GFSMap>(4);
 
     public RosMapPublisher() {
     }
@@ -41,14 +43,13 @@ public class RosMapPublisher extends AbstractNodeMain {
     int counter = 0;
 
     private void populateRosMAp(GFSMap smap) {
-        map.getHeader().setFrameId("" + counter++);
+        map.getHeader().setFrameId("map");
         map.getHeader().setSeq(counter);
         map.getHeader().setStamp(new Time(System.currentTimeMillis() / 1000));
 
         MapMetaData metaData = map.getInfo();
         metaData.setHeight(smap.getHeight());
         metaData.setWidth(smap.getWidth());
-
         // create a pose
         Pose p = map.getInfo().getOrigin();
         Quaternion q = p.getOrientation();
@@ -78,13 +79,17 @@ public class RosMapPublisher extends AbstractNodeMain {
 
 
 //        ChannelBuffer b = map.getData();
-        ChannelBuffer b = ChannelBuffers.buffer(smap.getWidth() * smap.getHeight());
+        ChannelBuffer b = ChannelBuffers.buffer(ByteOrder.LITTLE_ENDIAN, smap.getWidth() * smap.getHeight());
         for (int x = 0; x < smap.getWidth(); x++) {
             for (int y = 0; y < smap.getHeight(); y++) {
-                b.setByte(MAP_IDX(map.getInfo().getWidth(), x, y), smap.getData()[MAP_IDX(map.getInfo().getWidth(), x, y)]);
+                b.writeByte(smap.getData()[MAP_IDX(map.getInfo().getWidth(), x, y)]);
+//                b.writeByte(MAP_IDX(map.getInfo().getWidth(), x, y), smap.getData()[MAP_IDX(map.getInfo().getWidth(), x, y)]);
             }
         }
-        map.getData().writeBytes(b);
+
+
+        map.setData(b);
+
         gotMap = true;
     }
 
@@ -109,7 +114,6 @@ public class RosMapPublisher extends AbstractNodeMain {
         final Publisher<MapMetaData> metaDataPublisher = connectedNode.newPublisher("/map_metadata", MapMetaData._TYPE);
 
         this.map = mapPublisher.newMessage();
-
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             @Override
             protected void loop() throws InterruptedException {

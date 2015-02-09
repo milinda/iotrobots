@@ -373,7 +373,9 @@ public class DistributedReSampler {
             }
 
             for (int i = 0; i < deletedParticles.size(); i++) {
-                particles.get(deletedParticles.get(i)).node = null;
+                if (deletedParticles.get(i) < particles.size()) {
+                    particles.get(deletedParticles.get(i)).node = null;
+                }
             }
 
             LOG.debug("Deleting old particles...");

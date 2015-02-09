@@ -97,7 +97,7 @@ public class SimbardExample {
 //            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ());
             LaserScan laserScan = getLaserScan();
 
-            DoubleOrientedPoint noisyPoint = new DoubleOrientedPoint(point3D.x + SimUtils.gausianNoise(.005, 0), -point3D.z + SimUtils.gausianNoise(.005, 0), theta + SimUtils.gausianNoise(.005, 0));
+            DoubleOrientedPoint noisyPoint = new DoubleOrientedPoint(point3D.x + SimUtils.gausianNoise(.0005, 0), -point3D.z + SimUtils.gausianNoise(.0005, 0), theta + SimUtils.gausianNoise(.0005, 0));
             System.out.println("Noisy point: " + noisyPoint);
             laserScan.setPose(noisyPoint);
             for (int i = 0; i < laserScan.getRanges().size(); i++) {

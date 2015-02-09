@@ -157,7 +157,7 @@ public abstract class AbstractGridSlamProcessor {
     protected double scanMatchParticle(double[] plainReading, double sumScore, Particle it) {
         DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         double score = 0, l;
-        score = matcher.optimize(corrected, it.map, it.pose, plainReading);
+//        score = matcher.optimize(corrected, it.map, it.pose, plainReading);
 //        it->pose=corrected;
         if (score > minimumScore) {
             LOG.info("Correcting the position from {} to {}", it.pose, corrected);
@@ -319,14 +319,14 @@ public abstract class AbstractGridSlamProcessor {
                 deletedParticles.add(j);
                 j++;
             }
-            m_outputStream = new StringBuilder("Deleting Nodes:");
+
             for (int i = 0; i < deletedParticles.size(); i++) {
                 m_outputStream.append(" ").append(deletedParticles.get(i));
-                particles.get(deletedParticles.get(i)).node = null;
+                if (deletedParticles.get(i) < particles.size()) {
+                    particles.get(deletedParticles.get(i)).node = null;
+                }
             }
-            LOG.debug(m_outputStream.toString());
 
-            LOG.debug("Deleting old particles...");
             particles.clear();
             LOG.debug("Copying Particles and  Registering  scans...");
             for (Particle it : temp) {
