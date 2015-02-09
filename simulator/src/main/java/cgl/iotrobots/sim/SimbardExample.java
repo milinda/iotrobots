@@ -36,6 +36,8 @@ public class SimbardExample {
 
         int totalSensors = 0;
 
+        RosMapPublisher node = new RosMapPublisher();
+
         public Robot(Vector3d position, String name) {
             super(position, name);
             // Add sonars
@@ -55,6 +57,8 @@ public class SimbardExample {
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
+
+            SimUtils.connectToRos(node);
 
         }
 
@@ -118,6 +122,7 @@ public class SimbardExample {
                 setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 2);
 
             mapUI.setMap(gfsAlgorithm.getMap());
+            node.addMap(gfsAlgorithm.getMap());
         }
 
         private double quantarianToRad(Quaternion q) {

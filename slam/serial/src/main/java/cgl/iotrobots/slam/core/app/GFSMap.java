@@ -19,8 +19,6 @@ public class GFSMap {
 
     public List<IntPoint> currentPos = new ArrayList<IntPoint>();
 
-
-
     Position origin = new Position();
 
     Position originOrientation = new Position();

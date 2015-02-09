@@ -7,18 +7,12 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import geometry_msgs.Quaternion;
 import nav_msgs.Odometry;
-import org.ros.concurrent.CancellableLoop;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
 import org.ros.node.topic.Subscriber;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +29,8 @@ public class TurtleSimulator {
 
     MapUI mapUI;
 
+    RosMapPublisher node = new RosMapPublisher();
+
     public TurtleSimulator() {
         mapUI = new MapUI();
     }
@@ -49,24 +45,12 @@ public class TurtleSimulator {
         gfsAlgorithm.init();
 
 
-        connectToRos();
+        SimUtils.connectToRos(new RosTurtle());
+
+        SimUtils.connectToRos(node);
 
         Thread t = new Thread(new Worker());
         t.start();
-    }
-
-    private void connectToRos() {
-        // register with ros_java
-        NodeConfiguration nodeConfiguration;
-        try {
-//            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
-            NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
-            RosTurtle turtle = new RosTurtle();
-            nodeMainExecutor.execute(turtle, nodeConfiguration);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -81,6 +65,8 @@ public class TurtleSimulator {
 
     public class RosTurtle extends AbstractNodeMain {
         private String name = "/ts_controller";
+
+        private RosMapPublisher rosMapPublisher;
 
         public RosTurtle() {
         }
@@ -119,27 +105,11 @@ public class TurtleSimulator {
             laserScanSubscriber.addMessageListener(new MessageListener<sensor_msgs.LaserScan>() {
                 @Override
                 public void onNewMessage(sensor_msgs.LaserScan laserScanMsg) {
-//                    LaserScan scan = turtleScanToLaserScan(laserScanMsg);
-                    // update this with odomentry
-//                    if (lastPose != null) {
-//                        scan.setPose(lastPose);
-//                        gfsAlgorithm.laserScan(scan);
-//                        mapUI.setMap(gfsAlgorithm.getMap());
-//                    }
-
                     if (state == State.WAITING_LASER_SCAN) {
                         state = State.UPDATING_LASER_SCAN;
                         scan = turtleScanToLaserScan(laserScanMsg);
                         state = State.WAITING_COMPUTING;
                     }
-                }
-            });
-
-            // This CancellableLoop will be canceled automatically when the node shuts down.
-            connectedNode.executeCancellableLoop(new CancellableLoop() {
-                @Override
-                protected void loop() throws InterruptedException {
-
                 }
             });
         }
@@ -185,6 +155,7 @@ public class TurtleSimulator {
                             scan.setPose(lastPose);
                             gfsAlgorithm.laserScan(scan);
                             mapUI.setMap(gfsAlgorithm.getMap());
+                            node.addMap(gfsAlgorithm.getMap());
                         }
                     }
                     state = State.WAITING_LASER_SCAN;

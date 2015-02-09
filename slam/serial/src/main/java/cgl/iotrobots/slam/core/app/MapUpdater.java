@@ -114,10 +114,8 @@ public class MapUpdater {
             map.origin.x = xmin;
             map.origin.y = ymin;
             map.resize(map.width * map.height);
-
             LOG.debug("map origin: (%f, %f)", map.origin.x, map.origin.y);
         }
-        int count = 0;
         for (int x = 0; x < smap.getMapSizeX(); x++) {
             for (int y = 0; y < smap.getMapSizeY(); y++) {
                 /// @todo Sort out the unknown vs. free vs. obstacle thresholding
@@ -130,13 +128,11 @@ public class MapUpdater {
                 } else if (occ > occThresh) {
                     //map.map.data[MAP_IDX(map.map.info.width, x, y)] = (int)round(occ*100.0);
                     map.data[MAP_IDX(map.width, x, y)] = 100;
-                    count++;
                 } else {
                     map.data[MAP_IDX(map.width, x, y)] = 0;
                 }
             }
         }
-        LOG.info("count " + count);
         got_map_ = true;
         return map;
     }
