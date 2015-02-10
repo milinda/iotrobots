@@ -1,4 +1,4 @@
-package cgl.iotrobots.sim;
+package cgl.iotrobots.slam.utils;
 
 import nav_msgs.Odometry;
 import org.apache.commons.lang3.tuple.Pair;

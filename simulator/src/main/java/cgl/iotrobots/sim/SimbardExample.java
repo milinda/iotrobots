@@ -4,8 +4,6 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
-import geometry_msgs.Quaternion;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -14,8 +12,6 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;

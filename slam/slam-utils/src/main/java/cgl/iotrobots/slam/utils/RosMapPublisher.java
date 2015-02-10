@@ -1,4 +1,4 @@
-package cgl.iotrobots.sim;
+package cgl.iotrobots.slam.utils;
 
 import cgl.iotrobots.slam.core.app.GFSMap;
 import geometry_msgs.Point;
@@ -9,7 +9,6 @@ import nav_msgs.OccupancyGrid;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.ros.concurrent.CancellableLoop;
-import org.ros.internal.message.field.ChannelBufferField;
 import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
@@ -77,16 +76,12 @@ public class RosMapPublisher extends AbstractNodeMain {
             point.setZ(0);
         }
 
-
-//        ChannelBuffer b = map.getData();
         ChannelBuffer b = ChannelBuffers.buffer(ByteOrder.LITTLE_ENDIAN, smap.getWidth() * smap.getHeight());
         for (int x = 0; x < smap.getWidth(); x++) {
             for (int y = 0; y < smap.getHeight(); y++) {
                 b.writeByte(smap.getData()[MAP_IDX(map.getInfo().getWidth(), x, y)]);
-//                b.writeByte(MAP_IDX(map.getInfo().getWidth(), x, y), smap.getData()[MAP_IDX(map.getInfo().getWidth(), x, y)]);
             }
         }
-
 
         map.setData(b);
 

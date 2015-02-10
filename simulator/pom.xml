@@ -19,6 +19,11 @@
     </repositories>
     <dependencies>
         <dependency>
+            <groupId>iotrobots</groupId>
+            <artifactId>iotrobots-slam-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>simbard</groupId>
             <artifactId>simbard</artifactId>
             <scope>system</scope>
@@ -52,6 +57,7 @@
             <artifactId>iotrobots-slam</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
         <dependency>
             <groupId>iotrobots</groupId>
             <artifactId>iotrobots-slam-threading</artifactId>

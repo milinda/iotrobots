@@ -15,5 +15,6 @@
         <module>streaming</module>
         <module>slam-threading</module>
         <module>slam-sensor</module>
+        <module>slam-utils</module>
     </modules>
 </project>
