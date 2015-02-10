@@ -5,15 +5,25 @@ import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
+import cgl.iotcloud.core.transport.TransportConstants;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.utils.RosMapPublisher;
+import cgl.iotrobots.slam.utils.RosTurtle;
+import cgl.iotrobots.slam.utils.TurtleUtils;
 import cgl.iotrobots.utils.rabbitmq.*;
+import com.esotericsoftware.kryo.Kryo;
+import nav_msgs.Odometry;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sensor_msgs.LaserScan;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
 public class SlamSensor extends AbstractSensor {
     public static final String LASE_SCAN_SENDER = "laseScanSender";
@@ -46,6 +56,11 @@ public class SlamSensor extends AbstractSensor {
     private RabbitMQReceiver controlReceiver;
     private RabbitMQSender mapSender;
     private RabbitMQSender bestParticleSender;
+
+    RosMapPublisher rosMapPublisher;
+    RosTurtle rosTurtle;
+
+    Kryo kryo = new Kryo();
 
     public static void main(String[] args) {
         Map<String, String> properties = getProperties(args);
@@ -87,6 +102,13 @@ public class SlamSensor extends AbstractSensor {
             } catch (Exception e) {
                 LOG.error("Failed to create rabbitmq receiver", e);
             }
+        } else {
+            rosTurtle = new RosTurtle();
+            rosMapPublisher = new RosMapPublisher();
+            TurtleUtils.connectToRos(rosTurtle);
+            TurtleUtils.connectToRos(rosMapPublisher);
+
+            Thread t = new Thread(new Worker(rosTurtle.getQueue(), sendChannel));
         }
 
         startListen(mapChannel, new MessageReceiver() {
@@ -168,7 +190,57 @@ public class SlamSensor extends AbstractSensor {
         }
     }
 
-    @Override
+    private class Worker implements Runnable {
+        private BlockingQueue<Pair<Odometry, LaserScan>> queue;
+
+        private long lastTime = System.currentTimeMillis();
+
+        private Channel sendChannel;
+
+        private Worker(BlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>> queue, Channel sendChannel) {
+            this.queue = queue;
+            this.sendChannel = sendChannel;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Pair<Odometry, sensor_msgs.LaserScan> pair = null;
+                    while (queue.size() > 0) {
+                        pair = queue.take();
+                    }
+                    if (pair != null) {
+                        cgl.iotrobots.slam.core.app.LaserScan scan = TurtleUtils.turtleScanToLaserScan(pair.getRight());
+                        Odometry odometry = pair.getLeft();
+                        double rad = TurtleUtils.quantarianToRad(odometry.getPose().getPose().getOrientation());
+                        System.out.format("received odometry: x = %f, y = %f, theta = %f\n", odometry.getPose().getPose().getPosition().getX(), odometry.getPose().getPose().getPosition().getY(), rad);
+                        DoubleOrientedPoint lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
+                                odometry.getPose().getPose().getPosition().getY(), rad);
+
+                        scan.setPose(lastPose);
+
+                        byte []body = cgl.iotrobots.slam.streaming.Utils.serialize(kryo, scan);
+                        Map<String, Object> props = new HashMap<String, Object>();
+                        props.put("time", System.currentTimeMillis());
+
+                        if (System.currentTimeMillis() - lastTime > 1000) {
+                            lastTime = System.currentTimeMillis();
+                            try {
+                                this.sendChannel.publish(body, props);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    LOG.error("Error in getting item from queue");
+                }
+            }
+        }
+    }
+
+        @Override
     public void close() {
         run = false;
         super.close();

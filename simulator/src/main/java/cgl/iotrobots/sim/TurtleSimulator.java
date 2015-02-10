@@ -5,15 +5,11 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
-import cgl.iotrobots.slam.utils.Matrix3;
-import cgl.iotrobots.slam.utils.RosMapPublisher;
-import geometry_msgs.Quaternion;
+import cgl.iotrobots.slam.utils.*;
 import nav_msgs.Odometry;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public class TurtleSimulator {
@@ -44,9 +40,9 @@ public class TurtleSimulator {
         }
         gfsAlgorithm.init();
 
-        RosTurtle rosTurtle = new RosTurtle(this);
-        SimUtils.connectToRos(rosTurtle);
-        SimUtils.connectToRos(rosMapPublisher);
+        RosTurtle rosTurtle = new RosTurtle();
+        TurtleUtils.connectToRos(rosTurtle);
+        TurtleUtils.connectToRos(rosMapPublisher);
 
         Thread t = new Thread(new TurtleSimulator.Worker(rosTurtle.getQueue()));
         t.start();
@@ -60,18 +56,6 @@ public class TurtleSimulator {
         } else {
             simulator.start(false);
         }
-    }
-
-    boolean init = false;
-
-    private void init(LaserScan scanI) {
-        gfsAlgorithm.initMapper(scanI);
-    }
-
-    private double quantarianToRad(Quaternion q) {
-        //return Math.atan2(2.0 * (q.getY() * q.getZ() + q.getW() * q.getX()), q.getW() * q.getW() - q.getX() * q.getX() - q.getY() * q.getY() + q.getZ() * q.getZ());
-//        return Math.atan2(2.0 * (q.getX() * q.getZ() + q.getY() * q.getW()), 1 - 2 * (q.getZ() * q.getZ() + q.getW() * q.getW()));
-        return new Matrix3(q).getEulerYPR().yaw;
     }
 
     private class Worker implements Runnable {
@@ -90,9 +74,9 @@ public class TurtleSimulator {
                         pair = queue.take();
                     }
                     if (pair != null) {
-                        LaserScan scan = turtleScanToLaserScan(pair.getRight());
+                        LaserScan scan = TurtleUtils.turtleScanToLaserScan(pair.getRight());
                         Odometry odometry = pair.getLeft();
-                        double rad = quantarianToRad(odometry.getPose().getPose().getOrientation());
+                        double rad = TurtleUtils.quantarianToRad(odometry.getPose().getPose().getOrientation());
                         System.out.format("received odometry: x = %f, y = %f, theta = %f\n", odometry.getPose().getPose().getPosition().getX(), odometry.getPose().getPose().getPosition().getY(), rad);
                         DoubleOrientedPoint lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
                                 odometry.getPose().getPose().getPosition().getY(), rad);
@@ -108,37 +92,6 @@ public class TurtleSimulator {
                 }
             }
         }
-    }
-
-
-    private LaserScan turtleScanToLaserScan(sensor_msgs.LaserScan ls) {
-        LaserScan laserScan = new LaserScan();
-        laserScan.setAngleIncrement(ls.getAngleIncrement());
-        laserScan.setAngleMin(ls.getAngleMin());
-        laserScan.setAngleMax(ls.getAngleMax());
-        laserScan.setRangeMax(ls.getRangeMax());
-        laserScan.setRangeMin(ls.getRangeMin());
-        laserScan.setTimestamp((long) ls.getScanTime());
-        double angle = ls.getAngleMin();
-        if (ls.getRanges() != null) {
-            List<Double> ranges = new ArrayList<Double>();
-            float[] floats = ls.getRanges();
-            for (float r : floats) {
-                if (angle < Math.toRadians(23) && angle > Math.toRadians(-23)) {
-                    if (Float.isNaN(r)) {
-                        ranges.add((double) ls.getRangeMax());
-                    }
-                    ranges.add((double) r);
-                }
-                angle += ls.getAngleIncrement();
-            }
-            laserScan.setRanges(ranges);
-        }
-        return laserScan;
-    }
-
-    private DoubleOrientedPoint getOdomPose(long t) {
-        return null;
     }
 
 

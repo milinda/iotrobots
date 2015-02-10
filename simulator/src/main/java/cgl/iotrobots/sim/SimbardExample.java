@@ -4,6 +4,8 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.utils.RosMapPublisher;
+import cgl.iotrobots.slam.utils.TurtleUtils;
 import simbad.gui.Simbad;
 import simbad.sim.*;
 
@@ -54,7 +56,7 @@ public class SimbardExample {
 //                e.printStackTrace();
 //            }
 
-            SimUtils.connectToRos(node);
+            TurtleUtils.connectToRos(node);
 
         }
 
@@ -93,7 +95,7 @@ public class SimbardExample {
 //            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ());
             LaserScan laserScan = getLaserScan();
 
-            DoubleOrientedPoint noisyPoint = new DoubleOrientedPoint(point3D.x + SimUtils.gausianNoise(.0005, 0), -point3D.z + SimUtils.gausianNoise(.0005, 0), theta + SimUtils.gausianNoise(.0005, 0));
+            DoubleOrientedPoint noisyPoint = new DoubleOrientedPoint(point3D.x + TurtleUtils.gausianNoise(.0005, 0), -point3D.z + TurtleUtils.gausianNoise(.0005, 0), theta + TurtleUtils.gausianNoise(.0005, 0));
             System.out.println("Noisy point: " + noisyPoint);
             laserScan.setPose(noisyPoint);
             for (int i = 0; i < laserScan.getRanges().size(); i++) {

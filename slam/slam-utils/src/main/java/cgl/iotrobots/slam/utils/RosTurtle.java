@@ -1,4 +1,4 @@
-package cgl.iotrobots.sim;
+package cgl.iotrobots.slam.utils;
 
 import cgl.iotrobots.slam.utils.MessageFilter;
 import geometry_msgs.Quaternion;
@@ -26,16 +26,13 @@ import java.util.concurrent.BlockingQueue;
 * Created by supun on 2/10/15.
 */
 public class RosTurtle extends AbstractNodeMain {
-    private TurtleSimulator turtleSimulator;
     private String name = "/ts_controller";
 
     private BlockingQueue<Pair<Odometry, LaserScan>> queue = new ArrayBlockingQueue<Pair<Odometry, LaserScan>>(64);
 
     private MessageFilter filter = new MessageFilter(30, queue);
 
-    public RosTurtle(TurtleSimulator turtleSimulator) {
-        this.turtleSimulator = turtleSimulator;
-
+    public RosTurtle() {
     }
 
     public GraphName getDefaultNodeName() {
