@@ -81,7 +81,7 @@ public class TurtleController {
         // register with ros_java
         NodeConfiguration nodeConfiguration;
         try {
-            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
+            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
             TurtleController turtleController = new TurtleController();
             turtleController.start(nodeConfiguration);
         } catch (URISyntaxException e) {

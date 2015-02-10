@@ -73,7 +73,7 @@ public class TurtleSimulator {
 
         private BlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>> queue = new ArrayBlockingQueue<Pair<Odometry, sensor_msgs.LaserScan>>(64);
 
-        private MessageFilter filter = new MessageFilter(100, queue);
+        private MessageFilter filter = new MessageFilter(30, queue);
 
         public RosTurtle() {
 
@@ -230,14 +230,18 @@ public class TurtleSimulator {
         laserScan.setRangeMax(ls.getRangeMax());
         laserScan.setRangeMin(ls.getRangeMin());
         laserScan.setTimestamp((long) ls.getScanTime());
+        double angle = ls.getAngleMin();
         if (ls.getRanges() != null) {
             List<Double> ranges = new ArrayList<Double>();
             float[] floats = ls.getRanges();
             for (float r : floats) {
-                if (Float.isNaN(r)) {
-                    ranges.add((double) ls.getRangeMax());
+                if (angle < Math.toRadians(23) && angle > Math.toRadians(-23)) {
+                    if (Float.isNaN(r)) {
+                        ranges.add((double) ls.getRangeMax());
+                    }
+                    ranges.add((double) r);
                 }
-                ranges.add((double) r);
+                angle += ls.getAngleIncrement();
             }
             laserScan.setRanges(ranges);
         }
