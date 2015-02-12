@@ -45,6 +45,11 @@ public class TurtleUtils {
         return laserScan;
     }
 
+    public static double getYaw(double x, double y, double z, double w) {
+//        return Math.atan2(2.0*(y*z + w*x), w*w - x*x - y*y + z*z);
+        return Math.atan2(2.0 * (x * y + z * w), w * w + x * x - y * y - z * z);
+    }
+
     public static void connectToRos(AbstractNodeMain node) {
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
@@ -86,6 +91,7 @@ public class TurtleUtils {
     }
 
     public static double quantarianToRad(Quaternion q) {
-        return new Matrix3(q).getEulerYPR().yaw;
+//        return new Matrix3(q).getEulerYPR().yaw;
+        return getYaw(q.getX(), q.getY(), q.getZ(), q.getW());
     }
 }
