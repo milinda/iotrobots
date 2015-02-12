@@ -32,9 +32,11 @@ public class TurtleUtils {
             for (float r : floats) {
                 if (angle < Math.toRadians(23) && angle > Math.toRadians(-23)) {
                     if (Float.isNaN(r)) {
-                        ranges.add((double) ls.getRangeMax());
+                        ranges.add(0.0);
+                    } else {
+                        ranges.add((double) r);
                     }
-                    ranges.add((double) r);
+
                 }
                 angle += ls.getAngleIncrement();
             }
@@ -47,7 +49,7 @@ public class TurtleUtils {
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
 //            nodeConfiguration = NodeConfiguration.newPublic("192.168.1.6", new URI("http://192.168.1.6:11311"));
-        connectToRos(node, "156.56.93.59", "156.56.95.50");
+        connectToRos(node, "156.56.93.59", "156.56.93.220");
     }
 
     public static void connectToRos(AbstractNodeMain node, String host, String rosHost) {

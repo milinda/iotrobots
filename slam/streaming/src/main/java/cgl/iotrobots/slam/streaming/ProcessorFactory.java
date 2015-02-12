@@ -3,7 +3,6 @@ package cgl.iotrobots.slam.streaming;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.MapUpdater;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import scala.collection.mutable.MapBuilder;
 
 /**
  * Creates objects of the processors using the Configurations

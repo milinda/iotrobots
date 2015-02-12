@@ -34,9 +34,9 @@ public class TurtleSimulator {
     public void start(boolean parallel) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
-            gfsAlgorithm.gsp_ = new GridSlamProcessor();
+            gfsAlgorithm.gsp = new GridSlamProcessor();
         } else {
-            gfsAlgorithm.gsp_ = new ParallelGridSlamProcessor();
+            gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
         }
         gfsAlgorithm.init();
 

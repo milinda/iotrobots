@@ -2,7 +2,6 @@ package cgl.iotrobots.slam.core.app;
 
 import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-import cgl.iotrobots.slam.core.sensor.OdometrySensor;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
@@ -10,135 +9,132 @@ import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class GFSAlgorithm {
     private static Logger LOG = LoggerFactory.getLogger(GFSAlgorithm.class);
 
-    public AbstractGridSlamProcessor gsp_;
-    RangeSensor gsp_laser_;
+    public AbstractGridSlamProcessor gsp;
+    RangeSensor gspLaser;
 
     double gspLaserAngleIncrement;
-    double angle_min_;
-    double angle_max_;
+    double angleMin;
+    double angleMax;
     int gspLaserBeamCount;
 
-    int laser_count_;
-    int throttle_scans_;
+    int laserCount;
+    int throttleScans;
 
-    boolean got_first_scan_;
-    long map_update_interval_;
-    boolean got_map_;
+    boolean gotFirstScan;
+    long mapUpdateInterval;
+    boolean gotMap;
 
     // Parameters used by GMapping
-    double maxRange_;
-    double maxUrange_;
-    double maxrange_;
-    double minimum_score_ = 200;
-    double sigma_;
-    int kernelSize_;
-    double lstep_;
-    double astep_;
-    int iterations_;
-    double lsigma_;
-    double ogain_;
-    int lskip_;
-    double srr_;
-    double srt_;
-    double str_;
-    double stt_;
-    double linearUpdate_;
-    double angularUpdate_;
-    double temporalUpdate_;
-    double resampleThreshold_;
-    int particles_;
-    double xmin_;
-    double ymin_;
-    double xmax_;
-    double ymax_;
-    double delta_;
-    double occ_thresh_;
-    double llsamplerange_;
-    double llsamplestep_;
-    double lasamplerange_;
-    double lasamplestep_;
+    double maxRange;
+    double maxUrange;
+    double maxrange;
+    double minimumScore = 200;
+    double sigma;
+    int kernelSize;
+    double lstep;
+    double astep;
+    int iterations;
+    double lsigma;
+    double ogain;
+    int lskip;
+    double srr;
+    double srt;
+    double str;
+    double stt;
+    double linearUpdate;
+    double angularUpdate;
+    double temporalUpdate;
+    double resampleThreshold;
+    int particles;
+    double xmin;
+    double ymin;
+    double xmax;
+    double ymax;
+    double delta;
+    double occThresh;
+    double llsamplerange;
+    double llsamplestep;
+    double lasamplerange;
+    double lasamplestep;
 
     double tf_delay_;
 
     private MapUpdater mapUpdater;
 
     public void init() {
-        throttle_scans_ = 1;
+        throttleScans = 1;
 
         // gmapping parameters
-        maxUrange_ = 100.0;
-        maxRange_ = 100.0;
-        minimum_score_ = 200;
-        sigma_ = 0.05;
-        kernelSize_ = 1;
-        lstep_ = 0.05;
-        astep_ = 0.05;
-        iterations_ = 5;
-        lsigma_ = .075;
-        ogain_ = 3.0;
-        lskip_ = 0;
-        srr_ = 0.1;
-        srt_ = 0.2;
-        str_ = 0.1;
-        stt_ = 0.2;
-        linearUpdate_ = 1;
-        angularUpdate_ = 0.5;
-        temporalUpdate_ = 3;
-        resampleThreshold_ = .5;
-        particles_ = 50;
-        xmin_ = -20.0;
-        ymin_ = -20.0;
-        xmax_ = 20.0;
-        ymax_ = 20.0;
-        delta_ = 0.05;
-        occ_thresh_ = 0.25;
-        llsamplerange_ = 0.01;
-        llsamplestep_ = 0.01;
-        lasamplerange_ = 0.005;
-        lasamplestep_ = 0.005;
+        maxUrange = 100.0;
+        maxRange = 100.0;
+        minimumScore = 200;
+        sigma = 0.05;
+        kernelSize = 1;
+        lstep = 0.05;
+        astep = 0.05;
+        iterations = 5;
+        lsigma = .075;
+        ogain = 3.0;
+        lskip = 0;
+        srr = 0.1;
+        srt = 0.2;
+        str = 0.1;
+        stt = 0.2;
+        linearUpdate = 1;
+        angularUpdate = 0.5;
+        temporalUpdate = 3;
+        resampleThreshold = .5;
+        particles = 50;
+        xmin = -20.0;
+        ymin = -20.0;
+        xmax = 20.0;
+        ymax = 20.0;
+        delta = 0.05;
+        occThresh = 0.25;
+        llsamplerange = 0.01;
+        llsamplestep = 0.01;
+        lasamplerange = 0.005;
+        lasamplestep = 0.005;
     }
 
 
     public boolean initMapper(LaserScan scan) {
-        mapUpdater = new MapUpdater(maxRange_, maxUrange_, xmin_, ymin_, xmax_, ymax_, delta_, occ_thresh_);
-
         gspLaserBeamCount = scan.ranges.size();
 
         int orientationFactor = 1;
 
-        angle_min_ = orientationFactor * scan.angleMin;
-        angle_max_ = orientationFactor * scan.angleMax;
+        angleMin = orientationFactor * scan.angleMin;
+        angleMax = orientationFactor * scan.angleMax;
         gspLaserAngleIncrement = orientationFactor * scan.angleIncrement;
-        LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angle_min_, angle_max_, gspLaserAngleIncrement);
+        LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angleMin, angleMax, gspLaserAngleIncrement);
 
         DoubleOrientedPoint gmap_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
 
         // setting maxRange and maxUrange here so we can set a reasonable default
-        maxRange_ = scan.rangeMax - 0.01;
-        maxUrange_ = maxRange_;
+        maxRange = scan.rangeMax - 0.01;
+        maxUrange = maxRange;
 
         // The laser must be called "FLASER".
         // We pass in the absolute value of the computed angle increment, on the
         // assumption that GMapping requires a positive angle increment.  If the
         // actual increment is negative, we'll swap the order of ranges before
         // feeding each scan to GMapping.
-        gsp_laser_ = new RangeSensor("ROBOTLASER1",
+        gspLaser = new RangeSensor("ROBOTLASER1",
                 gspLaserBeamCount,
                 Math.abs(gspLaserAngleIncrement),
                 gmap_pose,
                 0.0,
-                maxRange_);
+                maxRange);
 
         Map<String, Sensor> smap = new HashMap<String, Sensor>();
-        smap.put(gsp_laser_.getName(), gsp_laser_);
-        gsp_.setSensorMap(smap);
+        smap.put(gspLaser.getName(), gspLaser);
+        gsp.setSensorMap(smap);
 
         /// @todo Expose setting an initial pose
         DoubleOrientedPoint initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
@@ -147,23 +143,23 @@ public class GFSAlgorithm {
             initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         }
 
-        gsp_.setMatchingParameters(maxUrange_, maxRange_, sigma_,
-                kernelSize_, lstep_, astep_, iterations_,
-                lsigma_, ogain_, lskip_);
+        gsp.setMatchingParameters(maxUrange, maxRange, sigma,
+                kernelSize, lstep, astep, iterations,
+                lsigma, ogain, lskip);
 
-        gsp_.setMotionModelParameters(srr_, srt_, str_, stt_);
-        gsp_.setUpdateDistances(linearUpdate_, angularUpdate_, resampleThreshold_);
-        gsp_.setUpdatePeriod_(temporalUpdate_);
-        gsp_.getMatcher().setgenerateMap(false);
-        gsp_.init(particles_, xmin_, ymin_, xmax_, ymax_, delta_, initialPose);
-        gsp_.getMatcher().setLLSamplerange(llsamplerange_);
-        gsp_.getMatcher().setLLSamplestep(llsamplestep_);
+        gsp.setMotionModelParameters(srr, srt, str, stt);
+        gsp.setUpdateDistances(linearUpdate, angularUpdate, resampleThreshold);
+        gsp.setUpdatePeriod_(temporalUpdate);
+        gsp.getMatcher().setgenerateMap(false);
+        gsp.init(particles, xmin, ymin, xmax, ymax, delta, initialPose);
+        gsp.getMatcher().setLLSamplerange(llsamplerange);
+        gsp.getMatcher().setLLSamplestep(llsamplestep);
         /// @todo Check these calls; in the gmapping gui, they use
         /// llsamplestep and llsamplerange intead of lasamplestep and
         /// lasamplerange.  It was probably a typo, but who knows.
-        gsp_.getMatcher().setLSSamplerange(lasamplerange_);
-        gsp_.getMatcher().setLASamplestep(lasamplestep_);
-        gsp_.setMinimumScore(minimum_score_);
+        gsp.getMatcher().setLSSamplerange(lasamplerange);
+        gsp.getMatcher().setLASamplestep(lasamplestep);
+        gsp.setMinimumScore(minimumScore);
 
         // Call the sampling function once to set the seed.
         Stat.sampleGaussian(1, System.currentTimeMillis());
@@ -179,17 +175,19 @@ public class GFSAlgorithm {
 
     public void laserScan(LaserScan scan) {
         long t0 =  System.currentTimeMillis();
-        laser_count_++;
-        if ((laser_count_ % throttle_scans_) != 0)
+        laserCount++;
+        if ((laserCount % throttleScans) != 0)
             return;
 
         long last_map_update = System.currentTimeMillis();
 
         // We can't initialize the mapper until we've got the first scan
-        if (!got_first_scan_) {
-            if (!initMapper(scan))
+        if (!gotFirstScan) {
+            if (!initMapper(scan)) {
                 return;
-            got_first_scan_ = true;
+            }
+            mapUpdater = new MapUpdater(maxRange, maxUrange, xmin, ymin, xmax, ymax, delta, occThresh);
+            gotFirstScan = true;
         }
 
         DoubleOrientedPoint pose = scan.getPose();
@@ -203,13 +201,13 @@ public class GFSAlgorithm {
             System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
-            DoubleOrientedPoint mpose = gsp_.getParticles().get(gsp_.getBestParticleIndex()).pose;
+            DoubleOrientedPoint mpose = gsp.getParticles().get(gsp.getBestParticleIndex()).pose;
             LOG.debug("new best pose: %.3f %.3f %.3f", mpose.x, mpose.y, mpose.theta);
             LOG.debug("odom pose: %.3f %.3f %.3f", odomPose.x, odomPose.y, odomPose.theta);
             LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odomPose.x, mpose.y - odomPose.y, mpose.theta - odomPose.theta);
 
             long t1 = System.currentTimeMillis();
-            if (!got_map_ || (scan.timestamp - last_map_update) > map_update_interval_) {
+            if (!gotMap || (scan.timestamp - last_map_update) > mapUpdateInterval) {
                 updateMap(scan);
                 LOG.debug("Updated the map");
             } else {
@@ -237,11 +235,11 @@ public class GFSAlgorithm {
         Double[] ranges_double = Utils.getDoubles(scan, gspLaserAngleIncrement);
         RangeReading reading = new RangeReading(scan.ranges.size(),
                 ranges_double,
-                gsp_laser_,
+                gspLaser,
                 scan.timestamp);
         reading.setPose(pose);
 
-        return gsp_.processScan(reading, 0);
+        return gsp.processScan(reading, 0);
     }
 
     public GFSMap getMap() {
@@ -254,7 +252,7 @@ public class GFSAlgorithm {
 
     public void updateMap(LaserScan scan) {
         double[] laser_angles = new double[scan.ranges.size()];
-        double theta = angle_min_;
+        double theta = angleMin;
         for (int i = 0; i < scan.ranges.size(); i++) {
             if (gspLaserAngleIncrement < 0)
                 laser_angles[scan.ranges.size() - i - 1] = theta;
@@ -271,8 +269,8 @@ public class GFSAlgorithm {
         }
 
         Particle best =
-                gsp_.getParticles().get(gsp_.getBestParticleIndex());
-        mapUpdater.updateMap(best, laser_angles, gsp_laser_.getPose());
+                gsp.getParticles().get(gsp.getBestParticleIndex());
+        mapUpdater.updateMap(best, laser_angles, gspLaser.getPose());
     }
 
     public static int MAP_IDX(int sx, int i, int j) {
