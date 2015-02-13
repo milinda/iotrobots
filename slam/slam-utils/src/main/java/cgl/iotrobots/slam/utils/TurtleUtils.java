@@ -54,7 +54,8 @@ public class TurtleUtils {
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
 //            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.95.50:11311"));
 //            nodeConfiguration = NodeConfiguration.newPublic("192.168.1.6", new URI("http://192.168.1.6:11311"));
-        connectToRos(node, "156.56.93.59", "156.56.93.220");
+//        connectToRos(node, "156.56.93.59", "156.56.93.220");
+        connectToRos(node, "156.56.93.59", "149.160.240.165");
     }
 
     public static void connectToRos(AbstractNodeMain node, String host, String rosHost) {

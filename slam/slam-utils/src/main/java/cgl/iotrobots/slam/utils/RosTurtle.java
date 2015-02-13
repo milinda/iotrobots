@@ -16,7 +16,7 @@ import org.ros.node.Node;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import sensor_msgs.LaserScan;
-import tf.tfMessage;
+import tf2_msgs.TFMessage;
 
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -52,7 +52,7 @@ public class RosTurtle extends AbstractNodeMain {
         final Subscriber<LaserScan> laserScanSubscriber =
                 connectedNode.newSubscriber("/scan", LaserScan._TYPE);
 
-        final Publisher<tfMessage> transformPublisher = connectedNode.newPublisher("/tf", tfMessage._TYPE);
+        final Publisher<TFMessage> transformPublisher = connectedNode.newPublisher("/tf", TFMessage._TYPE);
 
         try {
             Thread.sleep(1000);
@@ -91,7 +91,7 @@ public class RosTurtle extends AbstractNodeMain {
         });
     }
 
-    public void sendTransform(ConnectedNode node, Publisher<tfMessage> pub,
+    public void sendTransform(ConnectedNode node, Publisher<TFMessage> pub,
                               String parentFrame, String childFrame,
                               long t,
                               double v_x, double v_y, double v_z,
@@ -115,7 +115,7 @@ public class RosTurtle extends AbstractNodeMain {
         quaternion.setW(q_w);
         txMsg.getTransform().setRotation(quaternion);
 
-        tfMessage msg = node.getTopicMessageFactory().newFromType(tfMessage._TYPE);
+        TFMessage msg = node.getTopicMessageFactory().newFromType(TFMessage._TYPE);
         msg.setTransforms(new ArrayList<TransformStamped>(1));
         msg.getTransforms().add(txMsg);
 
