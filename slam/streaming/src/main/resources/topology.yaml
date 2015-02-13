@@ -48,9 +48,9 @@ conf:
     srt: 0.2
     str: 0.1
     stt: 0.2
-    linearUpdate: 1
-    angularUpdate: 0.5
-    temporalUpdate: 3.0
+    linearUpdate: .1
+    angularUpdate: 0.05
+    temporalUpdate: 1.0
     resampleThreshold: 0.5
     particles: 30
     xmin: -20.0

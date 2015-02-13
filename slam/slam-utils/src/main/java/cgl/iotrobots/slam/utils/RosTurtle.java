@@ -30,7 +30,7 @@ public class RosTurtle extends AbstractNodeMain {
 
     private BlockingQueue<Pair<Odometry, LaserScan>> queue = new ArrayBlockingQueue<Pair<Odometry, LaserScan>>(64);
 
-    private MessageFilter filter = new MessageFilter(50, queue);
+    private MessageFilter filter = new MessageFilter(10, queue);
 
     public RosTurtle() {
     }
