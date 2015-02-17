@@ -30,8 +30,6 @@ public class MapBuildingBolt extends BaseRichBolt {
 
     private Kryo kryo;
 
-    long lastMessageTime;
-    long lastComputationTime;
     private ExecutorService executor;
 
     private enum State {
@@ -68,55 +66,6 @@ public class MapBuildingBolt extends BaseRichBolt {
         } else {
             return;
         }
-
-//        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-//        long t0 = System.currentTimeMillis();
-//        long currentMessageTime = Long.parseLong(time.toString());
-//        // if this message came within that window, discard it
-//        // this will allow us to keep track of the current interval
-//        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
-//            outputCollector.ack(tuple);
-//            return;
-//        }
-//
-//        Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
-//
-//        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-//        if (!(val instanceof ParticleValue)) {
-//            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
-//        }
-//        ParticleValue particleValue = (ParticleValue) val;
-//
-//        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
-//        if (!(val instanceof LaserScan)) {
-//            throw new IllegalArgumentException("The laser scan should be of type RangeReading");
-//        }
-//        LaserScan scan = (LaserScan) val;
-//
-//        Particle p = new Particle();
-//        Utils.createParticle(particleValue, p);
-//
-//        double[] laser_angles = new double[scan.getRanges().size()];
-//        double theta = scan.getAngleMin();
-//        for (int i = 0; i < scan.getRanges().size(); i++) {
-//            if (scan.getAngleIncrement() < 0)
-//                laser_angles[scan.getRanges().size() - i - 1] = theta;
-//            else
-//                laser_angles[i] = theta;
-//            theta += scan.getAngleIncrement();
-//        }
-//
-//        GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
-//
-//        byte []body = Utils.serialize(kryo, map);
-//        List<Object> emit = new ArrayList<Object>();
-//        emit.add(body);
-//        emit.add(sensorId);
-//        emit.add(time);
-//
-//        outputCollector.emit(emit);
-//        lastComputationTime = System.currentTimeMillis() - t0;
-//        lastMessageTime = Long.parseLong(time.toString());
     }
 
     public class Worker implements Runnable {
@@ -129,15 +78,6 @@ public class MapBuildingBolt extends BaseRichBolt {
         @Override
         public void run() {
             Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-//            long t0 = System.currentTimeMillis();
-//            long currentMessageTime = Long.parseLong(time.toString());
-            // if this message came within that window, discard it
-            // this will allow us to keep track of the current interval
-//            if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
-//                outputCollector.ack(tuple);
-//                return;
-//            }
-
             Object sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
             Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
@@ -168,7 +108,6 @@ public class MapBuildingBolt extends BaseRichBolt {
             }
 
             double angle = -.5 * angleIncrement * size;
-            // double angle = 0;
             for (int i = 0; i < size; i++, angle += angleIncrement) {
                 laser_angles[i] = angle;
             }
@@ -181,8 +120,6 @@ public class MapBuildingBolt extends BaseRichBolt {
 
             outputCollector.emit(emit);
             stat = State.WAITING_INPUT;
-//            lastComputationTime = System.currentTimeMillis() - t0;
-//            lastMessageTime = Long.parseLong(time.toString());
         }
     }
 

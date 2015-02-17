@@ -193,7 +193,6 @@ public class ScanMatchBolt extends BaseRichBolt {
     Object sensorId;
     long lastMessageTime;
     long lastComputationTime;
-    // flag to be set when this bolt is has the best particle
 
     @Override
     public void execute(Tuple tuple) {
@@ -286,9 +285,6 @@ public class ScanMatchBolt extends BaseRichBolt {
         for (int i = 0; i < activeParticles.size(); i++) {
             int index = activeParticles.get(i);
             Particle particle = particles.get(index);
-//            ParticleValue particleValue = new ParticleValue(taskId, index, totalTasks, particle.pose,
-//                    particle.previousPose, particle.weight,
-//                    particle.weightSum, particle.gweight, particle.previousIndex, particle.node);
             ParticleValue particleValue = Utils.createParticleValue(particle, taskId, index, totalTasks);
             pvs.add(particleValue);
 
@@ -321,7 +317,6 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         outputFieldsDeclarer.declareStream(Constants.Fields.MAP_STREAM, new Fields(
                 Constants.Fields.PARTICLE_VALUE_FIELD,
-//                Constants.Fields.PARTICLE_MAP_FIELD,
                 Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD));
@@ -469,19 +464,11 @@ public class ScanMatchBolt extends BaseRichBolt {
     }
 
     private void emitParticleForMap(int index) {
-        LOG.info("Emit for map");
-        // tru tp see weather this bolt has the best particle
-//        ParticleValue pv = particleValues.get(index);
-//        LOG.error("Emit for map, best particle");
         Particle best = gfsp.getParticles().get(index);
         List<Object> emit = new ArrayList<Object>();
 
         ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
-        LOG.info("Emit for map, transfermap");
-//        TransferMap map = Utils.createTransferMap(best.getMap());
-
         emit.add(particleValue);
-//        emit.add(map);
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);
@@ -493,10 +480,6 @@ public class ScanMatchBolt extends BaseRichBolt {
         emitValue.add(sensorId);
         emitValue.add(time);
         outputCollector.emit(Constants.Fields.BEST_PARTICLE_STREAM, emitValue);
-//        ParticleValue particleValue = new ParticleValue(-1, -1, -1, best.pose,
-//                best.previousPose, best.weight,
-//                best.weightSum, best.gweight, best.previousIndex, best.node);
-
     }
 
     private boolean assignmentExists(int task, int index, List<ParticleAssignment> assignmentList) {

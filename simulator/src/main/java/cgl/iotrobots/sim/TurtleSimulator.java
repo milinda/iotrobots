@@ -71,7 +71,7 @@ public class TurtleSimulator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", true);
+        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", false);
         if (args.length > 0) {
             simulator.start(true);
             simulator.parallel = Integer.parseInt(args[0]);
