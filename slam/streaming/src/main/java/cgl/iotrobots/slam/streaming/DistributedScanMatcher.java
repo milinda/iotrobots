@@ -234,6 +234,7 @@ public class DistributedScanMatcher {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
+//            LOG.info("Using position: {}", p.pose);
         }
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
@@ -313,9 +314,7 @@ public class DistributedScanMatcher {
             LOG.info("Correcting the position from {} to {}", it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
-            LOG.info("Scan Matching Failed, using odometry. Likelihood=");
-            LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
-            LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
+            // LOG.info("Scan Matching Failed, using odometry. Likelihood: lp P{}, op {}", lastPartPose, odoPose);
         }
 
         ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);

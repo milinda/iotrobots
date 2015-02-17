@@ -73,7 +73,7 @@ public class TurtleSimulator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", false);
+        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", true);
         if (args.length > 0) {
             simulator.start(true);
             simulator.parallel = Integer.parseInt(args[0]);
@@ -128,7 +128,7 @@ public class TurtleSimulator {
             props.put("time", System.currentTimeMillis());
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
-            if (System.currentTimeMillis() - lastTime > 500) {
+//            if (System.currentTimeMillis() - lastTime > 500) {
                 lastTime = System.currentTimeMillis();
                 Message message = new Message(body, props);
                 try {
@@ -136,7 +136,7 @@ public class TurtleSimulator {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
+//            }
         }
     }
 
