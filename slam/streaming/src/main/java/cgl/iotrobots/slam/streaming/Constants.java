@@ -5,6 +5,7 @@ public abstract class Constants {
     public static final String ARGS_LOCAL = "local";
     public static final String ARGS_DS_MODE = "ds_mode";
     public static final String ARGS_PARALLEL = "p";
+    public static final String ARGS_IOT_CLOUD = "i";
 
     // configurations
     public static final String MAP_UPDATE_INTERVAL = "map_update_interval";

@@ -37,6 +37,7 @@ import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.ContainerAdapter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,6 +52,7 @@ public class SLAMTopology {
         options.addOption(Constants.ARGS_LOCAL, false, "Weather we want run locally");
         options.addOption(Constants.ARGS_DS_MODE, true, "The distributed mode, specify 0, 1, 2, 3 etc");
         options.addOption(Constants.ARGS_PARALLEL, true, "No of parallel nodes");
+        options.addOption(Constants.ARGS_IOT_CLOUD, false, "Weather we run through IoTCloud");
 
         CommandLineParser commandLineParser = new BasicParser();
         CommandLine cmd = commandLineParser.parse(options, args);
@@ -60,11 +62,12 @@ public class SLAMTopology {
         int dsMode = Integer.parseInt(dsModeValue);
         String pValue = cmd.getOptionValue(Constants.ARGS_PARALLEL);
         int p = Integer.parseInt(pValue);
+        boolean iotCloud = cmd.hasOption(Constants.ARGS_IOT_CLOUD);
 
         StreamTopologyBuilder streamTopologyBuilder;
         if (dsMode == 0) {
             streamTopologyBuilder = new StreamTopologyBuilder();
-            buildTestTopology(builder, streamTopologyBuilder, p, false);
+            buildTestTopology(builder, streamTopologyBuilder, p, iotCloud);
         }
 
         Config conf = new Config();
