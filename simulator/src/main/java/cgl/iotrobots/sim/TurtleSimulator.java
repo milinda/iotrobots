@@ -51,6 +51,8 @@ public class TurtleSimulator {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            TurtleUtils.sendControl(controlSender);
         }
     }
 

@@ -46,7 +46,6 @@ public class TurtleUtils {
     }
 
     public static double getYaw(double x, double y, double z, double w) {
-//        return Math.atan2(2.0*(y*z + w*x), w*w - x*x - y*y + z*z);
         return Math.atan2(2.0 * (x * y + z * w), w * w + x * x - y * y - z * z);
     }
 
@@ -59,12 +58,9 @@ public class TurtleUtils {
     }
 
     public static void connectToRos(AbstractNodeMain node, String host, String rosHost) {
-        // register with ros_java
         NodeConfiguration nodeConfiguration;
         try {
-//            nodeConfiguration = NodeConfiguration.newPublic("156.56.93.59", new URI("http://156.56.93.220:11311"));
             nodeConfiguration = NodeConfiguration.newPublic(host, new URI("http://" + rosHost + ":11311"));
-//            nodeConfiguration = NodeConfiguration.newPublic("192.168.1.6", new URI("http://192.168.1.6:11311"));
             NodeMainExecutor nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
             nodeMainExecutor.execute(node, nodeConfiguration);
         } catch (URISyntaxException e) {

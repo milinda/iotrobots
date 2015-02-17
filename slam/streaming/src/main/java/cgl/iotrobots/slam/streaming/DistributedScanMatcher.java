@@ -234,7 +234,6 @@ public class DistributedScanMatcher {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-//            p.pose = relPose;
         }
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
@@ -311,7 +310,7 @@ public class DistributedScanMatcher {
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
         //    it->pose=corrected;
         if (score > minimumScore) {
-            // LOG.info("Correcting the position from {} to {}", it.pose, corrected);
+            LOG.info("Correcting the position from {} to {}", it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
             LOG.info("Scan Matching Failed, using odometry. Likelihood=");

@@ -44,6 +44,8 @@ public class ConfigurationBuilder {
         configuration.setLasamplestep(getDoubleProperty(conf, Constants.LASAMPLESTEP));
         configuration.setOccThresh(getDoubleProperty(conf, Constants.OCC_THRESH));
 
+        configuration.setMinimumScore(getDoubleProperty(conf, Constants.MIN_SCORE));
+
         return configuration;
     }
 

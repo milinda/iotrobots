@@ -198,21 +198,19 @@ public class ScanMatchBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         String stream = tuple.getSourceStreamId();
 
+        outputCollector.ack(tuple);
         // if we receive a control message init and return
         if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
             init();
-            outputCollector.ack(tuple);
             return;
         }
 
         if (state != MatchState.WAITING_FOR_READING) {
             // we ack the tuple and discard it, because we cannot process the tuple at this moment
-            outputCollector.ack(tuple);
             return;
         }
 
         // check weather this tuple came between the last computation time. if so discard it
-
         long t0 = System.currentTimeMillis();
         int taskId = topologyContext.getThisTaskIndex();
 
@@ -296,7 +294,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(time);
         outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
 
-        outputCollector.ack(tuple);
+
         // we compute the last computation time
         lastComputationTime = System.currentTimeMillis() - t0;
         lastMessageTime = Long.parseLong(time.toString());

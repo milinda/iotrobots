@@ -63,3 +63,4 @@ conf:
     lasamplerange: 0.005
     lasamplestep: 0.005
     occ_threshold: 0.25
+    min_score: 200.0
