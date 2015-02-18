@@ -46,7 +46,7 @@ public class MapUpdater {
     public GFSMap updateMap(Particle best, double angles[], DoubleOrientedPoint laserPose) {
         ScanMatcher matcher = new ScanMatcher();
         matcher.setLaserParameters(angles.length, angles, laserPose);
-        System.out.format("best particle pose: %f %f %f\n", best.getPose().getX(), best.getPose().getY(), best.getPose().getTheta());
+        LOG.info("best particle pose: {}", best.getPose());
         matcher.setLaserMaxRange(maxRange_);
         matcher.setUsableRange(maxUrange_);
         matcher.setgenerateMap(true);

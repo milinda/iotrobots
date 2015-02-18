@@ -82,7 +82,6 @@ public class SimbardDistributed {
 
         }
 
-        /** This method is called by the simulator engine on reset. */
         public void initBehavior() {
             TurtleUtils.sendControl(controlSender);
         }
@@ -91,18 +90,11 @@ public class SimbardDistributed {
 
         long lastTime = System.currentTimeMillis();
 
-        /** This method is call cyclically (20 times per second)  by the simulator engine. */
         public void performBehavior() {
-//            System.out.println("\n\n");
             Point3d point3D = new Point3d(0.0, 0.0, 0.0);
             getCoords(point3D);
-
-            //System.out.format("actual position: %f, %f, %f\n", point3D.x, point3D.y, point3D.z);
             Quat4d trs = getOrientation();
-            //System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ(), trs.getW());
-//            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
             double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
-            //System.out.format("theta %f\n", theta);
             System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta));
@@ -122,7 +114,6 @@ public class SimbardDistributed {
                 }
             }
 
-            // progress at 0.5 m/s
             if (getCounter() % 500 == 0) {
                 forward = !forward;
             }

@@ -16,6 +16,8 @@ import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MapBuildingBolt extends BaseRichBolt {
+    private static Logger LOG = LoggerFactory.getLogger(MapBuildingBolt.class);
+
     private MapUpdater mapUpdater;
 
     private OutputCollector outputCollector;
@@ -112,6 +116,7 @@ public class MapBuildingBolt extends BaseRichBolt {
                 laser_angles[i] = angle;
             }
             GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
+            LOG.info("Laser scan pose: {}", scan.getPose());
             byte []body = Utils.serialize(kryo, map);
             List<Object> emit = new ArrayList<Object>();
             emit.add(body);
