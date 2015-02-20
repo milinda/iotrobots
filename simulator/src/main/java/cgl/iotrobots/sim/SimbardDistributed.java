@@ -119,9 +119,9 @@ public class SimbardDistributed {
             }
 
             if (forward) {
-                setTranslationalVelocity(.2);
+                setTranslationalVelocity(.4);
             } else {
-                setTranslationalVelocity(-.2);
+                setTranslationalVelocity(-.4);
             }
 
             if ((getCounter() % 2) == 0)
