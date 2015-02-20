@@ -46,8 +46,8 @@ conf:
     lskip: 0
     srr: 0.01
     srt: 0.02
-    str: 0.01
-    stt: 0.02
+    str: 0.001
+    stt: 0.002
     linearUpdate: .1
     angularUpdate: 0.05
     temporalUpdate: 1.0
