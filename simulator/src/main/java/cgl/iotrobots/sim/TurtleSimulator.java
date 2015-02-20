@@ -57,13 +57,14 @@ public class TurtleSimulator {
     }
 
     public void start(boolean parallel) throws InterruptedException {
-        if (!parallel) {
-            gfsAlgorithm.gsp = new GridSlamProcessor();
-        } else {
-            gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
+        if (!storm) {
+            if (!parallel) {
+                gfsAlgorithm.gsp = new GridSlamProcessor();
+            } else {
+                gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
+            }
+            gfsAlgorithm.init();
         }
-        gfsAlgorithm.init();
-
         RosTurtle rosTurtle = new RosTurtle();
         TurtleUtils.connectToRos(rosTurtle);
         TurtleUtils.connectToRos(rosMapPublisher);
