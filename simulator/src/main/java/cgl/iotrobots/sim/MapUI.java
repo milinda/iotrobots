@@ -62,7 +62,7 @@ public class MapUI extends JFrame {
                     for (IntPoint p : map.currentPos) {
                         int mapX = p.x;
                         int mapY = map.height - p.y - 1;
-                        colorArea(image, mapX, mapY, map.width, map.height, 1);
+                        colorArea(image, mapX, mapY, map.width, map.height, 1, Color.RED);
                     }
                 }
             } catch (Throwable e) {
@@ -92,14 +92,18 @@ public class MapUI extends JFrame {
         }
     }
 
-    public static void colorArea(BufferedImage image, int x, int y, int w, int h, int size) {
+    public static void colorArea(BufferedImage image, int x, int y, int w, int h, int size, Color color) {
         for (int i = -size; i < size; i++) {
             for (int j = -size; j < size; j++) {
                 if (x + i < w && x + i > 0 && y + j < h && y + j > 0) {
-                    image.setRGB(x + i, y + j, Color.WHITE.getRGB());
+                    image.setRGB(x + i, y + j, color.getRGB());
                 }
             }
         }
+    }
+
+    public static void colorArea(BufferedImage image, int x, int y, int w, int h, int size) {
+        colorArea(image, x, y, w, h, size, Color.WHITE);
     }
 
     public static BufferedImage getScaledImage(BufferedImage image, int width, int height) throws IOException {

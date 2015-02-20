@@ -4,6 +4,7 @@ import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import cgl.iotrobots.slam.utils.RosMapPublisher;
 import cgl.iotrobots.slam.utils.TurtleUtils;
 import simbad.gui.Simbad;
@@ -61,7 +62,7 @@ public class SimbardExample {
         }
 
         public void initBehavior() {
-            gfsAlgorithm.gsp = new GridSlamProcessor();
+            gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngleIncrement(ANGLE / totalSensors);
@@ -88,32 +89,29 @@ public class SimbardExample {
             getCoords(point3D);
 
             Quat4d trs = getOrientation();
-//            double theta = quantarianToRad(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
             double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
             System.out.format("actual position: %f, %f, %f\n", point3D.x, -point3D.z, theta);
-//            Transform3D trs = getTransform();
-//            System.out.format("actual position: %f, %f, %f %f\n", trs.getX(), trs.getY(), trs.getZ());
             LaserScan laserScan = getLaserScan();
 
             DoubleOrientedPoint noisyPoint = new DoubleOrientedPoint(point3D.x + TurtleUtils.gausianNoise(.0005, 0), -point3D.z + TurtleUtils.gausianNoise(.0005, 0), theta + TurtleUtils.gausianNoise(.0005, 0));
             System.out.println("Noisy point: " + noisyPoint);
             laserScan.setPose(noisyPoint);
-            for (int i = 0; i < laserScan.getRanges().size(); i++) {
-                System.out.format("%f ", laserScan.getRanges().get(i));
-            }
+//            for (int i = 0; i < laserScan.getRanges().size(); i++) {
+//                System.out.format("%f ", laserScan.getRanges().get(i));
+//            }
             System.out.format("\n");
 
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
 
-            if (getCounter() % 500 == 0) {
+            if (getCounter() % 200 == 0) {
                 forward = !forward;
             }
 
             if (forward) {
-                setTranslationalVelocity(.25);
+                setTranslationalVelocity(.2);
             } else {
-                setTranslationalVelocity(-.25);
+                setTranslationalVelocity(-.2);
             }
 
             if ((getCounter() % 2) == 0)

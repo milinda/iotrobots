@@ -104,7 +104,7 @@ public class SimbardDistributed {
             props.put("time", System.currentTimeMillis());
             props.put(TransportConstants.SENSOR_ID, System.currentTimeMillis());
 
-            if (System.currentTimeMillis() - lastTime > 1000) {
+            if (System.currentTimeMillis() - lastTime > 500) {
                 lastTime = System.currentTimeMillis();
                 Message message = new Message(body, props);
                 try {
@@ -114,14 +114,14 @@ public class SimbardDistributed {
                 }
             }
 
-            if (getCounter() % 500 == 0) {
+            if (getCounter() % 200 == 0) {
                 forward = !forward;
             }
 
             if (forward) {
-                setTranslationalVelocity(.1);
+                setTranslationalVelocity(.2);
             } else {
-                setTranslationalVelocity(-.1);
+                setTranslationalVelocity(-.2);
             }
 
             if ((getCounter() % 2) == 0)

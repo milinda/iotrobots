@@ -2,8 +2,12 @@ package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MotionModel {
+    private static Logger LOG = LoggerFactory.getLogger(MotionModel.class);
+
     public double srr, str, srt, stt;
 
     public void setSrr(double srr) {
@@ -52,6 +56,9 @@ public class MotionModel {
         if (noisypoint.theta > Math.PI)
             noisypoint.theta -= 2 * Math.PI;
         DoubleOrientedPoint point = absoluteSum(p, noisypoint);
+
+//        LOG.info("*************** old pos {} new pos {} changed pos {} ************ ", pold, pnew, point);
+
         return point;
     }
 

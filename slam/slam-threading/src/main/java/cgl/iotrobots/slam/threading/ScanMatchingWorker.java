@@ -49,7 +49,7 @@ public class ScanMatchingWorker implements Runnable {
             if (score > minimumScore) {
                 it.pose = new DoubleOrientedPoint(corrected);
             } else {
-                LOG.info("Scan Matching Failed, using odometry. Likelihood=");
+//                LOG.info("Scan Matching Failed, using odometry. Likelihood=");
             }
 
             ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);

@@ -1,12 +1,10 @@
 package cgl.iotrobots.slam.streaming;
 
-import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.gridfastsalm.MotionModel;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.gridfastsalm.TNode;
-import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
 import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
@@ -26,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class DistributedScanMatcher {
     private static Logger LOG = LoggerFactory.getLogger(DistributedScanMatcher.class);
 
-    public static final double distanceThresholdCheck = 20;
+    public static final double distanceThresholdCheck = 1;
 
     protected List<Particle> particles = new ArrayList<Particle>();
 
@@ -227,6 +225,7 @@ public class DistributedScanMatcher {
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
+        long t0 = System.currentTimeMillis();
         DoubleOrientedPoint relPose = reading.getPose();
         if (count == 0) {
             lastPartPose = odoPose = relPose;
@@ -244,7 +243,7 @@ public class DistributedScanMatcher {
 
         // if the robot jumps throw a warning
         if (linearDistance > distanceThresholdCheck) {
-            LOG.error("The robot jumped too much");
+            LOG.error("The robot jumped too much *********************************************************** ");
         }
 
         odoPose = relPose;
@@ -302,6 +301,7 @@ public class DistributedScanMatcher {
 
         }
         readingCount++;
+        LOG.info("Time in prcess scan: {} *****************************", (System.currentTimeMillis() - t0));
         return processed;
     }
 
