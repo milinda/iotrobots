@@ -35,7 +35,7 @@ public class SimbardExample {
 
         int totalSensors = 0;
 
-        RosMapPublisher node = new RosMapPublisher();
+//        RosMapPublisher node = new RosMapPublisher();
 
         public Robot(Vector3d position, String name) {
             super(position, name);
@@ -57,12 +57,12 @@ public class SimbardExample {
 //                e.printStackTrace();
 //            }
 
-            TurtleUtils.connectToRos(node);
+//            TurtleUtils.connectToRos(node);
 
         }
 
         public void initBehavior() {
-            gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
+            gfsAlgorithm.gsp = new GridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngleIncrement(ANGLE / totalSensors);
@@ -118,7 +118,7 @@ public class SimbardExample {
                 setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 2);
 
             mapUI.setMap(gfsAlgorithm.getMap());
-            node.addMap(gfsAlgorithm.getMap());
+//            node.addMap(gfsAlgorithm.getMap());
         }
 
         private double quantarianToRad(Quaternion q) {

@@ -168,7 +168,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         if (hasReSampled) {
             // first we will distribute the new assignments
             // this will distribute the current maps
-            LOG.info("ReSampled, distributing assignments");
+            LOG.info("ReSampled, distributing assignments***********************");
             ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
             assignments.setReSampled(true);
             assignments.setBestParticle(best);

@@ -157,7 +157,7 @@ public abstract class AbstractGridSlamProcessor {
     protected double scanMatchParticle(double[] plainReading, double sumScore, Particle it) {
         DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
         double score = 0, l;
-//        score = matcher.optimize(corrected, it.map, it.pose, plainReading);
+        score = matcher.optimize(corrected, it.map, it.pose, plainReading);
 //        it->pose=corrected;
         if (score > minimumScore) {
             LOG.info("Correcting the position from {} to {}", it.pose, corrected);
