@@ -81,11 +81,11 @@ public class SLAMTopology {
 
         // we are going to deploy on a real cluster
         if (!local) {
-            conf.setNumWorkers(10);
+            conf.setNumWorkers(20);
             StormSubmitter.submitTopology(name, conf, builder.createTopology());
         } else {
             // deploy on a local cluster
-            conf.setMaxTaskParallelism(10);
+            conf.setMaxTaskParallelism(20);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("drone", conf, builder.createTopology());
             Thread.sleep(1000000);

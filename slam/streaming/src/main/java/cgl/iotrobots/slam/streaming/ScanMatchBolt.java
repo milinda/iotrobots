@@ -166,8 +166,16 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
-
+        LOG.info("taskId {}: active particles at initialization {}", taskId, printActiveParticles());
         state = MatchState.WAITING_FOR_READING;
+    }
+
+    private String printActiveParticles() {
+        String s = "";
+        for (int i : gfsp.getActiveParticles()) {
+            s += i + " ";
+        }
+        return s;
     }
 
     /**
@@ -180,7 +188,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private int computeParticlesForTask(GFSConfiguration cfg, int totalTasks, int taskId) {
         int noOfParticles = cfg.getNoOfParticles() / totalTasks;
         int remainder = cfg.getNoOfParticles() % totalTasks;
-        if (remainder > 0 &&  remainder < (totalTasks - taskId)) {
+        if (remainder > 0 &&  taskId < remainder) {
             noOfParticles += 1;
         }
         return noOfParticles;
