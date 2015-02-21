@@ -5,7 +5,6 @@ import cgl.iotcloud.core.msg.MessageContext;
 import cgl.iotcloud.core.sensorsite.SiteContext;
 import cgl.iotcloud.core.transport.Channel;
 import cgl.iotcloud.core.transport.Direction;
-import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.utils.RosMapPublisher;
 import cgl.iotrobots.slam.utils.RosTurtle;
@@ -109,6 +108,7 @@ public class SlamSensor extends AbstractSensor {
             TurtleUtils.connectToRos(rosMapPublisher);
 
             Thread t = new Thread(new Worker(rosTurtle.getQueue(), sendChannel));
+            t.start();
         }
 
         startListen(mapChannel, new MessageReceiver() {

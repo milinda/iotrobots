@@ -62,5 +62,5 @@ conf:
     llsamplestep: 0.01
     lasamplerange: 0.005
     lasamplestep: 0.005
-    occ_threshold: 0.25
-    min_score: 200.0
+    occ_threshold: 0.5
+    min_score: 10.0
