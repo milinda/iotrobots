@@ -160,12 +160,10 @@ public abstract class AbstractGridSlamProcessor {
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
 //        it->pose=corrected;
         if (score > minimumScore) {
-            LOG.info("Correcting the position from {} to {}", it.pose, corrected);
+            LOG.info("Score {}: Correcting the position from {} to {}", score, it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
-            LOG.info("Scan Matching Failed, score {}, using odometry. Likelihood=", score);
-            LOG.info("lp:" + lastPartPose.x + " " + lastPartPose.y + " " + lastPartPose.theta);
-            LOG.info("op:" + odoPose.x + " " + odoPose.y + " " + odoPose.theta);
+            LOG.info("Score {}:, Scan Matching Failed, using odometry. Likelihood: last pose P{}, odom pose {}", score, lastPartPose, odoPose);
         }
 
         ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);

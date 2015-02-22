@@ -90,7 +90,7 @@ public class GFSAlgorithm {
         angularUpdate = 0.5;
         temporalUpdate = 1;
         resampleThreshold = .5;
-        particles = 50;
+        particles = 20;
         xmin = -20;
         ymin = -20.0;
         xmax = 20.0;

@@ -348,7 +348,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         public void onMessage(Message message) {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
-            LOG.info("taskId {}: Received particle map", taskId);
+            LOG.debug("taskId {}: Received particle map", taskId);
             ParticleMapsList pm = (ParticleMapsList) Utils.deSerialize(kryoMapReading, body, ParticleMapsList.class);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
                 try {
@@ -369,7 +369,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 }
             } else if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                 // because we haven't received the assignments yet, we will keep the values temporaly in this list
-                LOG.info("taskId {}: Adding map state {}", taskId, state);
+                LOG.debug("taskId {}: Adding map state {}", taskId, state);
                 lock.lock();
                 try {
                     List<ParticleMaps> list = pm.getParticleMapsArrayList();
@@ -478,7 +478,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);
-        LOG.info("Emit for map, collector");
+        LOG.debug("Emit for map, collector");
         outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
         List<Object> emitValue = new ArrayList<Object>();
@@ -513,7 +513,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             byte []body = message.getBody();
             if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                 try {
-                    LOG.info("taskId {}: Received particle assignment", taskId);
+                    LOG.debug("taskId {}: Received particle assignment", taskId);
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
                     LOG.info("taskId {}: Best particle index {}", taskId, assignments.getBestParticle());
                     // if we have resampled ditributed the assignments
@@ -561,7 +561,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 }
             }
         }
-        LOG.info("taskId {}: expectingParticleValues: {} expectingParticleMaps: {}", taskId,
+        LOG.debug("taskId {}: expectingParticleValues: {} expectingParticleMaps: {}", taskId,
                 expectingParticleValues, expectingParticleMaps);
     }
 
@@ -615,7 +615,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     Kryo k = kryoMapWriters.get(listEntry.getKey());
                     byte[] b = Utils.serialize(k, listEntry.getValue());
                     Message message = new Message(b, new HashMap<String, Object>());
-                    LOG.info("Sending particle map to {}", listEntry.getKey());
+                    LOG.debug("Sending particle map to {}", listEntry.getKey());
                     RabbitMQSender particleSender = particleSenders.get(listEntry.getKey());
                     try {
                         particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + listEntry.getKey());
@@ -655,7 +655,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
             ParticleValues pvs = (ParticleValues) Utils.deSerialize(kryoPVReading, body, ParticleValues.class);
-            LOG.info("taskId {}: Received particle value", taskId);
+            LOG.debug("taskId {}: Received particle value", taskId);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
                 try {
                     // first we need to determine the expected new maps for this particle
@@ -731,7 +731,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticleValues--;
-        LOG.info("taskId {}: Expecting particle values {} origin {}", taskId, expectingParticleValues, origin);
+        LOG.debug("taskId {}: Expecting particle values {} origin {}", taskId, expectingParticleValues, origin);
     }
 
 
@@ -761,7 +761,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // we have received one particle
         expectingParticleMaps--;
-        LOG.info("taskId {}: Expecting particle maps {} origin {}", taskId, expectingParticleMaps, origin);
+        LOG.debug("taskId {}: Expecting particle maps {} origin {}", taskId, expectingParticleMaps, origin);
     }
 
     @Override

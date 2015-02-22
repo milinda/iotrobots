@@ -316,17 +316,23 @@ public class DistributedReSampler {
         double wcum = 0;
         neff = 0;
         for (Particle particle : particles) {
-            double w = Math.exp(gain * (particle.weight - lmax));
+//            double w = Math.exp(gain * (particle.weight - lmax));
+            double w = particle.weight;
             weights.add(w);
             wcum += w;
         }
 
         neff = 0;
-        for (Double weight : weights) {
+        List<Double> temp = new ArrayList<Double>();
+        for (int i = 0; i < weights.size(); i++) {
+            double weight = weights.get(i);
             weight = weight / wcum;
+            temp.add(weight);
             double w = weight;
             neff += w * w;
         }
+        weights.clear();
+        weights.addAll(temp);
         neff = 1. / neff;
     }
 

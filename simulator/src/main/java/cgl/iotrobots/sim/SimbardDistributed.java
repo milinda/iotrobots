@@ -97,7 +97,7 @@ public class SimbardDistributed {
             double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
             System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta);
             LaserScan laserScan = getLaserScan();
-            laserScan.setPose(new DoubleOrientedPoint(point3D.x, -point3D.z, theta));
+            laserScan.setPose(new DoubleOrientedPoint(point3D.x + Math.random() / 10, -point3D.z + Math.random() / 10, theta + Math.random() / 10));
 
             byte []body = Utils.serialize(kryo, laserScan);
             Map<String, Object> props = new HashMap<String, Object>();
@@ -144,13 +144,11 @@ public class SimbardDistributed {
 
             @Override
             public void onMessage(Message message) {
-//                GFSMap map = (GFSMap) Utils.deSerialize(kryo, message.getBody(), GFSMap.class);
                 Object time = message.getProperties().get("time");
                 Long t = Long.parseLong(time.toString());
                 bestSum += System.currentTimeMillis() - t;
                 bestCount++;
                 System.out.println("*******************Best Time: " + (System.currentTimeMillis() - t) + "Average: " + ((double)(bestSum) / bestCount) +" ***************************");
-//                mapUI.setMap(map);
             }
         }
 

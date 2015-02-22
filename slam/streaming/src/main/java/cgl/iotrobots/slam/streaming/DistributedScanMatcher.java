@@ -311,10 +311,10 @@ public class DistributedScanMatcher {
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
         //    it->pose=corrected;
         if (score > minimumScore) {
-            LOG.info("Correcting the position from {} to {}", it.pose, corrected);
+            LOG.info("Score {}: Correcting the position from {} to {}", score, it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
-            // LOG.info("Scan Matching Failed, using odometry. Likelihood: lp P{}, op {}", lastPartPose, odoPose);
+            LOG.info("Score {}:, Scan Matching Failed, using odometry. Likelihood: last pose P{}, odom pose {}", score, lastPartPose, odoPose);
         }
 
         ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
@@ -347,7 +347,8 @@ public class DistributedScanMatcher {
 
     public void postProcessingWithoutReSampling(double []plainReading, RangeReading reading) {
         List<TNode> oldGeneration = new ArrayList<TNode>();
-        for (Particle m_particle : particles) {
+        for (int i : activeParticles) {
+            Particle m_particle = particles.get(i);
             oldGeneration.add(m_particle.node);
         }
         int index = 0;

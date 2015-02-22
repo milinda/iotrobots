@@ -6,5 +6,6 @@ Deploy on Storm
 Deploy on IoTCloud
 ------------------
 
+./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://localhost:5672"
 
 
