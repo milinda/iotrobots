@@ -261,13 +261,11 @@ public class SimbardDistributed {
 
     public static void main(String[] args) {
         // request antialising
+        mapUI = new MapUI();
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
         Simbad frame = new Simbad(new MyEnv(), false);
-
         showOnScreen(1, frame);
-        mapUI = new MapUI();
-//        showOnScreen(1, mapUI);
     }
 
     public static void showOnScreen( int screen, JFrame frame )

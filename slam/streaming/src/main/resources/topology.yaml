@@ -44,12 +44,12 @@ conf:
     lsigma: 0.075
     ogain: 3.0
     lskip: 0
-    srr: 0.01
-    srt: 0.02
-    str: 0.001
-    stt: 0.002
-    linearUpdate: .1
-    angularUpdate: 0.05
+    srr: 0.1
+    srt: 0.2
+    str: 0.1
+    stt: 0.2
+    linearUpdate: .01
+    angularUpdate: 0.005
     temporalUpdate: 1.0
     resampleThreshold: 0.5
     particles: 30
@@ -63,4 +63,4 @@ conf:
     lasamplerange: 0.005
     lasamplestep: 0.005
     occ_threshold: 0.5
-    min_score: 5.0
+    min_score: 2.0

@@ -448,7 +448,6 @@ public class ScanMatcher {
         double currentScore = score(map, currentPose, readings);
         double adelta = optAngularDelta, ldelta = optLinearDelta;
         int refinement = 0;
-        int c_iterations = 0;
         do {
             if (bestScore >= currentScore || (Double.isNaN(bestScore) && Double.isNaN(currentScore))) {
                 refinement++;
@@ -509,7 +508,6 @@ public class ScanMatcher {
                     currentScore = localScore;
                     bestLocalPose = new DoubleOrientedPoint(localPose.x, localPose.y, localPose.theta);
                 }
-                c_iterations++;
             } while (move != Move.Done);
             currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
         } while (currentScore > bestScore || refinement < optRecursiveIterations);

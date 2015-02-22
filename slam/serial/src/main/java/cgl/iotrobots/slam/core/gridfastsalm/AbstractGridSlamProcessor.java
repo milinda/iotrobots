@@ -173,6 +173,8 @@ public abstract class AbstractGridSlamProcessor {
         it.weight += l;
         it.weightSum += l;
 
+        LOG.info("Weigh of the particle: {}", it.weight);
+
         //set up the selective copy of the active area
         //by detaching the areas that will be updated
         matcher.invalidateActiveArea();
@@ -277,7 +279,7 @@ public abstract class AbstractGridSlamProcessor {
         }
 
         if (neff < resampleThreshold * particles.size()) {
-            LOG.info("*************RESAMPLE***************");
+            LOG.info("neff < resampleThreshold * particles.size() and resampling {} < {}", neff, resampleThreshold * particles.size());
             UniformResampler resampler = new UniformResampler();
             indexes = resampler.resampleIndexes(weights, adaptSize);
 
@@ -335,6 +337,7 @@ public abstract class AbstractGridSlamProcessor {
             }
             hasResampled = true;
         } else {
+            LOG.info("neff < resampleThreshold * particles.size() and resampling {} < {}", neff, resampleThreshold * particles.size());
             int index = 0;
             LOG.debug("Registering Scans:");
             Iterator<TNode> node_it = oldGeneration.iterator();

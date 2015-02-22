@@ -386,11 +386,11 @@ public class DistributedScanMatcher {
         try {
             for (int index : activeParticles) {
                 Particle it = particles.get(index);
-                sumScore = scanMatchParticle(plainReading, sumScore, it);
+                sumScore += scanMatchParticle(plainReading, sumScore, it);
             }
         }finally {
             lock.unlock();
         }
-        LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
+        LOG.info("Average Scan Matching Score =" + sumScore / particles.size());
     }
 }

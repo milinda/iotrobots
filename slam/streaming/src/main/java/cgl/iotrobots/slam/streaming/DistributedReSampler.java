@@ -344,6 +344,7 @@ public class DistributedReSampler {
         }
 
         if (neff < resampleThreshold * particles.size()) {
+            LOG.info("neff < resampleThreshold * particles.size() and resampling {} < {}", neff, resampleThreshold * particles.size());
             UniformResampler resampler = new UniformResampler();
             indexes = resampler.resampleIndexes(weights, adaptSize);
 
@@ -394,25 +395,9 @@ public class DistributedReSampler {
                 particles.add(it);
             }
             hasResampled = true;
+        } else {
+            LOG.info("neff > resampleThreshold * particles.size() and resampling {} > {}", neff, resampleThreshold * particles.size());
         }
-//        else {
-//            int index = 0;
-//            LOG.debug("Registering Scans:");
-//            Iterator<TNode> node_it = oldGeneration.iterator();
-//            for (Particle it : particles) {
-//                //create a new node in the particle tree and add it to the old tree
-//                TNode node = null;
-//                node = new TNode(it.pose, 0.0, node_it.next(), 0);
-//
-//                node.reading = reading;
-//                it.node = node;
-//
-//                matcher.invalidateActiveArea();
-//                matcher.registerScan(it.map, it.pose, plainReading);
-//                it.previousIndex = index;
-//                index++;
-//            }
-//        }
         return hasResampled;
     }
 

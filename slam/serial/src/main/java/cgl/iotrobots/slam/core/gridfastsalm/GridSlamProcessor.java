@@ -100,9 +100,9 @@ public class GridSlamProcessor extends SharedMemoryGridSlamProcessor {
         // sample a new pose from each scan in the reference
         double sumScore = 0;
         for (Particle it : particles) {
-            sumScore = scanMatchParticle(plainReading, sumScore, it);
+            sumScore += scanMatchParticle(plainReading, 0, it);
         }
-        LOG.info("Average Scan Matching Score=" + sumScore / particles.size());
+        LOG.info("Average Scan Matching Score = " + sumScore / particles.size());
     }
 
     @Override
