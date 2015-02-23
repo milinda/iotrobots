@@ -71,8 +71,8 @@ public class GFSAlgorithm {
         throttleScans = 1;
 
         // gmapping parameters
-        maxUrange = 100.0;
-        maxRange = 100.0;
+        maxUrange = 10.0;
+        maxRange = 10.0;
         minimumScore = 2;
         sigma = 0.05;
         kernelSize = 1;

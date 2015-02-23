@@ -74,8 +74,8 @@ public class TurtleSimulator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-//        TurtleSimulator simulator = new TurtleSimulator("amqp://149.165.159.12:5672", true);
-        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", true);
+        TurtleSimulator simulator = new TurtleSimulator("amqp://149.165.159.12:5672", true);
+//        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", true);
         if (args.length > 0) {
             simulator.start(true);
             simulator.parallel = Integer.parseInt(args[0]);
@@ -113,7 +113,7 @@ public class TurtleSimulator {
                         if (!storm) {
                             gfsAlgorithm.laserScan(scan);
                             mapUI.setMap(gfsAlgorithm.getMap());
-                            rosMapPublisher.addMap(gfsAlgorithm.getMap());
+//                            rosMapPublisher.addMap(gfsAlgorithm.getMap());
                         } else {
                             sendToStorm(scan);
                         }
