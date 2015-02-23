@@ -42,7 +42,7 @@ conf:
     astep: 0.05
     iterations: 5
     lsigma: 0.075
-    ogain: 3.0
+    ogain: 1000.0
     lskip: 0
     srr: 0.1
     srt: 0.2

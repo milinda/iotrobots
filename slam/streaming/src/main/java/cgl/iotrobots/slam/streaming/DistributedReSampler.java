@@ -316,8 +316,8 @@ public class DistributedReSampler {
         double wcum = 0;
         neff = 0;
         for (Particle particle : particles) {
-//            double w = Math.exp(gain * (particle.weight - lmax));
-            double w = particle.weight;
+            double w = Math.exp(gain * (particle.weight - lmax));
+//            double w = particle.weight;
             weights.add(w);
             wcum += w;
         }

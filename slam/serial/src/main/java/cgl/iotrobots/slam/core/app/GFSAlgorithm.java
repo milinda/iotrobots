@@ -73,14 +73,14 @@ public class GFSAlgorithm {
         // gmapping parameters
         maxUrange = 100.0;
         maxRange = 100.0;
-        minimumScore = 0;
+        minimumScore = 2;
         sigma = 0.05;
         kernelSize = 1;
         lstep = 0.05;
         astep = 0.05;
         iterations = 5;
         lsigma = .075;
-        ogain = 3.0;
+        ogain = 1000.0;
         lskip = 0;
         srr = 0.1;
         srt = 0.2;
