@@ -27,7 +27,8 @@ import java.util.Map;
 
 
 public class SimbardDistributed {
-    public static final double ANGLE_RANGE_SIDE = 0.521567881107;
+//    public static final double ANGLE_RANGE_SIDE = 0.521567881107;
+    public static final double ANGLE_RANGE_SIDE = Math.PI / 2;
 
     public static final int SENSORS = 640;
 
@@ -119,13 +120,13 @@ public class SimbardDistributed {
             }
 
             if (forward) {
-                setTranslationalVelocity(.4);
+                setTranslationalVelocity(.01);
             } else {
-                setTranslationalVelocity(-.4);
+                setTranslationalVelocity(-.01);
             }
 
             if ((getCounter() % 2) == 0)
-                setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 2);
+                setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 5);
         }
 
         private long bestSum;
