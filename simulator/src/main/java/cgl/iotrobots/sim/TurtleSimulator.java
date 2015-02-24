@@ -31,6 +31,8 @@ public class TurtleSimulator {
     RabbitMQReceiver bestReceiver;
     RabbitMQSender controlSender;
 
+    FileIO fileIO;
+
     public TurtleSimulator() {
         this(null, false);
     }
@@ -48,6 +50,8 @@ public class TurtleSimulator {
                 controlSender.open();
                 receiver.listen(new MapReceiver());
                 bestReceiver.listen(new BestParticleReceiver());
+
+                fileIO = new FileIO("turtle_1.txt", true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -74,8 +78,8 @@ public class TurtleSimulator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        TurtleSimulator simulator = new TurtleSimulator("amqp://149.165.159.12:5672", true);
-//        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", true);
+//        TurtleSimulator simulator = new TurtleSimulator("amqp://149.165.159.12:5672", true);
+        TurtleSimulator simulator = new TurtleSimulator("amqp://localhost:5672", true);
         if (args.length > 0) {
             simulator.start(true);
             simulator.parallel = Integer.parseInt(args[0]);
@@ -109,6 +113,10 @@ public class TurtleSimulator {
                         DoubleOrientedPoint lastPose = new DoubleOrientedPoint(odometry.getPose().getPose().getPosition().getX(),
                                 odometry.getPose().getPose().getPosition().getY(), rad);
                         scan.setPose(lastPose);
+
+                        if (fileIO != null) {
+                            fileIO.write(scan);
+                        }
 
                         if (!storm) {
                             gfsAlgorithm.laserScan(scan);

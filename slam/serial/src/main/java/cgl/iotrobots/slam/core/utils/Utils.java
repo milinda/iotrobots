@@ -34,4 +34,9 @@ public class Utils {
         }
         return ranges_double;
     }
+
+    public static double theta(double t) {
+        return Math.atan2(Math.sin(t), Math.cos(t));
+//        return t;
+    }
 }

@@ -104,18 +104,18 @@ public class SimbardExample {
             gfsAlgorithm.laserScan(laserScan);
             prevX = point3D.x;
 
-            if (getCounter() % 200 == 0) {
+            if (getCounter() % 10 == 0) {
                 forward = !forward;
             }
 
             if (forward) {
-                setTranslationalVelocity(.5);
+                setTranslationalVelocity(5);
             } else {
-                setTranslationalVelocity(.5);
+                setTranslationalVelocity(5);
             }
 
             if ((getCounter() % 2) == 0)
-                setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 2);
+                setRotationalVelocity(Math.PI / 2 * (- Math.random() * 10));
 
             mapUI.setMap(gfsAlgorithm.getMap());
 //            node.addMap(gfsAlgorithm.getMap());

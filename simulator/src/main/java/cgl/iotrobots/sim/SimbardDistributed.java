@@ -47,8 +47,8 @@ public class SimbardDistributed {
         Kryo kryo = new Kryo();
 
         PrintWriter pw;
-//        private String url = "amqp://149.165.159.12:5672";
-        private String url = "amqp://localhost:5672";
+        private String url = "amqp://149.165.159.12:5672";
+//        private String url = "amqp://localhost:5672";
 //        private String url = "amqp://156.56.93.59:5672";
 
         int totalSensors = 0;
@@ -120,13 +120,13 @@ public class SimbardDistributed {
             }
 
             if (forward) {
-                setTranslationalVelocity(.01);
+                setTranslationalVelocity(.1);
             } else {
-                setTranslationalVelocity(-.01);
+                setTranslationalVelocity(-.1);
             }
 
             if ((getCounter() % 2) == 0)
-                setRotationalVelocity(Math.PI / 2 * (- Math.random()) / 5);
+                setRotationalVelocity(- Math.random() / 10);
         }
 
         private long bestSum;

@@ -29,14 +29,14 @@ public class DoubleOrientedPoint {
     public static DoubleOrientedPoint minus(DoubleOrientedPoint p1, DoubleOrientedPoint p2) {
         double x = p1.x - p2.x;
         double y = p1.y - p2.y;
-        double theta = p1.theta - p2.theta;
+        double theta = Utils.theta(p1.theta - p2.theta);
         return new DoubleOrientedPoint(x, y, theta);
     }
 
     public static DoubleOrientedPoint plus(DoubleOrientedPoint p1, DoubleOrientedPoint p2) {
         double x = p1.x + p2.x;
         double y = p1.y + p2.y;
-        double theta = p1.theta + p2.theta;
+        double theta = Utils.theta(p1.theta + p2.theta);
         return new DoubleOrientedPoint(x, y, theta);
     }
 
@@ -56,7 +56,7 @@ public class DoubleOrientedPoint {
     public static DoubleOrientedPoint mulN(DoubleOrientedPoint p1, double p2) {
         double x = p1.x * p2;
         double y = p1.y * p2;
-        return new DoubleOrientedPoint(x, y, p1.theta * p2);
+        return new DoubleOrientedPoint(x, y, Utils.theta(p1.theta * p2));
     }
 
     // TODO check
