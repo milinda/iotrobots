@@ -57,9 +57,11 @@ public class ReSamplingBolt extends BaseRichBolt {
     private int receivedParticles = 0;
     private StreamTopologyBuilder streamTopologyBuilder;
     private StreamComponents components;
+    private Map conf;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        this.conf = map;
         this.topologyContext = topologyContext;
         this.outputCollector = outputCollector;
         this.kryo = new Kryo();
@@ -88,6 +90,9 @@ public class ReSamplingBolt extends BaseRichBolt {
     private void init() {
         LOG.info("Initializing resampling bolt");
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        if (conf.get(Constants.ARGS_PARTICLES) != null) {
+            cfg.setNoOfParticles(((Long) conf.get(Constants.ARGS_PARTICLES)).intValue());
+        }
         reSampler = ProcessorFactory.createReSampler(cfg);
         particleValueses = new ParticleValue[reSampler.getParticles().size()];
     }
