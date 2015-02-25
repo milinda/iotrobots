@@ -19,6 +19,7 @@ import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
 import com.esotericsoftware.kryo.Kryo;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +79,8 @@ public class ScanMatchBolt extends BaseRichBolt {
     private List<Kryo> kryoMapWriters = new ArrayList<Kryo>();
     private StreamComponents components;
 
+    private Map conf;
+
     private enum MatchState {
         INIT,
         WAITING_FOR_READING,
@@ -90,7 +93,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         executor = Executors.newFixedThreadPool(5);
-
+        this.conf = map;
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
         this.kryoAssignReading = new Kryo();
@@ -138,10 +141,10 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         // init the bolt
-        init();
+        init(map);
     }
 
-    private void init() {
+    private void init(Map conf) {
         state = MatchState.INIT;
 
         int taskId = topologyContext.getThisTaskIndex();
@@ -150,6 +153,9 @@ public class ScanMatchBolt extends BaseRichBolt {
         // set the initial particles
         // use the configuration to create the scanmatcher
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
+        if (conf.get(Constants.ARGS_PARTICLES) != null) {
+            cfg.setNoOfParticles(((Long) conf.get(Constants.ARGS_PARTICLES)).intValue());
+        }
         gfsp = ProcessorFactory.createMatcher(cfg);
 
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
@@ -209,7 +215,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         outputCollector.ack(tuple);
         // if we receive a control message init and return
         if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
-            init();
+            init(conf);
             return;
         }
 
