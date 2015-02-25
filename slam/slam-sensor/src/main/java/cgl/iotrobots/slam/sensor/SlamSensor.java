@@ -117,7 +117,7 @@ public class SlamSensor extends AbstractSensor {
                 if (message instanceof MessageContext) {
                     Message m = new Message(((MessageContext) message).getBody(), ((MessageContext) message).getProperties());
                     commandRecvCount++;
-                    System.out.println("Map received count: " + commandRecvCount);
+//                    System.out.println("Map received count: " + commandRecvCount);
                     if (simulator) {
                         try {
                             mapSender.send(m, "test.test.map");
@@ -135,7 +135,7 @@ public class SlamSensor extends AbstractSensor {
                 if (message instanceof MessageContext) {
                     Message m = new Message(((MessageContext) message).getBody(), ((MessageContext) message).getProperties());
                     commandRecvCount++;
-                    System.out.println("Best received count: " + commandRecvCount);
+//                    System.out.println("Best received count: " + commandRecvCount);
                     if (simulator) {
                         try {
                             bestParticleSender.send(m, "test.test.best");

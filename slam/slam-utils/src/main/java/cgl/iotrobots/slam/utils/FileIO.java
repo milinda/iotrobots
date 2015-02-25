@@ -24,6 +24,12 @@ public class FileIO {
     public void write(LaserScan laserScan) {
         String s = laserScan.getString();
         pw.printf("%s\n", s);
+        pw.flush();
+    }
+
+    public void writeResult(String value) {
+        pw.printf("%s\n", value);
+        pw.flush();
     }
 
     public LaserScan read() {

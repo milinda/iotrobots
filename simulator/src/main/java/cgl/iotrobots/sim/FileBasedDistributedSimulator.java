@@ -16,8 +16,11 @@ public class FileBasedDistributedSimulator {
     RabbitMQReceiver receiver;
     RabbitMQReceiver bestReceiver;
     FileIO fileIO;
+    FileIO resultMapIO;
+    FileIO resultBestIO;
     Kryo kryo = new Kryo();
-    public FileBasedDistributedSimulator(String url, String file) {
+
+    public FileBasedDistributedSimulator(String url, String file, String test) {
         try {
             dataSender = new RabbitMQSender(url, "simbard_laser");
             controlSender = new RabbitMQSender(url, "simbard_control");
@@ -29,7 +32,9 @@ public class FileBasedDistributedSimulator {
             receiver.listen(new MapReceiver());
             bestReceiver.listen(new BestParticleReceiver());
 
-            FileIO io = new FileIO(file, false);
+            fileIO = new FileIO(file, false);
+            resultMapIO = new FileIO(test + "_map", true);
+            resultBestIO = new FileIO(test + "_best", true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,11 +58,11 @@ public class FileBasedDistributedSimulator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        if (args.length < 2) {
-            System.out.println("Please specify amqp url and filename as arguments");
+        if (args.length < 3) {
+            System.out.println("Please specify amqp url, filename and test name as arguments");
         }
 
-        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0], args[1]);
+        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0], args[1], args[2]);
         fileBasedSimulator.start();
     }
 
@@ -107,6 +112,7 @@ public class FileBasedDistributedSimulator {
             Long t = Long.parseLong(time.toString());
             bestSum += System.currentTimeMillis() - t;
             bestCount++;
+            resultBestIO.writeResult((System.currentTimeMillis() - t) + "");
             System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double)(bestSum) / bestCount));
         }
     }
@@ -127,6 +133,7 @@ public class FileBasedDistributedSimulator {
             Long t = Long.parseLong(time.toString());
             mapCount++;
             mapSum += (System.currentTimeMillis() - t);
+            resultMapIO.writeResult((System.currentTimeMillis() - t) + "");
             System.out.println("Map Time: " + (System.currentTimeMillis() - t) + "\nAverage Map: " + ((double) (mapSum) / mapCount));
         }
     }

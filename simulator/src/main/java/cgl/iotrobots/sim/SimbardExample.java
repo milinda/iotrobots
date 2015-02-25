@@ -89,7 +89,10 @@ public class SimbardExample {
             getCoords(point3D);
 
             Quat4d trs = getOrientation();
-            double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
+            double []d = new double[4];
+            trs.get(d);
+            double theta = getYaw(new Quaternion(d[0], d[2], d[1], d[3]));
+//            double theta = getYaw(new Quaternion(trs.getX(), trs.getZ(), trs.getY(), trs.getW()));
             System.out.format("actual position: %f, %f, %f\n", point3D.x, -point3D.z, theta);
             LaserScan laserScan = getLaserScan();
 
