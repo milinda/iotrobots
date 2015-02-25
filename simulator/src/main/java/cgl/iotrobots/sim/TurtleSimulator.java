@@ -51,7 +51,7 @@ public class TurtleSimulator {
                 receiver.listen(new MapReceiver());
                 bestReceiver.listen(new BestParticleReceiver());
 
-                fileIO = new FileIO("turtle_1.txt", true);
+                fileIO = new FileIO("turtle_0.txt", true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
