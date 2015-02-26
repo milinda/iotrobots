@@ -1,4 +1,4 @@
-zk.servers: ["localhost:2181"]
+zk.servers: ["10.39.1.43:2181"]
 zk.root: "/iot/sensors"
 spouts:
     data_receive:
