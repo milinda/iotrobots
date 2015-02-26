@@ -23,7 +23,7 @@ public class FileBasedSimulator {
 
     int parallel = 2;
 
-    public void start(boolean parallel) throws InterruptedException {
+    public void start(boolean parallel, String file) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
             gfsAlgorithm.gsp = new GridSlamProcessor();
@@ -83,11 +83,11 @@ public class FileBasedSimulator {
 
     public static void main(String[] args) throws InterruptedException {
         FileBasedSimulator simulator = new FileBasedSimulator();
-        if (args.length > 0) {
-            simulator.start(true);
-            simulator.parallel = Integer.parseInt(args[0]);
-        } else {
-            simulator.start(false);
+        if (args.length > 1) {
+            simulator.start(true, args[0]);
+            simulator.parallel = Integer.parseInt(args[1]);
+        } else if (args.length == 1) {
+            simulator.start(false, args[0]);
         }
     }
 }
