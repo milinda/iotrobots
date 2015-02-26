@@ -44,12 +44,12 @@ public class ScanMatchingWorker implements Runnable {
             Particle it = particles.get(i);
             DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
             double score = 0, l, s;
-//            score = matcher.optimize(corrected, it.map, it.pose, plainReading);
+            score = matcher.optimize(corrected, it.map, it.pose, plainReading);
             //    it->pose=corrected;
             if (score > minimumScore) {
                 it.pose = new DoubleOrientedPoint(corrected);
             } else {
-//                LOG.info("Scan Matching Failed, using odometry. Likelihood=");
+                LOG.info("Scan Matching Failed, using odometry. Likelihood=");
             }
 
             ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);

@@ -66,7 +66,7 @@ public class SimbardExample {
         }
 
         public void initBehavior() {
-            gfsAlgorithm.gsp = new GridSlamProcessor();
+            gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
             LaserScan scanI = new LaserScan();
             scanI.setAngleIncrement(ANGLE / totalSensors);
