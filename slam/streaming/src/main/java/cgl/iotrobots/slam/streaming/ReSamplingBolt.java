@@ -99,11 +99,11 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        outputCollector.ack(tuple);
         String stream = tuple.getSourceStreamId();
         // if we receive a control message init and return
         if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
             init();
+            outputCollector.ack(tuple);
             return;
         }
 
@@ -118,11 +118,13 @@ public class ReSamplingBolt extends BaseRichBolt {
                 addParticleValue(value);
             }
         } else {
+            outputCollector.ack(tuple);
             throw new IllegalArgumentException("The particle value should be of type ParticleValue");
         }
 
         val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
         if (val != null && !(val instanceof LaserScan)) {
+            outputCollector.ack(tuple);
             throw new IllegalArgumentException("The laser scan should be of type LaserScan");
         }
         LaserScan scan = (LaserScan) val;
@@ -146,6 +148,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         LOG.info("receivedParticles: {}, expecting particles:{}", receivedParticles, reSampler.getParticles().size());
         // this bolt will wait until all the particle values are obtained
         if (receivedParticles < reSampler.getNoParticles() || reading == null) {
+            outputCollector.ack(tuple);
             return;
         }
         // reset the counter
@@ -214,6 +217,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
 
         reading = null;
+        outputCollector.ack(tuple);
     }
 
     private void addParticleValueToMap(Map<Integer, List<ParticleValue>> map, int task, ParticleValue value) {

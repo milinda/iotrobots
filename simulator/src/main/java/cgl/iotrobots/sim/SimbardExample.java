@@ -5,6 +5,7 @@ import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
+import cgl.iotrobots.slam.utils.FileIO;
 import cgl.iotrobots.slam.utils.RosMapPublisher;
 import cgl.iotrobots.slam.utils.TurtleUtils;
 import simbad.gui.Simbad;
@@ -27,8 +28,11 @@ public class SimbardExample {
     public static final double ANGLE = 2 * Math.PI;
 
     static MapUI mapUI;
+
     /** Describe the robot */
     static public class Robot extends Agent {
+        FileIO fileIO;
+
         GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
         PrintWriter pw;
@@ -50,7 +54,7 @@ public class SimbardExample {
 
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
-
+            fileIO = new FileIO("simbard_0.txt", true);
 //            try {
 //                pw = new PrintWriter(new FileWriter("out.txt"));
 //            } catch (IOException e) {
@@ -102,6 +106,7 @@ public class SimbardExample {
 //            for (int i = 0; i < laserScan.getRanges().size(); i++) {
 //                System.out.format("%f ", laserScan.getRanges().get(i));
 //            }
+            fileIO.write(laserScan);
             System.out.format("\n");
 
             gfsAlgorithm.laserScan(laserScan);
@@ -112,9 +117,9 @@ public class SimbardExample {
             }
 
             if (forward) {
-                setTranslationalVelocity(5);
+                setTranslationalVelocity(4);
             } else {
-                setTranslationalVelocity(5);
+                setTranslationalVelocity(4);
             }
 
             if ((getCounter() % 2) == 0)
