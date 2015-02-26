@@ -83,6 +83,8 @@ public class FileBasedDistributedSimulator {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    } else {
+                        break;
                     }
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
