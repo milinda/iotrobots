@@ -245,6 +245,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         lock.lock();
         try {
             scan = (LaserScan) Utils.deSerialize(kryoLaserReading, (byte[]) val, LaserScan.class);
+        } catch (Exception e) {
+            LOG.error("Failed to deserialize laser scan", e);
         } finally {
             lock.unlock();
         }
