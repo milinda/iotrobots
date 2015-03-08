@@ -98,7 +98,7 @@ public class SimbardDistributed {
             double []d = new double[4];
             trs.get(d);
             double theta = getYaw(new Quaternion(d[0], d[2], d[1], d[3]));
-            System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta);
+            //System.out.format("actual position: %f, %f, %f, %f\n", point3D.x, point3D.y, point3D.z, theta);
             LaserScan laserScan = getLaserScan();
             laserScan.setPose(new DoubleOrientedPoint(point3D.x + Math.random() / 10, -point3D.z + Math.random() / 10, theta + Math.random() / 10));
 

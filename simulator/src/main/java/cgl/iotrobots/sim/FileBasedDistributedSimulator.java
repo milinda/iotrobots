@@ -1,5 +1,6 @@
 package cgl.iotrobots.sim;
 
+import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.streaming.Utils;
@@ -44,6 +45,7 @@ public class FileBasedDistributedSimulator {
         byte[] body = "start".getBytes();
         Map<String, Object> props = new HashMap<String, Object>();
         props.put("time", System.currentTimeMillis());
+        props.put(TransportConstants.SENSOR_ID, "hellllo");
         Message message = new Message(body, props);
         try {
             controlSender.send(message, "test.test.control");
@@ -76,7 +78,7 @@ public class FileBasedDistributedSimulator {
                         byte []body = Utils.serialize(kryo, scan);
                         Map<String, Object> props = new HashMap<String, Object>();
                         props.put("time", System.currentTimeMillis());
-//                        props.put(TransportConstants.SENSOR_ID, "hellllo");
+                        props.put(TransportConstants.SENSOR_ID, "hellllo");
                         Message message = new Message(body, props);
                         try {
                             dataSender.send(message, "test.test.laser_scan");

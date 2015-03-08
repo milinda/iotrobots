@@ -4,6 +4,7 @@ import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
+import cgl.iotrobots.slam.utils.FileIO;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -19,11 +20,11 @@ public class FileBasedSimulator {
 
     GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
 
-    BufferedReader br = null;
-
     int parallel = 2;
 
-    public void start(boolean parallel, String file) throws InterruptedException {
+    FileIO fileIO;
+
+    public void start(boolean parallel, String file, int particles) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
             gfsAlgorithm.gsp = new GridSlamProcessor();
@@ -31,6 +32,7 @@ public class FileBasedSimulator {
             gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
         }
         gfsAlgorithm.init();
+        gfsAlgorithm.setParticles(particles);
         LaserScan scanI = new LaserScan();
         scanI.setAngleIncrement(ANGLE / SENSORS);
         scanI.setAngleMax(ANGLE);
@@ -46,11 +48,7 @@ public class FileBasedSimulator {
 
         gfsAlgorithm.initMapper(scanI);
 
-        try {
-            br = new BufferedReader(new FileReader("out.txt"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        fileIO = new FileIO(file, false);
 
         Thread t = new Thread(new SendWorker());
         t.start();
@@ -64,16 +62,13 @@ public class FileBasedSimulator {
             while (true) {
                 String line;
                 try {
-                    line = br.readLine();
-                    if (line != null) {
-                        LaserScan laserScan = new LaserScan();
-                        laserScan.loadFromString(line);
-
-                        gfsAlgorithm.laserScan(laserScan);
+                    LaserScan scan = fileIO.read();
+                    if (scan != null) {
+                        gfsAlgorithm.laserScan(scan);
+                    } else {
+                        return;
                     }
                     Thread.sleep(1000);
-                } catch (IOException e) {
-                    e.printStackTrace();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -83,11 +78,11 @@ public class FileBasedSimulator {
 
     public static void main(String[] args) throws InterruptedException {
         FileBasedSimulator simulator = new FileBasedSimulator();
-        if (args.length > 1) {
-            simulator.start(true, args[0]);
+        if (args.length > 2) {
+            simulator.start(Boolean.parseBoolean(args[0]), args[1], Integer.parseInt(args[2]));
             simulator.parallel = Integer.parseInt(args[1]);
         } else if (args.length == 1) {
-            simulator.start(false, args[0]);
+            simulator.start(false, args[0], 20);
         }
     }
 }

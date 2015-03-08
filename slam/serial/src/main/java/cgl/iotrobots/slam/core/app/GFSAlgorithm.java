@@ -103,6 +103,9 @@ public class GFSAlgorithm {
         lasamplestep = 0.005;
     }
 
+    public void setParticles(int particles) {
+        this.particles = particles;
+    }
 
     public boolean initMapper(LaserScan scan) {
         gspLaserBeamCount = scan.ranges.size();
