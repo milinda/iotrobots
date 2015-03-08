@@ -80,7 +80,7 @@ public class FileBasedSimulator {
         FileBasedSimulator simulator = new FileBasedSimulator();
         if (args.length > 2) {
             simulator.start(Boolean.parseBoolean(args[0]), args[1], Integer.parseInt(args[2]));
-            simulator.parallel = Integer.parseInt(args[1]);
+            simulator.parallel = Integer.parseInt(args[3]);
         } else if (args.length == 1) {
             simulator.start(false, args[0], 20);
         }
