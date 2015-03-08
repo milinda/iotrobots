@@ -23,4 +23,5 @@ Then you need to copy the out.txt to the place where you run the following comma
 java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator 4
 
 java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://149.165.159.3:5672"
+java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://localhost:5672" simbard_0.txt simbard_60_20
 
