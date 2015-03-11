@@ -3,6 +3,7 @@ package cgl.iotrobots.sim;
 import cgl.iotrobots.slam.core.app.GFSAlgorithm;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
+import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import cgl.iotrobots.slam.utils.FileIO;
 
@@ -23,6 +24,10 @@ public class FileBasedSimulator {
     int parallel = 2;
 
     FileIO fileIO;
+
+    SlamDataReader dataReader;
+
+    MapUI mapUI = new MapUI();
 
     public void start(boolean parallel, String file, int particles) throws InterruptedException {
         // nothing particular in this case
@@ -45,10 +50,12 @@ public class FileBasedSimulator {
         scanI.setRangeMin(0);
         scanI.setRangeMax(100);
         scanI.setTimestamp(System.currentTimeMillis());
+        scanI.setPose(new DoubleOrientedPoint(0.0, 0.0, 0.0));
 
         gfsAlgorithm.initMapper(scanI);
 
         fileIO = new FileIO(file, false);
+        dataReader = new SlamDataReader(file);
 
         Thread t = new Thread(new SendWorker());
         t.start();
@@ -61,17 +68,19 @@ public class FileBasedSimulator {
         public void run() {
             while (true) {
                 String line;
-                try {
-                    LaserScan scan = fileIO.read();
+//                try {
+                    // LaserScan scan = fileIO.read();
+                    LaserScan scan = dataReader.read();
                     if (scan != null) {
                         gfsAlgorithm.laserScan(scan);
+                        mapUI.setMap(gfsAlgorithm.getMap());
                     } else {
                         return;
                     }
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
     }

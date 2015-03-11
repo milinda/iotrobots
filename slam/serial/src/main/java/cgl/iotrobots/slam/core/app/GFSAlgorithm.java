@@ -73,7 +73,7 @@ public class GFSAlgorithm {
         // gmapping parameters
         maxUrange = 10.0;
         maxRange = 10.0;
-        minimumScore = 0;
+        minimumScore = 0.1;
         sigma = 0.05;
         kernelSize = 1;
         lstep = 0.05;
@@ -82,19 +82,19 @@ public class GFSAlgorithm {
         lsigma = .075;
         ogain = 3.0;
         lskip = 0;
-        srr = 0.01;
-        srt = 0.02;
-        str = 0.01;
-        stt = 0.02;
+        srr = 0.001;
+        srt = 0.002;
+        str = 0.001;
+        stt = 0.002;
         linearUpdate = .1;
         angularUpdate = 0.436;
         temporalUpdate = -1;
         resampleThreshold = .5;
         particles = 60;
-        xmin = -15;
-        ymin = -15.0;
-        xmax = 15.0;
-        ymax = 15.0;
+        xmin = -40;
+        ymin = -70.0;
+        xmax = 40.0;
+        ymax = 10.0;
         delta = 0.05;
         occThresh = 0.25;
         llsamplerange = 0.01;
@@ -140,7 +140,7 @@ public class GFSAlgorithm {
         gsp.setSensorMap(smap);
 
         /// @todo Expose setting an initial pose
-        DoubleOrientedPoint initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+        DoubleOrientedPoint initialPose = new DoubleOrientedPoint(scan.getPose());
         if (getOdomPose(initialPose, scan.timestamp) != null) {
             LOG.warn("Unable to determine inital pose of laser! Starting point will be set to zero.");
             initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);

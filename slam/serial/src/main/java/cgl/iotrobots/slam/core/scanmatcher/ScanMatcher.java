@@ -29,7 +29,7 @@ public class ScanMatcher {
     boolean generateMap;
     double enlargeStep = 10;
     DoubleOrientedPoint laserPose;
-    double fullnessThreshold = 0.1;
+    double fullnessThreshold = 0.2;
     double angularOdometryReliability = 0;
     double linearOdometryReliability = 0;
     double freeCellRatio = Math.sqrt(2.0);
