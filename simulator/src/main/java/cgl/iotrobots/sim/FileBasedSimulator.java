@@ -69,8 +69,8 @@ public class FileBasedSimulator {
             while (true) {
                 String line;
 //                try {
-                    // LaserScan scan = fileIO.read();
-                    LaserScan scan = dataReader.read();
+                    LaserScan scan = fileIO.read();
+//                    LaserScan scan = dataReader.read();
                     if (scan != null) {
                         gfsAlgorithm.laserScan(scan);
                         mapUI.setMap(gfsAlgorithm.getMap());

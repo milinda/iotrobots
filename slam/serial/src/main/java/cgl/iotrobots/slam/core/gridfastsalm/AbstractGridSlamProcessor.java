@@ -227,6 +227,8 @@ public abstract class AbstractGridSlamProcessor {
 
         if (Math.abs(aw - 1.0) > 0.0001 || Math.abs(lastNodeWeight - 1.0) > 0.0001) {
             LOG.error("ERROR: root->accWeight=" + lastNodeWeight + "    sum_leaf_weights=" + aw);
+        } else {
+            LOG.info("Cooreect weights {} {}", lastNodeWeight, aw);
         }
         return lastNodeWeight;
     }
@@ -287,7 +289,7 @@ public abstract class AbstractGridSlamProcessor {
             for (Integer it : indexes) {
                 m_outputStream.append(it).append(" ");
             }
-            LOG.debug(m_outputStream.toString());
+            LOG.info(m_outputStream.toString());
 
 
             //begin building tree
@@ -321,7 +323,6 @@ public abstract class AbstractGridSlamProcessor {
             }
 
             for (int i = 0; i < deletedParticles.size(); i++) {
-                m_outputStream.append(" ").append(deletedParticles.get(i));
                 if (deletedParticles.get(i) < particles.size()) {
                     particles.get(deletedParticles.get(i)).node = null;
                 }

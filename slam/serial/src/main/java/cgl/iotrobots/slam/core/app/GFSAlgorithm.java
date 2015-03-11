@@ -74,7 +74,7 @@ public class GFSAlgorithm {
         maxUrange = 10.0;
         maxRange = 10.0;
         minimumScore = 0.1;
-        sigma = 0.05;
+        sigma = 0.0005;
         kernelSize = 1;
         lstep = 0.05;
         astep = 0.05;
