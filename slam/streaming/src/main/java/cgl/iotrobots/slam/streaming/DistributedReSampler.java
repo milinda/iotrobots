@@ -172,13 +172,17 @@ public class DistributedReSampler {
         this.ymax = ymax;
         this.delta = delta;
 
+        this.xmin = -1;
+        this.xmax = 1;
+        this.ymax = 1;
+        this.ymin = -1;
         LOG.info(" -xmin " + this.xmin + " -xmax " + this.xmax + " -ymin " + this.ymin
                 + " -ymax " + this.ymax + " -delta " + this.delta + " -particles " + size);
 
         particles.clear();
 
         for (int i = 0; i < size; i++) {
-            IGMap lmap = MapFactory.create(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            IGMap lmap = MapFactory.create(new DoublePoint((this.xmin + this.xmax) * .5, (this.ymin + this.ymax) * .5), this.xmax - this.xmin, this.ymax - this.ymin, delta);
             Particle p = new Particle(lmap);
 
             p.pose = new DoubleOrientedPoint(initialPose);

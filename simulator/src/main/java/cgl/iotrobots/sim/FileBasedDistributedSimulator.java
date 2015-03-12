@@ -7,6 +7,7 @@ import cgl.iotrobots.slam.streaming.Utils;
 import cgl.iotrobots.slam.utils.FileIO;
 import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
+import std_msgs.Bool;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,9 +20,12 @@ public class FileBasedDistributedSimulator {
     FileIO fileIO;
     FileIO resultMapIO;
     FileIO resultBestIO;
+    SlamDataReader dataReader;
     Kryo kryo = new Kryo();
+    boolean simbard;
+    MapUI mapUI;
 
-    public FileBasedDistributedSimulator(String url, String file, String test) {
+    public FileBasedDistributedSimulator(String url, String file, String test, boolean simbard, boolean ui) {
         try {
             dataSender = new RabbitMQSender(url, "simbard_laser");
             controlSender = new RabbitMQSender(url, "simbard_control");
@@ -33,9 +37,17 @@ public class FileBasedDistributedSimulator {
             receiver.listen(new MapReceiver());
             bestReceiver.listen(new BestParticleReceiver());
 
-            fileIO = new FileIO(file, false);
+            if (simbard) {
+                fileIO = new FileIO(file, false);
+            } else {
+                dataReader = new SlamDataReader(file);
+            }
             resultMapIO = new FileIO(test + "_map", true);
             resultBestIO = new FileIO(test + "_best", true);
+            if (ui) {
+                mapUI = new MapUI();
+            }
+            this.simbard = simbard;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -64,7 +76,7 @@ public class FileBasedDistributedSimulator {
             System.out.println("Please specify amqp url, filename and test name as arguments");
         }
 
-        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0], args[1], args[2]);
+        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0], args[1], args[2], Boolean.parseBoolean(args[3]), Boolean.parseBoolean(args[4]));
         fileBasedSimulator.start();
     }
 
@@ -73,7 +85,12 @@ public class FileBasedDistributedSimulator {
         public void run() {
             while (true) {
                 try {
-                    LaserScan scan = fileIO.read();
+                    LaserScan scan;
+                    if (simbard) {
+                        scan = fileIO.read();
+                    } else {
+                        scan = dataReader.read();
+                    }
                     if (scan != null) {
                         byte []body = Utils.serialize(kryo, scan);
                         Map<String, Object> props = new HashMap<String, Object>();
@@ -86,7 +103,7 @@ public class FileBasedDistributedSimulator {
                             e.printStackTrace();
                         }
                     } else {
-                        break;
+                        return;
                     }
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {

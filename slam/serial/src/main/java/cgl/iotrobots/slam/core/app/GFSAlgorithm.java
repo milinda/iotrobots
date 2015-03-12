@@ -80,7 +80,7 @@ public class GFSAlgorithm {
         astep = 0.05;
         iterations = 5;
         lsigma = .075;
-        ogain = 100.0;
+        ogain = 10.0;
         lskip = 0;
         srr = 0.001;
         srt = 0.002;
@@ -95,7 +95,7 @@ public class GFSAlgorithm {
         ymin = -70.0;
         xmax = 40.0;
         ymax = 10.0;
-        delta = 0.05;
+        delta = 0.1;
         occThresh = 0.25;
         llsamplerange = 0.01;
         llsamplestep = 0.01;

@@ -59,6 +59,7 @@ public class SlamDataReader {
         laserScan.setRangeMax(11.0);
         laserScan.setRangeMin(.25);
 
+        i += 3;
         DoubleOrientedPoint pose = new DoubleOrientedPoint(Double.parseDouble(array[i]), Double.parseDouble(array[i + 1]), Double.parseDouble(array[i + 2]));
         laserScan.setPose(pose);
         return laserScan;

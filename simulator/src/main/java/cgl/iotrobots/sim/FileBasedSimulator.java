@@ -29,7 +29,9 @@ public class FileBasedSimulator {
 
     MapUI mapUI = new MapUI();
 
-    public void start(boolean parallel, String file, int particles) throws InterruptedException {
+    boolean simbard = true;
+
+    public void start(boolean parallel, String file, int particles, boolean simbard) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
             gfsAlgorithm.gsp = new GridSlamProcessor();
@@ -54,8 +56,13 @@ public class FileBasedSimulator {
 
         gfsAlgorithm.initMapper(scanI);
 
-        fileIO = new FileIO(file, false);
-        dataReader = new SlamDataReader(file);
+        if (simbard) {
+            fileIO = new FileIO(file, false);
+        } else {
+            dataReader = new SlamDataReader(file);
+        }
+
+        this.simbard = simbard;
 
         Thread t = new Thread(new SendWorker());
         t.start();
@@ -67,20 +74,18 @@ public class FileBasedSimulator {
         @Override
         public void run() {
             while (true) {
-                String line;
-//                try {
-//                    LaserScan scan = fileIO.read();
-                    LaserScan scan = dataReader.read();
-                    if (scan != null) {
-                        gfsAlgorithm.laserScan(scan);
-                        mapUI.setMap(gfsAlgorithm.getMap());
-                    } else {
-                        return;
-                    }
-//                    Thread.sleep(1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
+                LaserScan scan;
+                if (simbard) {
+                    scan = fileIO.read();
+                } else {
+                    scan = dataReader.read();
+                }
+                if (scan != null) {
+                    gfsAlgorithm.laserScan(scan);
+                    mapUI.setMap(gfsAlgorithm.getMap());
+                } else {
+                    return;
+                }
             }
         }
     }
@@ -88,10 +93,10 @@ public class FileBasedSimulator {
     public static void main(String[] args) throws InterruptedException {
         FileBasedSimulator simulator = new FileBasedSimulator();
         if (args.length > 2) {
-            simulator.start(Boolean.parseBoolean(args[0]), args[1], Integer.parseInt(args[2]));
-            simulator.parallel = Integer.parseInt(args[3]);
+            simulator.start(Boolean.parseBoolean(args[0]), args[1], Integer.parseInt(args[2]), Boolean.parseBoolean(args[3]));
+            simulator.parallel = Integer.parseInt(args[4]);
         } else if (args.length == 1) {
-            simulator.start(false, args[0], 20);
+            simulator.start(false, args[0], 20, true);
         }
     }
 }

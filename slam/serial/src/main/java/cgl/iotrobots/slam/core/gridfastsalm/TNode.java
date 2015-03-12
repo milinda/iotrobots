@@ -34,7 +34,11 @@ public class TNode {
         pose = p;
         weight = w;
         childs = c;
-        parent = n;
+        if (n != null) {
+            parent = new TNode(n);
+        } else {
+            parent = null;
+        }
         reading = null;
         gweight = 0;
         if (n != null) {
@@ -45,7 +49,14 @@ public class TNode {
     }
 
     public TNode(TNode t) {
-
+        this.pose = t.pose;
+        this.weight = t.weight;
+        this.childs = t.childs;
+        this.parent = t.parent;
+        this.reading = t.reading;
+        this.gweight = t.getGweight();
+        this.flag = t.flag;
+        this.accWeight = t.accWeight;
     }
 
     public TNode() {
