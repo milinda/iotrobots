@@ -2,10 +2,9 @@ package cgl.iotrobots.slam.core.particlefilter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class UniformResampler {
-    public List<Integer> resampleIndexes(List<Double> particles, int nparticles) {
+    public static List<Integer> resampleIndexes(List<Double> particles, int nparticles) {
         double cweight = 0;
 
         //compute the cumulative weights

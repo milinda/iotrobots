@@ -58,8 +58,4 @@ public class ParallelGridSlamProcessor extends SharedMemoryGridSlamProcessor {
             }
         }
     }
-
-    @Override
-    public void setup() {
-    }
 }

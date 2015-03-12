@@ -3,21 +3,14 @@ package cgl.iotrobots.slam.core.app;
 import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.core.sensor.RangeSensor;
-import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class GFSAlgorithm {
     private static Logger LOG = LoggerFactory.getLogger(GFSAlgorithm.class);
 
     public AbstractGridSlamProcessor gsp;
-    RangeSensor gspLaser;
-
     double gspLaserAngleIncrement;
     double angleMin;
     double angleMax;
@@ -117,27 +110,14 @@ public class GFSAlgorithm {
         gspLaserAngleIncrement = orientationFactor * scan.angleIncrement;
         LOG.debug("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angleMin, angleMax, gspLaserAngleIncrement);
 
-        DoubleOrientedPoint gmap_pose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+        DoubleOrientedPoint gmapPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
 
         // setting maxRange and maxUrange here so we can set a reasonable default
         maxRange = scan.rangeMax - 0.01;
         maxUrange = maxRange;
 
-        // The laser must be called "FLASER".
-        // We pass in the absolute value of the computed angle increment, on the
-        // assumption that GMapping requires a positive angle increment.  If the
-        // actual increment is negative, we'll swap the order of ranges before
-        // feeding each scan to GMapping.
-        gspLaser = new RangeSensor("ROBOTLASER1",
-                gspLaserBeamCount,
-                Math.abs(gspLaserAngleIncrement),
-                gmap_pose,
-                0.0,
-                maxRange);
-
-        Map<String, Sensor> smap = new HashMap<String, Sensor>();
-        smap.put(gspLaser.getName(), gspLaser);
-        gsp.setSensorMap(smap);
+        double []laserAngles = Utils.getLaserAngles(gspLaserBeamCount, gspLaserAngleIncrement);
+        gsp.setLaserParams(gspLaserBeamCount, laserAngles, gmapPose);
 
         /// @todo Expose setting an initial pose
         DoubleOrientedPoint initialPose = new DoubleOrientedPoint(scan.getPose());
@@ -152,7 +132,7 @@ public class GFSAlgorithm {
 
         gsp.setMotionModelParameters(srr, srt, str, stt);
         gsp.setUpdateDistances(linearUpdate, angularUpdate, resampleThreshold);
-        gsp.setUpdatePeriod_(temporalUpdate);
+        gsp.setUpdatePeriod(temporalUpdate);
         gsp.getMatcher().setgenerateMap(false);
         gsp.init(particles, xmin, ymin, xmax, ymax, delta, initialPose);
         gsp.getMatcher().setLLSamplerange(llsamplerange);
@@ -235,10 +215,9 @@ public class GFSAlgorithm {
         if (scan.ranges.size() != gspLaserBeamCount) {
             return false;
         }
-        Double[] ranges_double = Utils.getDoubles(scan, gspLaserAngleIncrement);
+        Double[] ranges_double = Utils.getRanges(scan, gspLaserAngleIncrement);
         RangeReading reading = new RangeReading(scan.ranges.size(),
                 ranges_double,
-                gspLaser,
                 scan.timestamp);
         reading.setPose(pose);
 
@@ -254,26 +233,24 @@ public class GFSAlgorithm {
     }
 
     public void updateMap(LaserScan scan) {
-        double[] laser_angles = new double[scan.ranges.size()];
+        double[] laserAngles = new double[scan.ranges.size()];
         double theta = angleMin;
         for (int i = 0; i < scan.ranges.size(); i++) {
             if (gspLaserAngleIncrement < 0)
-                laser_angles[scan.ranges.size() - i - 1] = theta;
+                laserAngles[scan.ranges.size() - i - 1] = theta;
             else
-                laser_angles[i] = theta;
+                laserAngles[i] = theta;
             theta += gspLaserAngleIncrement;
         }
 
-//        double angle = Math.PI * 2 -.5 * res * beams_num;
         double angle = -.5 * gspLaserAngleIncrement * gspLaserBeamCount;
-        // double angle = 0;
         for (int i = 0; i < gspLaserBeamCount; i++, angle += gspLaserAngleIncrement) {
-            laser_angles[i] = angle;
+            laserAngles[i] = angle;
         }
 
         Particle best =
                 gsp.getParticles().get(gsp.getBestParticleIndex());
-        mapUpdater.updateMap(best, laser_angles, gspLaser.getPose());
+        mapUpdater.updateMap(best, laserAngles, new DoubleOrientedPoint(0, 0, 0));
     }
 
     public static int MAP_IDX(int sx, int i, int j) {

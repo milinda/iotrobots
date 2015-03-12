@@ -43,7 +43,7 @@ public class ScanMatcher {
      * laser parameters
      */
     int laserBeams;
-    double m_laserAngles[] = new double[LASER_MAXBEAMS];
+    double laserAngles[] = new double[LASER_MAXBEAMS];
 
     public void setLaserMaxRange(double m_laserMaxRange) {
         this.laserMaxRange = m_laserMaxRange;
@@ -133,14 +133,6 @@ public class ScanMatcher {
         this.m_activeAreaComputed = m_activeAreaComputed;
     }
 
-    public void setlaserBeams(int m_laserBeams) {
-        this.laserBeams = m_laserBeams;
-    }
-
-    public void setlaserAngles(double[] m_laserAngles) {
-        this.m_laserAngles = m_laserAngles;
-    }
-
     public void setMatchingParameters
             (double urange, double range, double sigma, int kernsize, double lopt, double aopt, int iterations, double likelihoodSigma, int likelihoodSkip) {
         usableRange = urange;
@@ -175,7 +167,7 @@ public class ScanMatcher {
         int angleIndex = initialBeamsSkip;
         for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++) {
             double r = readings[readingIndex];
-            double angle = m_laserAngles[angleIndex];
+            double angle = laserAngles[angleIndex];
 
             if (r > laserMaxRange || r == 0.0 || r > Double.MAX_VALUE) continue;
             double d = r > usableRange ? usableRange : r;
@@ -208,7 +200,7 @@ public class ScanMatcher {
                 if (d > usableRange)
                     d = usableRange;
 
-                DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + m_laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + m_laserAngles[angleIndex]) + lp.y);
+                DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + laserAngles[angleIndex]) + lp.y);
                 p0 = map.world2map(lp);
                 IntPoint p1 = map.world2map(phit);
 
@@ -226,7 +218,7 @@ public class ScanMatcher {
                 }
             } else {
                 double r = readings[readingIndex];
-                double angle = m_laserAngles[angleIndex];
+                double angle = laserAngles[angleIndex];
                 if (readings[readingIndex] > laserMaxRange || readings[readingIndex] > usableRange) {
                     continue;
                 }
@@ -272,7 +264,7 @@ public class ScanMatcher {
                     continue;
                 if (d >= usableRange)
                     d = usableRange;
-                DoublePoint phit = new DoublePoint(d * Math.cos(Utils.theta(lp.theta + m_laserAngles[angleIndex])) + lp.x, d * Math.sin(Utils.theta(lp.theta + m_laserAngles[angleIndex])) + lp.y);
+                DoublePoint phit = new DoublePoint(d * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex])) + lp.x, d * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex])) + lp.y);
                 IntPoint p1 = map.world2map(phit);
 
                 d += map.getDelta();
@@ -302,8 +294,8 @@ public class ScanMatcher {
                     continue;
                 }
                 DoublePoint phit = new DoublePoint(lp.x, lp.y);
-                phit.x += r * Math.cos(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
-                phit.y += r * Math.sin(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
+                phit.x += r * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+                phit.y += r * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
                 IntPoint p1 = map.world2map(phit);
                 PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
                 pa.update(true, phit);
@@ -519,14 +511,12 @@ public class ScanMatcher {
         return bestScore;
     }
 
-    public void setLaserParameters
-            (int beams, double[] angles, DoubleOrientedPoint lpose) {
+    public void setLaserParameters(int beams, double[] angles, DoubleOrientedPoint lpose) {
         laserPose = lpose;
         laserBeams = beams;
-        m_laserAngles = new double[beams];
-        System.arraycopy(angles, 0, m_laserAngles, 0, angles.length);
+        laserAngles = new double[beams];
+        System.arraycopy(angles, 0, laserAngles, 0, angles.length);
     }
-
 
     public void invalidateActiveArea() {
         m_activeAreaComputed = false;
@@ -636,12 +626,12 @@ public class ScanMatcher {
                 continue;
             }
             DoublePoint phit = new DoublePoint(lp.x, lp.y);
-            phit.x += readings[rIndex] * Math.cos(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
-            phit.y += readings[rIndex] * Math.sin(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
+            phit.x += readings[rIndex] * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            phit.y += readings[rIndex] * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
             IntPoint iphit = map.world2map(phit);
             DoublePoint pfree = new DoublePoint(lp.x, lp.y);
-            pfree.x += (readings[rIndex] - freeDelta) * Math.cos(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
-            pfree.y += (readings[rIndex] - freeDelta) * Math.sin(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
+            pfree.x += (readings[rIndex] - freeDelta) * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            pfree.y += (readings[rIndex] - freeDelta) * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
             pfree.x = pfree.x - phit.x;
             pfree.y = pfree.y - phit.y;
 
@@ -695,13 +685,13 @@ public class ScanMatcher {
             if (skip != 0) continue;
             DoublePoint phit = new DoublePoint(lp.x, lp.y);
 
-            phit.x += readings[rIndex] * Math.cos(lp.theta + m_laserAngles[angleIndex]);
-            phit.y += readings[rIndex] * Math.sin(lp.theta + m_laserAngles[angleIndex]);
+            phit.x += readings[rIndex] * Math.cos(lp.theta + laserAngles[angleIndex]);
+            phit.y += readings[rIndex] * Math.sin(lp.theta + laserAngles[angleIndex]);
             IntPoint iphit = map.world2map(phit);
 
             DoublePoint pfree = new DoublePoint(lp.x, lp.y);
-            pfree.x += (readings[rIndex] - map.getDelta() * freeDelta) * Math.cos(lp.theta + m_laserAngles[angleIndex]);
-            pfree.y += (readings[rIndex] - map.getDelta() * freeDelta) * Math.sin(lp.theta + m_laserAngles[angleIndex]);
+            pfree.x += (readings[rIndex] - map.getDelta() * freeDelta) * Math.cos(lp.theta + laserAngles[angleIndex]);
+            pfree.y += (readings[rIndex] - map.getDelta() * freeDelta) * Math.sin(lp.theta + laserAngles[angleIndex]);
             pfree.x = pfree.x - phit.x;
             pfree.y = pfree.y - phit.y;
 
@@ -756,12 +746,12 @@ public class ScanMatcher {
             skip = skip > likelihoodSkip ? 0 : skip;
             if (skip != 0 || readings[rIndex] > usableRange || readings[rIndex] == 0.0) continue;
             DoublePoint phit = new DoublePoint(lp.x, lp.y);
-            phit.x += readings[rIndex] * Math.cos(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
-            phit.y += readings[rIndex] * Math.sin(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
+            phit.x += readings[rIndex] * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            phit.y += readings[rIndex] * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
             IntPoint iphit = map.world2map(phit);
             DoublePoint pfree = new DoublePoint(lp.x, lp.y);
-            pfree.x += (readings[rIndex] - map.getDelta() * freeDelta) * Math.cos(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
-            pfree.y += (readings[rIndex] - map.getDelta() * freeDelta) * Math.sin(Utils.theta(lp.theta + m_laserAngles[angleIndex]));
+            pfree.x += (readings[rIndex] - map.getDelta() * freeDelta) * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            pfree.y += (readings[rIndex] - map.getDelta() * freeDelta) * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
             pfree.x = pfree.x - phit.x;
             pfree.y = pfree.y - phit.y;
 

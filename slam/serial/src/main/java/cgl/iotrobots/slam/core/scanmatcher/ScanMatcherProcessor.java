@@ -55,19 +55,7 @@ public class ScanMatcherProcessor {
         useICP=false;
     }
 
-    void setSensorMap(Map<String, Sensor> smap, String sensorName){
-        m_sensorMap = smap;
 
-        RangeSensor rangeSensor= (RangeSensor) m_sensorMap.get(sensorName);
-        assert(rangeSensor != null && rangeSensor.beams().size() > 0);
-
-        m_beams=rangeSensor.beams().size();
-        double[] angles=new double[rangeSensor.beams().size()];
-        for (int i=0; i<m_beams; i++){
-            angles[i]=rangeSensor.beams().get(i).pose.theta;
-        }
-        m_matcher.setLaserParameters(m_beams, angles, rangeSensor.getPose());
-    }
 
     public void init(){
         m_first=true;
@@ -132,7 +120,7 @@ public class ScanMatcherProcessor {
             }
         */
         double []plainReading = new double[m_beams];
-        reading.rawView(plainReading, m_map.getDelta());
+//        reading.rawView(plainReading, m_map.getDelta());
 
         //the final stuff: scan match the pose
         double score=0;

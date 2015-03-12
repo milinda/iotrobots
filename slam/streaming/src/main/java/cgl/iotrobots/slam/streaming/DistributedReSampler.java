@@ -228,7 +228,6 @@ public class DistributedReSampler {
 
         RangeReading readingCopy =
                 new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
-                        (RangeSensor) reading.getSensor(),
                         reading.getTime());
 
         if (count > 0) {

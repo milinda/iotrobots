@@ -1,17 +1,20 @@
 package cgl.iotrobots.slam.core.gridfastsalm;
 
-import cgl.iotrobots.slam.core.grid.GMap;
 import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
+
+public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(SharedMemoryGridSlamProcessor.class);
+
+    private Normalizer normalizer;
+
+    private ReSampler reSampler;
 
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
         this.xmin = xmin;
@@ -38,10 +41,12 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
             p.node = new TNode(initialPose, 0, null, 0);
         }
 
-        neff = (double) size;
         count = 0;
         readingCount = 0;
         linearDistance = angularDistance = 0;
+
+        normalizer = new Normalizer(obsSigmaGain);
+        reSampler = new ReSampler(resampleThreshold, matcher);
     }
 
     public boolean processScan(RangeReading reading, int adaptParticles) {
@@ -56,9 +61,6 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
         LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
         LOG.info("ODO_UPDATE " + particles.size() + " ");
-//        for (Particle p : particles) {
-//            LOG.info("Particle x {}, y {}, theta {}, weight {}", p.pose.x, p.pose.y, p.pose.theta, p.weight);
-//        }
         LOG.info("ODO_UPDATE Time {}", reading.getTime());
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
@@ -87,8 +89,8 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
         if (count == 0
                 || linearDistance >= linearThresholdDistance
                 || angularDistance >= angularThresholdDistance
-                || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)) {
-            last_update_time_ = reading.getTime();
+                || (updatePeriod >= 0.0 && (reading.getTime() - lastUpdateTime) > updatePeriod)) {
+            lastUpdateTime = reading.getTime();
 
             LOG.info("FRAME " + readingCount + " " + linearDistance + " " + angularDistance);
 
@@ -96,23 +98,14 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
             LOG.info("Laser Pose= " + reading.getPose().x + " " + reading.getPose().y + " " + reading.getPose().theta);
 
             //this is for converting the reading in a scan-matcher feedable form
-            assert (reading.size() == beams);
             double[] plainReading = new double[beams];
             for (int i = 0; i < beams; i++) {
                 plainReading[i] = reading.get(i);
             }
 
-//            System.out.format("Reading: ");
-//            for (int i = 0; i < plainReading.length; i++) {
-//                System.out.format("%f ", plainReading[i]);
-//            }
-//            System.out.format("\n");
-
             LOG.info("count " + count);
-
             RangeReading reading_copy =
                     new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
-                            (RangeSensor) reading.getSensor(),
                             reading.getTime());
 
             if (count > 0) {
@@ -132,15 +125,9 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
                     LOG.debug(pose.theta + " " + it.weight + " ");
                 }
 
-                updateTreeWeights(false);
-
-                LOG.info("neff = " + neff);
-
-//                for (Particle p1 : particles) {
-//                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
-//                }
-
-                resample(plainReading, adaptParticles, reading_copy);
+                Normalizer.NormalizeResult result = normalizer.updateTreeWeights(false, particles);
+                LOG.info("neff = " + result.getNeff());
+                reSampler.resample(particles, result.getNeff(), plainReading, adaptParticles, reading_copy, result.getWeights());
                 LOG.info("After resampling.................");
 //                for (Particle p1 : particles) {
 //                    LOG.info("Particle x {}, y {}, theta {}, weight {}", p1.pose.x, p1.pose.y, p1.pose.theta, p1.weight);
@@ -159,7 +146,7 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
 
                 }
             }
-            updateTreeWeights(false);
+            normalizer.updateTreeWeights(false, particles);
 
             lastPartPose = odoPose; //update the past pose for the next iteration
             linearDistance = 0;
@@ -175,15 +162,5 @@ public class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
         }
         readingCount++;
         return processed;
-    }
-
-    @Override
-    public void scanMatch(double[] plainReading) {
-
-    }
-
-    @Override
-    public void setup() {
-
     }
 }

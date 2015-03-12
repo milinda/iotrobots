@@ -8,7 +8,7 @@ public class OdometryReading extends SensorReading {
     DoubleOrientedPoint m_acceleration;
 
     public OdometryReading(OdometrySensor m_sensor, double m_time) {
-        super(m_sensor, m_time);
+        super(m_time);
     }
 
     public DoubleOrientedPoint getPose() {
