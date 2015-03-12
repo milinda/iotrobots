@@ -48,9 +48,6 @@ public abstract class AbstractGridSlamProcessor {
     protected double ymax;
 
     protected double delta;
-    protected double regScore;
-    protected double critScore;
-    protected double maxMove;
     protected double linearThresholdDistance;
     protected double angularThresholdDistance;
     protected double obsSigmaGain;
