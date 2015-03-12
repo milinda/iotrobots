@@ -149,14 +149,12 @@ public class ScanMatchBolt extends BaseRichBolt {
         int taskId = topologyContext.getThisTaskIndex();
         LOG.info("taskId {}: Initializing scan match bolt", taskId);
 
-        // set the initial particles
         // use the configuration to create the scanmatcher
         GFSConfiguration cfg = ConfigurationBuilder.getConfiguration(components.getConf());
         if (conf.get(Constants.ARGS_PARTICLES) != null) {
             cfg.setNoOfParticles(((Long) conf.get(Constants.ARGS_PARTICLES)).intValue());
         }
-        gfsp = ProcessorFactory.createMatcher(cfg);
-
+        // set the initial particles
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
         int noOfParticles = computeParticlesForTask(cfg, totalTasks, taskId);
 
@@ -165,10 +163,15 @@ public class ScanMatchBolt extends BaseRichBolt {
             previousTotal += computeParticlesForTask(cfg, totalTasks, i);
         }
 
-        List<Integer> activeParticles = gfsp.getActiveParticles();
+        List<Integer> activeParticles = new ArrayList<Integer>();
         for (int i = 0; i < noOfParticles; i++) {
             activeParticles.add(i + previousTotal);
         }
+
+
+        gfsp = ProcessorFactory.createMatcher(cfg, activeParticles);
+
+        
 
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
         LOG.info("taskId {}: active particles at initialization {}", taskId, printActiveParticles());

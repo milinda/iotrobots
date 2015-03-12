@@ -25,4 +25,5 @@ java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.s
 java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://149.165.159.3:5672"
 java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://localhost:5672" simbard_0.txt simbard_60_20
 
+java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://localhost:5672" simulator/data/aces.txt aces_60_20 false true
 "amqp://149.165.159.12:5672" simulator/data/aces.txt aces_60_20 false true

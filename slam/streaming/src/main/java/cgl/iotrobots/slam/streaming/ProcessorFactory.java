@@ -3,12 +3,16 @@ package cgl.iotrobots.slam.streaming;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.MapUpdater;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
+import scala.Int;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Creates objects of the processors using the Configurations
  */
 public class ProcessorFactory {
-    public static DistributedScanMatcher createMatcher(GFSConfiguration cfg) {
+    public static DistributedScanMatcher createMatcher(GFSConfiguration cfg, List<Integer> activeParticles) {
         DistributedScanMatcher scanMatcher = new DistributedScanMatcher();
 
         scanMatcher.setMatchingParameters(cfg.getMaxURage(), cfg.getMaxRange(), cfg.getGaussianSigma(),
@@ -19,8 +23,8 @@ public class ProcessorFactory {
         scanMatcher.setUpdatePeriod_(cfg.getUpdatePeriod());
         scanMatcher.setMinimumScore(cfg.getMinimumScore());
         scanMatcher.init(cfg.getNoOfParticles(), cfg.getXmin(), cfg.getYmin(),
-                cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0));
-
+                cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0), activeParticles);
+        scanMatcher.getActiveParticles().addAll(activeParticles);
         return scanMatcher;
     }
 

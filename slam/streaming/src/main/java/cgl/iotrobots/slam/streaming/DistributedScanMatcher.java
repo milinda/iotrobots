@@ -191,9 +191,7 @@ public class DistributedScanMatcher {
         matcher.setLaserParameters(beams, angles, rangeSensor.getPose());
     }
 
-
-
-    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
+    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose, List<Integer> activeParticles) {
         this.xmin = xmin;
         this.ymin = ymin;
         this.xmax = xmax;
@@ -206,7 +204,12 @@ public class DistributedScanMatcher {
         particles.clear();
 
         for (int i = 0; i < size; i++) {
-            IGMap lmap = MapFactory.create(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            IGMap lmap;
+            if (activeParticles.contains(i)) {
+                lmap = MapFactory.create(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            } else {
+                lmap = MapFactory.create(new DoublePoint((0) * .5, (0) * .5), 2, 2, delta);
+            }
             Particle p = new Particle(lmap);
 
             p.pose = new DoubleOrientedPoint(initialPose);

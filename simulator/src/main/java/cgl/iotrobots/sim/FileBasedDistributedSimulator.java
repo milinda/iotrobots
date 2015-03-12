@@ -105,7 +105,7 @@ public class FileBasedDistributedSimulator {
                     } else {
                         return;
                     }
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -156,6 +156,9 @@ public class FileBasedDistributedSimulator {
             mapSum += (System.currentTimeMillis() - t);
             resultMapIO.writeResult((System.currentTimeMillis() - t) + "");
             System.out.println("Map Time: " + (System.currentTimeMillis() - t) + "\nAverage Map: " + ((double) (mapSum) / mapCount));
+            if (mapUI != null) {
+                mapUI.setMap(map);
+            }
         }
     }
 }
