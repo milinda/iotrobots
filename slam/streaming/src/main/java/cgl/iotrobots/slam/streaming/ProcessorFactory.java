@@ -28,20 +28,24 @@ public class ProcessorFactory {
         return scanMatcher;
     }
 
-    public static DistributedReSampler createReSampler(GFSConfiguration cfg) {
-        DistributedReSampler reSampler = new DistributedReSampler();
+    public static DScanMatcher createScanMatcher(GFSConfiguration cfg, List<Integer> activeParticles) {
+        DScanMatcher scanMatcher = new DScanMatcher();
 
-        reSampler.setMatchingParameters(cfg.getMaxURage(), cfg.getMaxRange(), cfg.getGaussianSigma(),
+        scanMatcher.setMatchingParameters(cfg.getMaxURage(), cfg.getMaxRange(), cfg.getGaussianSigma(),
                 cfg.getKernelSize(), cfg.getLinearThresholdDistance(),
                 cfg.getAngularThresholdDistance(), cfg.getOptRecursiveIterations(),
                 cfg.getLikelihoodSigma(), cfg.getLikelihoodGain(), cfg.getLikelihoodSkip());
-        reSampler.setMotionModelParameters(cfg.getSrr(), cfg.getSrt(), cfg.getStr(), cfg.getStt());
-        reSampler.setUpdatePeriod_(cfg.getUpdatePeriod());
-        reSampler.setMinimumScore(cfg.getMinimumScore());
-        reSampler.setUpdateDistances(cfg.getLinearThresholdDistance(), cfg.getAngularThresholdDistance(), cfg.getResampleThreshold());
-        reSampler.init(cfg.getNoOfParticles(), cfg.getXmin(), cfg.getYmin(),
-                cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0));
+        scanMatcher.setMotionModelParameters(cfg.getSrr(), cfg.getSrt(), cfg.getStr(), cfg.getStt());
+        scanMatcher.setUpdatePeriod(cfg.getUpdatePeriod());
+        scanMatcher.setMinimumScore(cfg.getMinimumScore());
+        scanMatcher.init(cfg.getNoOfParticles(), cfg.getXmin(), cfg.getYmin(),
+                cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0), activeParticles);
+        scanMatcher.getActiveParticles().addAll(activeParticles);
+        return scanMatcher;
+    }
 
+    public static DistributedReSampler createReSampler(GFSConfiguration cfg) {
+        DistributedReSampler reSampler = new DistributedReSampler(cfg.getObsSigmaGain(), cfg.getResampleThreshold(), cfg.getNoOfParticles());
         return reSampler;
     }
 

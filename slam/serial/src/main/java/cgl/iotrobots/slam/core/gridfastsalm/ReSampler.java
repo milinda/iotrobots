@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class ReSampler {
@@ -15,14 +14,11 @@ public class ReSampler {
 
     protected double resampleThreshold;
 
-    private ScanMatcher matcher;
-
-    public ReSampler(double resampleThreshold, ScanMatcher scanMatcher) {
+    public ReSampler(double resampleThreshold) {
         this.resampleThreshold = resampleThreshold;
-        this.matcher = scanMatcher;
     }
 
-    public boolean resample(List<Particle> particles, double neff, double[] plainReading,
+    public ReSampleResult resample(List<Particle> particles, double neff, double[] plainReading,
                             int adaptSize, RangeReading reading, List<Double> weights) {
         boolean hasResampled = false;
         List<TNode> oldGeneration = new ArrayList<TNode>();
@@ -80,28 +76,33 @@ public class ReSampler {
             LOG.debug("Copying Particles and  Registering  scans...");
             for (Particle it : temp) {
                 it.setWeight(0);
-                matcher.invalidateActiveArea();
-                matcher.registerScan(it.map, it.pose, plainReading);
                 particles.add(it);
             }
             hasResampled = true;
+
+            return new ReSampleResult(true, indexes);
         } else {
             LOG.info("neff > resampleThreshold * particles.size() and resampling {} > {}", neff, resampleThreshold * particles.size());
-            int index = 0;
-            Iterator<TNode> nodeIt = oldGeneration.iterator();
-            for (Particle it : particles) {
-                //create a new node in the particle tree and add it to the old tree
-                TNode node;
-                node = new TNode(it.pose, 0.0, nodeIt.next(), 0);
-                node.reading = reading;
-                it.node = node;
-
-                matcher.invalidateActiveArea();
-                matcher.registerScan(it.map, it.pose, plainReading);
-                it.previousIndex = index;
-                index++;
-            }
+            return new ReSampleResult(false, null);
         }
-        return hasResampled;
+    }
+
+    public static class ReSampleResult {
+        private boolean reSampled;
+
+        private List<Integer> indexes;
+
+        public ReSampleResult(boolean reSampled, List<Integer> indexes) {
+            this.reSampled = reSampled;
+            this.indexes = indexes;
+        }
+
+        public boolean isReSampled() {
+            return reSampled;
+        }
+
+        public List<Integer> getIndexes() {
+            return indexes;
+        }
     }
 }

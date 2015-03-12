@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractGridSlamProcessor {
     private Logger LOG = LoggerFactory.getLogger(AbstractGridSlamProcessor.class);
@@ -41,6 +43,11 @@ public abstract class AbstractGridSlamProcessor {
     protected double angularThresholdDistance;
     protected double obsSigmaGain;
 
+    protected List<Integer> activeParticles = new ArrayList<Integer>();
+
+    // this lock must not be here. For now we will use it
+    protected Lock lock = new ReentrantLock();
+
     public AbstractGridSlamProcessor() {
         updatePeriod = 100.0;
         obsSigmaGain = 1;
@@ -48,7 +55,11 @@ public abstract class AbstractGridSlamProcessor {
         minimumScore = 0.;
     }
 
-    public abstract void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose);
+    public abstract void init(int size, double xmin, double ymin, double xmax, double ymax, double delta,
+                              DoubleOrientedPoint initialPose, List<Integer> activeParticles);
+
+    public abstract void init(int size, double xmin, double ymin, double xmax, double ymax, double delta,
+                              DoubleOrientedPoint initialPose);
 
     public abstract boolean processScan(RangeReading reading, int adaptParticles);
 
@@ -115,6 +126,30 @@ public abstract class AbstractGridSlamProcessor {
     public void setLaserParams(int beams, double []angles, DoubleOrientedPoint laserPos) {
         this.beams = beams;
         matcher.setLaserParameters(beams, angles, laserPos);
+    }
+
+    public void clearActiveParticles() {
+        lock.lock();
+        try {
+            activeParticles.clear();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void addActiveParticle(int index) {
+        lock.lock();
+        try {
+            if (!activeParticles.contains(index)) {
+                activeParticles.add(index);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public List<Integer> getActiveParticles() {
+        return activeParticles;
     }
 
     protected double scanMatchParticle(double[] plainReading, double sumScore, Particle it) {

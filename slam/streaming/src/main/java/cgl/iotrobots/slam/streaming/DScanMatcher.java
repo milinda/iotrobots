@@ -1,7 +1,10 @@
-package cgl.iotrobots.slam.core.gridfastsalm;
+package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.grid.MapFactory;
+import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
+import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
@@ -12,16 +15,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+public class DScanMatcher extends AbstractGridSlamProcessor {
+    private static Logger LOG = LoggerFactory.getLogger(DScanMatcher.class);
 
-public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
-    private static Logger LOG = LoggerFactory.getLogger(SharedMemoryGridSlamProcessor.class);
-
-    private Normalizer normalizer;
-
-    private ReSampler reSampler;
-
-    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose,
-                     List<Integer> activeParticles) {
+    public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose, List<Integer> activeParticles) {
         this.xmin = xmin;
         this.ymin = ymin;
         this.xmax = xmax;
@@ -40,7 +37,6 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
             } else {
                 lmap = MapFactory.create(new DoublePoint((0) * .5, (0) * .5), 2, 2, delta);
             }
-
             Particle p = new Particle(lmap);
 
             p.pose = new DoubleOrientedPoint(initialPose);
@@ -55,20 +51,16 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
         count = 0;
         readingCount = 0;
         linearDistance = angularDistance = 0;
-
-        normalizer = new Normalizer(obsSigmaGain);
-        reSampler = new ReSampler(resampleThreshold);
     }
 
+    @Override
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose) {
-        List<Integer> activeParticles = new ArrayList<Integer>();
-        for (int i = 0; i < size; i++) {
-            activeParticles.add(i);
-        }
-        init(size, xmin, ymin, xmax, ymax, delta, initialPose, activeParticles);
+        throw new IllegalArgumentException("This method is not implemented");
     }
 
+    @Override
     public boolean processScan(RangeReading reading, int adaptParticles) {
+        long t0 = System.currentTimeMillis();
         DoubleOrientedPoint relPose = reading.getPose();
         if (count == 0) {
             lastPartPose = odoPose = relPose;
@@ -78,10 +70,6 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
         }
 
-        LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
-        LOG.info("ODO_UPDATE " + particles.size() + " ");
-        LOG.info("ODO_UPDATE Time {}", reading.getTime());
-
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
         linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
@@ -89,7 +77,7 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
 
         // if the robot jumps throw a warning
         if (linearDistance > distanceThresholdCheck) {
-            LOG.error("Robot jumped too much ************************");
+            LOG.error("The robot jumped too much *********************************************************** ");
         }
 
         odoPose = relPose;
@@ -102,76 +90,36 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
                 || (updatePeriod >= 0.0 && (reading.getTime() - lastUpdateTime) > updatePeriod)) {
             lastUpdateTime = reading.getTime();
 
-            LOG.info("FRAME " + readingCount + " " + linearDistance + " " + angularDistance);
-
-            LOG.info("update frame " + readingCount + "update ld=" + linearDistance + " ad=" + angularDistance);
-            LOG.info("Laser Pose= " + reading.getPose().x + " " + reading.getPose().y + " " + reading.getPose().theta);
-
             //this is for converting the reading in a scan-matcher feedable form
+            if (reading.size() != beams) {
+                throw new IllegalStateException("reading should contain " + beams + " beams");
+            }
             double[] plainReading = new double[beams];
             for (int i = 0; i < beams; i++) {
                 plainReading[i] = reading.get(i);
             }
 
-            LOG.info("count " + count);
+            RangeReading readingCopy =
+                    new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
+                            reading.getTime());
+
             if (count > 0) {
                 scanMatch(plainReading);
-                LOG.debug("LASER_READING " + reading.size() + " ");
-                for (Double b : reading) {
-                    LOG.debug(b + " ");
-                }
-                DoubleOrientedPoint p = reading.getPose();
-
-                LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
-                LOG.debug("SM_UPDATE " + particles.size() + " ");
-                for (Particle it : particles) {
-                    DoubleOrientedPoint pose = it.pose;
-                    LOG.debug(pose.x + " " + pose.y + " ");
-                    LOG.debug(pose.theta + " " + it.weight + " ");
-                }
-
-                Normalizer.NormalizeResult result = normalizer.updateTreeWeights(false, particles);
-                LOG.info("neff = " + result.getNeff());
-                ReSampler.ReSampleResult reSampled = reSampler.resample(particles, result.getNeff(), plainReading, adaptParticles, reading, result.getWeights());
-                if (reSampled.isReSampled()) {
-                    for (Particle it : particles) {
-                        matcher.invalidateActiveArea();
-                        matcher.registerScan(it.map, it.pose, plainReading);
-                    }
-                } else {
-                    int index = 0;
-                    List<TNode> oldGeneration = new ArrayList<TNode>();
-                    for (Particle m_particle : particles) {
-                        oldGeneration.add(m_particle.node);
-                    }
-                    Iterator<TNode> nodeIt = oldGeneration.iterator();
-                    for (Particle it : particles) {
-                        //create a new node in the particle tree and add it to the old tree
-                        TNode node;
-                        node = new TNode(it.pose, 0.0, nodeIt.next(), 0);
-                        node.reading = reading;
-                        it.node = node;
-
-                        matcher.invalidateActiveArea();
-                        matcher.registerScan(it.map, it.pose, plainReading);
-                        it.previousIndex = index;
-                        index++;
-                    }
-                }
+                // updateTreeWeights(false);
+                // resample(plainReading, adaptParticles, readingCopy);
             } else {
-                LOG.info("Registering First Scan");
-                for (Particle it : particles) {
+                for (int index : activeParticles) {
+                    Particle it = particles.get(index);
                     matcher.invalidateActiveArea();
                     matcher.computeActiveArea(it.map, it.pose, plainReading);
                     matcher.registerScan(it.map, it.pose, plainReading);
 
                     // not needed anymore, particles refer to the root in the beginning!
                     TNode node = new TNode(it.pose, 0., it.node, 0);
-                    node.reading = reading;
+                    node.reading = readingCopy;
                     it.node = node;
                 }
             }
-            normalizer.updateTreeWeights(false, particles);
 
             lastPartPose = odoPose; //update the past pose for the next iteration
             linearDistance = 0;
@@ -183,8 +131,70 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
             for (Particle it : particles) {
                 it.previousPose = it.pose;
             }
+
         }
         readingCount++;
+        LOG.info("Time in prcess scan: {} *****************************", (System.currentTimeMillis() - t0));
         return processed;
+    }
+
+    @Override
+    public void scanMatch(double[] plainReading) {
+        // sample a new pose from each scan in the reference
+        double sumScore = 0;
+        lock.lock();
+        try {
+            for (int index : activeParticles) {
+                Particle it = particles.get(index);
+                sumScore += scanMatchParticle(plainReading, sumScore, it);
+            }
+        }finally {
+            lock.unlock();
+        }
+        LOG.info("Average Scan Matching Score =" + sumScore / particles.size());
+    }
+
+    public void processAfterReSampling(double []plainReading) {
+        lock.lock();
+        try {
+            for (int i : activeParticles) {
+                Particle it = particles.get(i);
+                matcher.invalidateActiveArea();
+                matcher.registerScan(it.map, it.pose, plainReading);
+                // particles.add(it);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void postProcessingWithoutReSampling(double []plainReading, RangeReading reading) {
+        List<TNode> oldGeneration = new ArrayList<TNode>();
+        for (int i : activeParticles) {
+            Particle m_particle = particles.get(i);
+            oldGeneration.add(m_particle.node);
+        }
+        int index = 0;
+        LOG.debug("Registering Scans:");
+        Iterator<TNode> node_it = oldGeneration.iterator();
+        lock.lock();
+        try {
+            for (int i : activeParticles) {
+                Particle it = particles.get(i);
+                //create a new node in the particle tree and add it to the old tree
+                TNode node = null;
+                node = new TNode(it.pose, 0.0, node_it.next(), 0);
+
+                node.reading = reading;
+                it.node = node;
+
+                matcher.invalidateActiveArea();
+                matcher.registerScan(it.map, it.pose, plainReading);
+                it.previousIndex = index;
+                index++;
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 }

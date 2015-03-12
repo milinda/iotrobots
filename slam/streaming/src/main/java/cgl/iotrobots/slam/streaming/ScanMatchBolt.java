@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ScanMatchBolt extends BaseRichBolt {
     private Logger LOG = LoggerFactory.getLogger(ScanMatchBolt.class);
 
-    private DistributedScanMatcher gfsp = null;
+    private DScanMatcher gfsp = null;
 
     private OutputCollector outputCollector;
 
@@ -168,10 +168,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             activeParticles.add(i + previousTotal);
         }
 
-
-        gfsp = ProcessorFactory.createMatcher(cfg, activeParticles);
-
-        
+        gfsp = ProcessorFactory.createScanMatcher(cfg, activeParticles);
 
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
         LOG.info("taskId {}: active particles at initialization {}", taskId, printActiveParticles());
@@ -257,25 +254,16 @@ public class ScanMatchBolt extends BaseRichBolt {
 
 
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
-        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getRanges(scan, scan.getAngleIncrement());
-        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
-                scan.getRanges().size(),
-                Math.abs(scan.getAngleIncrement()),
-                new DoubleOrientedPoint(0, 0, 0),
-                0.0,
-                scan.getRangeMax());
-
+        Double[] ranges = cgl.iotrobots.slam.core.utils.Utils.getRanges(scan, scan.getAngleIncrement());
         reading = new RangeReading(scan.getRanges().size(),
-                ranges_double,
+                ranges,
                 scan.getTimestamp());
         reading.setPose(scan.getPose());
-        Map<String, Sensor> smap = new HashMap<String, Sensor>();
-        smap.put(sensor.getName(), sensor);
-        gfsp.setSensorMap(smap);
-
+        double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(), scan.getAngleIncrement());
+        gfsp.setLaserParams(reading.size(), laserAngles, new DoubleOrientedPoint(0, 0, 0));
         rangeReading = reading;
-        plainReading = new double[gfsp.beams];
-        for (int i = 0; i < gfsp.beams; i++) {
+        plainReading = new double[scan.getRanges().size()];
+        for (int i = 0; i < scan.getRanges().size(); i++) {
             plainReading[i] = reading.get(i);
         }
 

@@ -8,6 +8,7 @@ import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.core.gridfastsalm.Particle;
+import cgl.iotrobots.slam.core.gridfastsalm.ReSampler;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
@@ -94,7 +95,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             cfg.setNoOfParticles(((Long) conf.get(Constants.ARGS_PARTICLES)).intValue());
         }
         reSampler = ProcessorFactory.createReSampler(cfg);
-        particleValueses = new ParticleValue[reSampler.getParticles().size()];
+        particleValueses = new ParticleValue[reSampler.getNoOfParticles()];
     }
 
     @Override
@@ -142,11 +143,10 @@ public class ReSamplingBolt extends BaseRichBolt {
         reading.setPose(scan.getPose());
         Map<String, Sensor> smap = new HashMap<String, Sensor>();
         smap.put(sensor.getName(), sensor);
-        reSampler.setSensorMap(smap);
 
         LOG.info("receivedParticles: {}, expecting particles:{}", receivedParticles, reSampler.getParticles().size());
         // this bolt will wait until all the particle values are obtained
-        if (receivedParticles < reSampler.getNoParticles() || reading == null) {
+        if (receivedParticles < reSampler.getNoOfParticles() || reading == null) {
             outputCollector.ack(tuple);
             return;
         }
@@ -154,7 +154,6 @@ public class ReSamplingBolt extends BaseRichBolt {
         receivedParticles = 0;
 
         // now distribute the particle Valueses to the bolts
-
         // we got all the particleValueses, we will resample
         // first we need to clear the current particleValueses
         reSampler.getParticles().clear();
@@ -166,17 +165,18 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
 
         // do the resampling
-        boolean hasReSampled = reSampler.processScan(reading, 0);
+        ReSampler.ReSampleResult hasReSampled = reSampler.processScan(reading, 0);
         // now distribute the resampled particleValueses
-        List<Integer> particles = reSampler.getIndexes();
+
 
         int best = reSampler.getBestParticleIndex();
         // we will distribute only if we have reSampled
-        if (hasReSampled) {
+        if (hasReSampled.isReSampled()) {
             // first we will distribute the new assignments
             // this will distribute the current maps
-            LOG.info("ReSampled, distributing assignments***********************");
-            ParticleAssignments assignments = createAssignments(reSampler.getIndexes());
+            LOG.info("ReSampled, distributing assignments.....");
+            List<Integer> particles = hasReSampled.getIndexes();
+            ParticleAssignments assignments = createAssignments(particles);
             assignments.setReSampled(true);
             assignments.setBestParticle(best);
             distributeAssignments(assignments);
@@ -263,12 +263,8 @@ public class ReSamplingBolt extends BaseRichBolt {
      * @return an assignment of particles
      */
     protected ParticleAssignments createAssignments(List<Integer> indexes) {
-//        for (int i : indexes) {
-//            System.out.format("%d ", i);
-//        }
-//        System.out.format("\n");
         // create a matrix of size noOfParticles x noOfparticles
-        int noOfParticles = reSampler.getNoParticles();
+        int noOfParticles = reSampler.getNoOfParticles();
         // assume taskIndexes are going from 0
         double [][]cost = new double[noOfParticles][noOfParticles];
         for (int i = 0; i < noOfParticles; i++) {
@@ -287,21 +283,9 @@ public class ReSamplingBolt extends BaseRichBolt {
             }
         }
 
-//        for (int i = 0; i < cost.length; i++) {
-//            for (int j = 0; j < cost[i].length; j++) {
-//                System.out.format("%f ", cost[i][j]);
-//            }
-//            System.out.format("\n");
-//        }
-
         HungarianAlgorithm algorithm = new HungarianAlgorithm(cost);
         int []assignments = algorithm.execute();
         ParticleAssignments particleAssignments = new ParticleAssignments();
-
-//        for (int i : assignments) {
-//            System.out.format("%d ", i);
-//        }
-        System.out.println();
 
         // go through the particle indexs and try to find their new assignments
         for (int i = 0; i < indexes.size(); i++) {
@@ -319,12 +303,6 @@ public class ReSamplingBolt extends BaseRichBolt {
                     pv.getTaskId(), thrueTaskIndex);
             particleAssignments.addAssignment(assignment);
         }
-
-//        for (ParticleAssignment assignment : particleAssignments.getAssignments()) {
-//            System.out.format("pre task: %d prev i: %d new task: %d new i %d\n",
-//                    assignment.getPreviousTask(), assignment.getPreviousIndex(), assignment.getNewTask(), assignment.getNewIndex());;
-//        }
-
         return particleAssignments;
     }
 }
