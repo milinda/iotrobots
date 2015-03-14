@@ -20,7 +20,7 @@ public class GFSAlgorithm {
     int throttleScans;
 
     boolean gotFirstScan;
-    long mapUpdateInterval;
+    long mapUpdateInterval = 1000;
     boolean gotMap;
 
     // Parameters used by GMapping
@@ -64,8 +64,8 @@ public class GFSAlgorithm {
         throttleScans = 1;
 
         // gmapping parameters
-        maxUrange = 10.0;
-        maxRange = 10.0;
+        maxUrange = 49;
+        maxRange = 49.0;
         minimumScore = 0.0;
         sigma = 0.0005;
         kernelSize = 1;
@@ -76,19 +76,19 @@ public class GFSAlgorithm {
         ogain = 10.0;
         lskip = 0;
         srr = 0.001;
-        srt = 0.002;
+        srt = 0.001;
         str = 0.001;
-        stt = 0.002;
+        stt = 0.001;
         linearUpdate = .1;
         angularUpdate = 0.436;
         temporalUpdate = -1;
         resampleThreshold = .5;
         particles = 60;
-        xmin = -40;
-        ymin = -70.0;
-        xmax = 40.0;
-        ymax = 10.0;
-        delta = 0.1;
+        xmin = -70;
+        ymin = -40.0;
+        xmax = 10.0;
+        ymax = 40.0;
+        delta = 0.05;
         occThresh = 0.25;
         llsamplerange = 0.01;
         llsamplestep = 0.01;
@@ -121,10 +121,10 @@ public class GFSAlgorithm {
 
         /// @todo Expose setting an initial pose
         DoubleOrientedPoint initialPose = new DoubleOrientedPoint(scan.getPose());
-        if (getOdomPose(initialPose, scan.timestamp) != null) {
-            LOG.warn("Unable to determine inital pose of laser! Starting point will be set to zero.");
-            initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
-        }
+//        if (getOdomPose(initialPose, scan.timestamp) != null) {
+//            LOG.warn("Unable to determine inital pose of laser! Starting point will be set to zero.");
+//            initialPose = new DoubleOrientedPoint(0.0, 0.0, 0.0);
+//        }
 
         gsp.setMatchingParameters(maxUrange, maxRange, sigma,
                 kernelSize, lstep, astep, iterations,
@@ -162,7 +162,7 @@ public class GFSAlgorithm {
         if ((laserCount % throttleScans) != 0)
             return;
 
-        long last_map_update = System.currentTimeMillis();
+        long lastMapUpdate = System.currentTimeMillis();
 
         // We can't initialize the mapper until we've got the first scan
         if (!gotFirstScan) {
@@ -190,7 +190,7 @@ public class GFSAlgorithm {
             LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odomPose.x, mpose.y - odomPose.y, mpose.theta - odomPose.theta);
 
             long t1 = System.currentTimeMillis();
-            if (!gotMap || (scan.timestamp - last_map_update) > mapUpdateInterval) {
+            if (!gotMap || (scan.timestamp - lastMapUpdate) > mapUpdateInterval) {
                 updateMap(scan);
                 LOG.debug("Updated the map");
             } else {
@@ -215,9 +215,9 @@ public class GFSAlgorithm {
         if (scan.ranges.size() != gspLaserBeamCount) {
             return false;
         }
-        Double[] ranges_double = Utils.getRanges(scan, gspLaserAngleIncrement);
+        Double[] ranges = Utils.getRanges(scan, gspLaserAngleIncrement);
         RangeReading reading = new RangeReading(scan.ranges.size(),
-                ranges_double,
+                ranges,
                 scan.timestamp);
         reading.setPose(pose);
 

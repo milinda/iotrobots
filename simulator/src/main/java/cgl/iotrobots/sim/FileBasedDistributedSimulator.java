@@ -7,10 +7,13 @@ import cgl.iotrobots.slam.streaming.Utils;
 import cgl.iotrobots.slam.utils.FileIO;
 import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
-import std_msgs.Bool;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class FileBasedDistributedSimulator {
     RabbitMQSender dataSender;
@@ -25,8 +28,15 @@ public class FileBasedDistributedSimulator {
     boolean simbard;
     MapUI mapUI;
 
+    Lock lock;
+    Condition sendWait;
+    Condition receiveWait;
+
     public FileBasedDistributedSimulator(String url, String file, String test, boolean simbard, boolean ui) {
         try {
+            this.lock = new ReentrantLock();
+            this.sendWait = lock.newCondition();
+            this.receiveWait = lock.newCondition();
             dataSender = new RabbitMQSender(url, "simbard_laser");
             controlSender = new RabbitMQSender(url, "simbard_control");
             receiver = new RabbitMQReceiver(url, "simbard_map");
@@ -80,12 +90,24 @@ public class FileBasedDistributedSimulator {
         fileBasedSimulator.start();
     }
 
+    private boolean send = false;
+
     private class SendWorker implements Runnable {
         @Override
         public void run() {
+            long t0 = System.currentTimeMillis();
             while (true) {
+                lock.lock();
                 try {
+                    while (send) {
+                        System.out.println("send wait");
+                        receiveWait.await(1000, TimeUnit.MILLISECONDS);
+                        break;
+                    }
+                    System.out.println("send wait done");
                     LaserScan scan;
+                    System.out.println("difference: " + (System.currentTimeMillis() - t0));
+                    t0 = System.currentTimeMillis();
                     if (simbard) {
                         scan = fileIO.read();
                     } else {
@@ -105,9 +127,12 @@ public class FileBasedDistributedSimulator {
                     } else {
                         return;
                     }
-                    Thread.sleep(500);
+
+                    send = true;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                } finally {
+                    lock.unlock();
                 }
             }
         }
@@ -129,12 +154,20 @@ public class FileBasedDistributedSimulator {
 
         @Override
         public void onMessage(Message message) {
-            Object time = message.getProperties().get("time");
-            Long t = Long.parseLong(time.toString());
-            bestSum += System.currentTimeMillis() - t;
-            bestCount++;
-            resultBestIO.writeResult((System.currentTimeMillis() - t) + "");
-            System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double)(bestSum) / bestCount));
+            lock.lock();
+            try {
+                System.out.println("receive");
+                Object time = message.getProperties().get("time");
+                Long t = Long.parseLong(time.toString());
+                bestSum += System.currentTimeMillis() - t;
+                bestCount++;
+                resultBestIO.writeResult((System.currentTimeMillis() - t) + "");
+                System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double) (bestSum) / bestCount));
+                send = false;
+                receiveWait.signal();
+            }finally {
+                lock.unlock();
+            }
         }
     }
 

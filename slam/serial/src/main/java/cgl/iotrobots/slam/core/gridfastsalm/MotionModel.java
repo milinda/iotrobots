@@ -2,6 +2,7 @@ package cgl.iotrobots.slam.core.gridfastsalm;
 
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.Stat;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,8 @@ public class MotionModel {
         this.stt = stt;
     }
 
+
+
     public DoubleOrientedPoint drawFromMotion(DoubleOrientedPoint p, double linearMove, double angularMove) {
         DoubleOrientedPoint n = new DoubleOrientedPoint(p);
         double lm = linearMove + Math.abs(linearMove) * Stat.sampleGaussian(srr, 0) + Math.abs(angularMove) * Stat.sampleGaussian(str, 0);
@@ -44,6 +47,7 @@ public class MotionModel {
     public DoubleOrientedPoint drawFromMotion(DoubleOrientedPoint p, DoubleOrientedPoint pnew, DoubleOrientedPoint pold) {
         double sxy = 0.3 * srr;
         DoubleOrientedPoint delta = absoluteDifference(pnew, pold);
+//        DoubleOrientedPoint delta = DoubleOrientedPoint.minus(pnew, pold);
         DoubleOrientedPoint noisypoint = new DoubleOrientedPoint(delta);
         noisypoint.x += Stat.sampleGaussian(srr * Math.abs(delta.x) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.y), 0);
         noisypoint.y += Stat.sampleGaussian(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), 0);
@@ -52,6 +56,34 @@ public class MotionModel {
 //        noisypoint.y += Stat.sampleGaussian(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), 0);
 
         noisypoint.theta += Stat.sampleGaussian(stt * Math.abs(delta.theta) + srt * Math.sqrt(delta.x * delta.x + delta.y * delta.y), 0);
+        noisypoint.theta = noisypoint.theta % (2 * Math.PI);
+        if (noisypoint.theta > Math.PI)
+            noisypoint.theta -= 2 * Math.PI;
+        DoubleOrientedPoint point = absoluteSum(p, noisypoint);
+
+//        LOG.info("*************** old pos {} new pos {} changed pos {} ************ ", pold, pnew, point);
+
+        return point;
+    }
+
+    public DoubleOrientedPoint drawFromMotionRandomL(DoubleOrientedPoint p, DoubleOrientedPoint pnew, DoubleOrientedPoint pold) {
+        double sxy = 0.3 * srr;
+
+        DoubleOrientedPoint delta = absoluteDifference(pnew, pold);
+        DoubleOrientedPoint noisypoint = new DoubleOrientedPoint(delta);
+        NormalDistribution normalDistribution = new NormalDistribution(srr * Math.abs(delta.x) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.y), .005);
+        noisypoint.x += normalDistribution.sample();
+        normalDistribution = new NormalDistribution(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), .005);
+        noisypoint.y += normalDistribution.sample();
+        normalDistribution = new NormalDistribution(stt * Math.abs(delta.theta) + srt * Math.sqrt(delta.x * delta.x + delta.y * delta.y), .005);
+        noisypoint.theta += normalDistribution.sample();
+//        noisypoint.x += Stat.sampleGaussian(srr * Math.abs(delta.x) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.y), 0);
+//        noisypoint.y += Stat.sampleGaussian(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), 0);
+
+//        noisypoint.x += Stat.sampleGaussian(srr * Math.abs(delta.x) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.y), 0);
+//        noisypoint.y += Stat.sampleGaussian(srr * Math.abs(delta.y) + str * Math.abs(delta.theta) + sxy * Math.abs(delta.x), 0);
+
+//        noisypoint.theta += Stat.sampleGaussian(stt * Math.abs(delta.theta) + srt * Math.sqrt(delta.x * delta.x + delta.y * delta.y), 0);
         noisypoint.theta = noisypoint.theta % (2 * Math.PI);
         if (noisypoint.theta > Math.PI)
             noisypoint.theta -= 2 * Math.PI;

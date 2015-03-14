@@ -99,23 +99,8 @@ public class MapBuildingBolt extends BaseRichBolt {
             Particle p = new Particle();
             Utils.createParticle(particleValue, p);
 
-            int size = scan.getRanges().size();
-            double[] laser_angles = new double[size];
-            double theta = scan.getAngleMin();
-            double angleIncrement = scan.getAngleIncrement();
-            for (int i = 0; i < size; i++) {
-                if (angleIncrement < 0)
-                    laser_angles[size - i - 1] = theta;
-                else
-                    laser_angles[i] = theta;
-                theta += angleIncrement;
-            }
-
-            double angle = -.5 * angleIncrement * size;
-            for (int i = 0; i < size; i++, angle += angleIncrement) {
-                laser_angles[i] = angle;
-            }
-            GFSMap map = mapUpdater.updateMap(p, laser_angles, new DoubleOrientedPoint(0, 0, 0));
+            double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(), scan.getAngleIncrement());
+            GFSMap map = mapUpdater.updateMap(p, laserAngles, new DoubleOrientedPoint(0, 0, 0));
             LOG.info("Laser scan pose: {}", scan.getPose());
             byte []body = Utils.serialize(kryo, map);
             List<Object> emit = new ArrayList<Object>();

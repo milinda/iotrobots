@@ -122,14 +122,6 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
                 }
                 DoubleOrientedPoint p = reading.getPose();
 
-                LOG.debug(p.x + " " + p.y + " " + p.theta + " " + reading.getTime());
-                LOG.debug("SM_UPDATE " + particles.size() + " ");
-                for (Particle it : particles) {
-                    DoubleOrientedPoint pose = it.pose;
-                    LOG.debug(pose.x + " " + pose.y + " ");
-                    LOG.debug(pose.theta + " " + it.weight + " ");
-                }
-
                 Normalizer.NormalizeResult result = normalizer.updateTreeWeights(false, particles);
                 LOG.info("neff = " + result.getNeff());
                 ReSampler.ReSampleResult reSampled = reSampler.resample(particles, result.getNeff(), plainReading, adaptParticles, reading, result.getWeights());

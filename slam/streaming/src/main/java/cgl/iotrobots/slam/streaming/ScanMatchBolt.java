@@ -80,6 +80,8 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private Map conf;
 
+    private boolean gotFirstScan  = false;
+
     private enum MatchState {
         INIT,
         WAITING_FOR_READING,
@@ -173,6 +175,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
         LOG.info("taskId {}: active particles at initialization {}", taskId, printActiveParticles());
         state = MatchState.WAITING_FOR_READING;
+        gotFirstScan = false;
     }
 
     private String printActiveParticles() {
@@ -250,6 +253,13 @@ public class ScanMatchBolt extends BaseRichBolt {
         } finally {
             lock.unlock();
         }
+
+        if (!gotFirstScan) {
+            gfsp.initParticles(scan.getPose());
+            gotFirstScan = true;
+            return;
+        }
+
         RangeReading reading;
 
 
@@ -261,6 +271,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         reading.setPose(scan.getPose());
         double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(), scan.getAngleIncrement());
         gfsp.setLaserParams(reading.size(), laserAngles, new DoubleOrientedPoint(0, 0, 0));
+
         rangeReading = reading;
         plainReading = new double[scan.getRanges().size()];
         for (int i = 0; i < scan.getRanges().size(); i++) {

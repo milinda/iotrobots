@@ -8,6 +8,7 @@ import cgl.iotrobots.slam.core.gridfastsalm.TNode;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,8 @@ import java.util.List;
 
 public class DScanMatcher extends AbstractGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(DScanMatcher.class);
+
+    private int noOfParticles;
 
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose, List<Integer> activeParticles) {
         this.xmin = xmin;
@@ -47,10 +50,32 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
             // we use the root directly
             p.node = new TNode(initialPose, 0, null, 0);
         }
-
+        noOfParticles = size;
         count = 0;
         readingCount = 0;
         linearDistance = angularDistance = 0;
+    }
+
+    public void initParticles(DoubleOrientedPoint initialPose) {
+        particles.clear();
+
+        for (int i = 0; i < noOfParticles; i++) {
+            IGMap lmap;
+            if (activeParticles.contains(i)) {
+                lmap = MapFactory.create(new DoublePoint((xmin + xmax) * .5, (ymin + ymax) * .5), xmax - xmin, ymax - ymin, delta);
+            } else {
+                lmap = MapFactory.create(new DoublePoint((0) * .5, (0) * .5), 2, 2, delta);
+            }
+            Particle p = new Particle(lmap);
+
+            p.pose = new DoubleOrientedPoint(initialPose);
+            p.previousPose = initialPose;
+            p.setWeight(0);
+            p.previousIndex = 0;
+            particles.add(p);
+            // we use the root directly
+            p.node = new TNode(initialPose, 0, null, 0);
+        }
     }
 
     @Override
@@ -99,10 +124,6 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
                 plainReading[i] = reading.get(i);
             }
 
-            RangeReading readingCopy =
-                    new RangeReading(reading.size(), reading.toArray(new Double[reading.size()]),
-                            reading.getTime());
-
             if (count > 0) {
                 scanMatch(plainReading);
                 // updateTreeWeights(false);
@@ -116,7 +137,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
 
                     // not needed anymore, particles refer to the root in the beginning!
                     TNode node = new TNode(it.pose, 0., it.node, 0);
-                    node.reading = readingCopy;
+                    node.reading = reading;
                     it.node = node;
                 }
             }
@@ -134,7 +155,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
 
         }
         readingCount++;
-        LOG.info("Time in prcess scan: {} *****************************", (System.currentTimeMillis() - t0));
+        LOG.info("Time in process scan: {} *****************************", (System.currentTimeMillis() - t0));
         return processed;
     }
 

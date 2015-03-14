@@ -12,18 +12,13 @@ public class Stat {
             r = gsl_rng_alloc (gsl_rng_default);
         }
         */
-        Random random = new Random();
-        if (S != 0) {
-            //gsl_rng_set(r, S);
-            random = new Random(S);
-        }
         if (sigma == 0)
             return 0;
         //return gsl_ran_gaussian (r,sigma);
-        return pf_ran_gaussian(sigma, random);
+        return pf_ran_gaussian(sigma);
     }
 
-    public static double pf_ran_gaussian(double sigma, Random random) {
+    public static double pf_ran_gaussian(double sigma) {
         double x1, x2, w;
         double r;
 
