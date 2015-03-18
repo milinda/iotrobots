@@ -100,8 +100,8 @@ public class Normalizer {
         neff = 0;
         List<Double> temp = new ArrayList<Double>();
         for (Double weight1 : weights) {
-            double weight = weight1;
-            weight = weight / wcum;
+            double weight;
+            weight = weight1 / wcum;
             temp.add(weight);
             double w = weight;
             neff += w * w;

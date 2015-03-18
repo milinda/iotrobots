@@ -79,8 +79,8 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
         }
 
         LOG.info("ODOM " + odoPose.x + " " + odoPose.y + " " + odoPose.theta + " " + reading.getTime());
-        LOG.info("ODO_UPDATE " + particles.size() + " ");
-        LOG.info("ODO_UPDATE Time {}", reading.getTime());
+//        LOG.info("ODO_UPDATE " + particles.size() + " ");
+//        LOG.info("ODO_UPDATE Time {}", reading.getTime());
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
@@ -175,6 +175,8 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
             for (Particle it : particles) {
                 it.previousPose = it.pose;
             }
+        } else {
+            LOG.info("Not calculating: Linear update {} Angular Update {}", linearDistance, angularDistance);
         }
         readingCount++;
         return processed;

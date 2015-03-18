@@ -437,7 +437,9 @@ public class ScanMatcher {
     public double optimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
         double bestScore = -1;
         DoubleOrientedPoint currentPose = new DoubleOrientedPoint(init.x, init.y, init.theta);
-        double currentScore = score(map, currentPose, readings);
+        LikeliHoodAndScore likeliHoodAndScore = likelihoodAndScore(map, currentPose, readings);
+//        double currentScore = score(map, currentPose, readings);
+        double currentScore = likeliHoodAndScore.s;
         double adelta = optAngularDelta, ldelta = optLinearDelta;
         int refinement = 0;
         do {
@@ -497,7 +499,9 @@ public class ScanMatcher {
                     odo_gain *= Math.exp(-linearOdometryReliability * drho);
                 }
 
-                double localScore = odo_gain * score(map, localPose, readings);
+                likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
+//                double localScore = odo_gain * score(map, localPose, readings);
+                double localScore = odo_gain * likeliHoodAndScore.s;
                 if (localScore > currentScore) {
                     currentScore = localScore;
                     bestLocalPose = new DoubleOrientedPoint(localPose.x, localPose.y, localPose.theta);
@@ -779,7 +783,7 @@ public class ScanMatcher {
                 }
             }
             if (found) {
-                s += Math.exp(-1. / gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
+                s += Math.exp(-1. / (gaussianSigma * DoublePoint.mulD(bestMu, bestMu)));
             }
         }
         return s;

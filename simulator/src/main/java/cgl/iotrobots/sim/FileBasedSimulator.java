@@ -73,8 +73,8 @@ public class FileBasedSimulator {
     private class SendWorker implements Runnable {
         @Override
         public void run() {
+            LaserScan scan;
             while (true) {
-                LaserScan scan;
                 if (simbard) {
                     scan = fileIO.read();
                 } else {
@@ -84,6 +84,7 @@ public class FileBasedSimulator {
                     gfsAlgorithm.laserScan(scan);
                     mapUI.setMap(gfsAlgorithm.getMap());
                 } else {
+                    System.out.println("We are done!!");
                     return;
                 }
             }

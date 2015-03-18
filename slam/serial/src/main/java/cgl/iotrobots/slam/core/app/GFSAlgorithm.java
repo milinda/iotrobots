@@ -20,8 +20,7 @@ public class GFSAlgorithm {
     int throttleScans;
 
     boolean gotFirstScan;
-    long mapUpdateInterval = 1000;
-    boolean gotMap;
+    long mapUpdateInterval = 30000;
 
     // Parameters used by GMapping
     double maxRange;
@@ -67,13 +66,13 @@ public class GFSAlgorithm {
         maxUrange = 49;
         maxRange = 49.0;
         minimumScore = 0.0;
-        sigma = 0.0005;
+        sigma = 0.05;
         kernelSize = 1;
         lstep = 0.05;
         astep = 0.05;
         iterations = 5;
         lsigma = .075;
-        ogain = 10.0;
+        ogain = 3.0;
         lskip = 0;
         srr = 0.001;
         srt = 0.001;
@@ -156,13 +155,19 @@ public class GFSAlgorithm {
     double scanTime = 0;
     int count = 0;
 
+    long lastMapUpdate;
+
+    public void setLastMapUpdate(long lastMapUpdate) {
+        this.lastMapUpdate = lastMapUpdate;
+    }
+
     public void laserScan(LaserScan scan) {
         long t0 =  System.currentTimeMillis();
         laserCount++;
         if ((laserCount % throttleScans) != 0)
             return;
 
-        long lastMapUpdate = System.currentTimeMillis();
+
 
         // We can't initialize the mapper until we've got the first scan
         if (!gotFirstScan) {
@@ -190,11 +195,10 @@ public class GFSAlgorithm {
             LOG.debug("correction: %.3f %.3f %.3f", mpose.x - odomPose.x, mpose.y - odomPose.y, mpose.theta - odomPose.theta);
 
             long t1 = System.currentTimeMillis();
-            if (!gotMap || (scan.timestamp - lastMapUpdate) > mapUpdateInterval) {
+            if ((scan.timestamp - lastMapUpdate) > mapUpdateInterval) {
                 updateMap(scan);
                 LOG.debug("Updated the map");
-            } else {
-                updateMap(scan);
+                lastMapUpdate = System.currentTimeMillis();
             }
             System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
