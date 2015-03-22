@@ -6,6 +6,9 @@ import cgl.iotrobots.slam.core.gridfastsalm.GridSlamProcessor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import cgl.iotrobots.slam.utils.FileIO;
+import cgl.iotrobots.slam.utils.RosMapPublisher;
+import cgl.iotrobots.slam.utils.RosTurtle;
+import cgl.iotrobots.slam.utils.TurtleUtils;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -30,6 +33,8 @@ public class FileBasedSimulator {
     MapUI mapUI = new MapUI();
 
     boolean simbard = true;
+
+    RosMapPublisher mapPublisher = new RosMapPublisher();
 
     public void start(boolean parallel, String file, int particles, boolean simbard) throws InterruptedException {
         // nothing particular in this case
@@ -56,6 +61,10 @@ public class FileBasedSimulator {
 
         gfsAlgorithm.initMapper(scanI);
 
+//        RosTurtle rosTurtle = new RosTurtle();
+//        TurtleUtils.connectToRos(rosTurtle);
+        TurtleUtils.connectToRos(mapPublisher);
+
         if (simbard) {
             fileIO = new FileIO(file, false);
         } else {
@@ -73,8 +82,9 @@ public class FileBasedSimulator {
     private class SendWorker implements Runnable {
         @Override
         public void run() {
-            LaserScan scan;
+            LaserScan oldScan = null;
             while (true) {
+                LaserScan scan;
                 if (simbard) {
                     scan = fileIO.read();
                 } else {
@@ -83,10 +93,18 @@ public class FileBasedSimulator {
                 if (scan != null) {
                     gfsAlgorithm.laserScan(scan);
                     mapUI.setMap(gfsAlgorithm.getMap());
+//                    mapPublisher.addMap(gfsAlgorithm.getMap());
                 } else {
-                    System.out.println("We are done!!");
-                    return;
+                    gfsAlgorithm.setLastMapUpdate(0);
+                    if (oldScan != null) {
+                        gfsAlgorithm.laserScan(oldScan);
+                        mapUI.setMap(gfsAlgorithm.getMap());
+                        mapPublisher.addMap(gfsAlgorithm.getMap());
+                        System.out.println("We are done!!");
+                        return;
+                    }
                 }
+                oldScan = scan;
             }
         }
     }

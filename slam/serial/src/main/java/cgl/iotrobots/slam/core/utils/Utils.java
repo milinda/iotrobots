@@ -35,10 +35,11 @@ public class Utils {
         return ranges;
     }
 
-    public static double[] getLaserAngles(int beams, double angleIncrement) {
-        double angle = -.5 * angleIncrement * beams;
+    public static double[] getLaserAngles(int beams, double angleIncrement, double angleMin) {
+//        double angle = -.5 * angleIncrement * beams;
+        double angle = angleMin;
         double []angles = new double[beams];
-        // double angle = 0;
+//        double angle = 0;
         for (int i = 0; i < beams; i++, angle += angleIncrement) {
             angles[i] = angle;
         }

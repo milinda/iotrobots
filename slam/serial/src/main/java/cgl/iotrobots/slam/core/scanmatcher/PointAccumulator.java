@@ -44,7 +44,7 @@ public class PointAccumulator {
     }
 
     public DoublePoint mean() {
-        return new DoublePoint(1.0 /(acc.x * n), 1.0 /(n *acc.y));
+        return new DoublePoint(acc.x / n, acc.y / n);
     }
 
     void add(PointAccumulator p) {

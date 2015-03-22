@@ -22,7 +22,7 @@ import java.util.concurrent.BlockingQueue;
 public class RosMapPublisher extends AbstractNodeMain {
     private boolean gotMap = false;
 
-    private OccupancyGrid map;
+//    private OccupancyGrid map;
 
     private String name = "slam_map";
 
@@ -41,7 +41,7 @@ public class RosMapPublisher extends AbstractNodeMain {
 
     int counter = 0;
 
-    private void populateRosMAp(GFSMap smap) {
+    private void populateRosMAp(OccupancyGrid map, GFSMap smap) {
         map.getHeader().setFrameId("map");
         map.getHeader().setSeq(counter);
         map.getHeader().setStamp(new Time(System.currentTimeMillis() / 1000));
@@ -92,9 +92,9 @@ public class RosMapPublisher extends AbstractNodeMain {
         return ((sx) * (j) + (i));
     }
 
-    public OccupancyGrid getMap() {
-        return map;
-    }
+//    public OccupancyGrid getMap() {
+//        return map;
+//    }
 
     @Override
     public GraphName getDefaultNodeName() {
@@ -108,16 +108,17 @@ public class RosMapPublisher extends AbstractNodeMain {
         final Publisher<OccupancyGrid> mapPublisher = connectedNode.newPublisher("/map", OccupancyGrid._TYPE);
         final Publisher<MapMetaData> metaDataPublisher = connectedNode.newPublisher("/map_metadata", MapMetaData._TYPE);
 
-        this.map = mapPublisher.newMessage();
+//        this.map = mapPublisher.newMessage();
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             @Override
             protected void loop() throws InterruptedException {
                 GFSMap gfsMap = maps.take();
 
                 if (gfsMap != null) {
-                    populateRosMAp(gfsMap);
-                    mapPublisher.publish(map);
+                    OccupancyGrid map = mapPublisher.newMessage();
+                    populateRosMAp(map, gfsMap);
                     metaDataPublisher.publish(map.getInfo());
+                    mapPublisher.publish(map);
                 }
             }
         });

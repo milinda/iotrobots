@@ -269,7 +269,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 ranges,
                 scan.getTimestamp());
         reading.setPose(scan.getPose());
-        double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(), scan.getAngleIncrement());
+        double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(), scan.getAngleIncrement(), scan.getAngleMin());
         gfsp.setLaserParams(reading.size(), laserAngles, new DoubleOrientedPoint(0, 0, 0));
 
         rangeReading = reading;

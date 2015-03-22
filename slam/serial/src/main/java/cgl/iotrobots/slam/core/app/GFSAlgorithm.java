@@ -20,12 +20,11 @@ public class GFSAlgorithm {
     int throttleScans;
 
     boolean gotFirstScan;
-    long mapUpdateInterval = 30000;
+    long mapUpdateInterval = -10;
 
     // Parameters used by GMapping
     double maxRange;
     double maxUrange;
-    double maxrange;
     double minimumScore = 200;
     double sigma;
     int kernelSize;
@@ -55,16 +54,14 @@ public class GFSAlgorithm {
     double lasamplerange;
     double lasamplestep;
 
-    double tf_delay_;
-
     private MapUpdater mapUpdater;
 
     public void init() {
         throttleScans = 1;
 
         // gmapping parameters
-        maxUrange = 49;
-        maxRange = 49.0;
+        maxUrange = 80;
+        maxRange = 79.0;
         minimumScore = 0.0;
         sigma = 0.05;
         kernelSize = 1;
@@ -74,15 +71,15 @@ public class GFSAlgorithm {
         lsigma = .075;
         ogain = 3.0;
         lskip = 0;
-        srr = 0.001;
-        srt = 0.001;
-        str = 0.001;
-        stt = 0.001;
-        linearUpdate = .1;
-        angularUpdate = 0.436;
+        srr = 0.1;
+        srt = 0.2;
+        str = 0.1;
+        stt = 0.2;
+        linearUpdate = .5;
+        angularUpdate = .25;
         temporalUpdate = -1;
         resampleThreshold = .5;
-        particles = 60;
+        particles = 30;
         xmin = -70;
         ymin = -40.0;
         xmax = 10.0;
@@ -115,7 +112,7 @@ public class GFSAlgorithm {
         maxRange = scan.rangeMax - 0.01;
         maxUrange = maxRange;
 
-        double []laserAngles = Utils.getLaserAngles(gspLaserBeamCount, gspLaserAngleIncrement);
+        double []laserAngles = Utils.getLaserAngles(gspLaserBeamCount, gspLaserAngleIncrement, angleMin);
         gsp.setLaserParams(gspLaserBeamCount, laserAngles, gmapPose);
 
         /// @todo Expose setting an initial pose
@@ -199,6 +196,7 @@ public class GFSAlgorithm {
                 updateMap(scan);
                 LOG.debug("Updated the map");
                 lastMapUpdate = System.currentTimeMillis();
+                lastMapUpdate = 0;
             }
             System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
@@ -238,19 +236,7 @@ public class GFSAlgorithm {
 
     public void updateMap(LaserScan scan) {
         double[] laserAngles = new double[scan.ranges.size()];
-        double theta = angleMin;
-        for (int i = 0; i < scan.ranges.size(); i++) {
-            if (gspLaserAngleIncrement < 0)
-                laserAngles[scan.ranges.size() - i - 1] = theta;
-            else
-                laserAngles[i] = theta;
-            theta += gspLaserAngleIncrement;
-        }
-
-        double angle = -.5 * gspLaserAngleIncrement * gspLaserBeamCount;
-        for (int i = 0; i < gspLaserBeamCount; i++, angle += gspLaserAngleIncrement) {
-            laserAngles[i] = angle;
-        }
+        laserAngles = Utils.getLaserAngles(scan.ranges.size(), scan.angleIncrement, angleMin);
 
         Particle best =
                 gsp.getParticles().get(gsp.getBestParticleIndex());

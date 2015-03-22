@@ -90,6 +90,12 @@ public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProc
         // if the robot jumps throw a warning
         if (linearDistance > distanceThresholdCheck) {
             LOG.error("Robot jumped too much ************************");
+            odoPose = relPose;
+            return true;
+        } else if (angularDistance > Math.PI / 2) {
+            LOG.error("Robot jumped too much ************************");
+            odoPose = relPose;
+            return true;
         }
 
         odoPose = relPose;
