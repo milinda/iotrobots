@@ -30,18 +30,24 @@ public class FileBasedSimulator {
 
     SlamDataReader dataReader;
 
-    MapUI mapUI = new MapUI();
+    MapUI mapUI;
 
     boolean simbard = true;
 
     RosMapPublisher mapPublisher = new RosMapPublisher();
 
-    public void start(boolean parallel, String file, int particles, boolean simbard) throws InterruptedException {
+    boolean ui = false;
+
+    public void start(boolean parallel, String file, int particles, boolean simbard, boolean ui) throws InterruptedException {
         // nothing particular in this case
         if (!parallel) {
             gfsAlgorithm.gsp = new GridSlamProcessor();
         } else {
             gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
+        }
+        this.ui = ui;
+        if (ui) {
+            mapUI = new MapUI();
         }
         gfsAlgorithm.init();
         gfsAlgorithm.setParticles(particles);
@@ -63,7 +69,9 @@ public class FileBasedSimulator {
 
 //        RosTurtle rosTurtle = new RosTurtle();
 //        TurtleUtils.connectToRos(rosTurtle);
-        TurtleUtils.connectToRos(mapPublisher);
+        if (ui) {
+            TurtleUtils.connectToRos(mapPublisher);
+        }
 
         if (simbard) {
             fileIO = new FileIO(file, false);
@@ -92,14 +100,18 @@ public class FileBasedSimulator {
                 }
                 if (scan != null) {
                     gfsAlgorithm.laserScan(scan);
-                    mapUI.setMap(gfsAlgorithm.getMap());
-                    mapPublisher.addMap(gfsAlgorithm.getMap());
+                    if (ui) {
+                        mapUI.setMap(gfsAlgorithm.getMap());
+                        mapPublisher.addMap(gfsAlgorithm.getMap());
+                    }
                 } else {
                     gfsAlgorithm.setLastMapUpdate(0);
                     if (oldScan != null) {
                         gfsAlgorithm.laserScan(oldScan);
-                        mapUI.setMap(gfsAlgorithm.getMap());
-                        mapPublisher.addMap(gfsAlgorithm.getMap());
+                        if (ui) {
+                            mapUI.setMap(gfsAlgorithm.getMap());
+                            mapPublisher.addMap(gfsAlgorithm.getMap());
+                        }
                         System.out.println("We are done!!");
                         return;
                     }
@@ -112,10 +124,10 @@ public class FileBasedSimulator {
     public static void main(String[] args) throws InterruptedException {
         FileBasedSimulator simulator = new FileBasedSimulator();
         if (args.length > 2) {
-            simulator.start(Boolean.parseBoolean(args[0]), args[1], Integer.parseInt(args[2]), Boolean.parseBoolean(args[3]));
+            simulator.start(Boolean.parseBoolean(args[0]), args[1], Integer.parseInt(args[2]), Boolean.parseBoolean(args[3]), Boolean.parseBoolean(args[5]));
             simulator.parallel = Integer.parseInt(args[4]);
         } else if (args.length == 1) {
-            simulator.start(false, args[0], 20, true);
+            simulator.start(false, args[0], 20, true, false);
         }
     }
 }
