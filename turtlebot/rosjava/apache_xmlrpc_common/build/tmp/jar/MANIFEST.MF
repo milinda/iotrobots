@@ -18,8 +18,8 @@ Export-Package: org.apache.xmlrpc.util;uses:="org.apache.xmlrpc.common
 Bundle-Version: 0.0.0.SNAPSHOT
 Tool: Bnd-1.50.0
 Bundle-Name: apache_xmlrpc_common
-Bnd-LastModified: 1403314487532
-Created-By: 1.7.0_51 (Oracle Corporation)
+Bnd-LastModified: 1404163209897
+Created-By: 1.7.0_04 (Oracle Corporation)
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: ros.rosjava_core.apache_xmlrpc_common
 Import-Package: javax.xml.bind,javax.xml.namespace,javax.xml.parsers,o

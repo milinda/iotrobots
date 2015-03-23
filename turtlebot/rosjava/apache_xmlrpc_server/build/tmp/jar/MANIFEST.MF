@@ -10,8 +10,8 @@ Export-Package: org.apache.xmlrpc.metadata;uses:="org.apache.xmlrpc.se
 Bundle-Version: 0.0.0.SNAPSHOT
 Tool: Bnd-1.50.0
 Bundle-Name: apache_xmlrpc_server
-Bnd-LastModified: 1403314488120
-Created-By: 1.7.0_51 (Oracle Corporation)
+Bnd-LastModified: 1404163210714
+Created-By: 1.7.0_04 (Oracle Corporation)
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: ros.rosjava_core.apache_xmlrpc_server
 Import-Package: org.apache.commons.logging;version="[1.1,2)",org.apach

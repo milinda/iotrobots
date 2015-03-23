@@ -8,8 +8,8 @@ Export-Package: org.ros.internal.message.field;uses:="org.jboss.netty.
  l.message.definition,com.google.common.base";version="0.0.0-SNAPSHOT"
  ,org.ros.internal.message;uses:="org.ros.internal.message.field,org.j
  boss.netty.buffer,org.ros.message,com.google.common.collect,org.ros.i
- nternal.message.service,org.ros.exception,org.ros.internal.message.to
- pic,org.ros.internal.message.definition,org.apache.commons.io,com.goo
+ nternal.message.service,org.ros.exception,org.ros.internal.message.de
+ finition,org.ros.internal.message.topic,org.apache.commons.io,com.goo
  gle.common.base,org.apache.commons.codec.digest,org.apache.commons.po
  ol,org.apache.commons.pool.impl,org.ros.internal.message.context,org.
  apache.commons.lang,org.apache.commons.io.filefilter";version="0.0.0-
@@ -29,8 +29,8 @@ Export-Package: org.ros.internal.message.field;uses:="org.jboss.netty.
 Bundle-Version: 0.0.0-SNAPSHOT
 Tool: Bnd-1.50.0
 Bundle-Name: rosjava_bootstrap
-Bnd-LastModified: 1403314488265
-Created-By: 1.7.0_51 (Oracle Corporation)
+Bnd-LastModified: 1404163211087
+Created-By: 1.7.0_04 (Oracle Corporation)
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.ros.rosjava_bootstrap
 Import-Package: com.google.common.base;version="[12.0,13)",com.google.

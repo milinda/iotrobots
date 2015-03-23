@@ -9,8 +9,8 @@ Export-Package: org.apache.xmlrpc.client;uses:="org.apache.xmlrpc,org.
 Bundle-Version: 0.0.0.SNAPSHOT
 Tool: Bnd-1.50.0
 Bundle-Name: apache_xmlrpc_client
-Bnd-LastModified: 1403314487743
-Created-By: 1.7.0_51 (Oracle Corporation)
+Bnd-LastModified: 1404163210291
+Created-By: 1.7.0_04 (Oracle Corporation)
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: ros.rosjava_core.apache_xmlrpc_client
 Import-Package: javax.net,javax.net.ssl,org.apache.commons.httpclient;
