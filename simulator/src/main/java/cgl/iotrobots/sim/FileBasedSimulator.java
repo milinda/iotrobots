@@ -93,7 +93,7 @@ public class FileBasedSimulator {
                 if (scan != null) {
                     gfsAlgorithm.laserScan(scan);
                     mapUI.setMap(gfsAlgorithm.getMap());
-//                    mapPublisher.addMap(gfsAlgorithm.getMap());
+                    mapPublisher.addMap(gfsAlgorithm.getMap());
                 } else {
                     gfsAlgorithm.setLastMapUpdate(0);
                     if (oldScan != null) {

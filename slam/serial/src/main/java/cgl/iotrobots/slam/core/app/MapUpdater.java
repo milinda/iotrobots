@@ -106,7 +106,7 @@ public class MapUpdater {
             xmax = wmax.x;
             ymax = wmax.y;
 
-            LOG.debug("map size is now {} x {} pixels ({},{})-({}, {})", smap.getMapSizeX(), smap.getMapSizeY(),
+            LOG.info("map size is now {} x {} pixels ({},{})-({}, {})", smap.getMapSizeX(), smap.getMapSizeY(),
                     xmin, ymin, xmax, ymax);
 
             map.width = smap.getMapSizeX();

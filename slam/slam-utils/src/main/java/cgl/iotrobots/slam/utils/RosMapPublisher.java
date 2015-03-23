@@ -47,8 +47,16 @@ public class RosMapPublisher extends AbstractNodeMain {
         map.getHeader().setStamp(new Time(System.currentTimeMillis() / 1000));
 
         MapMetaData metaData = map.getInfo();
-        metaData.setHeight(smap.getHeight());
-        metaData.setWidth(smap.getWidth());
+
+        int size = 0;
+        if (smap.getHeight() > smap.getWidth()) {
+            size = smap.getHeight();
+        } else {
+            size = smap.getWidth();
+        }
+
+        metaData.setHeight(size);
+        metaData.setWidth(size);
         // create a pose
         Pose p = map.getInfo().getOrigin();
         Quaternion q = p.getOrientation();
@@ -60,11 +68,8 @@ public class RosMapPublisher extends AbstractNodeMain {
 
         metaData.setMapLoadTime(new Time(1));
 
-        if (!gotMap) {
+//        if (!gotMap) {
             metaData.setResolution((float) smap.getResolution());
-
-            metaData.setHeight(smap.getHeight());
-            metaData.setWidth(smap.getWidth());
 
             q.setX(0);
             q.setY(0);
@@ -74,18 +79,23 @@ public class RosMapPublisher extends AbstractNodeMain {
             point.setX(0);
             point.setY(0);
             point.setZ(0);
-        }
+//        }
 
-        ChannelBuffer b = ChannelBuffers.buffer(ByteOrder.LITTLE_ENDIAN, smap.getWidth() * smap.getHeight());
-        for (int x = 0; x < smap.getWidth(); x++) {
-            for (int y = 0; y < smap.getHeight(); y++) {
-                b.writeByte(smap.getData()[MAP_IDX(map.getInfo().getWidth(), x, y)]);
+
+        ChannelBuffer b = ChannelBuffers.buffer(ByteOrder.LITTLE_ENDIAN, size * size);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                if (x < smap.getWidth() && y < smap.getHeight()) {
+                    b.writeByte(smap.getData()[MAP_IDX(smap.getWidth(), x, y)]);
+                } else {
+                    b.writeByte(-1);
+                }
             }
         }
 
         map.setData(b);
 
-        gotMap = true;
+//        gotMap = true;
     }
 
     public static int MAP_IDX(int sx, int i, int j) {
