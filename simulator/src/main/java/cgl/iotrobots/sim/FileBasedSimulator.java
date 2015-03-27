@@ -7,13 +7,8 @@ import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.threading.ParallelGridSlamProcessor;
 import cgl.iotrobots.slam.utils.FileIO;
 import cgl.iotrobots.slam.utils.RosMapPublisher;
-import cgl.iotrobots.slam.utils.RosTurtle;
 import cgl.iotrobots.slam.utils.TurtleUtils;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,21 +40,6 @@ public class FileBasedSimulator {
         }
         gfsAlgorithm.init();
         gfsAlgorithm.setParticles(particles);
-        LaserScan scanI = new LaserScan();
-        scanI.setAngleIncrement(ANGLE / SENSORS);
-        scanI.setAngleMax(ANGLE);
-        scanI.setAngleMin(0);
-        List<Double> ranges  = new ArrayList<Double>();
-        for (int i = 0; i < SENSORS; i++) {
-            ranges.add(100.0);
-        }
-        scanI.setRanges(ranges);
-        scanI.setRangeMin(0);
-        scanI.setRangeMax(100);
-        scanI.setTimestamp(System.currentTimeMillis());
-        scanI.setPose(new DoubleOrientedPoint(0.0, 0.0, 0.0));
-
-        gfsAlgorithm.initMapper(scanI);
 
 //        RosTurtle rosTurtle = new RosTurtle();
 //        TurtleUtils.connectToRos(rosTurtle);

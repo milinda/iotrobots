@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimbardExample {
-    public static final double ANGLE_RANGE_SIDE = 0.521567881107;
+    public static final double ANGLE_RANGE_SIDE = Math.PI / 2;
 
     public static final int SENSORS = 640;
 
@@ -35,11 +35,8 @@ public class SimbardExample {
 
         GFSAlgorithm gfsAlgorithm = new GFSAlgorithm();
         RangeSensorBelt sonars;
-        PrintWriter pw;
 
         int totalSensors = 0;
-
-//        RosMapPublisher node = new RosMapPublisher();
 
         public Robot(Vector3d position, String name) {
             super(position, name);
@@ -54,34 +51,27 @@ public class SimbardExample {
 
             Vector3d pos = new Vector3d(0, agentHeight / 2, 0.0);
             this.addSensorDevice(sonars, pos, 0);
-            fileIO = new FileIO("simbard_0.txt", true);
-//            try {
-//                pw = new PrintWriter(new FileWriter("out.txt"));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-
-//            TurtleUtils.connectToRos(node);
+            fileIO = new FileIO("simbard_1.txt", true);
 
         }
 
         public void initBehavior() {
             gfsAlgorithm.gsp = new ParallelGridSlamProcessor();
             gfsAlgorithm.init();
-            LaserScan scanI = new LaserScan();
-            scanI.setAngleIncrement(ANGLE / totalSensors);
-            scanI.setAngleMax(ANGLE_RANGE_SIDE);
-            scanI.setAngleMin(-ANGLE_RANGE_SIDE);
-            List<Double> ranges  = new ArrayList<Double>();
-            for (int i = 0; i < SENSORS; i++) {
-                ranges.add(100.0);
-            }
-            scanI.setRanges(ranges);
-            scanI.setRangeMin(.1);
-            scanI.setRangeMax(100);
-            scanI.setTimestamp(System.currentTimeMillis());
+//            LaserScan scanI = new LaserScan();
+//            scanI.setAngleIncrement(ANGLE / totalSensors);
+//            scanI.setAngleMax(ANGLE_RANGE_SIDE);
+//            scanI.setAngleMin(-ANGLE_RANGE_SIDE);
+//            List<Double> ranges  = new ArrayList<Double>();
+//            for (int i = 0; i < SENSORS; i++) {
+//                ranges.add(100.0);
+//            }
+//            scanI.setRanges(ranges);
+//            scanI.setRangeMin(.1);
+//            scanI.setRangeMax(100);
+//            scanI.setTimestamp(System.currentTimeMillis());
 
-            gfsAlgorithm.initMapper(scanI);
+//            gfsAlgorithm.initMapper(scanI);
         }
 
         boolean forward = false;
