@@ -104,9 +104,7 @@ public class FileBasedDistributedSimulator {
 //                        receiveWait.await(1000, TimeUnit.MILLISECONDS);
 //                        break;
 //                    }
-                    System.out.println("send wait done");
                     LaserScan scan;
-                    System.out.println("difference: " + (System.currentTimeMillis() - t0));
                     t0 = System.currentTimeMillis();
                     if (simbard) {
                         scan = fileIO.read();

@@ -44,7 +44,9 @@ public class ScanMatchingWorker implements Runnable {
             Particle it = particles.get(i);
             DoubleOrientedPoint corrected = new DoubleOrientedPoint(0.0, 0.0, 0.0);
             double score = 0, l, s;
+            long time = System.currentTimeMillis();
             score = matcher.optimize(corrected, it.map, it.pose, plainReading);
+            System.out.println("Scan match time: " + (System.currentTimeMillis() - time));
             if (score > minimumScore) {
                 LOG.info("Score {}: Correcting the position from {} to {}", score, it.pose, corrected);
                 it.pose = new DoubleOrientedPoint(corrected);
