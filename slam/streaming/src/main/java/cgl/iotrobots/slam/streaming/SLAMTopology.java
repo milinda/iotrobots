@@ -86,6 +86,11 @@ public class SLAMTopology {
         // add the serializers
         addSerializers(conf);
 
+        conf.put(Config.TOPOLOGY_RECEIVER_BUFFER_SIZE,             8);
+        conf.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE,            32);
+        conf.put(Config.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE, 16384);
+        conf.put(Config.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE,    16384);
+
         // we are going to deploy on a real cluster
         if (!local) {
             conf.setNumWorkers(20);
