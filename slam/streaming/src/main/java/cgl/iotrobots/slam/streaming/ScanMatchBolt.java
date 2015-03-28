@@ -497,7 +497,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         Particle best = gfsp.getParticles().get(index);
         List<Object> emit = new ArrayList<Object>();
 
-        ParticleValue particleValue = Utils.createParticleValueWithNodeReadings(best, -1, -1, -1);
+//        ParticleValue particleValue = Utils.createParticleValueWithNodeReadings(best, -1, -1, -1);
 //        emit.add(particleValue);
 //        emit.add(scan);
 //        emit.add(sensorId);
