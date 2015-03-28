@@ -497,13 +497,13 @@ public class ScanMatchBolt extends BaseRichBolt {
         Particle best = gfsp.getParticles().get(index);
         List<Object> emit = new ArrayList<Object>();
 
-        ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
-        emit.add(particleValue);
-        emit.add(scan);
-        emit.add(sensorId);
-        emit.add(time);
-        LOG.debug("Emit for map, collector");
-        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
+//        ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1);
+//        emit.add(particleValue);
+//        emit.add(scan);
+//        emit.add(sensorId);
+//        emit.add(time);
+//        LOG.debug("Emit for map, collector");
+//        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
         List<Object> emitValue = new ArrayList<Object>();
         emitValue.add(Utils.serialize(kryoBestParticle, ParticleValue.class));
