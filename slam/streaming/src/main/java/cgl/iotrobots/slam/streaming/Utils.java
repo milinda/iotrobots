@@ -137,7 +137,13 @@ public class Utils {
         return pv;
     }
 
-    public static List<TNodeValue> createNodeListFromNodeTree(TNode node) {
+    public static ParticleValue createParticleValueWithNodeReadings(Particle p, int taskId, int index, int totalTasks) {
+        ParticleValue pv = new ParticleValue(taskId, index, totalTasks, p.getPose(), p.getPreviousPose(),
+                p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), createNodeListFromNodeTreeWithReadings(p.getNode()));
+        return pv;
+    }
+
+    public static List<TNodeValue> createNodeListFromNodeTreeWithReadings(TNode node) {
         List<TNodeValue> values = new ArrayList<TNodeValue>();
 
         TNode n = node;
@@ -149,11 +155,27 @@ public class Utils {
         return values;
     }
 
+    public static List<TNodeValue> createNodeListFromNodeTree(TNode node) {
+        List<TNodeValue> values = new ArrayList<TNodeValue>();
+
+        TNode n = node;
+        while (n != null) {
+            values.add(new TNodeValue(n.getPose(), n.getWeight(), n.getAccWeight(), n.getGweight(), null, n.getChilds(), n.getVisitCounter(), n.isFlag()));
+            n = n.getParent();
+        }
+
+        return values;
+    }
+
     public static TNode createNodeFromList(List<TNodeValue> list) {
         TNode next = null;
-        for (int i = list.size() - 1; i >= 0; i--) {
-            TNodeValue v = list.get(i);
-            next = new TNode(v.getPose(), v.getWeight(), v.getAccWeight(), v.getGweight(), next, v.getReading(), v.getChilds(), v.getVisitCounter(), v.isFlag());
+        if (list.size() > 0) {
+            for (int i = list.size() - 1; i >= 0; i--) {
+                TNodeValue v = list.get(i);
+                next = new TNode(v.getPose(), v.getWeight(), v.getAccWeight(), v.getGweight(), next, v.getReading(), v.getChilds(), v.getVisitCounter(), v.isFlag());
+            }
+        } else {
+            next = new TNode(new DoubleOrientedPoint(0,0,0), 0, 0, 0, null, null, 0, 0, false);
         }
         return next;
     }
