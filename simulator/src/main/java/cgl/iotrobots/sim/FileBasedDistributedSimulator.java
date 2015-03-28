@@ -130,6 +130,7 @@ public class FileBasedDistributedSimulator {
                             e.printStackTrace();
                         }
                     } else {
+                        System.out.println("We are done!!");
                         return;
                     }
 

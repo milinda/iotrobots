@@ -59,6 +59,7 @@ public class ScanMatchingWorker implements Runnable {
             sumScore += score;
             it.weight += l;
             it.weightSum += l;
+            LOG.info("Weigh of the particle: {}", it.weight);
 
             //set up the selective copy of the active area
             //by detaching the areas that will be updated

@@ -48,6 +48,10 @@ public abstract class AbstractGridSlamProcessor {
     // this lock must not be here. For now we will use it
     protected Lock lock = new ReentrantLock();
 
+    protected Normalizer normalizer;
+
+    protected ReSampler reSampler;
+
     public AbstractGridSlamProcessor() {
         updatePeriod = 100.0;
         obsSigmaGain = 1;

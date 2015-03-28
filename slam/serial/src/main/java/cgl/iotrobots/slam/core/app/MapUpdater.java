@@ -92,7 +92,6 @@ public class MapUpdater {
                 matcher.registerScan(smap, n.pose, readingArray);
             }
         }
-        System.out.println();
 
         // the map may have expanded, so resize ros message as well
         if (map.width != smap.getMapSizeX() || map.height != smap.getMapSizeY()) {

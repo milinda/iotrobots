@@ -16,10 +16,6 @@ import java.util.List;
 public abstract class SharedMemoryGridSlamProcessor extends AbstractGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(SharedMemoryGridSlamProcessor.class);
 
-    private Normalizer normalizer;
-
-    private ReSampler reSampler;
-
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose,
                      List<Integer> activeParticles) {
         this.xmin = xmin;

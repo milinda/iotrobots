@@ -2,9 +2,7 @@ package cgl.iotrobots.slam.streaming;
 
 import cgl.iotrobots.slam.core.grid.IGMap;
 import cgl.iotrobots.slam.core.grid.MapFactory;
-import cgl.iotrobots.slam.core.gridfastsalm.AbstractGridSlamProcessor;
-import cgl.iotrobots.slam.core.gridfastsalm.Particle;
-import cgl.iotrobots.slam.core.gridfastsalm.TNode;
+import cgl.iotrobots.slam.core.gridfastsalm.*;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
@@ -54,6 +52,9 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
         count = 0;
         readingCount = 0;
         linearDistance = angularDistance = 0;
+
+        normalizer = new Normalizer(obsSigmaGain);
+        reSampler = new ReSampler(resampleThreshold);
     }
 
     public void initParticles(DoubleOrientedPoint initialPose) {
@@ -91,8 +92,11 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
             lastPartPose = odoPose = relPose;
         }
 
+        LOG.info("Got laser pose: {}", reading.getPose());
+
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
+            LOG.info("After motion: {}, {}", relPose, p.pose);
         }
 
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
@@ -102,7 +106,11 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
 
         // if the robot jumps throw a warning
         if (linearDistance > distanceThresholdCheck) {
-            LOG.error("The robot jumped too much *********************************************************** ");
+            LOG.error("Robot jumped too much ************************");
+            odoPose = relPose;
+        } else if (angularDistance > Math.PI / 2) {
+            LOG.error("Robot jumped too much ************************");
+            odoPose = relPose;
         }
 
         odoPose = relPose;
@@ -196,14 +204,14 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
             oldGeneration.add(m_particle.node);
         }
         int index = 0;
-        LOG.debug("Registering Scans:");
+        LOG.info("Post processing without resampling.....");
         Iterator<TNode> node_it = oldGeneration.iterator();
         lock.lock();
         try {
             for (int i : activeParticles) {
                 Particle it = particles.get(i);
                 //create a new node in the particle tree and add it to the old tree
-                TNode node = null;
+                TNode node;
                 node = new TNode(it.pose, 0.0, node_it.next(), 0);
 
                 node.reading = reading;

@@ -29,3 +29,9 @@ java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.s
 "amqp://149.165.159.12:5672" simulator/data/aces.txt aces_60_20 false true
 
 java -Xmx6G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator true simulator/data/aces.txt 90 false 4 false
+
+SIMBARD_TEST
+------------
+./bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p 4 -pt 20 -i
+
+java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.1.39.28:5672" data/aces.txt 20_4 true false

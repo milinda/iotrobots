@@ -16,8 +16,8 @@ public class ProcessorFactory {
         DScanMatcher scanMatcher = new DScanMatcher();
 
         scanMatcher.setMatchingParameters(cfg.getMaxURage(), cfg.getMaxRange(), cfg.getGaussianSigma(),
-                cfg.getKernelSize(), cfg.getLinearThresholdDistance(),
-                cfg.getAngularThresholdDistance(), cfg.getOptRecursiveIterations(),
+                cfg.getKernelSize(), cfg.getOptLinearDelta(),
+                cfg.getOptAngularDelta(), cfg.getOptRecursiveIterations(),
                 cfg.getLikelihoodSigma(), cfg.getLikelihoodGain(), cfg.getLikelihoodSkip());
         scanMatcher.setMotionModelParameters(cfg.getSrr(), cfg.getSrt(), cfg.getStr(), cfg.getStt());
         scanMatcher.setUpdatePeriod(cfg.getUpdatePeriod());

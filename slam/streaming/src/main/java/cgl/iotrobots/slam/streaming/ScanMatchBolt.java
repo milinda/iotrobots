@@ -255,9 +255,9 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         if (!gotFirstScan) {
+            LOG.info("Initializing the particles with pose: {}", scan.getPose());
             gfsp.initParticles(scan.getPose());
             gotFirstScan = true;
-            return;
         }
 
         RangeReading reading;
@@ -427,6 +427,14 @@ public class ScanMatchBolt extends BaseRichBolt {
             }
 
             this.assignments = null;
+            int size = gfsp.getParticles().size();
+            for (int i = 0; i < size; i++) {
+                if (!gfsp.getActiveParticles().contains(i)) {
+                    Particle p = gfsp.getParticles().get(i);
+                    p.setMap(null);
+                    p.setNode(null);
+                }
+            }
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
         }
@@ -457,6 +465,14 @@ public class ScanMatchBolt extends BaseRichBolt {
             }
 
             this.assignments = null;
+            int size = gfsp.getParticles().size();
+            for (int i = 0; i < size; i++) {
+                if (!gfsp.getActiveParticles().contains(i)) {
+                    Particle p = gfsp.getParticles().get(i);
+                    p.setMap(null);
+                    p.setNode(null);
+                }
+            }
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
         }
@@ -536,7 +552,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         ScanMatchBolt.this.assignments = assignments;
                         processReceivedValues("assign");
                         processReceivedMaps("assign-maps");
-                        postProcessingAfterReceiveAll(taskId, "assign-all", assignments.getBestParticle());
+                        postProcessingAfterReceiveAll(taskId, "assign-all", true, assignments.getBestParticle());
                     } else {
                         // we are going to keep the assignemtns so that we can check the receiving particles
                         ScanMatchBolt.this.assignments = assignments;

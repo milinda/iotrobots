@@ -51,21 +51,21 @@ public class FileBasedSimulator {
         }
         gfsAlgorithm.init();
         gfsAlgorithm.setParticles(particles);
-        LaserScan scanI = new LaserScan();
-        scanI.setAngleIncrement(ANGLE / SENSORS);
-        scanI.setAngleMax(ANGLE);
-        scanI.setAngleMin(0);
-        List<Double> ranges  = new ArrayList<Double>();
-        for (int i = 0; i < SENSORS; i++) {
-            ranges.add(100.0);
-        }
-        scanI.setRanges(ranges);
-        scanI.setRangeMin(0);
-        scanI.setRangeMax(100);
-        scanI.setTimestamp(System.currentTimeMillis());
-        scanI.setPose(new DoubleOrientedPoint(0.0, 0.0, 0.0));
-
-        gfsAlgorithm.initMapper(scanI);
+//        LaserScan scanI = new LaserScan();
+//        scanI.setAngleIncrement(ANGLE / SENSORS);
+//        scanI.setAngleMax(ANGLE);
+//        scanI.setAngleMin(0);
+//        List<Double> ranges  = new ArrayList<Double>();
+//        for (int i = 0; i < SENSORS; i++) {
+//            ranges.add(100.0);
+//        }
+//        scanI.setRanges(ranges);
+//        scanI.setRangeMin(0);
+//        scanI.setRangeMax(100);
+//        scanI.setTimestamp(System.currentTimeMillis());
+//        scanI.setPose(new DoubleOrientedPoint(0.0, 0.0, 0.0));
+//
+//        gfsAlgorithm.initMapper(scanI);
 
 //        RosTurtle rosTurtle = new RosTurtle();
 //        TurtleUtils.connectToRos(rosTurtle);

@@ -69,7 +69,7 @@ public class GFSAlgorithm {
         astep = 0.05;
         iterations = 5;
         lsigma = .075;
-        ogain = 3.0;
+        ogain = 10.0;
         lskip = 0;
         srr = 0.1;
         srt = 0.2;

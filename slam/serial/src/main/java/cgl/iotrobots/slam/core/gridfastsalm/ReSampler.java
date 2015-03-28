@@ -27,7 +27,7 @@ public class ReSampler {
         }
 
         if (neff < resampleThreshold * particles.size()) {
-            LOG.info("neff < resampleThreshold * particles.size() and resampling {} < {}", neff, resampleThreshold * particles.size());
+            LOG.info("ReSampled: neff < resampleThreshold * particles.size() and resampling {} < {}", neff, resampleThreshold * particles.size());
             List<Integer> indexes = UniformResampler.resampleIndexes(weights, adaptSize);
             StringBuilder m_outputStream = new StringBuilder("RESAMPLE ").append(indexes.size());
             for (Integer it : indexes) {
@@ -82,7 +82,7 @@ public class ReSampler {
 
             return new ReSampleResult(true, indexes);
         } else {
-            LOG.info("neff > resampleThreshold * particles.size() and resampling {} > {}", neff, resampleThreshold * particles.size());
+            LOG.info("NOT ReSampled: neff > resampleThreshold * particles.size() and resampling {} > {}", neff, resampleThreshold * particles.size());
             return new ReSampleResult(false, null);
         }
     }
