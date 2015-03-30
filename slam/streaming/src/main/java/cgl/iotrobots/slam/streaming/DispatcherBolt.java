@@ -73,7 +73,7 @@ public class DispatcherBolt extends BaseRichBolt {
 
         this.brokerURL = (String) components.getConf().get(Constants.RABBITMQ_URL);
         if (conf.get(Constants.ARGS_PARALLEL) != null) {
-            this.noOfParallelTasks = (int) conf.get(Constants.ARGS_PARALLEL);
+            this.noOfParallelTasks = ((Long) conf.get(Constants.ARGS_PARALLEL)).intValue();
         } else {
             this.noOfParallelTasks = topologyContext.getComponentTasks(Constants.Topology.SCAN_MATCH_BOLT).size();
         }
@@ -101,11 +101,14 @@ public class DispatcherBolt extends BaseRichBolt {
                 outputCollector.emit(Constants.Fields.SCAN_STREAM, createTuple(input));
                 this.currentTuple = null;
                 this.state = State.WAITING_ANY;
+                LOG.info("Changing state from READING to ANY");
             } else if (this.state == State.WAITING_ANY) {
                 this.currentTuple = input;
                 this.state = State.WAITING_FOR_READY;
+                LOG.info("Changing state from ANY to READY");
             } else if (this.state == State.WAITING_FOR_READY) {
                 this.currentTuple = input;
+                LOG.info("Input while in state READY");
             }
         } finally {
             lock.unlock();
@@ -135,10 +138,12 @@ public class DispatcherBolt extends BaseRichBolt {
                         outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
                         readyList.clear();
                         currentTuple = null;
-                        state = State.WAITING_FOR_READING;
+                        state = State.WAITING_ANY;
+                        LOG.info("Changing state from READY to ANY");
                     } else if (state == State.WAITING_ANY) {
                         state = State.WAITING_FOR_READING;
                         readyList.clear();
+                        LOG.info("Changing state from ANY to READING");
                     }
                 }
             } finally {

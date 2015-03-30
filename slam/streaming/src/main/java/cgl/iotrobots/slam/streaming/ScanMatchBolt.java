@@ -245,10 +245,11 @@ public class ScanMatchBolt extends BaseRichBolt {
         long currentMessageTime = Long.parseLong(time.toString());
         // if this message came within that window, discard it
         // this will allow us to keep track of the current interval
-        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
-            outputCollector.ack(tuple);
-            return;
-        }
+//        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
+//            outputCollector.ack(tuple);
+//            changeToReady(taskId);
+//            return;
+//        }
 
         Object val = tuple.getValueByField(Constants.Fields.BODY);
         if (!(val instanceof byte [])) {
@@ -291,6 +292,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         LOG.info("taskId {}: Changing state to COMPUTING_INIT_READINGS", taskId);
         state = MatchState.COMPUTING_INIT_READINGS;
         if (!gfsp.processScan(reading, 0)) {
+            changeToReady(taskId);
             return;
         }
 
@@ -444,8 +446,8 @@ public class ScanMatchBolt extends BaseRichBolt {
                     p.setNode(null);
                 }
             }
+
             changeToReady(taskId);
-            state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
         }
     }
@@ -484,12 +486,12 @@ public class ScanMatchBolt extends BaseRichBolt {
                 }
             }
             changeToReady(taskId);
-            state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
         }
     }
 
     private void changeToReady(int taskId) {
+        state = MatchState.WAITING_FOR_READING;
         Ready ready = new Ready(taskId);
         byte []readyBody = Utils.serialize(kryoReady, ready);
 
