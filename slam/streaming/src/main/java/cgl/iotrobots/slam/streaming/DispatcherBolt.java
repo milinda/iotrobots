@@ -48,6 +48,14 @@ public class DispatcherBolt extends BaseRichBolt {
 
     private Lock lock = new ReentrantLock();
 
+    private enum State {
+        WAITING_FOR_READING,
+        WAITING_FOR_READY,
+        WAITING_ANY
+    }
+
+    private State state = State.WAITING_FOR_READING;
+
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declareStream(Constants.Fields.SCAN_STREAM, new Fields(
                 Constants.Fields.BODY,
@@ -89,10 +97,16 @@ public class DispatcherBolt extends BaseRichBolt {
     public void execute(Tuple input) {
         lock.lock();
         try {
-            if (this.currentTuple == null) {
+            if (this.state == State.WAITING_FOR_READING) {
                 outputCollector.emit(Constants.Fields.SCAN_STREAM, createTuple(input));
+                this.currentTuple = null;
+                this.state = State.WAITING_ANY;
+            } else if (this.state == State.WAITING_ANY) {
+                this.currentTuple = input;
+                this.state = State.WAITING_FOR_READY;
+            } else if (this.state == State.WAITING_FOR_READY) {
+                this.currentTuple = input;
             }
-            this.currentTuple = input;
         } finally {
             lock.unlock();
         }
@@ -116,10 +130,16 @@ public class DispatcherBolt extends BaseRichBolt {
             readyList.add(ready);
             try {
                 if (readyList.size() == noOfParallelTasks) {
-                    List<Object> emit = createTuple(currentTuple);
-
-                    outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
-                    readyList.clear();
+                    if (state == State.WAITING_FOR_READY) {
+                        List<Object> emit = createTuple(currentTuple);
+                        outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
+                        readyList.clear();
+                        currentTuple = null;
+                        state = State.WAITING_FOR_READING;
+                    } else if (state == State.WAITING_ANY) {
+                        state = State.WAITING_FOR_READING;
+                        readyList.clear();
+                    }
                 }
             } finally {
                 lock.unlock();
