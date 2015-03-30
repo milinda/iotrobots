@@ -52,6 +52,8 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     private RabbitMQReceiver particleValueReceiver;
 
+    private RabbitMQSender readySender;
+
     private Kryo kryoPVReading;
 
     private Kryo kryoMapReading;
@@ -61,6 +63,8 @@ public class ScanMatchBolt extends BaseRichBolt {
     private Kryo kryoLaserReading;
 
     private Kryo kryoBestParticle;
+
+    private Kryo kryoReady;
 
     private volatile MatchState state = MatchState.INIT;
 
@@ -102,12 +106,14 @@ public class ScanMatchBolt extends BaseRichBolt {
         this.kryoMapReading = new Kryo();
         this.kryoLaserReading = new Kryo();
         this.kryoBestParticle = new Kryo();
+        this.kryoReady = new Kryo();
 
         Utils.registerClasses(kryoAssignReading);
         Utils.registerClasses(kryoPVReading);
         Utils.registerClasses(kryoMapReading);
         Utils.registerClasses(kryoLaserReading);
         Utils.registerClasses(kryoBestParticle);
+        Utils.registerClasses(kryoReady);
 
         // read the configuration of the scanmatcher from topology.xml
         StreamTopologyBuilder streamTopologyBuilder = new StreamTopologyBuilder();
@@ -122,6 +128,9 @@ public class ScanMatchBolt extends BaseRichBolt {
             this.particleMapReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             // we use direct to receive particle values
             this.particleValueReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
+            // send the ready signal to dispatcher
+            this.readySender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
+            this.readySender.open();
             // we use direct to send the new particle maps
             for (int i = 0; i < totalTasks; i++) {
                 RabbitMQSender  particleSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
@@ -435,6 +444,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     p.setNode(null);
                 }
             }
+            changeToReady(taskId);
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
         }
@@ -473,8 +483,23 @@ public class ScanMatchBolt extends BaseRichBolt {
                     p.setNode(null);
                 }
             }
+            changeToReady(taskId);
             state = MatchState.WAITING_FOR_READING;
             LOG.info("taskId {}: Changing state to WAITING_FOR_READING", taskId);
+        }
+    }
+
+    private void changeToReady(int taskId) {
+        Ready ready = new Ready(taskId);
+        byte []readyBody = Utils.serialize(kryoReady, ready);
+
+        Message m = new Message(readyBody, new HashMap<String, Object>());
+        try {
+            readySender.send(m, Constants.Messages.READY_ROUTING_KEY);
+        } catch (Exception e) {
+            String msg = "Error sending the ready message";
+            LOG.error(msg, e);
+            throw new RuntimeException(msg, e);
         }
     }
 

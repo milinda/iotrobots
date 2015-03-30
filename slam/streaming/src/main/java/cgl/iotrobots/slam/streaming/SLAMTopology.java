@@ -83,6 +83,11 @@ public class SLAMTopology {
             conf.put(Constants.ARGS_PARTICLES, particles);
         }
 
+        // put the no of parallel tasks as a config property
+        if (cmd.hasOption(Constants.ARGS_PARALLEL)) {
+            conf.put(Constants.ARGS_PARALLEL, p);
+        }
+
         // add the serializers
         addSerializers(conf);
 
@@ -133,10 +138,12 @@ public class SLAMTopology {
         ScanMatchBolt scanMatchBolt = new ScanMatchBolt();
         ReSamplingBolt reSamplingBolt = new ReSamplingBolt();
         MapBuildingBolt mapBuildingBolt = new MapBuildingBolt();
+        DispatcherBolt dispatcherBolt = new DispatcherBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.RECEIVE_SPOUT).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
+        builder.setBolt(Constants.Topology.DISPATCHER_BOLT, dispatcherBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.DISPATCHER_BOLT, Constants.Fields.SCAN_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
         builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);;
         builder.setBolt(Constants.Topology.MAP_COMPUTE_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.MAP_SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_COMPUTE_BOLT);

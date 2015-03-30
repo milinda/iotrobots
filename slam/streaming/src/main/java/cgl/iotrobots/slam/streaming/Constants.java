@@ -44,6 +44,7 @@ public abstract class Constants {
 
     public abstract class Fields {
         public static final String BODY = "body";
+        public static final String SCAN_STREAM = "scans";
         public static final String PARTICLE_STREAM = "particle";
         public static final String MAP_STREAM = "map";
         public static final String BEST_PARTICLE_STREAM = "best_particle";
@@ -62,6 +63,7 @@ public abstract class Constants {
         public static final String PARTICLE_ASSIGNMENT_ROUTING_KEY = "pa";
         public static final String PARTICLE_MAP_ROUTING_KEY ="pm";
         public static final String PARTICLE_VALUE_ROUTING_KEY ="pv";
+        public static final String READY_ROUTING_KEY = "ready";
     }
 
     public abstract class Topology {
@@ -72,5 +74,6 @@ public abstract class Constants {
         public static final String MAP_SEND_BOLD = "map_send_bolt";
         public static final String BEST_PARTICLE_SEND_BOLT = "best_send_bolt";
         public static final String CONTROL_SPOUT = "control_spout";
+        public static final String DISPATCHER_BOLT = "dispatcher_bolt";
     }
 }

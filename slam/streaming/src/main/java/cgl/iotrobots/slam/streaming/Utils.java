@@ -208,5 +208,6 @@ public class Utils {
         kryo.register(ParticleValues.class);
         kryo.register(ParticleMapsList.class);
         kryo.register(StaticMap.class);
+        kryo.register(Ready.class);
     }
 }
