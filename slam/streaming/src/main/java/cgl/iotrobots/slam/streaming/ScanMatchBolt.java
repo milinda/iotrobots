@@ -416,17 +416,19 @@ public class ScanMatchBolt extends BaseRichBolt {
         if (expectingParticleMaps == 0 && expectingParticleValues == 0) {
             state = MatchState.COMPUTING_NEW_PARTICLES;
             LOG.info("taskId {}: Map Handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
+            long ppTime = System.currentTimeMillis();
             if (resampled) {
                 gfsp.processAfterReSampling(plainReading);
             } else {
                 gfsp.postProcessingWithoutReSampling(plainReading, rangeReading);
 
             }
+            ppTime = System.currentTimeMillis() - ppTime;
 
             // find the particle with the best index
             // find the particle with the best index
             if (gfsp.getActiveParticles().contains(best)) {
-                emitParticleForMap(best);
+                emitParticleForMap(best, ppTime);
             }
 
             this.assignments = null;
@@ -460,12 +462,14 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         if (expectingParticleMaps == 0 && expectingParticleValues == 0) {
             state = MatchState.COMPUTING_NEW_PARTICLES;
+            long ppTime = System.currentTimeMillis();
             LOG.info("taskId {}: Map Handler Changing state to COMPUTING_NEW_PARTICLES", taskId);
             gfsp.processAfterReSampling(plainReading);
 
+            ppTime = System.currentTimeMillis() - ppTime;
             // find the particle with the best index
             if (gfsp.getActiveParticles().contains(best)) {
-                emitParticleForMap(best);
+                emitParticleForMap(best, ppTime);
             }
 
             this.assignments = null;
@@ -512,7 +516,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
     }
 
-    private void emitParticleForMap(int index) {
+    private void emitParticleForMap(int index, long ppTime) {
         Particle best = gfsp.getParticles().get(index);
         List<Object> emit = new ArrayList<Object>();
 
@@ -526,6 +530,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         currentTrace.setSmar(System.currentTimeMillis() - lastEmitTime);
         currentTrace.setSm(System.currentTimeMillis() - lastComputationBeginTime);
+        currentTrace.setSmaPP(ppTime);
 
         List<Object> emitValue = new ArrayList<Object>();
         emitValue.add(Utils.serialize(kryoBestParticle, currentTrace));

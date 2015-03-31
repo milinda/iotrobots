@@ -18,6 +18,8 @@ public class Trace {
     private long actualRsp;
     // scanmatcher, receiving assingment to being ready to receive time
     private long smar;
+    // scanmatche time for post processing
+    private long smaPP;
 
     public Trace() {
     }
@@ -71,12 +73,20 @@ public class Trace {
         this.smp = smp;
     }
 
+    public long getSmaPP() {
+        return smaPP;
+    }
+
+    public void setSmaPP(long smaPP) {
+        this.smaPP = smaPP;
+    }
+
     public String serialize() {
         String s = "'";
         for (Map.Entry<Integer, Long> e : smp.entrySet()) {
             s += e.getValue() + " ";
         }
         s += "'";
-        return pd + ", " + sm + ", " + s + " ," + rsp + " ," + actualRsp + " ," + smar;
+        return pd + ", " + sm + ", " + s + " ," + rsp + " ," + actualRsp + " ," + smar + ", " + smaPP;
     }
 }
