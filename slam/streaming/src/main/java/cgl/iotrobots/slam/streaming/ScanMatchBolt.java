@@ -221,6 +221,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     long lastComputationBeginTime;
     long lastEmitTime;
     Trace currentTrace;
+    long assignmentReceiveTime;
 
     @Override
     public void execute(Tuple tuple) {
@@ -528,7 +529,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 //        LOG.debug("Emit for map, collector");
 //        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
-        currentTrace.setSmar(System.currentTimeMillis() - lastEmitTime);
+        currentTrace.setSmar(System.currentTimeMillis() - assignmentReceiveTime);
         currentTrace.setSm(System.currentTimeMillis() - lastComputationBeginTime);
         currentTrace.setSmaPP(ppTime);
 
@@ -567,6 +568,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                     LOG.debug("taskId {}: Received particle assignment", taskId);
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
                     currentTrace = assignments.getTrace();
+                    assignmentReceiveTime = System.currentTimeMillis();
                     LOG.info("taskId {}: Best particle index {}", taskId, assignments.getBestParticle());
                     // if we have resampled ditributed the assignments
                     if (assignments.isReSampled()) {
