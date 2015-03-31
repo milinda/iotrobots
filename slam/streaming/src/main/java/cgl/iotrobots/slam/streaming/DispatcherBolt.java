@@ -147,6 +147,7 @@ public class DispatcherBolt extends BaseRichBolt {
                 if (readyList.size() == noOfParallelTasks) {
                     previousTime = System.currentTimeMillis() - beginTime;
                     if (state == State.WAITING_FOR_READY) {
+                        beginTime = tempBeginTime;
                         Trace t = new Trace();
                         t.setPd(previousTime);
                         List<Object> emit = createTuple(currentTuple, t);
