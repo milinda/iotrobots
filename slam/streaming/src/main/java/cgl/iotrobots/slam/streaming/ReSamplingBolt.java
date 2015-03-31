@@ -13,10 +13,7 @@ import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.streaming.msgs.ParticleAssignment;
-import cgl.iotrobots.slam.streaming.msgs.ParticleAssignments;
-import cgl.iotrobots.slam.streaming.msgs.ParticleValue;
-import cgl.iotrobots.slam.streaming.msgs.ParticleValues;
+import cgl.iotrobots.slam.streaming.msgs.*;
 import cgl.iotrobots.utils.rabbitmq.Message;
 import cgl.iotrobots.utils.rabbitmq.RabbitMQSender;
 import cgl.sensorstream.core.StreamComponents;
@@ -43,6 +40,8 @@ public class ReSamplingBolt extends BaseRichBolt {
     /** we will collect the values until we get all of them */
     private ParticleValue []particleValueses;
 
+    private Map<Integer, Trace> traceMap = new HashMap<Integer, Trace>();
+
     /** This is the reading message we will get */
     private RangeReading reading;
 
@@ -59,6 +58,8 @@ public class ReSamplingBolt extends BaseRichBolt {
     private StreamTopologyBuilder streamTopologyBuilder;
     private StreamComponents components;
     private Map conf;
+
+    private long firstReadingTime = -1;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -108,15 +109,19 @@ public class ReSamplingBolt extends BaseRichBolt {
             return;
         }
 
+        if (firstReadingTime == -1) {
+            firstReadingTime = System.currentTimeMillis();
+        }
+
+        Trace trace = (Trace) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
         Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
         List<ParticleValue> pvs;
-        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
 
         if (val != null && (val instanceof List)) {
             pvs = (List<ParticleValue>) val;
             for (ParticleValue value : pvs) {
                 LOG.debug("Received particle with index {}", value.getIndex());
-                addParticleValue(value);
+                addParticleValue(value, trace);
             }
         } else {
             outputCollector.ack(tuple);
@@ -128,7 +133,10 @@ public class ReSamplingBolt extends BaseRichBolt {
             outputCollector.ack(tuple);
             throw new IllegalArgumentException("The laser scan should be of type LaserScan");
         }
+
         LaserScan scan = (LaserScan) val;
+
+
         Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getRanges(scan, scan.getAngleIncrement());
         RangeSensor sensor = new RangeSensor("ROBOTLASER1",
                 scan.getRanges().size(),
@@ -152,7 +160,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         }
         // reset the counter
         receivedParticles = 0;
-
+        long resamplingStartTime =  System.currentTimeMillis();
         // now distribute the particle Valueses to the bolts
         // we got all the particleValueses, we will resample
         // first we need to clear the current particleValueses
@@ -167,7 +175,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // do the resampling
         ReSampler.ReSampleResult hasReSampled = reSampler.processScan(reading, 0);
         // now distribute the resampled particleValueses
-
+        long resampleTime = System.currentTimeMillis() - resamplingStartTime;
 
         int best = reSampler.getBestParticleIndex();
         // we will distribute only if we have reSampled
@@ -179,7 +187,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             ParticleAssignments assignments = createAssignments(particles);
             assignments.setReSampled(true);
             assignments.setBestParticle(best);
-            distributeAssignments(assignments);
+            distributeAssignments(assignments, resampleTime);
 
             Map<Integer, List<ParticleValue>> values = new HashMap<Integer, List<ParticleValue>>();
             // distribute the new particle values according to
@@ -212,7 +220,7 @@ public class ReSamplingBolt extends BaseRichBolt {
             ParticleAssignments assignments = new ParticleAssignments();
             assignments.setReSampled(false);
             assignments.setBestParticle(best);
-            distributeAssignments(assignments);
+            distributeAssignments(assignments, resampleTime);
         }
 
         reading = null;
@@ -235,8 +243,9 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     }
 
-    protected synchronized void addParticleValue(ParticleValue value) {
+    protected synchronized void addParticleValue(ParticleValue value, Trace trace) {
         particleValueses[value.getIndex()] = value;
+        traceMap.put(value.getTaskId(), trace);
         receivedParticles++;
     }
 
@@ -244,7 +253,19 @@ public class ReSamplingBolt extends BaseRichBolt {
      * We will broadcast this message using a topic. Every ScanMatching bolt will receive this message
      * @param assignments the particle assignments
      */
-    private void distributeAssignments(ParticleAssignments assignments) {
+    private void distributeAssignments(ParticleAssignments assignments, long time) {
+        Trace t = new Trace();
+        // gather the traces
+        for (Map.Entry<Integer, Trace> e : traceMap.entrySet()) {
+            t.getSmp().put(e.getKey(), e.getValue().getSmp().get(e.getKey()));
+            t.setPd(e.getValue().getPd());
+        }
+        t.setActualRsp(time);
+        t.setRsp(System.currentTimeMillis() - firstReadingTime);
+
+        firstReadingTime = -1;
+        assignments.setTrace(t);
+
         LOG.info("Sending particle assignment");
         byte []b = Utils.serialize(kryo, assignments);
 

@@ -55,6 +55,7 @@ public abstract class Constants {
         public static final String PARTICLE_VALUE_FIELD = "particle_value";
         public static final String PARTICLE_FIELD = "particle";
         public static final String SENSOR_ID_FIELD = "sensorID";
+        public static final String TRACE_FIELD = "trace";
     }
 
     public abstract class Messages {

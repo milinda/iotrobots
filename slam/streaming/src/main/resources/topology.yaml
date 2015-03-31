@@ -53,10 +53,10 @@ conf:
     temporalUpdate: -1.0
     resampleThreshold: 0.5
     particles: 60
-    xmin: -70.0
-    ymin: -40.0
-    xmax: 10.0
-    ymax: 40.0
+    xmin: -15.0
+    ymin: -10.0
+    xmax: 15.0
+    ymax: 15.0
     delta: 0.05
     llsamplerange: 0.01
     llsamplestep: 0.01

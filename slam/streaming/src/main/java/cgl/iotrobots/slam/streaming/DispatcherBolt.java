@@ -7,6 +7,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.streaming.msgs.Ready;
+import cgl.iotrobots.slam.streaming.msgs.Trace;
 import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
@@ -60,7 +61,8 @@ public class DispatcherBolt extends BaseRichBolt {
         declarer.declareStream(Constants.Fields.SCAN_STREAM, new Fields(
                 Constants.Fields.BODY,
                 Constants.Fields.SENSOR_ID_FIELD,
-                Constants.Fields.TIME_FIELD));
+                Constants.Fields.TIME_FIELD,
+                Constants.Fields.TRACE_FIELD));
     }
 
     @Override
@@ -93,12 +95,22 @@ public class DispatcherBolt extends BaseRichBolt {
 
     private List<Ready> readyList = new ArrayList<Ready>();
 
+    private long beginTime;
+
+    private long previousTime;
+
+    private long tempBeginTime;
+
     @Override
     public void execute(Tuple input) {
         lock.lock();
         try {
+            tempBeginTime = System.currentTimeMillis();
             if (this.state == State.WAITING_FOR_READING) {
-                outputCollector.emit(Constants.Fields.SCAN_STREAM, createTuple(input));
+                beginTime = tempBeginTime;
+                Trace t = new Trace();
+                t.setPd(previousTime);
+                outputCollector.emit(Constants.Fields.SCAN_STREAM, createTuple(input, t));
                 this.currentTuple = null;
                 this.state = State.WAITING_ANY;
                 LOG.info("Changing state from READING to ANY");
@@ -133,8 +145,11 @@ public class DispatcherBolt extends BaseRichBolt {
             readyList.add(ready);
             try {
                 if (readyList.size() == noOfParallelTasks) {
+                    previousTime = System.currentTimeMillis() - beginTime;
                     if (state == State.WAITING_FOR_READY) {
-                        List<Object> emit = createTuple(currentTuple);
+                        Trace t = new Trace();
+                        t.setPd(previousTime);
+                        List<Object> emit = createTuple(currentTuple, t);
                         outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
                         readyList.clear();
                         currentTuple = null;
@@ -152,7 +167,7 @@ public class DispatcherBolt extends BaseRichBolt {
         }
     }
 
-    private List<Object> createTuple(Tuple currentTuple) {
+    private List<Object> createTuple(Tuple currentTuple, Trace trace) {
         Object body = currentTuple.getValueByField(Constants.Fields.BODY);
         Object time = currentTuple.getValueByField(Constants.Fields.TIME_FIELD);
         Object sensorId = currentTuple.getValueByField(Constants.Fields.SENSOR_ID_FIELD);
@@ -161,6 +176,8 @@ public class DispatcherBolt extends BaseRichBolt {
         emit.add(body);
         emit.add(sensorId);
         emit.add(time);
+        emit.add(trace);
+
         return emit;
     }
 }

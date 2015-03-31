@@ -4,6 +4,7 @@ import cgl.iotcloud.core.transport.TransportConstants;
 import cgl.iotrobots.slam.core.app.GFSMap;
 import cgl.iotrobots.slam.core.app.LaserScan;
 import cgl.iotrobots.slam.streaming.Utils;
+import cgl.iotrobots.slam.streaming.msgs.Trace;
 import cgl.iotrobots.slam.utils.FileIO;
 import cgl.iotrobots.utils.rabbitmq.*;
 import com.esotericsoftware.kryo.Kryo;
@@ -165,8 +166,10 @@ public class FileBasedDistributedSimulator {
                 Long t = Long.parseLong(time.toString());
                 bestSum += System.currentTimeMillis() - t;
                 bestCount++;
-                resultBestIO.writeResult((System.currentTimeMillis() - t) + "");
-                System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double) (bestSum) / bestCount));
+            Trace trace = (Trace) Utils.deSerialize(kryo, message.getBody(), Trace.class);
+                resultBestIO.writeResult((System.currentTimeMillis() - t) + " ," + trace.serialize());
+//                System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double) (bestSum) / bestCount));
+            System.out.println((System.currentTimeMillis() - t) + " ," + trace.serialize());
                 // send = false;
                 // receiveWait.signal();
 //            }finally {

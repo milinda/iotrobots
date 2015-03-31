@@ -3,7 +3,17 @@ package cgl.iotrobots.slam.streaming.msgs;
 public class Ready {
     private int taskId;
 
+    private Trace trace;
+
     public Ready() {
+    }
+
+    public Trace getTrace() {
+        return trace;
+    }
+
+    public void setTrace(Trace trace) {
+        this.trace = trace;
     }
 
     public Ready(int taskId) {

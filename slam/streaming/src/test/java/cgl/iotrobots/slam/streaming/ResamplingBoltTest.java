@@ -20,12 +20,12 @@ public class ResamplingBoltTest extends TestCase {
         ParticleValue v5 = new ParticleValue(1, 4, 2, null, null, 0, 0, 0, 0, null);
         ParticleValue v6 = new ParticleValue(1, 5, 2, null, null, 0, 0, 0, 0, null);
 
-        bolt.addParticleValue(v1);
-        bolt.addParticleValue(v2);
-        bolt.addParticleValue(v3);
-        bolt.addParticleValue(v4);
-        bolt.addParticleValue(v5);
-        bolt.addParticleValue(v6);
+//        bolt.addParticleValue(v1);
+//        bolt.addParticleValue(v2);
+//        bolt.addParticleValue(v3);
+//        bolt.addParticleValue(v4);
+//        bolt.addParticleValue(v5);
+//        bolt.addParticleValue(v6);
 
         List<Integer> indexes = new ArrayList<Integer>();
         indexes.add(0);

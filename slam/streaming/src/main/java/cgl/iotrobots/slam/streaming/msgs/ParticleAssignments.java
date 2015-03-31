@@ -11,7 +11,17 @@ public class ParticleAssignments {
 
     private int bestParticle;
 
+    private Trace trace;
+
     public ParticleAssignments() {
+    }
+
+    public Trace getTrace() {
+        return trace;
+    }
+
+    public void setTrace(Trace trace) {
+        this.trace = trace;
     }
 
     public int getBestParticle() {

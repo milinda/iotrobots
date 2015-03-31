@@ -33,5 +33,9 @@ java -Xmx6G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotr
 SIMBARD_TEST
 ------------
 ./bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p 4 -pt 20 -i
+./bin/storm kill slam_processor -w 1
 
-java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.1.39.28:5672" data/aces.txt 20_4 true false
+./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672"
+
+
+ java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar l.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" data/simbard_1.txt 20_8 true false

@@ -209,5 +209,6 @@ public class Utils {
         kryo.register(ParticleMapsList.class);
         kryo.register(StaticMap.class);
         kryo.register(Ready.class);
+        kryo.register(Trace.class);
     }
 }

@@ -216,8 +216,11 @@ public class ScanMatchBolt extends BaseRichBolt {
     LaserScan scan;
     Object time;
     Object sensorId;
-    long lastMessageTime;
-    long lastComputationTime;
+
+    // these are used to gather statistics
+    long lastComputationBeginTime;
+    long lastEmitTime;
+    Trace currentTrace;
 
     @Override
     public void execute(Tuple tuple) {
@@ -236,25 +239,18 @@ public class ScanMatchBolt extends BaseRichBolt {
         }
 
         // check weather this tuple came between the last computation time. if so discard it
-        long t0 = System.currentTimeMillis();
+        lastComputationBeginTime = System.currentTimeMillis();
         int taskId = topologyContext.getThisTaskIndex();
 
         time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
 
-        long currentMessageTime = Long.parseLong(time.toString());
-        // if this message came within that window, discard it
-        // this will allow us to keep track of the current interval
-//        if (currentMessageTime < lastComputationTime * 2 + lastMessageTime) {
-//            outputCollector.ack(tuple);
-//            changeToReady(taskId);
-//            return;
-//        }
-
+        Trace trace = (Trace) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
         Object val = tuple.getValueByField(Constants.Fields.BODY);
         if (!(val instanceof byte [])) {
             throw new IllegalArgumentException("The laser scan should be of type byte[]");
         }
+
         lock.lock();
         try {
             scan = (LaserScan) Utils.deSerialize(kryoLaserReading, (byte[]) val, LaserScan.class);
@@ -272,14 +268,12 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         RangeReading reading;
 
-
         int totalTasks = topologyContext.getComponentTasks(topologyContext.getThisComponentId()).size();
         Double[] ranges = cgl.iotrobots.slam.core.utils.Utils.getRanges(scan, scan.getAngleIncrement());
-        reading = new RangeReading(scan.getRanges().size(),
-                ranges,
-                scan.getTimestamp());
+        reading = new RangeReading(scan.getRanges().size(), ranges, scan.getTimestamp());
         reading.setPose(scan.getPose());
-        double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(), scan.getAngleIncrement(), scan.getAngleMin());
+        double []laserAngles = cgl.iotrobots.slam.core.utils.Utils.getLaserAngles(scan.getRanges().size(),
+                scan.getAngleIncrement(), scan.getAngleMin());
         gfsp.setLaserParams(reading.size(), laserAngles, new DoubleOrientedPoint(0, 0, 0));
 
         rangeReading = reading;
@@ -319,15 +313,12 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(scan);
         emit.add(sensorId);
         emit.add(time);
+        lastEmitTime = System.currentTimeMillis();
+        long timeSpent = lastEmitTime - lastComputationBeginTime;
+        trace.getSmp().put(taskId, timeSpent);
+        emit.add(trace);
         outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
-
-
-        // we compute the last computation time
-        lastComputationTime = System.currentTimeMillis() - t0;
-        lastMessageTime = Long.parseLong(time.toString());
     }
-
-
 
     /**
      * We will output the sensorId, time and particle value
@@ -338,7 +329,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         outputFieldsDeclarer.declareStream(Constants.Fields.PARTICLE_STREAM, new Fields(Constants.Fields.PARTICLE_VALUE_FIELD,
                 Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
-                Constants.Fields.TIME_FIELD));
+                Constants.Fields.TIME_FIELD,
+                Constants.Fields.TRACE_FIELD));
 
         outputFieldsDeclarer.declareStream(Constants.Fields.MAP_STREAM, new Fields(
                 Constants.Fields.PARTICLE_VALUE_FIELD,
@@ -532,8 +524,11 @@ public class ScanMatchBolt extends BaseRichBolt {
 //        LOG.debug("Emit for map, collector");
 //        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
+        currentTrace.setSmar(System.currentTimeMillis() - lastEmitTime);
+        currentTrace.setSm(System.currentTimeMillis() - lastComputationBeginTime);
+
         List<Object> emitValue = new ArrayList<Object>();
-        emitValue.add(Utils.serialize(kryoBestParticle, "HELLO"));
+        emitValue.add(Utils.serialize(kryoBestParticle, currentTrace));
         emitValue.add(sensorId);
         emitValue.add(time);
         outputCollector.emit(Constants.Fields.BEST_PARTICLE_STREAM, emitValue);
@@ -566,6 +561,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 try {
                     LOG.debug("taskId {}: Received particle assignment", taskId);
                     ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
+                    currentTrace = assignments.getTrace();
                     LOG.info("taskId {}: Best particle index {}", taskId, assignments.getBestParticle());
                     // if we have resampled ditributed the assignments
                     if (assignments.isReSampled()) {
