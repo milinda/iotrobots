@@ -147,14 +147,14 @@ public class DispatcherBolt extends BaseRichBolt {
                 if (readyList.size() == noOfParallelTasks) {
                     previousTime = System.currentTimeMillis() - beginTime;
                     if (state == State.WAITING_FOR_READY) {
-                        beginTime = tempBeginTime;
-                        Trace t = new Trace();
-                        t.setPd(previousTime);
-                        List<Object> emit = createTuple(currentTuple, t);
-                        outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
+//                        beginTime = tempBeginTime;
+//                        Trace t = new Trace();
+//                        t.setPd(previousTime);
+//                        List<Object> emit = createTuple(currentTuple, t);
+//                        outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
                         readyList.clear();
                         currentTuple = null;
-                        state = State.WAITING_ANY;
+                        state = State.WAITING_FOR_READING;
                         LOG.info("Changing state from READY to ANY");
                     } else if (state == State.WAITING_ANY) {
                         state = State.WAITING_FOR_READING;
