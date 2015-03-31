@@ -173,6 +173,8 @@ public class SLAMTopology {
         config.registerSerialization(TNodeValue.class);
         config.registerSerialization(RangeSensor.class);
         config.registerSerialization(RangeReading.class);
+        config.registerSerialization(Trace.class);
+        config.registerSerialization(Ready.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

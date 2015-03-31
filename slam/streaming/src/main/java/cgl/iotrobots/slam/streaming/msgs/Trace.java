@@ -7,17 +7,20 @@ import java.util.Map;
 
 public class Trace {
     // time spent in the dispatcher, by previous tuple
-    long pd;
+    private long pd;
     // total time spent in the scan matcher
-    long sm;
+    private long sm;
     // processing time spent on each of the scan matchers
-    Map<Integer, Long> smp = new HashMap<Integer, Long>();
+    private Map<Integer, Long> smp = new HashMap<Integer, Long>();
     // resampling processing time
-    long rsp;
+    private long rsp;
     //actual resampling processing time
-    long actualRsp;
+    private long actualRsp;
     // scanmatcher, receiving assingment to being ready to receive time
-    long smar;
+    private long smar;
+
+    public Trace() {
+    }
 
     public long getSm() {
         return sm;
