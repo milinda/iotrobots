@@ -15,6 +15,8 @@ import cgl.iotrobots.slam.core.sensor.RangeSensor;
 import cgl.iotrobots.slam.core.sensor.Sensor;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.streaming.msgs.*;
+import cgl.iotrobots.slam.streaming.stats.GCCounter;
+import cgl.iotrobots.slam.streaming.stats.GCInformation;
 import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
@@ -223,6 +225,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     Trace currentTrace;
     long assignmentReceiveTime;
 
+
     @Override
     public void execute(Tuple tuple) {
         String stream = tuple.getSourceStreamId();
@@ -241,6 +244,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // check weather this tuple came between the last computation time. if so discard it
         lastComputationBeginTime = System.currentTimeMillis();
+        GCCounter gcCounter = GCInformation.getInstance().addCounter();
         int taskId = topologyContext.getThisTaskIndex();
 
         time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
@@ -315,8 +319,11 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(sensorId);
         emit.add(time);
         lastEmitTime = System.currentTimeMillis();
+        long gcTime = gcCounter.getFullGCTime();
         long timeSpent = lastEmitTime - lastComputationBeginTime;
         trace.getSmp().put(taskId, timeSpent);
+        trace.getGcTimes().put(taskId, gcTime);
+        GCInformation.getInstance().removeCounter(gcCounter);
         emit.add(trace);
         outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
     }

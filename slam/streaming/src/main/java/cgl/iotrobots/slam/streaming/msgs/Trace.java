@@ -12,6 +12,8 @@ public class Trace {
     private long sm;
     // processing time spent on each of the scan matchers
     private Map<Integer, Long> smp = new HashMap<Integer, Long>();
+    // gc times during processing
+    private Map<Integer, Long> gcTimes = new HashMap<Integer, Long>();
     // resampling processing time
     private long rsp;
     //actual resampling processing time
@@ -44,7 +46,6 @@ public class Trace {
         return pd;
     }
 
-
     public long getRsp() {
         return rsp;
     }
@@ -69,6 +70,10 @@ public class Trace {
         return smp;
     }
 
+    public Map<Integer, Long> getGcTimes() {
+        return gcTimes;
+    }
+
     public void setSmp(Map<Integer, Long> smp) {
         this.smp = smp;
     }
@@ -83,10 +88,14 @@ public class Trace {
 
     public String serialize() {
         String s = "'";
-        for (Map.Entry<Integer, Long> e : smp.entrySet()) {
-            s += e.getValue() + " ";
+        String g = "'";
+        int size = smp.size();
+        for (int i = 0; i < size; i++) {
+            s += smp.get(i) + " ";
+            g += gcTimes.get(i) + " ";
         }
         s += "'";
-        return pd + ", " + sm + ", " + s + " ," + rsp + " ," + actualRsp + " ," + smar + ", " + smaPP;
+        g += "'";
+        return pd + ", " + sm + ", " + s + " ," + g + " ," + rsp + " ," + actualRsp + " ," + smar + ", " + smaPP;
     }
 }

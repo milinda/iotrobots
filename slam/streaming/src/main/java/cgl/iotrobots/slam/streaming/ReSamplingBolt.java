@@ -258,6 +258,7 @@ public class ReSamplingBolt extends BaseRichBolt {
         // gather the traces
         for (Map.Entry<Integer, Trace> e : traceMap.entrySet()) {
             t.getSmp().put(e.getKey(), e.getValue().getSmp().get(e.getKey()));
+            t.getGcTimes().put(e.getKey(), e.getValue().getGcTimes().get(e.getKey()));
             t.setPd(e.getValue().getPd());
         }
         t.setActualRsp(time);
