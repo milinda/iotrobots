@@ -319,7 +319,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(sensorId);
         emit.add(time);
         lastEmitTime = System.currentTimeMillis();
-        long gcTime = gcCounter.getFullGCTime();
+        long gcTime = gcCounter.getFullGCTime() + gcCounter.getYoungGCTime();
         long timeSpent = lastEmitTime - lastComputationBeginTime;
         trace.getSmp().put(taskId, timeSpent);
         trace.getGcTimes().put(taskId, gcTime);
