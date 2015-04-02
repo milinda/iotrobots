@@ -84,6 +84,9 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
         throw new IllegalArgumentException("This method is not implemented");
     }
 
+
+    private RangeReading reading;
+
     @Override
     public boolean processScan(RangeReading reading, int adaptParticles) {
         long t0 = System.currentTimeMillis();
@@ -98,7 +101,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
             LOG.info("After motion: {}, {}", relPose, p.pose);
         }
-
+        this.reading = reading;
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
         move.theta = Math.atan2(Math.sin(move.theta), Math.cos(move.theta));
         linearDistance += Math.sqrt(DoubleOrientedPoint.mulN(move, move));
@@ -188,6 +191,14 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
         try {
             for (int i : activeParticles) {
                 Particle it = particles.get(i);
+
+                TNode node;
+                TNode oldNode = it.getNode();
+                node = new TNode(it.pose, 0, oldNode, 0);
+                node.reading = this.reading;
+
+                it.node = node;
+
                 matcher.invalidateActiveArea();
                 matcher.registerScan(it.map, it.pose, plainReading);
                 // particles.add(it);

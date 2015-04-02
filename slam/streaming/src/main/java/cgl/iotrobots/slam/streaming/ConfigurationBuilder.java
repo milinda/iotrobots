@@ -18,6 +18,7 @@ public class ConfigurationBuilder {
         configuration.setOptAngularDelta(getDoubleProperty(conf, Constants.ASTEP));
         configuration.setOptRecursiveIterations(getIntProperty(conf, Constants.ITERATIONS));
         configuration.setLikelihoodGain(getDoubleProperty(conf, Constants.OGAIN));
+        configuration.setObsSigmaGain(getDoubleProperty(conf, Constants.OGAIN));
 
         configuration.setLikelihoodSigma(getDoubleProperty(conf, Constants.LSIGMA));
 

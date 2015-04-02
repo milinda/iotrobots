@@ -121,6 +121,18 @@ public class Utils {
         return new MapCell(x, y, acc.getAcc(), acc.getN(), acc.getVisits());
     }
 
+    public static void createParticle(ParticleValue value, Particle p, boolean withNode) {
+        p.setPose(value.getPose());
+        p.setWeightSum(value.getWeightSum());
+        p.setWeight(value.getWeight());
+        p.setPreviousIndex(value.getPreviousIndex());
+        p.setGweight(value.getGweight());
+        p.setPreviousPose(value.getPreviousPose());
+        if (withNode) {
+            p.setNode(createNodeFromList(value.getNodes()));
+        }
+    }
+
     public static void createParticle(ParticleValue value, Particle p) {
         p.setPose(value.getPose());
         p.setWeightSum(value.getWeightSum());

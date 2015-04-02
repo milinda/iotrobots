@@ -1,21 +1,13 @@
 package cgl.iotrobots.slam.streaming;
 
-import cgl.iotrobots.slam.core.grid.IGMap;
-import cgl.iotrobots.slam.core.grid.MapFactory;
 import cgl.iotrobots.slam.core.gridfastsalm.*;
-import cgl.iotrobots.slam.core.particlefilter.UniformResampler;
-import cgl.iotrobots.slam.core.scanmatcher.ScanMatcher;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
-import cgl.iotrobots.slam.core.sensor.RangeSensor;
-import cgl.iotrobots.slam.core.sensor.Sensor;
-import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
-import cgl.iotrobots.slam.core.utils.DoublePoint;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class DistributedReSampler {
     private static Logger LOG = LoggerFactory.getLogger(DistributedReSampler.class);
@@ -37,7 +29,7 @@ public class DistributedReSampler {
         this.obsSigmaGain = obsSigmaGain;
         this.resampleThreshold = resampleThreshold;
         this.normalizer = new Normalizer(obsSigmaGain);
-        this.reSampler = new ReSampler(resampleThreshold);
+        this.reSampler = new ReSampler(resampleThreshold, false);
         this.noOfParticles = noOfParticles;
     }
 
@@ -80,6 +72,7 @@ public class DistributedReSampler {
         } else {
             hasRsSampled = new ReSampler.ReSampleResult(false, null);
         }
+        count++;
         normalizer.updateTreeWeights(false, particles);
 
         //update the past pose for the next iteration

@@ -14,8 +14,15 @@ public class ReSampler {
 
     protected double resampleThreshold;
 
+    private boolean withMap;
+
     public ReSampler(double resampleThreshold) {
+        this(resampleThreshold, true);
+    }
+
+    public ReSampler(double resampleThreshold, boolean withMap) {
         this.resampleThreshold = resampleThreshold;
+        this.withMap = withMap;
     }
 
     public ReSampleResult resample(List<Particle> particles, double neff, double[] plainReading,
@@ -50,7 +57,8 @@ public class ReSampler {
                 if (j == ind) {
                     j++;
                 }
-                Particle p = new Particle(particles.get(ind));
+                Particle p;
+                p = new Particle(particles.get(ind), withMap);
 
                 TNode node;
                 TNode oldNode = oldGeneration.get(ind);
