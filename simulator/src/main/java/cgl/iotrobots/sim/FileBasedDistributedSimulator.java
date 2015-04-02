@@ -43,7 +43,7 @@ public class FileBasedDistributedSimulator {
             receiver = new RabbitMQReceiver(url, "simbard_map");
             bestReceiver = new RabbitMQReceiver(url, "simbard_best");
 
-            Utils.registerClasses(kryo);
+            // Utils.registerClasses(kryo);
 
             dataSender.open();
             controlSender.open();
