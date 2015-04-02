@@ -98,7 +98,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        executor = Executors.newFixedThreadPool(5);
+        executor = Executors.newScheduledThreadPool(5);
         this.conf = map;
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
@@ -303,7 +303,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
         // after the computation we are going to create a new object without the map and nodes in particle and emit it
         // these will be used by the re sampler to re sample particles
-        LOG.info("taskId {}: no of active particles {}", taskId, activeParticles.size());
+        LOG.debug("taskId {}: no of active particles {}", taskId, activeParticles.size());
         List<ParticleValue> pvs = new ArrayList<ParticleValue>();
         for (int i = 0; i < activeParticles.size(); i++) {
             int index = activeParticles.get(i);
@@ -371,7 +371,8 @@ public class ScanMatchBolt extends BaseRichBolt {
         public void onMessage(Message message) {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
-            LOG.debug("taskId {}: Received particle map", taskId);
+//            LOG.debug("taskId {}: Received particle map", taskId);
+            LOG.info("taskId {}: Received maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
             ParticleMapsList pm = (ParticleMapsList) Utils.deSerialize(kryoMapReading, body, ParticleMapsList.class);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
                 try {
@@ -646,11 +647,14 @@ public class ScanMatchBolt extends BaseRichBolt {
             @Override
             public void run() {
                 for (Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
+                    LOG.info("taskId {}: Serializing maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
                     Kryo k = kryoMapWriters.get(listEntry.getKey());
                     byte[] b = Utils.serialize(k, listEntry.getValue());
                     Message message = new Message(b, new HashMap<String, Object>());
                     LOG.debug("Sending particle map to {}", listEntry.getKey());
+                    LOG.info("taskId {}: Sending maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
                     RabbitMQSender particleSender = particleSenders.get(listEntry.getKey());
+                    LOG.info("taskId {}: Sent maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
                     try {
                         particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + listEntry.getKey());
                     } catch (Exception e) {
@@ -688,6 +692,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         public void onMessage(Message message) {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
+            LOG.info("taskId {}: Received values: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
             ParticleValues pvs = (ParticleValues) Utils.deSerialize(kryoPVReading, body, ParticleValues.class);
             LOG.debug("taskId {}: Received particle value", taskId);
             if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {

@@ -104,7 +104,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
 
         for (Particle p : particles) {
             p.pose = motionModel.drawFromMotion(p.pose, relPose, odoPose);
-            LOG.info("After motion: {}, {}", relPose, p.pose);
+            LOG.debug("After motion: {}, {}", relPose, p.pose);
         }
         this.reading = reading;
         DoubleOrientedPoint move = DoubleOrientedPoint.minus(relPose, odoPose);
