@@ -6,7 +6,6 @@ import cgl.iotrobots.slam.core.gridfastsalm.*;
 import cgl.iotrobots.slam.core.sensor.RangeReading;
 import cgl.iotrobots.slam.core.utils.DoubleOrientedPoint;
 import cgl.iotrobots.slam.core.utils.DoublePoint;
-import org.apache.commons.math3.distribution.NormalDistribution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +17,12 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
     private static Logger LOG = LoggerFactory.getLogger(DScanMatcher.class);
 
     private int noOfParticles;
+
+    private List<RangeReading> readings = new ArrayList<RangeReading>();
+
+    public List<RangeReading> getReadings() {
+        return readings;
+    }
 
     public void init(int size, double xmin, double ymin, double xmax, double ymax, double delta, DoubleOrientedPoint initialPose, List<Integer> activeParticles) {
         this.xmin = xmin;
@@ -137,6 +142,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
 
             if (count > 0) {
                 scanMatch(plainReading);
+
                 // updateTreeWeights(false);
                 // resample(plainReading, adaptParticles, readingCopy);
             } else {
@@ -153,6 +159,9 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
                 }
             }
 
+            // we add the reading here
+            readings.add(reading);
+
             lastPartPose = odoPose; //update the past pose for the next iteration
             linearDistance = 0;
             angularDistance = 0;
@@ -166,7 +175,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
 
         }
         readingCount++;
-        LOG.info("Time in process scan: {} *****************************", (System.currentTimeMillis() - t0));
+        LOG.debug("Time in process scan: {} *****************************", (System.currentTimeMillis() - t0));
         return processed;
     }
 
@@ -183,7 +192,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
         }finally {
             lock.unlock();
         }
-        LOG.info("Average Scan Matching Score =" + sumScore / particles.size());
+        LOG.debug("Average Scan Matching Score =" + sumScore / particles.size());
     }
 
     public void processAfterReSampling(double []plainReading) {
@@ -215,7 +224,7 @@ public class DScanMatcher extends AbstractGridSlamProcessor {
             oldGeneration.add(m_particle.node);
         }
         int index = 0;
-        LOG.info("Post processing without resampling.....");
+        LOG.debug("Post processing without resampling.....");
         Iterator<TNode> node_it = oldGeneration.iterator();
         lock.lock();
         try {

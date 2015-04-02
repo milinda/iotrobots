@@ -161,10 +161,10 @@ public abstract class AbstractGridSlamProcessor {
         double score = 0, l;
         score = matcher.optimize(corrected, it.map, it.pose, plainReading);
         if (score > minimumScore) {
-            LOG.info("Score {}: Correcting the position from {} to {}", score, it.pose, corrected);
+            LOG.debug("Score {}: Correcting the position from {} to {}", score, it.pose, corrected);
             it.pose = new DoubleOrientedPoint(corrected);
         } else {
-            LOG.info("Score {}:, Scan Matching Failed, using odometry. Likelihood: last pose P{}, odom pose {}", score, lastPartPose, odoPose);
+            LOG.debug("Score {}:, Scan Matching Failed, using odometry. Likelihood: last pose P{}, odom pose {}", score, lastPartPose, odoPose);
         }
 
         ScanMatcher.LikeliHoodAndScore score1 = matcher.likelihoodAndScore(it.map, it.pose, plainReading);
@@ -174,7 +174,7 @@ public abstract class AbstractGridSlamProcessor {
         it.weight += l;
         it.weightSum += l;
 
-        LOG.info("Weigh of the particle: {}", it.weight);
+        LOG.debug("Weigh of the particle: {}", it.weight);
 
         //set up the selective copy of the active area
         //by detaching the areas that will be updated

@@ -149,18 +149,27 @@ public class Utils {
         return pv;
     }
 
-    public static ParticleValue createParticleValueWithNodeReadings(Particle p, int taskId, int index, int totalTasks) {
+    public static ParticleValue createParticleValue(Particle p, int taskId, int index, int totalTasks, List<RangeReading> readings) {
         ParticleValue pv = new ParticleValue(taskId, index, totalTasks, p.getPose(), p.getPreviousPose(),
-                p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), createNodeListFromNodeTreeWithReadings(p.getNode()));
+                p.getWeight(), p.getWeightSum(), p.getGweight(), p.getPreviousIndex(), createNodeListFromNodeTree(p.getNode(), readings));
         return pv;
     }
 
-    public static List<TNodeValue> createNodeListFromNodeTreeWithReadings(TNode node) {
+    public static List<TNodeValue> createNodeListFromNodeTree(TNode node, List<RangeReading> readings) {
         List<TNodeValue> values = new ArrayList<TNodeValue>();
-
+        int i = readings.size() - 1;
         TNode n = node;
         while (n != null) {
-            values.add(new TNodeValue(n.getPose(), n.getWeight(), n.getAccWeight(), n.getGweight(), n.getReading(), n.getChilds(), n.getVisitCounter(), n.isFlag()));
+            TNodeValue e;
+            if (i >= 0) {
+                e = new TNodeValue(n.getPose(), n.getWeight(), n.getAccWeight(), n.getGweight(), readings.get(i), n.getChilds(), n.getVisitCounter(), n.isFlag());
+            } else {
+                e = new TNodeValue(n.getPose(), n.getWeight(), n.getAccWeight(), n.getGweight(), n.getReading(), n.getChilds(), n.getVisitCounter(), n.isFlag());
+            }
+
+            i--;
+
+            values.add(e);
             n = n.getParent();
         }
 
