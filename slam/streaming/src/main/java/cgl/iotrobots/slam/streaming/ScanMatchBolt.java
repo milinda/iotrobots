@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -686,6 +687,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                 }
             }
         }
+
+        final Semaphore semaphore = new Semaphore(0);
+        int noOfSend = values.size();
         for (final Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
             executor.submit(new Runnable() {
                 @Override
@@ -703,8 +707,17 @@ public class ScanMatchBolt extends BaseRichBolt {
                     } catch (Exception e) {
                         LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
                     }
+                    semaphore.release();
                 }
             });
+        }
+
+        for (int i = 0; i < noOfSend; i++) {
+            try {
+                semaphore.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -750,6 +763,9 @@ public class ScanMatchBolt extends BaseRichBolt {
                 try {
                     for (ParticleValue pv : pvs.getParticleValues()) {
                         particleValues.add(pv);
+                    }
+                    if (state != MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+                        postProcessingAfterReceiveAll(taskId, "adding values", true, assignments.getBestParticle());
                     }
                 } finally {
                     lock.unlock();
