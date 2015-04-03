@@ -508,13 +508,13 @@ public class ScanMatchBolt extends BaseRichBolt {
         Particle best = gfsp.getParticles().get(index);
         List<Object> emit = new ArrayList<Object>();
 
-        ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1, gfsp.getReadings());
-        emit.add(particleValue);
-        emit.add(scan);
-        emit.add(sensorId);
-        emit.add(time);
-        LOG.debug("Emit for map, collector");
-        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
+//        ParticleValue particleValue = Utils.createParticleValue(best, -1, -1, -1, gfsp.getReadings());
+//        emit.add(particleValue);
+//        emit.add(scan);
+//        emit.add(sensorId);
+//        emit.add(time);
+//        LOG.debug("Emit for map, collector");
+//        outputCollector.emit(Constants.Fields.MAP_STREAM, emit);
 
         currentTrace.setSmar(System.currentTimeMillis() - assignmentReceiveTime);
         currentTrace.setSm(System.currentTimeMillis() - lastComputationBeginTime);
