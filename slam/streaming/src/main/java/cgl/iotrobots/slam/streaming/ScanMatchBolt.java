@@ -494,6 +494,10 @@ public class ScanMatchBolt extends BaseRichBolt {
         try {
             if (!particleMapses.isEmpty()) {
                 for (ParticleMaps existingPm : particleMapses) {
+                    if (existingPm.getSerializedMap() != null) {
+                        TransferMap map = (TransferMap) Utils.deSerialize(kryoMapReading, existingPm.getSerializedMap(), TransferMap.class);
+                        existingPm.setMap(map);
+                    }
                     addMaps(existingPm, origin);
                 }
                 // after handling the temp values, we'll clear the buffer
