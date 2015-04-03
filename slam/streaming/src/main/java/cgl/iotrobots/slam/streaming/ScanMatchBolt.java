@@ -98,7 +98,7 @@ public class ScanMatchBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        executor = Executors.newScheduledThreadPool(5);
+        executor = Executors.newScheduledThreadPool(8);
         this.conf = map;
         this.outputCollector = outputCollector;
         this.topologyContext = topologyContext;
@@ -432,6 +432,7 @@ public class ScanMatchBolt extends BaseRichBolt {
             long ppTime = System.currentTimeMillis();
             if (resampled) {
                 // add the temp to active particles
+                LOG.info("taskId {}: Clearing active particles", taskId);
                 gfsp.clearActiveParticles();
                 gfsp.getActiveParticles().addAll(tempActiveParticles);
                 tempActiveParticles.clear();
@@ -553,7 +554,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                         // now go through the assignments and send them to the bolts directly
                         computeExpectedParticles(assignments);
                         distributeAssignments(assignments);
-                        LOG.info("taskId {}: Clearing active particles", taskId);
+                        // LOG.info("taskId {}: Clearing active particles", taskId);
                         // gfsp.clearActiveParticles();
 
                         // we are going to keep the assignemtns so that we can check the receiving particles
@@ -601,18 +602,44 @@ public class ScanMatchBolt extends BaseRichBolt {
         List<ParticleAssignment> assignmentList = assignments.getAssignments();
         final int taskId = topologyContext.getThisTaskIndex();
         final Map<Integer, ParticleMapsList> values = new HashMap<Integer, ParticleMapsList>();
+        final Map<Integer, TransferMap> tempMaps = new HashMap<Integer, TransferMap>();
+
         for (int i = 0; i < assignmentList.size(); i++) {
             ParticleAssignment assignment = assignmentList.get(i);
             if (assignment.getPreviousTask() == taskId) {
                 int previousIndex = assignment.getPreviousIndex();
-                if (gfsp.getActiveParticles().contains(assignment.getPreviousIndex())) {
+                if (gfsp.getActiveParticles().contains(previousIndex)) {
                     // send the particle over rabbitmq if this is a different task
                     if (assignment.getNewTask() != taskId) {
+                        if (!tempMaps.containsKey(previousIndex)) {
+                            Particle p = gfsp.getParticles().get(previousIndex);
+                            // create a new ParticleMaps
+                            tempMaps.put(previousIndex, Utils.createTransferMap(p.getMap()));
+                        }
+                    }
+                } else {
+                    LOG.error("taskId {}: The particle {} is not in this bolt's active list, something is wrong", taskId,
+                            assignment.getPreviousIndex());
+                }
+            }
+        }
+
+        for (int i = 0; i < assignmentList.size(); i++) {
+            ParticleAssignment assignment = assignmentList.get(i);
+            if (assignment.getPreviousTask() == taskId) {
+                int previousIndex = assignment.getPreviousIndex();
+                if (gfsp.getActiveParticles().contains(previousIndex)) {
+                    // send the particle over rabbitmq if this is a different task
+                    if (assignment.getNewTask() != taskId) {
+                        LOG.info("taskId {}: Start creating transfer maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
+                        // create a new ParticleMaps
                         Particle p = gfsp.getParticles().get(previousIndex);
                         // create a new ParticleMaps
-                        ParticleMaps particleMaps = new ParticleMaps(Utils.createTransferMap(p.getMap()),
+                        ParticleMaps particleMaps = new ParticleMaps(tempMaps.get(previousIndex),
                                 assignment.getNewIndex(), assignment.getNewTask(), Utils.createNodeListFromNodeTree(p.getNode()));
 
+//                        ParticleMaps particleMaps = tempMaps.get(previousIndex);
+                        LOG.info("taskId {}: Created transfer maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
                         ParticleMapsList list;
                         if (values.containsKey(assignment.getNewTask())) {
                             list = values.get(assignment.getNewTask());
@@ -642,11 +669,10 @@ public class ScanMatchBolt extends BaseRichBolt {
                 }
             }
         }
-
-        executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                for (Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
+        for (final Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
                     LOG.info("taskId {}: Serializing maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
                     Kryo k = kryoMapWriters.get(listEntry.getKey());
                     byte[] b = Utils.serialize(k, listEntry.getValue());
@@ -661,19 +687,8 @@ public class ScanMatchBolt extends BaseRichBolt {
                         LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
                     }
                 }
-            }
-        });
-
-//        for (Map.Entry<Integer, ParticleMapsList> listEntry : values.entrySet()) {
-//            byte[] b = Utils.serialize(kryoMapWriting, listEntry.getValue());
-//            Message message = new Message(b, new HashMap<String, Object>());
-//            LOG.info("Sending particle map to {}", listEntry.getKey());
-//            try {
-//                particleSender.send(message, Constants.Messages.PARTICLE_MAP_ROUTING_KEY + "_" + listEntry.getKey());
-//            } catch (Exception e) {
-//                LOG.error("taskId {}: Failed to send the new particle map", taskId, e);
-//            }
-//        }
+            });
+        }
     }
 
     private List<ParticleValue> particleValues = new ArrayList<ParticleValue>();
