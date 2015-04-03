@@ -15,6 +15,8 @@ public class ParticleMaps {
 
     private List<TNodeValue> nodes;
 
+    private byte []serializedMap;
+
     public ParticleMaps() {
     }
 
@@ -23,6 +25,13 @@ public class ParticleMaps {
         this.index = index;
         this.task = task;
         this.nodes = nodes;
+    }
+
+    public ParticleMaps(byte[] serializedMap, int index, int task, List<TNodeValue> nodes) {
+        this.index = index;
+        this.task = task;
+        this.nodes = nodes;
+        this.serializedMap = serializedMap;
     }
 
     public TransferMap getMap() {
@@ -51,6 +60,14 @@ public class ParticleMaps {
 
     public List<TNodeValue> getNodes() {
         return nodes;
+    }
+
+    public byte[] getSerializedMap() {
+        return serializedMap;
+    }
+
+    public void setSerializedMap(byte[] serializedMap) {
+        this.serializedMap = serializedMap;
     }
 
     public void setNodes(List<TNodeValue> nodes) {
