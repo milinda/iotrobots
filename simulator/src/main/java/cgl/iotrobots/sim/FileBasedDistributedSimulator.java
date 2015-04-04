@@ -28,12 +28,13 @@ public class FileBasedDistributedSimulator {
     Kryo kryo = new Kryo();
     boolean simbard;
     MapUI mapUI;
+    long sleepTime = 1000;
 
 //    Lock lock;
 //    Condition sendWait;
 //    Condition receiveWait;
 
-    public FileBasedDistributedSimulator(String url, String file, String test, boolean simbard, boolean ui) {
+    public FileBasedDistributedSimulator(String url, String file, String test, boolean simbard, boolean ui, long sleepTime) {
         try {
 //            this.lock = new ReentrantLock();
 //            this.sendWait = lock.newCondition();
@@ -61,6 +62,7 @@ public class FileBasedDistributedSimulator {
                 mapUI = new MapUI();
             }
             this.simbard = simbard;
+            this.sleepTime = sleepTime;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,7 +91,7 @@ public class FileBasedDistributedSimulator {
             System.out.println("Please specify amqp url, filename and test name as arguments");
         }
 
-        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0], args[1], args[2], Boolean.parseBoolean(args[3]), Boolean.parseBoolean(args[4]));
+        FileBasedDistributedSimulator fileBasedSimulator = new FileBasedDistributedSimulator(args[0], args[1], args[2], Boolean.parseBoolean(args[3]), Boolean.parseBoolean(args[4]), Long.parseLong(args[5]));
         fileBasedSimulator.start();
     }
 
@@ -126,12 +128,18 @@ public class FileBasedDistributedSimulator {
                             e.printStackTrace();
                         }
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     } else {
                         System.out.println("We are done!!");
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.exit(0);
                         return;
                     }
 
