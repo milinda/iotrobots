@@ -323,11 +323,11 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(sensorId);
         emit.add(time);
         lastEmitTime = System.currentTimeMillis();
-        try {
-            Thread.sleep(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(1);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         long gcTime = gcCounter.getFullGCTime() + gcCounter.getYoungGCTime();
         long timeSpent = lastEmitTime - lastComputationBeginTime;
         trace.getSmp().put(taskId, timeSpent);
