@@ -1,0 +1,1 @@
+Results taken with ReSampling enabled
