@@ -49,4 +49,14 @@ public class ParticleAssignment {
     public void setNewTask(int newTask) {
         this.newTask = newTask;
     }
+
+    @Override
+    public String toString() {
+        return "ParticleAssignment{" +
+                "previousIndex=" + previousIndex +
+                ", newIndex=" + newIndex +
+                ", previousTask=" + previousTask +
+                ", newTask=" + newTask +
+                '}';
+    }
 }
