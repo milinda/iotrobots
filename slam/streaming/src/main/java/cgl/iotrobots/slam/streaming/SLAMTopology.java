@@ -142,9 +142,9 @@ public class SLAMTopology {
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
-        builder.setBolt(Constants.Topology.DISPATCHER_BOLT, dispatcherBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
-        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.DISPATCHER_BOLT, Constants.Fields.SCAN_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
-        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);;
+        builder.setBolt(Constants.Topology.DISPATCHER_BOLT, dispatcherBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.READY_STREAM);
+        builder.setBolt(Constants.Topology.SCAN_MATCH_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.DISPATCHER_BOLT, Constants.Fields.SCAN_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM).allGrouping(Constants.Topology.RE_SAMPLE_BOLT, Constants.Fields.ASSIGNMENT_STREAM);
+        builder.setBolt(Constants.Topology.RE_SAMPLE_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.PARTICLE_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
         builder.setBolt(Constants.Topology.MAP_COMPUTE_BOLT, mapBuildingBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.MAP_STREAM);
         builder.setBolt(Constants.Topology.MAP_SEND_BOLD, mapSendBolt, 1).shuffleGrouping(Constants.Topology.MAP_COMPUTE_BOLT);
         builder.setBolt(Constants.Topology.BEST_PARTICLE_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.SCAN_MATCH_BOLT, Constants.Fields.BEST_PARTICLE_STREAM);

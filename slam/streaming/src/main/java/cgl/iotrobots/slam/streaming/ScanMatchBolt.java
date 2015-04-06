@@ -20,6 +20,7 @@ import cgl.iotrobots.slam.streaming.stats.GCInformation;
 import cgl.iotrobots.utils.rabbitmq.*;
 import cgl.sensorstream.core.StreamComponents;
 import cgl.sensorstream.core.StreamTopologyBuilder;
+import clojure.lang.Obj;
 import com.esotericsoftware.kryo.Kryo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private TopologyContext topologyContext;
 
     /** Assignment are broad cast, so will create a broadcast receiver */
-    private RabbitMQReceiver assignmentReceiver;
+//    private RabbitMQReceiver assignmentReceiver;
 
     /** Particles are sent directly, so we will create a direct receiver */
     private RabbitMQReceiver particleMapReceiver;
@@ -129,7 +130,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         String url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             // we use broadcast to receive assignments
-            this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
+//            this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             // we use direct exchange to receive particle maps
             this.particleMapReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             // we use direct to receive particle values
@@ -148,7 +149,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 kryoMapWriters.add(k);
             }
 
-            this.assignmentReceiver.listen(new ParticleAssignmentHandler());
+//            this.assignmentReceiver.listen(new ParticleAssignmentHandler());
             this.particleMapReceiver.listen(new MapHandler());
             this.particleValueReceiver.listen(new ParticleValueHandler());
         } catch (Exception e) {
@@ -233,12 +234,24 @@ public class ScanMatchBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         String stream = tuple.getSourceStreamId();
-
+        int taskId = topologyContext.getThisTaskIndex();
         outputCollector.ack(tuple);
         // if we receive a control message init and return
         if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
             init(conf);
             return;
+        }
+
+        lock.lock();
+        try {
+            if (stream.equals(Constants.Fields.ASSIGNMENT_STREAM)) {
+                byte[] body = (byte[]) tuple.getValueByField(Constants.Fields.ASSIGNMENT_FILED);
+                ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
+                handleAssignment(taskId, assignments);
+                return;
+            }
+        } finally {
+            lock.unlock();
         }
 
         if (state != MatchState.WAITING_FOR_READING) {
@@ -249,7 +262,6 @@ public class ScanMatchBolt extends BaseRichBolt {
         // check weather this tuple came between the last computation time. if so discard it
         lastComputationBeginTime = System.currentTimeMillis();
         GCCounter gcCounter = GCInformation.getInstance().addCounter();
-        int taskId = topologyContext.getThisTaskIndex();
 
         time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         sensorId = tuple.getValueByField(TransportConstants.SENSOR_ID);
@@ -333,6 +345,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         trace.getSmp().put(taskId, timeSpent);
         trace.getGcTimes().put(taskId, gcTime);
         GCInformation.getInstance().removeCounter(gcCounter);
+        LOG.debug("taskId {}: emitting to resample ", taskId);
         emit.add(trace);
         outputCollector.emit(Constants.Fields.PARTICLE_STREAM, emit);
     }
@@ -354,6 +367,10 @@ public class ScanMatchBolt extends BaseRichBolt {
                 Constants.Fields.LASER_SCAN_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD));
+
+        outputFieldsDeclarer.declareStream(Constants.Fields.READY_STREAM, new Fields(
+                Constants.Fields.READY_FIELD
+                ));
 
         outputFieldsDeclarer.declareStream(Constants.Fields.BEST_PARTICLE_STREAM,
                 new Fields("body", Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
@@ -379,32 +396,32 @@ public class ScanMatchBolt extends BaseRichBolt {
 //            LOG.debug("taskId {}: Received particle map", taskId);
             LOG.info("taskId {}: Received maps: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
             ParticleMapsList pm = (ParticleMapsList) Utils.deSerialize(kryoMapReading, body, ParticleMapsList.class);
-            if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
-                try {
-                    // first we need to determine the expected new maps for this particle
-                    // first check weather particleMapses not empty. If not empty handle those first
-                    processReceivedMaps("map");
-                    processReceivedValues("map");
-                    // now go through the assignments and send them to the bolts directly
-                    List<ParticleMaps> list = pm.getParticleMapsArrayList();
-                    for (ParticleMaps p : list) {
-                        if (p.getSerializedMap() != null) {
-                            TransferMap map = (TransferMap) Utils.deSerialize(kryoMapReading, p.getSerializedMap(), TransferMap.class);
-                            p.setMap(map);
+            lock.lock();
+            try {
+                if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
+                    try {
+                        // first we need to determine the expected new maps for this particle
+                        // first check weather particleMapses not empty. If not empty handle those first
+                        processReceivedMaps("map");
+                        processReceivedValues("map");
+                        // now go through the assignments and send them to the bolts directly
+                        List<ParticleMaps> list = pm.getParticleMapsArrayList();
+                        for (ParticleMaps p : list) {
+                            if (p.getSerializedMap() != null) {
+                                TransferMap map = (TransferMap) Utils.deSerialize(kryoMapReading, p.getSerializedMap(), TransferMap.class);
+                                p.setMap(map);
+                            }
+                            addMaps(p, "map");
                         }
-                        addMaps(p, "map");
-                    }
 
-                    // we have received all the particles we need to do the processing after resampling
-                    postProcessingAfterReceiveAll(taskId, "map", true, assignments.getBestParticle());
-                } catch (Exception e) {
-                    LOG.error("taskId {}: Failed to deserialize map", taskId, e);
-                }
-            } else if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
-                // because we haven't received the assignments yet, we will keep the values temporaly in this list
-                LOG.debug("taskId {}: Adding map state {}", taskId, state);
-                lock.lock();
-                try {
+                        // we have received all the particles we need to do the processing after resampling
+                        postProcessingAfterReceiveAll(taskId, "map", true, assignments.getBestParticle());
+                    } catch (Exception e) {
+                        LOG.error("taskId {}: Failed to deserialize map", taskId, e);
+                    }
+                } else if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+                    // because we haven't received the assignments yet, we will keep the values temporaly in this list
+                    LOG.debug("taskId {}: Adding map state {}", taskId, state);
                     List<ParticleMaps> list = pm.getParticleMapsArrayList();
                     for (ParticleMaps p : list) {
                         particleMapses.add(p);
@@ -412,11 +429,11 @@ public class ScanMatchBolt extends BaseRichBolt {
                     if (state != MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                         postProcessingAfterReceiveAll(taskId, "adding map", true, assignments.getBestParticle());
                     }
-                } finally {
-                    lock.unlock();
+                } else {
+                    LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
                 }
-            } else {
-                LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -479,15 +496,18 @@ public class ScanMatchBolt extends BaseRichBolt {
         state = MatchState.WAITING_FOR_READING;
         Ready ready = new Ready(taskId);
         byte []readyBody = Utils.serialize(kryoReady, ready);
-
-        Message m = new Message(readyBody, new HashMap<String, Object>());
-        try {
-            readySender.send(m, Constants.Messages.READY_ROUTING_KEY);
-        } catch (Exception e) {
-            String msg = "Error sending the ready message";
-            LOG.error(msg, e);
-            throw new RuntimeException(msg, e);
-        }
+//
+//        Message m = new Message(readyBody, new HashMap<String, Object>());
+//        try {
+//            readySender.send(m, Constants.Messages.READY_ROUTING_KEY);
+//        } catch (Exception e) {
+//            String msg = "Error sending the ready message";
+//            LOG.error(msg, e);
+//            throw new RuntimeException(msg, e);
+//        }
+        List<Object> emit = new ArrayList<Object>();
+        emit.add(readyBody);
+        outputCollector.emit(Constants.Fields.READY_STREAM, emit);
     }
 
     private void processReceivedMaps(String origin) {
@@ -555,39 +575,48 @@ public class ScanMatchBolt extends BaseRichBolt {
         public void onMessage(Message message) {
             int taskId = topologyContext.getThisTaskIndex();
             byte []body = message.getBody();
-            if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
-                try {
-                    LOG.debug("taskId {}: Received particle assignment", taskId);
-                    ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
-                    currentTrace = assignments.getTrace();
-                    assignmentReceiveTime = System.currentTimeMillis();
-                    LOG.info("taskId {}: Best particle index {}", taskId, assignments.getBestParticle());
-                    // if we have resampled ditributed the assignments
-                    if (assignments.isReSampled()) {
-                        // now go through the assignments and send them to the bolts directly
-                        computeExpectedParticles(assignments);
-                        distributeAssignments(assignments);
-                        // LOG.info("taskId {}: Clearing active particles", taskId);
-                        // gfsp.clearActiveParticles();
-
-                        // we are going to keep the assignemtns so that we can check the receiving particles
-                        ScanMatchBolt.this.assignments = assignments;
-                        processReceivedValues("assign");
-                        processReceivedMaps("assign-maps");
-                        postProcessingAfterReceiveAll(taskId, "assign-all", true, assignments.getBestParticle());
-                    } else {
-                        // we are going to keep the assignemtns so that we can check the receiving particles
-                        ScanMatchBolt.this.assignments = assignments;
-                        expectingParticleValues = 0;
-                        expectingParticleMaps = 0;
-                        postProcessingAfterReceiveAll(taskId, "assign", false, assignments.getBestParticle());
+            lock.lock();
+            try {
+                if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+                    try {
+                        LOG.debug("taskId {}: Received particle assignment", taskId);
+                        ParticleAssignments assignments = (ParticleAssignments) Utils.deSerialize(kryoAssignReading, body, ParticleAssignments.class);
+                        handleAssignment(taskId, assignments);
+                    } catch (Exception e) {
+                        LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
                     }
-                } catch (Exception e) {
-                    LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
+                } else {
+                    LOG.error("Received message when we are in an unexpected state {}", state);
                 }
-            } else {
-                LOG.error("Received message when we are in an unexpected state {}", state);
+            } finally {
+                lock.unlock();
             }
+        }
+    }
+
+    private void handleAssignment(int taskId, ParticleAssignments assignments) {
+        currentTrace = assignments.getTrace();
+        assignmentReceiveTime = System.currentTimeMillis();
+        LOG.debug("taskId {}: Best particle index {}", taskId, assignments.getBestParticle());
+        // if we have resampled ditributed the assignments
+        if (assignments.isReSampled()) {
+            // now go through the assignments and send them to the bolts directly
+            computeExpectedParticles(assignments);
+            distributeAssignments(assignments);
+            // LOG.info("taskId {}: Clearing active particles", taskId);
+            // gfsp.clearActiveParticles();
+
+            // we are going to keep the assignemtns so that we can check the receiving particles
+            this.assignments = assignments;
+            processReceivedValues("assign");
+            processReceivedMaps("assign-maps");
+            postProcessingAfterReceiveAll(taskId, "assign-all", true, assignments.getBestParticle());
+        } else {
+            // we are going to keep the assignemtns so that we can check the receiving particles
+            this.assignments = assignments;
+            expectingParticleValues = 0;
+            expectingParticleMaps = 0;
+            postProcessingAfterReceiveAll(taskId, "assign", false, assignments.getBestParticle());
         }
     }
 
@@ -740,39 +769,38 @@ public class ScanMatchBolt extends BaseRichBolt {
             LOG.info("taskId {}: Received values: {}", taskId, (System.currentTimeMillis() - assignmentReceiveTime));
             ParticleValues pvs = (ParticleValues) Utils.deSerialize(kryoPVReading, body, ParticleValues.class);
             LOG.debug("taskId {}: Received particle value", taskId);
-            if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
-                try {
-                    // first we need to determine the expected new maps for this particle
-                    // first check weather particleMapses not empty. If not empty handle those first
-                    processReceivedValues("value");
-                    processReceivedMaps("value");
-                    // now go through the assignments and send them to the bolts directly
-                    for (ParticleValue pv : pvs.getParticleValues()) {
-                        addParticle(pv, "value");
-                    }
+            lock.lock();
+            try {
+                if (state == MatchState.WAITING_FOR_NEW_PARTICLES) {
+                    try {
+                        // first we need to determine the expected new maps for this particle
+                        // first check weather particleMapses not empty. If not empty handle those first
+                        processReceivedValues("value");
+                        processReceivedMaps("value");
+                        // now go through the assignments and send them to the bolts directly
+                        for (ParticleValue pv : pvs.getParticleValues()) {
+                            addParticle(pv, "value");
+                        }
 
-                    // we have received all the particles we need to do the processing after resampling
-                    postProcessingAfterReceiveAll(taskId, "assign", true, assignments.getBestParticle());
-                } catch (Exception e) {
-                    LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
-                }
-            } else if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
-                // first we need to determine the expected new maps for this particle
-                // because we haven't received the assignments yet, we will keep the values temporaly in this list
-                lock.lock();
-                try {
+                        // we have received all the particles we need to do the processing after resampling
+                        postProcessingAfterReceiveAll(taskId, "assign", true, assignments.getBestParticle());
+                    } catch (Exception e) {
+                        LOG.error("taskId {}: Failed to deserialize assignment", taskId, e);
+                    }
+                } else if (state == MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
+                    // first we need to determine the expected new maps for this particle
+                    // because we haven't received the assignments yet, we will keep the values temporaly in this list
                     for (ParticleValue pv : pvs.getParticleValues()) {
                         particleValues.add(pv);
                     }
                     if (state != MatchState.WAITING_FOR_PARTICLE_ASSIGNMENTS) {
                         postProcessingAfterReceiveAll(taskId, "adding values", true, assignments.getBestParticle());
                     }
-                } finally {
-                    lock.unlock();
+                } else {
+                    LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
                 }
-
-            } else {
-                LOG.error("taskId {}: Received message when we are in an unexpected state {}", taskId, state);
+            } finally {
+                lock.unlock();
             }
         }
     }

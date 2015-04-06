@@ -103,6 +103,14 @@ public class DispatcherBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple input) {
+        String stream = input.getSourceStreamId();
+        if (stream.equals(Constants.Fields.READY_STREAM)) {
+            byte readyBytes[] = (byte[]) input.getValueByField(Constants.Fields.READY_FIELD);
+            Ready ready = (Ready) Utils.deSerialize(kryo, readyBytes, Ready.class);
+            handleReady(ready);
+            return;
+        }
+
         lock.lock();
         try {
             tempBeginTime = System.currentTimeMillis();
@@ -141,30 +149,34 @@ public class DispatcherBolt extends BaseRichBolt {
             byte []messageBody = message.getBody();
             Ready ready = (Ready) Utils.deSerialize(kryo, messageBody, Ready.class);
 
-            lock.lock();
-            readyList.add(ready);
-            try {
-                if (readyList.size() == noOfParallelTasks) {
-                    previousTime = System.currentTimeMillis() - beginTime;
-                    if (state == State.WAITING_FOR_READY) {
+            handleReady(ready);
+        }
+    }
+
+    private void handleReady(Ready ready) {
+        lock.lock();
+        readyList.add(ready);
+        try {
+            if (readyList.size() == noOfParallelTasks) {
+                previousTime = System.currentTimeMillis() - beginTime;
+                if (state == State.WAITING_FOR_READY) {
 //                        beginTime = tempBeginTime;
 //                        Trace t = new Trace();
 //                        t.setPd(previousTime);
 //                        List<Object> emit = createTuple(currentTuple, t);
 //                        outputCollector.emit(Constants.Fields.SCAN_STREAM, emit);
-                        readyList.clear();
-                        currentTuple = null;
-                        state = State.WAITING_FOR_READING;
-                        LOG.info("Changing state from READY to ANY");
-                    } else if (state == State.WAITING_ANY) {
-                        state = State.WAITING_FOR_READING;
-                        readyList.clear();
-                        LOG.info("Changing state from ANY to READING");
-                    }
+                    readyList.clear();
+                    currentTuple = null;
+                    state = State.WAITING_FOR_READING;
+                    LOG.info("Changing state from READY to ANY");
+                } else if (state == State.WAITING_ANY) {
+                    state = State.WAITING_FOR_READING;
+                    readyList.clear();
+                    LOG.info("Changing state from ANY to READING");
                 }
-            } finally {
-                lock.unlock();
             }
+        } finally {
+            lock.unlock();
         }
     }
 

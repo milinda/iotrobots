@@ -4,6 +4,7 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import cgl.iotrobots.slam.core.GFSConfiguration;
 import cgl.iotrobots.slam.core.app.LaserScan;
@@ -29,6 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ReSamplingBolt extends BaseRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(ReSamplingBolt.class);
@@ -49,7 +52,7 @@ public class ReSamplingBolt extends BaseRichBolt {
     private RangeReading reading;
 
     /** The RabbitMQ send used for sending out the re sampled particles back to the scan match bolts */
-    private RabbitMQSender assignmentSender;
+//    private RabbitMQSender assignmentSender;
 
     private RabbitMQSender valueSender;
 
@@ -67,6 +70,8 @@ public class ReSamplingBolt extends BaseRichBolt {
     private ExecutorService executor;
     private List<Kryo> kryoValueWriters = new ArrayList<Kryo>();
 
+    private Lock lock = new ReentrantLock();
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.conf = map;
@@ -83,8 +88,8 @@ public class ReSamplingBolt extends BaseRichBolt {
         int totalTasks = topologyContext.getComponentTasks(Constants.Topology.SCAN_MATCH_BOLT).size();
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
-            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
-            this.assignmentSender.open();
+//            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
+//            this.assignmentSender.open();
 
             this.valueSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
             this.valueSender.open();
@@ -126,50 +131,55 @@ public class ReSamplingBolt extends BaseRichBolt {
             firstReadingTime = System.currentTimeMillis();
         }
 
-        Trace trace = (Trace) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
-        Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
-        List<ParticleValue> pvs;
+        lock.lock();
+        try {
+            Trace trace = (Trace) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
+            Object val = tuple.getValueByField(Constants.Fields.PARTICLE_VALUE_FIELD);
+            List<ParticleValue> pvs;
 
-        if (val != null && (val instanceof List)) {
-            pvs = (List<ParticleValue>) val;
-            for (ParticleValue value : pvs) {
-                LOG.debug("Received particle with index {}", value.getIndex());
-                addParticleValue(value, trace);
+            if (val != null && (val instanceof List)) {
+                pvs = (List<ParticleValue>) val;
+                for (ParticleValue value : pvs) {
+                    LOG.debug("Received particle with index {}", value.getIndex());
+                    addParticleValue(value, trace);
+                }
+            } else {
+                outputCollector.ack(tuple);
+                throw new IllegalArgumentException("The particle value should be of type ParticleValue");
             }
-        } else {
-            outputCollector.ack(tuple);
-            throw new IllegalArgumentException("The particle value should be of type ParticleValue");
-        }
 
-        val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
-        if (val != null && !(val instanceof LaserScan)) {
-            outputCollector.ack(tuple);
-            throw new IllegalArgumentException("The laser scan should be of type LaserScan");
-        }
+            val = tuple.getValueByField(Constants.Fields.LASER_SCAN_FIELD);
+            if (val != null && !(val instanceof LaserScan)) {
+                outputCollector.ack(tuple);
+                throw new IllegalArgumentException("The laser scan should be of type LaserScan");
+            }
 
-        LaserScan scan = (LaserScan) val;
+            LaserScan scan = (LaserScan) val;
 
 
-        Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getRanges(scan, scan.getAngleIncrement());
-        RangeSensor sensor = new RangeSensor("ROBOTLASER1",
-                scan.getRanges().size(),
-                Math.abs(scan.getAngleIncrement()),
-                new DoubleOrientedPoint(0, 0, 0),
-                0.0,
-                scan.getRangeMax());
+            Double[] ranges_double = cgl.iotrobots.slam.core.utils.Utils.getRanges(scan, scan.getAngleIncrement());
+            RangeSensor sensor = new RangeSensor("ROBOTLASER1",
+                    scan.getRanges().size(),
+                    Math.abs(scan.getAngleIncrement()),
+                    new DoubleOrientedPoint(0, 0, 0),
+                    0.0,
+                    scan.getRangeMax());
 
-        reading = new RangeReading(scan.getRanges().size(),
-                ranges_double,
-                scan.getTimestamp());
-        reading.setPose(scan.getPose());
-        Map<String, Sensor> smap = new HashMap<String, Sensor>();
-        smap.put(sensor.getName(), sensor);
+            reading = new RangeReading(scan.getRanges().size(),
+                    ranges_double,
+                    scan.getTimestamp());
+            reading.setPose(scan.getPose());
+            Map<String, Sensor> smap = new HashMap<String, Sensor>();
+            smap.put(sensor.getName(), sensor);
 
-        LOG.info("receivedParticles: {}, expecting particles:{}", receivedParticles, reSampler.getParticles().size());
-        // this bolt will wait until all the particle values are obtained
-        if (receivedParticles < reSampler.getNoOfParticles() || reading == null) {
-            outputCollector.ack(tuple);
-            return;
+            LOG.debug("receivedParticles: {}, expecting particles:{}", receivedParticles, reSampler.getParticles().size());
+            // this bolt will wait until all the particle values are obtained
+            if (receivedParticles < reSampler.getNoOfParticles() || reading == null) {
+                outputCollector.ack(tuple);
+                return;
+            }
+        } finally {
+            lock.unlock();
         }
         // reset the counter
         receivedParticles = 0;
@@ -259,10 +269,13 @@ public class ReSamplingBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-
+        outputFieldsDeclarer.declareStream(Constants.Fields.ASSIGNMENT_STREAM, new Fields(
+                Constants.Fields.ASSIGNMENT_FILED
+        ));
     }
 
     protected synchronized void addParticleValue(ParticleValue value, Trace trace) {
+        LOG.debug("Received particle value from taskID {}", value.getTaskId());
         particleValueses[value.getIndex()] = value;
         traceMap.put(value.getTaskId(), trace);
         receivedParticles++;
@@ -286,15 +299,18 @@ public class ReSamplingBolt extends BaseRichBolt {
         firstReadingTime = -1;
         assignments.setTrace(t);
 
-        LOG.info("Sending particle assignment");
+        LOG.debug("Sending particle assignment");
         byte []b = Utils.serialize(kryo, assignments);
-
-        Message message = new Message(b, new HashMap<String, Object>());
-        try {
-            assignmentSender.send(message, "*");
-        } catch (Exception e) {
-            LOG.error("Failed to send the message", e);
-        }
+//
+//        Message message = new Message(b, new HashMap<String, Object>());
+//        try {
+//            assignmentSender.send(message, "*");
+//        } catch (Exception e) {
+//            LOG.error("Failed to send the message", e);
+//        }
+        List<Object> emit = new ArrayList<Object>();
+        emit.add(b);
+        outputCollector.emit(Constants.Fields.ASSIGNMENT_STREAM, emit);
     }
 
     /**
