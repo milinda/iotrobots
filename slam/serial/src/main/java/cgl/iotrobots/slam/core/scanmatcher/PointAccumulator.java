@@ -10,14 +10,18 @@ import cgl.iotrobots.slam.core.utils.DoublePoint;
 public class PointAccumulator {
     public static final int SIGHT_INC = 1;
 
-    public DoublePoint acc = new DoublePoint(0.0, 0.0);
+//    public DoublePoint acc = new DoublePoint(0.0, 0.0);
+
+    public double accx = 0.0;
+    public double accy = 0.0;
 
     public int n, visits;
 
     public PointAccumulator(PointAccumulator pointAccumulator) {
         this.n = pointAccumulator.n;
         this.visits = pointAccumulator.visits;
-        this.acc = new DoublePoint(pointAccumulator.acc);
+        this.accx = pointAccumulator.accx;
+        this.accy = pointAccumulator.accy;
     }
 
     public PointAccumulator() {
@@ -25,8 +29,19 @@ public class PointAccumulator {
 
     public void update(boolean value, DoublePoint p) {
         if (value) {
-            acc.x += p.x;
-            acc.y += p.y;
+            accx += p.x;
+            accy += p.y;
+            n++;
+            visits += SIGHT_INC;
+        } else {
+            visits++;
+        }
+    }
+
+    public void update(boolean value, double x, double y) {
+        if (value) {
+            accx += x;
+            accy += y;
             n++;
             visits += SIGHT_INC;
         } else {
@@ -44,21 +59,18 @@ public class PointAccumulator {
     }
 
     public DoublePoint mean() {
-        return new DoublePoint(acc.x / n, acc.y / n);
+        return new DoublePoint(accx / n, accy / n);
     }
 
     void add(PointAccumulator p) {
-        acc = new DoublePoint(acc.x + p.acc.x, acc.y + p.acc.y);
+        accx = accx + p.accx;
+        accy = accy + p.accy;
         n +=p.n;
         visits += p.visits;
     }
 
     public double doubleValue() {
         return visits > 0 ? (double)n*SIGHT_INC/(double)visits:-1;
-    }
-
-    public DoublePoint getAcc() {
-        return acc;
     }
 
     public int getN() {
@@ -69,8 +81,9 @@ public class PointAccumulator {
         return visits;
     }
 
-    public void setAcc(DoublePoint acc) {
-        this.acc = acc;
+    public void setAcc(double accx, double accy) {
+        this.accx = accx;
+        this.accy = accy;
     }
 
     public void setN(int n) {
@@ -79,6 +92,22 @@ public class PointAccumulator {
 
     public void setVisits(int visits) {
         this.visits = visits;
+    }
+
+    public double getAccx() {
+        return accx;
+    }
+
+    public double getAccy() {
+        return accy;
+    }
+
+    public void setAccx(double accx) {
+        this.accx = accx;
+    }
+
+    public void setAccy(double accy) {
+        this.accy = accy;
     }
 }
 

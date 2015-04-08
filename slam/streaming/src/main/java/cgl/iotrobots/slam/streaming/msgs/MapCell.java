@@ -6,17 +6,19 @@ public class MapCell {
     private int x;
     private int y;
 
-    private DoublePoint acc = new DoublePoint(0.0, 0.0);
+    private double accx = 0.0;
+    private double accy = 0.0;
 
     private int n, visits;
 
     public MapCell() {
     }
 
-    public MapCell(int x, int y, DoublePoint acc, int n, int visits) {
+    public MapCell(int x, int y, double accx, double accy, int n, int visits) {
         this.x = x;
         this.y = y;
-        this.acc = acc;
+        this.accx = accx;
+        this.accy = accy;
         this.n = n;
         this.visits = visits;
     }
@@ -29,8 +31,12 @@ public class MapCell {
         return y;
     }
 
-    public DoublePoint getAcc() {
-        return acc;
+    public double getAccx() {
+        return accx;
+    }
+
+    public double getAccy() {
+        return accy;
     }
 
     public int getN() {
@@ -49,8 +55,12 @@ public class MapCell {
         this.y = y;
     }
 
-    public void setAcc(DoublePoint acc) {
-        this.acc = acc;
+    public void setAccx(double accx) {
+        this.accx = accx;
+    }
+
+    public void setAccy(double accy) {
+        this.accy = accy;
     }
 
     public void setN(int n) {

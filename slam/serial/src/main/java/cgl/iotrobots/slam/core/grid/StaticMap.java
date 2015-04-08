@@ -113,7 +113,7 @@ public class StaticMap implements IGMap {
                 return pa;
             }
         } else {
-            return new PointAccumulator();
+            return null;
         }
     }
 

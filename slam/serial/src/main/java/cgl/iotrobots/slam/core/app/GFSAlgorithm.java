@@ -20,7 +20,7 @@ public class GFSAlgorithm {
     int throttleScans;
 
     boolean gotFirstScan;
-    long mapUpdateInterval = -10;
+    long mapUpdateInterval = 20000;
 
     // Parameters used by GMapping
     double maxRange;
@@ -75,8 +75,8 @@ public class GFSAlgorithm {
         srt = 0.2;
         str = 0.1;
         stt = 0.2;
-        linearUpdate = .0;
-        angularUpdate = 0.0;
+        linearUpdate = 0.5;
+        angularUpdate = 0.25;
         temporalUpdate = -1;
         resampleThreshold = .5;
         particles = 30;
@@ -196,7 +196,7 @@ public class GFSAlgorithm {
                 // updateMap(scan);
                 LOG.debug("Updated the map");
                 lastMapUpdate = System.currentTimeMillis();
-                lastMapUpdate = 0;
+//                lastMapUpdate = 0;
             }
             System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }

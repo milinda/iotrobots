@@ -149,7 +149,7 @@ public class ScanMatcher {
     public void computeActiveArea(IGMap map, DoubleOrientedPoint p, double[] readings) {
         if (m_activeAreaComputed)
             return;
-        Set<IntPoint> activeArea = new HashSet<IntPoint>();
+        //Set<IntPoint> activeArea = new HashSet<IntPoint>();
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * laserPose.x - Math.sin(p.theta) * laserPose.y;
         lp.y += Math.sin(p.theta) * laserPose.x + Math.cos(p.theta) * laserPose.y;
@@ -190,50 +190,53 @@ public class ScanMatcher {
             map.resize(min.x, min.y, max.x, max.y);
         }
 
-        readingIndex = initialBeamsSkip;
-        angleIndex = initialBeamsSkip;
-        for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++) {
-            if (generateMap) {
-                double d = readings[readingIndex];
-                if (d > laserMaxRange || d == 0.0 || d > Double.MAX_VALUE)
-                    continue;
-                if (d > usableRange)
-                    d = usableRange;
-
-                DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + laserAngles[angleIndex]) + lp.y);
-                p0 = map.world2map(lp);
-                IntPoint p1 = map.world2map(phit);
-
-                d += map.getDelta();
-                GridLineTraversalLine line = new GridLineTraversalLine();
-                line.points = m_linePoints;
-                GridLineTraversalLine.gridLine(p0, p1, line);
-                for (int i = 0; i < line.numPoints - 1; i++) {
-                    IntPoint patch = (m_linePoints[i]);
-                    activeArea.add(patch);
-                }
-                if (d <= usableRange) {
-                    IntPoint patch = (p1);
-                    activeArea.add(patch);
-                }
-            } else {
-                double r = readings[readingIndex];
-                double angle = laserAngles[angleIndex];
-                if (readings[readingIndex] > laserMaxRange || readings[readingIndex] > usableRange) {
-                    continue;
-                }
-                DoublePoint phit = new DoublePoint(lp.x, lp.y);
-                phit.x += r * Math.cos(lp.theta + angle);
-                phit.y += r * Math.sin(lp.theta + angle);
-                IntPoint p1 = map.world2map(phit);
-                assert (p1.x >= 0 && p1.y >= 0);
-                IntPoint cp = (p1);
-                assert (cp.x >= 0 && cp.y >= 0);
-                activeArea.add(cp);
-            }
-        }
+//        readingIndex = initialBeamsSkip;
+//        angleIndex = initialBeamsSkip;
+//        for (readingIndex = initialBeamsSkip; readingIndex < laserBeams; readingIndex++, angleIndex++) {
+//            if (generateMap) {
+//                double d = readings[readingIndex];
+//                if (d > laserMaxRange || d == 0.0 || d > Double.MAX_VALUE)
+//                    continue;
+//                if (d > usableRange)
+//                    d = usableRange;
+//
+//                DoublePoint phit = new DoublePoint(d * Math.cos(lp.theta + laserAngles[angleIndex]) + lp.x, d * Math.sin(lp.theta + laserAngles[angleIndex]) + lp.y);
+//                p0 = map.world2map(lp);
+//                IntPoint p1 = map.world2map(phit);
+//
+//                d += map.getDelta();
+//                GridLineTraversalLine line = new GridLineTraversalLine();
+//                line.points = m_linePoints;
+//                GridLineTraversalLine.gridLine(p0, p1, line);
+//                for (int i = 0; i < line.numPoints - 1; i++) {
+//                    IntPoint patch = (m_linePoints[i]);
+//                    activeArea.add(patch);
+//                }
+//                if (d <= usableRange) {
+//                    IntPoint patch = (p1);
+//                    activeArea.add(patch);
+//                }
+//            } else {
+//                double r = readings[readingIndex];
+//                double angle = laserAngles[angleIndex];
+//                if (readings[readingIndex] > laserMaxRange || readings[readingIndex] > usableRange) {
+//                    continue;
+//                }
+////                DoublePoint phit = new DoublePoint(lp.x, lp.y);
+//                double phitx = lp.x;
+//                double phity = lp.y;
+//                phitx += r * Math.cos(lp.theta + angle);
+//                phity += r * Math.sin(lp.theta + angle);
+//
+//                IntPoint p1 = map.world2map(phitx, phity);
+//                assert (p1.x >= 0 && p1.y >= 0);
+//                IntPoint cp = (p1);
+//                assert (cp.x >= 0 && cp.y >= 0);
+//                activeArea.add(cp);
+//            }
+//        }
         //this allocates the unallocated cells in the active area of the map
-        map.setActiveArea(activeArea, false);
+        //map.setActiveArea(activeArea, false);
         m_activeAreaComputed = true;
     }
 
@@ -247,7 +250,7 @@ public class ScanMatcher {
             computeActiveArea(map, p, readings);
 
         //this operation replicates the cells that will be changed in the registration operation
-        map.allocActiveArea();
+        // map.allocActiveArea();
 
         DoubleOrientedPoint lp = new DoubleOrientedPoint(p.x, p.y, p.theta);
         lp.x += Math.cos(p.theta) * laserPose.x - Math.sin(p.theta) * laserPose.y;
@@ -273,18 +276,21 @@ public class ScanMatcher {
                 GridLineTraversalLine.gridLine(p0, p1, line);
                 for (int i = 0; i < line.numPoints - 1; i++) {
                     PointAccumulator pa = (PointAccumulator) map.cell(line.points[i], false);
-                    double e = -pa.entropy();
-                    pa.update(false, new DoublePoint(0.0, 0.0));
-                    e += pa.entropy();
-                    esum += e;
+                    if (pa != null) {
+                        double e = -pa.entropy();
+                        pa.update(false, new DoublePoint(0.0, 0.0));
+                        e += pa.entropy();
+                        esum += e;
+                    }
                 }
                 if (d < usableRange) {
-
                     PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
-                    double e = -pa.entropy();
-                    pa.update(true, phit);
-                    e += pa.entropy();
-                    esum += e;
+                    if (pa != null) {
+                        double e = -pa.entropy();
+                        pa.update(true, phit);
+                        e += pa.entropy();
+                        esum += e;
+                    }
                 }
 
 
@@ -293,12 +299,16 @@ public class ScanMatcher {
                 if (r >= laserMaxRange || r >= usableRange || r == 0) {
                     continue;
                 }
-                DoublePoint phit = new DoublePoint(lp.x, lp.y);
-                phit.x += r * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
-                phit.y += r * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
-                IntPoint p1 = map.world2map(phit);
+//                DoublePoint phit = new DoublePoint(lp.x, lp.y);
+                double phitx = lp.x;
+                double phity = lp.y;
+                phitx += r * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+                phity += r * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
+                IntPoint p1 = map.world2map(phitx, phity);
                 PointAccumulator pa = (PointAccumulator) map.cell(p1, false);
-                pa.update(true, phit);
+                if (pa != null) {
+                    pa.update(true, phitx, phity);
+                }
             }
         }
         return esum;
@@ -501,10 +511,10 @@ public class ScanMatcher {
                 }
 
                 likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
-                count++;
-                if (count == 50) {
-                    move = Move.Done;
-                }
+//                count++;
+//                if (count == 50) {
+//                    move = Move.Done;
+//                }
 //                double localScore = odo_gain * score(map, localPose, readings);
                 double localScore = odo_gain * likeliHoodAndScore.s;
                 if (localScore > currentScore) {
@@ -513,7 +523,7 @@ public class ScanMatcher {
                 }
             } while (move != Move.Done);
             currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
-        } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && count < 50);
+        } while ((currentScore > bestScore || refinement <= optRecursiveIterations));
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
         pnew.theta = currentPose.theta;
@@ -624,6 +634,7 @@ public class ScanMatcher {
         double noHit = nullLikelihood / (likelihoodSigma);
         int skip = 0;
         int c = 0;
+        PointAccumulator emptyPointAccumulator = new PointAccumulator();
         double freeDelta = map.getDelta() * freeCellRatio;
         for (int rIndex = initialBeamsSkip; rIndex < readings.length; rIndex++, angleIndex++) {
             skip++;
@@ -634,43 +645,74 @@ public class ScanMatcher {
             if (skip != 0) {
                 continue;
             }
-            DoublePoint phit = new DoublePoint(lp.x, lp.y);
-            phit.x += readings[rIndex] * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
-            phit.y += readings[rIndex] * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
-            IntPoint iphit = map.world2map(phit);
-            DoublePoint pfree = new DoublePoint(lp.x, lp.y);
-            pfree.x += (readings[rIndex] - freeDelta) * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
-            pfree.y += (readings[rIndex] - freeDelta) * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
-            pfree.x = pfree.x - phit.x;
-            pfree.y = pfree.y - phit.y;
+            double phitx = lp.x;
+            double phity = lp.y;
+            phitx += readings[rIndex] * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            phity += readings[rIndex] * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
+//            IntPoint iphit = map.world2map(phitx, phity);
+            int iphitx = (int) Math.round((phitx - map.getCenter().x) / map.getDelta()) + map.getSizeX2();
+            int iphity = (int) Math.round((phity - map.getCenter().y) / map.getDelta()) + map.getSizeY2();
+//            DoublePoint pfree = new DoublePoint(lp.x, lp.y);
+            double pfreex = lp.x;
+            double pfreey = lp.y;
+            pfreex += (readings[rIndex] - freeDelta) * Math.cos(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            pfreey += (readings[rIndex] - freeDelta) * Math.sin(Utils.theta(lp.theta + laserAngles[angleIndex]));
+            pfreex = pfreex - phitx;
+            pfreey = pfreey - phity;
 
-            IntPoint ipfree = map.world2map(pfree);
+//            IntPoint ipfree = map.world2map(pfreex, pfreey);
+            int ipfreex = (int) Math.round((pfreex - map.getCenter().x) / map.getDelta()) + map.getSizeX2();
+            int ipfreey = (int) Math.round((pfreey - map.getCenter().y) / map.getDelta()) + map.getSizeY2();
             boolean found = false;
-            DoublePoint bestMu = new DoublePoint(0.0, 0.0);
+//            DoublePoint bestMu = new DoublePoint(0.0, 0.0);
+            double bestMux = 0.0;
+            double bestMuy = 0.0;
             for (int xx = -kernelSize; xx <= kernelSize; xx++) {
                 for (int yy = -kernelSize; yy <= kernelSize; yy++) {
-                    IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
-                    IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
+//                    IntPoint pr = new IntPoint(iphit.x + xx, iphit.y + yy);
+                    int prx = iphitx + xx;
+                    int pry = iphity + yy;
+
+//                    IntPoint pf = new IntPoint(pr.x + ipfree.x, pr.y + ipfree.y);
+                    int pfx = prx + ipfreex;
+                    int pfy = pry + ipfreey;
                     //AccessibilityState s=map.storage().cellState(pr);
                     //if (s&Inside && s&Allocated){
-                    PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
-                    PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
+                    PointAccumulator cell = (PointAccumulator) map.cell(prx, pry, true);
+                    PointAccumulator fcell = (PointAccumulator) map.cell(pfx, pfy, true);
+                    if (cell == null) {
+                        cell = emptyPointAccumulator;
+                    }
+                    if (fcell == null) {
+                        fcell = emptyPointAccumulator;
+                    }
                     if (cell.doubleValue() > fullnessThreshold && fcell.doubleValue() < fullnessThreshold) {
-                        DoublePoint mu = DoublePoint.minus(phit, cell.mean());
+                        double meanx = cell.accx / cell.n;
+                        double meany = cell.accy / cell.n;
+                        double mux = phitx - meanx;
+                        double muy = phity - meany;
+//                        DoublePoint mu = DoublePoint.minus(phit, cell.mean());
                         if (!found) {
-                            bestMu = mu;
+                            bestMux = mux;
+                            bestMuy = muy;
                             found = true;
                         } else {
-                            bestMu = (DoublePoint.mulD(mu, mu)) < DoublePoint.mulD(bestMu, bestMu) ? mu : bestMu;
+                            double mulMu = mux * mux + muy * muy;
+                            double mulBestMu = bestMux * bestMux + bestMuy * bestMuy;
+                            if (mulMu < mulBestMu) {
+                                bestMux = mux;
+                                bestMuy = muy;
+                            }
                         }
                     }
                 }
             }
+            double mulBestMu = bestMux * bestMux + bestMuy * bestMuy;
             if (found) {
-                s += Math.exp(-1.0 / gaussianSigma * DoublePoint.mulD(bestMu, bestMu));
+                s += Math.exp(-1.0 / gaussianSigma * mulBestMu);
                 c++;
             }
-            double f = (1./ likelihoodSigma) * (DoublePoint.mulD(bestMu, bestMu));
+            double f = (1./ likelihoodSigma) * (mulBestMu);
             l += (found) ? f : noHit;
         }
         return new LikeliHoodAndScore(s, l, c);
@@ -775,13 +817,15 @@ public class ScanMatcher {
 //                    if ((ss) > 0) {
                         PointAccumulator cell = (PointAccumulator) map.cell(pr, true);
                         PointAccumulator fcell = (PointAccumulator) map.cell(pf, true);
-                        if (cell.doubleValue() > fullnessThreshold && fcell.doubleValue() < fullnessThreshold) {
-                            DoublePoint mu = DoublePoint.minus(phit, cell.mean());
-                            if (!found) {
-                                bestMu = mu;
-                                found = true;
-                            } else {
-                                bestMu = DoublePoint.mulD(mu, mu) < DoublePoint.mulD(bestMu, bestMu) ? mu : bestMu;
+                        if (cell != null && fcell != null) {
+                            if (cell.doubleValue() > fullnessThreshold && fcell.doubleValue() < fullnessThreshold) {
+                                DoublePoint mu = DoublePoint.minus(phit, cell.mean());
+                                if (!found) {
+                                    bestMu = mu;
+                                    found = true;
+                                } else {
+                                    bestMu = DoublePoint.mulD(mu, mu) < DoublePoint.mulD(bestMu, bestMu) ? mu : bestMu;
+                                }
                             }
                         }
 //                    }

@@ -83,9 +83,11 @@ public class Utils {
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
-            accumulator.setAcc(cell.getAcc());
-            accumulator.setN(cell.getN());
-            accumulator.setVisits(cell.getVisits());
+            if (accumulator != null) {
+                accumulator.setAcc(cell.getAccx(), cell.getAccy());
+                accumulator.setN(cell.getN());
+                accumulator.setVisits(cell.getVisits());
+            }
         }
 
         if (tMap.getActiveArea() != null) {
@@ -105,7 +107,7 @@ public class Utils {
 
         for (MapCell cell : tMap.getMapCells()) {
             PointAccumulator accumulator = (PointAccumulator) gMap.cell(cell.getX(), cell.getY(), false);
-            accumulator.setAcc(cell.getAcc());
+            accumulator.setAcc(cell.getAccx(), cell.getAccy());
             accumulator.setN(cell.getN());
             accumulator.setVisits(cell.getVisits());
         }
@@ -118,7 +120,7 @@ public class Utils {
     }
 
     public static MapCell createMapCell(PointAccumulator acc, int x, int y) {
-        return new MapCell(x, y, acc.getAcc(), acc.getN(), acc.getVisits());
+        return new MapCell(x, y, acc.getAccx(), acc.getAccy(), acc.getN(), acc.getVisits());
     }
 
     public static void createParticle(ParticleValue value, Particle p, boolean withNode) {
