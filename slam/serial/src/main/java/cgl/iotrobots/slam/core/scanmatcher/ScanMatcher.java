@@ -442,6 +442,7 @@ public class ScanMatcher {
         double currentScore = likeliHoodAndScore.s;
         double adelta = optAngularDelta, ldelta = optLinearDelta;
         int refinement = 0;
+        int count = 0;
         do {
             if (bestScore >= currentScore || (Double.isNaN(bestScore) && Double.isNaN(currentScore))) {
                 refinement++;
@@ -500,6 +501,10 @@ public class ScanMatcher {
                 }
 
                 likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
+                count++;
+                if (count == 50) {
+                    move = Move.Done;
+                }
 //                double localScore = odo_gain * score(map, localPose, readings);
                 double localScore = odo_gain * likeliHoodAndScore.s;
                 if (localScore > currentScore) {
@@ -508,7 +513,7 @@ public class ScanMatcher {
                 }
             } while (move != Move.Done);
             currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
-        } while (currentScore > bestScore || refinement <= optRecursiveIterations);
+        } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && count < 50);
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
         pnew.theta = currentPose.theta;
