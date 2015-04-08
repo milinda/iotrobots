@@ -134,7 +134,7 @@ public class StaticMap implements IGMap {
     }
 
     public boolean isInside(double x, double y) {
-        return isInside(world2map(new IntPoint(new Double(x).intValue(), new Double(y).intValue())));
+        return isInside(world2map(x, y));
     }
 
     public void resize(double xmin, double ymin, double xmax, double ymax) {

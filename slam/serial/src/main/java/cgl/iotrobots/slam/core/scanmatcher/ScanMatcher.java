@@ -154,7 +154,7 @@ public class ScanMatcher {
         lp.x += Math.cos(p.theta) * laserPose.x - Math.sin(p.theta) * laserPose.y;
         lp.y += Math.sin(p.theta) * laserPose.x + Math.cos(p.theta) * laserPose.y;
         lp.theta += laserPose.theta;
-        IntPoint p0 = map.world2map(lp);
+//        IntPoint p0 = map.world2map(lp);
 
         DoublePoint min = map.map2world(new IntPoint(0, 0));
         DoublePoint max = map.map2world(new IntPoint(map.getMapSizeX() - 1, map.getMapSizeY() - 1));
@@ -171,13 +171,14 @@ public class ScanMatcher {
 
             if (r > laserMaxRange || r == 0.0 || r > Double.MAX_VALUE) continue;
             double d = r > usableRange ? usableRange : r;
-            DoublePoint phit = new DoublePoint(lp.x, lp.y);
-            phit.x += d * Math.cos(lp.theta + angle);
-            phit.y += d * Math.sin(lp.theta + angle);
-            if (phit.x < min.x) min.x = phit.x;
-            if (phit.y < min.y) min.y = phit.y;
-            if (phit.x > max.x) max.x = phit.x;
-            if (phit.y > max.y) max.y = phit.y;
+//            DoublePoint phit = new DoublePoint(lp.x, lp.y);
+            double phitx = lp.x, phity = lp.y;
+            phitx += d * Math.cos(lp.theta + angle);
+            phity += d * Math.sin(lp.theta + angle);
+            if (phitx < min.x) min.x = phitx;
+            if (phity < min.y) min.y = phity;
+            if (phitx > max.x) max.x = phitx;
+            if (phity > max.y) max.y = phity;
         }
 
         if (!map.isInsideD(min) || !map.isInsideD(max)) {

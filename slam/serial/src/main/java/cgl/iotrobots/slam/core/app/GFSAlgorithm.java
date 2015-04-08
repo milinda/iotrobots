@@ -193,7 +193,7 @@ public class GFSAlgorithm {
 
             long t1 = System.currentTimeMillis();
             if ((scan.timestamp - lastMapUpdate) > mapUpdateInterval) {
-                // updateMap(scan);
+//                updateMap(scan);
                 LOG.debug("Updated the map");
                 lastMapUpdate = System.currentTimeMillis();
 //                lastMapUpdate = 0;
