@@ -52,7 +52,7 @@ public class ReSamplingBolt extends BaseRichBolt {
     private RangeReading reading;
 
     /** The RabbitMQ send used for sending out the re sampled particles back to the scan match bolts */
-    private RabbitMQSender assignmentSender;
+//    private RabbitMQSender assignmentSender;
 
     private RabbitMQSender valueSender;
 
@@ -88,8 +88,8 @@ public class ReSamplingBolt extends BaseRichBolt {
         int totalTasks = topologyContext.getComponentTasks(Constants.Topology.SCAN_MATCH_BOLT).size();
         this.url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
-            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
-            this.assignmentSender.open();
+//            this.assignmentSender = new RabbitMQSender(url, Constants.Messages.BROADCAST_EXCHANGE, true);
+//            this.assignmentSender.open();
 
             this.valueSender = new RabbitMQSender(url, Constants.Messages.DIRECT_EXCHANGE);
             this.valueSender.open();
@@ -302,15 +302,15 @@ public class ReSamplingBolt extends BaseRichBolt {
         LOG.debug("Sending particle assignment");
         byte []b = Utils.serialize(kryo, assignments);
 
-        Message message = new Message(b, new HashMap<String, Object>());
-        try {
-            assignmentSender.send(message, "*");
-        } catch (Exception e) {
-            LOG.error("Failed to send the message", e);
-        }
-//        List<Object> emit = new ArrayList<Object>();
-//        emit.add(b);
-//        outputCollector.emit(Constants.Fields.ASSIGNMENT_STREAM, emit);
+//        Message message = new Message(b, new HashMap<String, Object>());
+//        try {
+//            assignmentSender.send(message, "*");
+//        } catch (Exception e) {
+//            LOG.error("Failed to send the message", e);
+//        }
+        List<Object> emit = new ArrayList<Object>();
+        emit.add(b);
+        outputCollector.emit(Constants.Fields.ASSIGNMENT_STREAM, emit);
     }
 
     /**
