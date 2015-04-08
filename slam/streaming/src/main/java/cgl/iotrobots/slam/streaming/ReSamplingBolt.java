@@ -301,7 +301,7 @@ public class ReSamplingBolt extends BaseRichBolt {
 
         LOG.debug("Sending particle assignment");
         byte []b = Utils.serialize(kryo, assignments);
-//
+
 //        Message message = new Message(b, new HashMap<String, Object>());
 //        try {
 //            assignmentSender.send(message, "*");
