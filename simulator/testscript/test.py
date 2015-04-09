@@ -33,6 +33,22 @@ def compile_program(ssh, topologyFile):
     stdout.close()
     stdin.close()
 
+def restart_zk(ssh):
+    print "compiling"
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    sudo service supervisor stop
+    sleep 5
+    rm -rf /tmp/zookeeper/
+    sudo service supervisor start
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
+
 def exec_storm(ssh, particles, parallel):
     print "executing storm commands"
     cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
@@ -155,8 +171,11 @@ def run_rs_test():
             run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'false')
 
 def main():
+    restart_zk(sshNZ)
     run_aces_test()
+    restart_zk(sshNZ)
     run_simbard_test()
+    restart_zk(sshNZ)
     run_rs_test()
 
 if __name__ == "__main__":
