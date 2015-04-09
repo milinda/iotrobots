@@ -43,6 +43,7 @@ def restart_zk(ssh):
     sleep 5
     rm -rf /tmp/zookeeper/
     sudo service supervisor start
+    sleep 60
     exit
     ''')
     print stdout.read()
