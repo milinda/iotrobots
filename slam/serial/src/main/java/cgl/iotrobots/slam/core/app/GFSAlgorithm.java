@@ -75,8 +75,8 @@ public class GFSAlgorithm {
         srt = 0.2;
         str = 0.1;
         stt = 0.2;
-        linearUpdate = 0.5;
-        angularUpdate = 0.25;
+        linearUpdate = 0.0;
+        angularUpdate = 0.0;
         temporalUpdate = -1;
         resampleThreshold = .5;
         particles = 30;
