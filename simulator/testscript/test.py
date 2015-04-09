@@ -17,6 +17,23 @@ sshIR = paramiko.SSHClient()
 sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 sshIR.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
+def compile_program(ssh, topologyFile):
+    print "compiling"
+    cmd = 'cp ' + str(topologyFile) + ' streaming/src/main/resources/topology.yaml'
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    cd /home/ubuntu/projects/iotrobots/slam
+    ''' + cmd + '''
+    mvn clean install -Dmaven.test.skip=true
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
+    time.sleep(30)
+
 def exec_storm(ssh, particles, parallel):
     print "executing storm commands"
     cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
@@ -105,6 +122,7 @@ def run_simbard_test():
     tasks = [4, 8, 12, 16, 20]
     particles = [20, 60, 100]
 
+    compile_program(sshNZ, "simbard.yaml")
     for par in particles:
         for t in tasks:
             exec_rabbit(sshBR)
@@ -116,6 +134,7 @@ def run_simbard_test():
 def run_aces_test():
     tasks = [4, 8, 12, 16, 20]
     particles = [20, 60, 100]
+    compile_program(sshNZ, "aces.yaml")
     for par in particles:
         for t in tasks:
             exec_rabbit(sshBR)
@@ -124,9 +143,22 @@ def run_aces_test():
             exec_storm(sshNZ, par, t)
             run_test(sshIR, 'aces', t, par, 'data/aces.txt', 'false')
 
+def run_rs_test():
+    tasks = [4, 8, 12, 16, 20]
+    particles = [20, 60, 100]
+    compile_program(sshNZ, "simbard_rs.yaml")
+    for par in particles:
+        for t in tasks:
+            exec_rabbit(sshBR)
+            exec_iotcloud(sshI)
+            exec_sensor(sshI)
+            exec_storm(sshNZ, par, t)
+            run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'false')
+
 def main():
     run_aces_test()
     run_simbard_test()
+    run_rs_test()
 
 if __name__ == "__main__":
     main()
