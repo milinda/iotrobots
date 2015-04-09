@@ -168,7 +168,7 @@ def run_rs_test():
             exec_iotcloud(sshI)
             exec_sensor(sshI)
             exec_storm(sshNZ, par, t)
-            run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'false')
+            run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'true')
 
 def main():
     #restart_zk(sshNZ)
