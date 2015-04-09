@@ -147,6 +147,19 @@ def run_simbard_test():
             exec_storm(sshNZ, par, t)
             run_test(sshIR, 'sim', t, par, 'data/simbard_1.txt', 'true')
 
+def run_simbard_cost_test():
+    tasks = [4, 8, 12, 16, 20]
+    particles = [20, 60, 100]
+
+    compile_program(sshNZ, "simbard.yaml")
+    for par in particles:
+        for t in tasks:
+            exec_rabbit(sshBR)
+            exec_iotcloud(sshI)
+            exec_sensor(sshI)
+            exec_storm(sshNZ, par, t)
+            run_test(sshIR, 'const', t, par, 'data/simbard_1.txt', 'true')
+
 def run_aces_test():
     tasks = [4, 8, 12, 16, 20]
     particles = [20, 60, 100]
