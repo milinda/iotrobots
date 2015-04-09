@@ -44,7 +44,7 @@ def exec_rabbit(ssh):
     pid=`ps ax | grep "rabbitmq" | awk '{print $1}'`
     sudo kill $pid
     cd /home/ubuntu/deploy/rabbitmq_server-3.3.2/sbin
-    sudo ./rabbitmq-server
+    sudo ./rabbitmq-server > /dev/null 2>&1 &
     exit
     ''')
     print stdout.read()
@@ -74,7 +74,7 @@ def exec_sensor(ssh):
     stdout = channel.makefile('rb')
     stdin.write('''
     cd deploy/iotcloud2-bin-1.0-SNAPSHOT
-    ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672
+    ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672"
     exit
     ''')
     print stdout.read()
@@ -98,8 +98,8 @@ def run_test(ssh, test, parallel, particles, input, simbad):
 
 def main():
     exec_rabbit(sshBR)
-    # exec_iotcloud(sshI)
-    # exec_sensor(sshI)
+    exec_iotcloud(sshI)
+    exec_sensor(sshI)
     # exec_storm(sshNZ, 20, 4)
     # run_test(sshIR, 'sim', 4, 20, 'data/simbard_1.txt', 'true')
 
