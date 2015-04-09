@@ -17,6 +17,21 @@ sshIR = paramiko.SSHClient()
 sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 sshIR.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
+def copy_scan_matcher(ssh, topologyFile):
+    print "compiling"
+    cmd = 'cp ' + str(topologyFile) + ' serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java'
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    cd /home/ubuntu/projects/iotrobots/slam
+    ''' + cmd + '''
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
+
 def compile_program(ssh, topologyFile):
     print "compiling"
     cmd = 'cp ' + str(topologyFile) + ' streaming/src/main/resources/topology.yaml'
@@ -52,7 +67,8 @@ def restart_zk(ssh):
 
 def exec_storm(ssh, particles, parallel):
     print "executing storm commands"
-    cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
+    # cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
+    cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -121,7 +137,7 @@ def exec_sensor(ssh):
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir2/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -151,6 +167,7 @@ def run_simbard_cost_test():
     tasks = [4, 8, 12, 16, 20]
     particles = [20, 60, 100]
 
+    copy_scan_matcher(sshNZ, "ScanMatcher.java")
     compile_program(sshNZ, "simbard.yaml")
     for par in particles:
         for t in tasks:
@@ -185,12 +202,12 @@ def run_rs_test():
             run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'true')
 
 def main():
-    #restart_zk(sshNZ)
-    #run_aces_test()
-    #restart_zk(sshNZ)
-    #run_simbard_test()
-    #restart_zk(sshNZ)
-    #run_rs_test()
+    restart_zk(sshNZ)
+    run_aces_test()
+    restart_zk(sshNZ)
+    run_simbard_test()
+    restart_zk(sshNZ)
+    run_rs_test()
     restart_zk(sshNZ)
     run_simbard_cost_test()
 
