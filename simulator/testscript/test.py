@@ -88,7 +88,7 @@ def exec_sensor(ssh):
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir/' +str(test) + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir/' +str(test) + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 250'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -101,12 +101,32 @@ def run_test(ssh, test, parallel, particles, input, simbad):
     stdout.close()
     stdin.close()
 
+def run_simbard_test():
+    tasks = [4, 8, 12, 16, 20]
+    particles = [20, 60, 100]
+
+    for par in particles:
+        for t in tasks:
+            exec_rabbit(sshBR)
+            exec_iotcloud(sshI)
+            exec_sensor(sshI)
+            exec_storm(sshNZ, par, t)
+            run_test(sshIR, 'sim', t, par, 'data/simbard_1.txt', 'true')
+
+def run_aces_test():
+    tasks = [4, 8, 12, 16, 20]
+    particles = [20, 60, 100]
+    for par in particles:
+        for t in tasks:
+            exec_rabbit(sshBR)
+            exec_iotcloud(sshI)
+            exec_sensor(sshI)
+            exec_storm(sshNZ, par, t)
+            run_test(sshIR, 'aces', t, par, 'data/aces.txt', 'false')
+
 def main():
-    exec_rabbit(sshBR)
-    exec_iotcloud(sshI)
-    exec_sensor(sshI)
-    # exec_storm(sshNZ, 20, 4)
-    # run_test(sshIR, 'sim', 4, 20, 'data/simbard_1.txt', 'true')
+    run_aces_test()
+    run_simbard_test()
 
 if __name__ == "__main__":
     main()
