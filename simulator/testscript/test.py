@@ -50,6 +50,7 @@ def exec_rabbit(ssh):
     print stdout.read()
     stdout.close()
     stdin.close()
+    time.sleep(5)
 
 def exec_iotcloud(ssh):
     print "starting iotcloud...."
@@ -66,6 +67,7 @@ def exec_iotcloud(ssh):
     print stdout.read()
     stdout.close()
     stdin.close()
+    time.sleep(5)
 
 def exec_sensor(ssh):
     print "starting sensor...."
@@ -80,6 +82,7 @@ def exec_sensor(ssh):
     print stdout.read()
     stdout.close()
     stdin.close()
+    time.sleep(5)
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
