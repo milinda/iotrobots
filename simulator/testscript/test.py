@@ -189,8 +189,10 @@ def main():
     #run_aces_test()
     #restart_zk(sshNZ)
     #run_simbard_test()
+    #restart_zk(sshNZ)
+    #run_rs_test()
     restart_zk(sshNZ)
-    run_rs_test()
+    run_simbard_cost_test()
 
 if __name__ == "__main__":
     main()
