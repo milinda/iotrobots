@@ -74,7 +74,7 @@ def exec_sensor(ssh):
     stdout = channel.makefile('rb')
     stdin.write('''
     cd deploy/iotcloud2-bin-1.0-SNAPSHOT
-    ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672"
+    ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672"  > /dev/null 2>&1 &
     exit
     ''')
     print stdout.read()
