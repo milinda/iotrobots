@@ -171,10 +171,10 @@ def run_rs_test():
             run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'false')
 
 def main():
-    restart_zk(sshNZ)
-    run_aces_test()
-    restart_zk(sshNZ)
-    run_simbard_test()
+    #restart_zk(sshNZ)
+    #run_aces_test()
+    #restart_zk(sshNZ)
+    #run_simbard_test()
     restart_zk(sshNZ)
     run_rs_test()
 
