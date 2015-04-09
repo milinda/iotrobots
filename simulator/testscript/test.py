@@ -15,6 +15,18 @@ sshI.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skambur
 
 def exec_storm(ssh, particles, parallel):
     stdin, stdout, stderr = ssh.exec_command('cd deploy/stom; ./bin/storm kill slam_processor -w 1')
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    cd deploy/stom
+    ls
+    ./bin/storm kill slam_processor -w 1
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
     time.sleep(30)
     stdin, stdout, stderr = ssh.exec_command('cd deploy/stom; ./bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i')
     time.sleep(30)
