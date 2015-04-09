@@ -18,7 +18,13 @@ def exec_storm(ssh, particles, parallel):
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
-    stdin.write('cd deploy/storm; ./bin/storm kill slam_processor -w 1; sleep 1; ' + cmd + ' ; exit')
+    stdin.write('''
+    cd deploy/stom
+    ./bin/storm kill slam_processor -w 1
+    sleep 30
+    ''' + cmd + '''
+    exit
+    ''')
     print stdout.read()
     stdout.close()
     stdin.close()
