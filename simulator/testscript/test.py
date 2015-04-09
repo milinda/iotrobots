@@ -18,6 +18,7 @@ sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 sshIR.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
 def exec_storm(ssh, particles, parallel):
+    print "executing storm commands"
     cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
@@ -35,6 +36,7 @@ def exec_storm(ssh, particles, parallel):
     time.sleep(30)
 
 def exec_rabbit(ssh):
+    print "starting rabbitmq...."
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -48,9 +50,9 @@ def exec_rabbit(ssh):
     print stdout.read()
     stdout.close()
     stdin.close()
-    time.sleep(30)
 
 def exec_iotcloud(ssh):
+    print "starting iotcloud...."
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -66,6 +68,7 @@ def exec_iotcloud(ssh):
     stdin.close()
 
 def exec_sensor(ssh):
+    print "starting sensor...."
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -79,6 +82,7 @@ def exec_sensor(ssh):
     stdin.close()
 
 def run_test(ssh, test, parallel, particles, input, simbad):
+    print "running test...."
     cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir/' +str(test) + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
@@ -94,10 +98,10 @@ def run_test(ssh, test, parallel, particles, input, simbad):
 
 def main():
     exec_rabbit(sshBR)
-    exec_iotcloud(sshI)
-    exec_sensor(sshI)
-    exec_storm(sshNZ, 20, 4)
-    run_test(sshIR, 'sim', 4, 20, 'data/simbard_1.txt', 'true')
+    # exec_iotcloud(sshI)
+    # exec_sensor(sshI)
+    # exec_storm(sshNZ, 20, 4)
+    # run_test(sshIR, 'sim', 4, 20, 'data/simbard_1.txt', 'true')
 
 if __name__ == "__main__":
     main()
