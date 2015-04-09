@@ -43,6 +43,7 @@ def exec_rabbit(ssh):
     stdin.write('''
     pid=`ps ax | grep "rabbitmq" | awk '{print $1}'`
     sudo kill $pid
+    sleep 5
     cd /home/ubuntu/deploy/rabbitmq_server-3.3.2/sbin
     sudo ./rabbitmq-server > /dev/null 2>&1 &
     exit
@@ -60,6 +61,7 @@ def exec_iotcloud(ssh):
     stdin.write('''
     pid=`jps | grep "LocalCluster" | awk '{print $1}'`
     kill $pid
+    sleep 5
     cd deploy/iotcloud2-bin-1.0-SNAPSHOT
     ./bin/iotcloud local > /dev/null 2>&1 &
     exit
