@@ -32,7 +32,6 @@ def compile_program(ssh, topologyFile):
     print stdout.read()
     stdout.close()
     stdin.close()
-    time.sleep(30)
 
 def exec_storm(ssh, particles, parallel):
     print "executing storm commands"
@@ -43,7 +42,7 @@ def exec_storm(ssh, particles, parallel):
     stdin.write('''
     cd deploy/storm
     ./bin/storm kill slam_processor -w 1
-    sleep 20
+    sleep 30
     ''' + cmd + '''
     exit
     ''')
@@ -105,7 +104,7 @@ def exec_sensor(ssh):
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 250'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -141,7 +140,7 @@ def run_aces_test():
             exec_iotcloud(sshI)
             exec_sensor(sshI)
             exec_storm(sshNZ, par, t)
-            run_test(sshIR, 'aces', t, par, 'data/aces.txt', 'false')
+            run_test(sshIR, 'aces', t, par, 'data/aces_300.txt', 'false')
 
 def run_rs_test():
     tasks = [4, 8, 12, 16, 20]
