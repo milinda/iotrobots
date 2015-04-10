@@ -67,8 +67,8 @@ def restart_zk(ssh):
 
 def exec_storm(ssh, particles, parallel):
     print "executing storm commands"
-    # cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
-    cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles)
+    cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles) + ' -i'
+    # cmd = './bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p ' + str(parallel) + ' -pt ' + str(particles)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -207,17 +207,37 @@ def start_cluster(par, t):
     exec_sensor(sshI)
     exec_storm(sshNZ, par, t)
 
-def main():
-    #restart_zk(sshNZ)
-    #run_aces_test()
-    #restart_zk(sshNZ)
-    #run_simbard_test()
-    #restart_zk(sshNZ)
-    #run_rs_test()
-    #restart_zk(sshNZ)
-    #run_simbard_cost_test()
+def run_serial(ssh, par, file, simbard):
+    print "running test...."
+    cmd = "java -Xmx6G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator true data/" + str(file) + " " + str(par) + " " + str(simbard) + " 1 false > " + str(file) + str(par)
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    cd /home/ubuntu/projects/iotrobots/simulator
+    ''' + cmd + '''
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
 
-    start_cluster(4, 20)
+def main():
+    restart_zk(sshNZ)
+    run_aces_test()
+    restart_zk(sshNZ)
+    run_simbard_test()
+    restart_zk(sshNZ)
+    run_rs_test()
+    restart_zk(sshNZ)
+    run_simbard_cost_test()
+
+    run_serial(sshI, 20, "simbard_1.txt", "true")
+    run_serial(sshI, 60, "simbard_1.txt", "true")
+    run_serial(sshI, 100, "simbard_1.txt", "true")
+    run_serial(sshI, 20, "aces.txt", "false")
+    run_serial(sshI, 60, "aces.txt", "false")
+    run_serial(sshI, 100, "aces.txt", "false")
 
 if __name__ == "__main__":
     main()
