@@ -1,0 +1,2359 @@
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1652
+Map compute Time: 0
+Total Scan Time: 1653
+Average scan time: 1652.0
+Average total time: 1653.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 592
+Map compute Time: 0
+Total Scan Time: 592
+Average scan time: 1122.0
+Average total time: 1122.5
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 590
+Map compute Time: 0
+Total Scan Time: 590
+Average scan time: 944.6666666666666
+Average total time: 945.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 596
+Map compute Time: 0
+Total Scan Time: 596
+Average scan time: 857.5
+Average total time: 857.75
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 501
+Map compute Time: 0
+Total Scan Time: 501
+Average scan time: 786.2
+Average total time: 786.4
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 553
+Map compute Time: 0
+Total Scan Time: 553
+Average scan time: 747.3333333333334
+Average total time: 747.5
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 412
+Map compute Time: 0
+Total Scan Time: 412
+Average scan time: 699.4285714285714
+Average total time: 699.5714285714286
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 612
+Map compute Time: 0
+Total Scan Time: 612
+Average scan time: 688.5
+Average total time: 688.625
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 514
+Map compute Time: 0
+Total Scan Time: 514
+Average scan time: 669.1111111111111
+Average total time: 669.2222222222222
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 503
+Map compute Time: 0
+Total Scan Time: 503
+Average scan time: 652.5
+Average total time: 652.6
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 635.9090909090909
+Average total time: 636.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 513
+Map compute Time: 0
+Total Scan Time: 513
+Average scan time: 625.6666666666666
+Average total time: 625.75
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 513
+Map compute Time: 0
+Total Scan Time: 513
+Average scan time: 617.0
+Average total time: 617.0769230769231
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 616
+Map compute Time: 0
+Total Scan Time: 616
+Average scan time: 616.9285714285714
+Average total time: 617.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 428
+Map compute Time: 0
+Total Scan Time: 428
+Average scan time: 604.3333333333334
+Average total time: 604.4
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 452
+Map compute Time: 0
+Total Scan Time: 452
+Average scan time: 594.8125
+Average total time: 594.875
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 674
+Map compute Time: 0
+Total Scan Time: 674
+Average scan time: 599.4705882352941
+Average total time: 599.5294117647059
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 526
+Map compute Time: 0
+Total Scan Time: 526
+Average scan time: 595.3888888888889
+Average total time: 595.4444444444445
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 583
+Map compute Time: 0
+Total Scan Time: 583
+Average scan time: 594.7368421052631
+Average total time: 594.7894736842105
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 472
+Map compute Time: 0
+Total Scan Time: 472
+Average scan time: 588.6
+Average total time: 588.65
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 627
+Map compute Time: 0
+Total Scan Time: 627
+Average scan time: 590.4285714285714
+Average total time: 590.4761904761905
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 520
+Map compute Time: 0
+Total Scan Time: 521
+Average scan time: 587.2272727272727
+Average total time: 587.3181818181819
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 737
+Map compute Time: 0
+Total Scan Time: 737
+Average scan time: 593.7391304347826
+Average total time: 593.8260869565217
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 616
+Map compute Time: 0
+Total Scan Time: 616
+Average scan time: 594.6666666666666
+Average total time: 594.75
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 581
+Map compute Time: 0
+Total Scan Time: 581
+Average scan time: 594.12
+Average total time: 594.2
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 477
+Map compute Time: 0
+Total Scan Time: 477
+Average scan time: 589.6153846153846
+Average total time: 589.6923076923077
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 573
+Map compute Time: 0
+Total Scan Time: 574
+Average scan time: 589.0
+Average total time: 589.1111111111111
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 577
+Map compute Time: 0
+Total Scan Time: 577
+Average scan time: 588.5714285714286
+Average total time: 588.6785714285714
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 471
+Map compute Time: 0
+Total Scan Time: 471
+Average scan time: 584.5172413793103
+Average total time: 584.6206896551724
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 525
+Map compute Time: 0
+Total Scan Time: 525
+Average scan time: 582.5333333333333
+Average total time: 582.6333333333333
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 521
+Map compute Time: 0
+Total Scan Time: 521
+Average scan time: 580.5483870967741
+Average total time: 580.6451612903226
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 419
+Map compute Time: 0
+Total Scan Time: 419
+Average scan time: 575.5
+Average total time: 575.59375
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 468
+Map compute Time: 0
+Total Scan Time: 468
+Average scan time: 572.2424242424242
+Average total time: 572.3333333333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 599
+Map compute Time: 0
+Total Scan Time: 599
+Average scan time: 573.0294117647059
+Average total time: 573.1176470588235
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 520
+Map compute Time: 0
+Total Scan Time: 520
+Average scan time: 571.5142857142857
+Average total time: 571.6
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 430
+Map compute Time: 0
+Total Scan Time: 430
+Average scan time: 567.5833333333334
+Average total time: 567.6666666666666
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 476
+Map compute Time: 0
+Total Scan Time: 476
+Average scan time: 565.1081081081081
+Average total time: 565.1891891891892
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 529
+Map compute Time: 0
+Total Scan Time: 529
+Average scan time: 564.1578947368421
+Average total time: 564.2368421052631
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 530
+Map compute Time: 0
+Total Scan Time: 530
+Average scan time: 563.2820512820513
+Average total time: 563.3589743589744
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 475
+Map compute Time: 0
+Total Scan Time: 475
+Average scan time: 561.075
+Average total time: 561.15
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 474
+Map compute Time: 0
+Total Scan Time: 474
+Average scan time: 558.9512195121952
+Average total time: 559.0243902439024
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 471
+Map compute Time: 0
+Total Scan Time: 471
+Average scan time: 556.8571428571429
+Average total time: 556.9285714285714
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 632
+Map compute Time: 0
+Total Scan Time: 632
+Average scan time: 558.6046511627907
+Average total time: 558.6744186046511
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 556.5909090909091
+Average total time: 556.6590909090909
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 417
+Map compute Time: 0
+Total Scan Time: 417
+Average scan time: 553.4888888888889
+Average total time: 553.5555555555555
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 471
+Map compute Time: 0
+Total Scan Time: 471
+Average scan time: 551.695652173913
+Average total time: 551.7608695652174
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 471
+Map compute Time: 0
+Total Scan Time: 471
+Average scan time: 549.9787234042553
+Average total time: 550.0425531914893
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 417
+Map compute Time: 0
+Total Scan Time: 417
+Average scan time: 547.2083333333334
+Average total time: 547.2708333333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 523
+Map compute Time: 0
+Total Scan Time: 523
+Average scan time: 546.6938775510204
+Average total time: 546.7755102040817
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 688
+Map compute Time: 0
+Total Scan Time: 688
+Average scan time: 549.52
+Average total time: 549.6
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 643
+Map compute Time: 0
+Total Scan Time: 644
+Average scan time: 551.3529411764706
+Average total time: 551.4509803921569
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 474
+Map compute Time: 0
+Total Scan Time: 474
+Average scan time: 549.8653846153846
+Average total time: 549.9615384615385
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 548.3584905660377
+Average total time: 548.4528301886793
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 477
+Map compute Time: 0
+Total Scan Time: 477
+Average scan time: 547.0370370370371
+Average total time: 547.1296296296297
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 545.6363636363636
+Average total time: 545.7272727272727
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 544.2857142857143
+Average total time: 544.375
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 485
+Map compute Time: 0
+Total Scan Time: 485
+Average scan time: 543.2456140350877
+Average total time: 543.3333333333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 478
+Map compute Time: 0
+Total Scan Time: 478
+Average scan time: 542.1206896551724
+Average total time: 542.2068965517242
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 636
+Map compute Time: 0
+Total Scan Time: 636
+Average scan time: 543.7118644067797
+Average total time: 543.7966101694915
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 418
+Map compute Time: 0
+Total Scan Time: 418
+Average scan time: 541.6166666666667
+Average total time: 541.7
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 526
+Map compute Time: 0
+Total Scan Time: 526
+Average scan time: 541.360655737705
+Average total time: 541.4426229508197
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 472
+Map compute Time: 0
+Total Scan Time: 472
+Average scan time: 540.241935483871
+Average total time: 540.3225806451613
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 526
+Map compute Time: 0
+Total Scan Time: 526
+Average scan time: 540.015873015873
+Average total time: 540.0952380952381
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 417
+Map compute Time: 0
+Total Scan Time: 417
+Average scan time: 538.09375
+Average total time: 538.171875
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 473
+Map compute Time: 0
+Total Scan Time: 473
+Average scan time: 537.0923076923077
+Average total time: 537.1692307692308
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 473
+Map compute Time: 0
+Total Scan Time: 473
+Average scan time: 536.1212121212121
+Average total time: 536.1969696969697
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 525
+Map compute Time: 0
+Total Scan Time: 525
+Average scan time: 535.955223880597
+Average total time: 536.0298507462686
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 416
+Map compute Time: 0
+Total Scan Time: 416
+Average scan time: 534.1911764705883
+Average total time: 534.2647058823529
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 633
+Map compute Time: 0
+Total Scan Time: 633
+Average scan time: 535.6231884057971
+Average total time: 535.695652173913
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 580
+Map compute Time: 0
+Total Scan Time: 580
+Average scan time: 536.2571428571429
+Average total time: 536.3285714285714
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 532
+Map compute Time: 0
+Total Scan Time: 532
+Average scan time: 536.1971830985915
+Average total time: 536.2676056338029
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 427
+Map compute Time: 0
+Total Scan Time: 427
+Average scan time: 534.6805555555555
+Average total time: 534.75
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 469
+Map compute Time: 0
+Total Scan Time: 469
+Average scan time: 533.7808219178082
+Average total time: 533.8493150684932
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 418
+Map compute Time: 0
+Total Scan Time: 418
+Average scan time: 532.2162162162163
+Average total time: 532.2837837837837
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 525
+Map compute Time: 0
+Total Scan Time: 526
+Average scan time: 532.12
+Average total time: 532.2
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 578
+Map compute Time: 0
+Total Scan Time: 578
+Average scan time: 532.7236842105264
+Average total time: 532.8026315789474
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 633
+Map compute Time: 0
+Total Scan Time: 633
+Average scan time: 534.025974025974
+Average total time: 534.1038961038961
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 417
+Map compute Time: 0
+Total Scan Time: 417
+Average scan time: 532.5128205128206
+Average total time: 532.6025641025641
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 417
+Map compute Time: 0
+Total Scan Time: 417
+Average scan time: 531.0506329113924
+Average total time: 531.1392405063291
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 579
+Map compute Time: 0
+Total Scan Time: 579
+Average scan time: 531.65
+Average total time: 531.7375
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 416
+Map compute Time: 0
+Total Scan Time: 416
+Average scan time: 530.2222222222222
+Average total time: 530.3086419753087
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 527
+Map compute Time: 0
+Total Scan Time: 529
+Average scan time: 530.1829268292682
+Average total time: 530.2926829268292
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 532
+Map compute Time: 0
+Total Scan Time: 532
+Average scan time: 530.2048192771084
+Average total time: 530.3132530120482
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 529
+Map compute Time: 0
+Total Scan Time: 529
+Average scan time: 530.1904761904761
+Average total time: 530.297619047619
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 525
+Map compute Time: 0
+Total Scan Time: 526
+Average scan time: 530.1294117647059
+Average total time: 530.2470588235294
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 525
+Map compute Time: 0
+Total Scan Time: 525
+Average scan time: 530.0697674418604
+Average total time: 530.1860465116279
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 487
+Map compute Time: 0
+Total Scan Time: 487
+Average scan time: 529.5747126436781
+Average total time: 529.6896551724138
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 538
+Map compute Time: 0
+Total Scan Time: 538
+Average scan time: 529.6704545454545
+Average total time: 529.7840909090909
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 474
+Map compute Time: 0
+Total Scan Time: 474
+Average scan time: 529.0449438202247
+Average total time: 529.1573033707865
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 469
+Map compute Time: 0
+Total Scan Time: 469
+Average scan time: 528.3777777777777
+Average total time: 528.4888888888889
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 468
+Map compute Time: 0
+Total Scan Time: 468
+Average scan time: 527.7142857142857
+Average total time: 527.8241758241758
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 631
+Map compute Time: 0
+Total Scan Time: 631
+Average scan time: 528.8369565217391
+Average total time: 528.945652173913
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 579
+Map compute Time: 0
+Total Scan Time: 579
+Average scan time: 529.3763440860215
+Average total time: 529.483870967742
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 525
+Map compute Time: 0
+Total Scan Time: 525
+Average scan time: 529.3297872340426
+Average total time: 529.436170212766
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 468
+Map compute Time: 0
+Total Scan Time: 468
+Average scan time: 528.6842105263158
+Average total time: 528.7894736842105
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 528.0729166666666
+Average total time: 528.1770833333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 524
+Map compute Time: 0
+Total Scan Time: 524
+Average scan time: 528.0309278350516
+Average total time: 528.1340206185567
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 471
+Map compute Time: 0
+Total Scan Time: 471
+Average scan time: 527.4489795918367
+Average total time: 527.5510204081633
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 470
+Map compute Time: 0
+Total Scan Time: 470
+Average scan time: 526.8686868686868
+Average total time: 526.969696969697
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 422
+Map compute Time: 0
+Total Scan Time: 422
+Average scan time: 525.82
+Average total time: 525.92
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 544
+Map compute Time: 0
+Total Scan Time: 544
+Average scan time: 526.0
+Average total time: 526.0990099009902
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 534
+Map compute Time: 0
+Total Scan Time: 534
+Average scan time: 526.0784313725491
+Average total time: 526.1764705882352
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 477
+Map compute Time: 0
+Total Scan Time: 477
+Average scan time: 525.6019417475728
+Average total time: 525.6990291262136
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 433
+Map compute Time: 0
+Total Scan Time: 433
+Average scan time: 524.7115384615385
+Average total time: 524.8076923076923
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 535
+Map compute Time: 0
+Total Scan Time: 535
+Average scan time: 524.8095238095239
+Average total time: 524.9047619047619
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 563
+Map compute Time: 0
+Total Scan Time: 563
+Average scan time: 525.1698113207547
+Average total time: 525.2641509433962
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 699
+Map compute Time: 0
+Total Scan Time: 699
+Average scan time: 526.7943925233645
+Average total time: 526.8878504672897
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 486
+Map compute Time: 0
+Total Scan Time: 486
+Average scan time: 526.4166666666666
+Average total time: 526.5092592592592
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 528
+Map compute Time: 0
+Total Scan Time: 528
+Average scan time: 526.4311926605504
+Average total time: 526.5229357798165
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 420
+Map compute Time: 0
+Total Scan Time: 420
+Average scan time: 525.4636363636364
+Average total time: 525.5545454545454
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 532
+Map compute Time: 0
+Total Scan Time: 532
+Average scan time: 525.5225225225225
+Average total time: 525.6126126126126
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 545
+Map compute Time: 0
+Total Scan Time: 545
+Average scan time: 525.6964285714286
+Average total time: 525.7857142857143
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 424
+Map compute Time: 0
+Total Scan Time: 424
+Average scan time: 524.7964601769911
+Average total time: 524.8849557522124
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 484
+Map compute Time: 0
+Total Scan Time: 484
+Average scan time: 524.438596491228
+Average total time: 524.5263157894736
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 533
+Map compute Time: 0
+Total Scan Time: 533
+Average scan time: 524.5130434782609
+Average total time: 524.6
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 534
+Map compute Time: 0
+Total Scan Time: 535
+Average scan time: 524.5948275862069
+Average total time: 524.6896551724138
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 481
+Map compute Time: 0
+Total Scan Time: 481
+Average scan time: 524.2222222222222
+Average total time: 524.3162393162393
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 544
+Map compute Time: 0
+Total Scan Time: 544
+Average scan time: 524.3898305084746
+Average total time: 524.4830508474577
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 584
+Map compute Time: 0
+Total Scan Time: 584
+Average scan time: 524.890756302521
+Average total time: 524.9831932773109
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 475
+Map compute Time: 0
+Total Scan Time: 475
+Average scan time: 524.475
+Average total time: 524.5666666666667
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 420
+Map compute Time: 0
+Total Scan Time: 420
+Average scan time: 523.6115702479339
+Average total time: 523.702479338843
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 532
+Map compute Time: 0
+Total Scan Time: 532
+Average scan time: 523.6803278688525
+Average total time: 523.7704918032787
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 421
+Map compute Time: 0
+Total Scan Time: 421
+Average scan time: 522.8455284552846
+Average total time: 522.9349593495934
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 478
+Map compute Time: 0
+Total Scan Time: 478
+Average scan time: 522.483870967742
+Average total time: 522.5725806451613
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 529
+Map compute Time: 0
+Total Scan Time: 529
+Average scan time: 522.536
+Average total time: 522.624
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 592
+Map compute Time: 0
+Total Scan Time: 592
+Average scan time: 523.0873015873016
+Average total time: 523.1746031746031
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1054
+Map compute Time: 0
+Total Scan Time: 1055
+Average scan time: 527.2677165354331
+Average total time: 527.3622047244095
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1061
+Map compute Time: 0
+Total Scan Time: 1061
+Average scan time: 531.4375
+Average total time: 531.53125
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1124
+Map compute Time: 0
+Total Scan Time: 1124
+Average scan time: 536.031007751938
+Average total time: 536.1240310077519
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1444
+Map compute Time: 0
+Total Scan Time: 1445
+Average scan time: 543.0153846153846
+Average total time: 543.1153846153846
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1948
+Map compute Time: 0
+Total Scan Time: 1949
+Average scan time: 553.7404580152672
+Average total time: 553.8473282442748
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1289
+Map compute Time: 0
+Total Scan Time: 1289
+Average scan time: 559.310606060606
+Average total time: 559.4166666666666
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1268
+Map compute Time: 0
+Total Scan Time: 1268
+Average scan time: 564.6390977443609
+Average total time: 564.7443609022556
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1247
+Map compute Time: 0
+Total Scan Time: 1247
+Average scan time: 569.7313432835821
+Average total time: 569.8358208955224
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1310
+Map compute Time: 0
+Total Scan Time: 1310
+Average scan time: 575.2148148148148
+Average total time: 575.3185185185185
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1115
+Map compute Time: 0
+Total Scan Time: 1115
+Average scan time: 579.1838235294117
+Average total time: 579.2867647058823
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 976
+Map compute Time: 0
+Total Scan Time: 976
+Average scan time: 582.0802919708029
+Average total time: 582.1824817518249
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1063
+Map compute Time: 0
+Total Scan Time: 1063
+Average scan time: 585.5652173913044
+Average total time: 585.6666666666666
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
+Add Scan Time: 1292
+Map compute Time: 0
+Total Scan Time: 1293
+Average scan time: 590.6474820143885
+Average total time: 590.7553956834532
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1382
+Map compute Time: 0
+Total Scan Time: 1382
+Average scan time: 596.3
+Average total time: 596.4071428571428
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1244
+Map compute Time: 0
+Total Scan Time: 1244
+Average scan time: 600.8936170212766
+Average total time: 601.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1351
+Map compute Time: 0
+Total Scan Time: 1351
+Average scan time: 606.1760563380282
+Average total time: 606.2816901408451
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1374
+Map compute Time: 0
+Total Scan Time: 1374
+Average scan time: 611.5454545454545
+Average total time: 611.6503496503497
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1516
+Map compute Time: 0
+Total Scan Time: 1516
+Average scan time: 617.8263888888889
+Average total time: 617.9305555555555
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1424
+Map compute Time: 0
+Total Scan Time: 1424
+Average scan time: 623.3862068965517
+Average total time: 623.4896551724138
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000009
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000009
+Add Scan Time: 1518
+Map compute Time: 0
+Total Scan Time: 1518
+Average scan time: 629.513698630137
+Average total time: 629.6164383561644
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1352
+Map compute Time: 0
+Total Scan Time: 1352
+Average scan time: 634.4285714285714
+Average total time: 634.530612244898
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1263
+Map compute Time: 0
+Total Scan Time: 1263
+Average scan time: 638.6756756756756
+Average total time: 638.777027027027
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
+Add Scan Time: 1619
+Map compute Time: 0
+Total Scan Time: 1619
+Average scan time: 645.255033557047
+Average total time: 645.3557046979865
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1497
+Map compute Time: 0
+Total Scan Time: 1497
+Average scan time: 650.9333333333333
+Average total time: 651.0333333333333
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1324
+Map compute Time: 0
+Total Scan Time: 1324
+Average scan time: 655.3907284768212
+Average total time: 655.4900662251656
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1367
+Map compute Time: 0
+Total Scan Time: 1367
+Average scan time: 660.0723684210526
+Average total time: 660.171052631579
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1345
+Map compute Time: 0
+Total Scan Time: 1345
+Average scan time: 664.5490196078431
+Average total time: 664.6470588235294
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1532
+Map compute Time: 0
+Total Scan Time: 1532
+Average scan time: 670.1818181818181
+Average total time: 670.2792207792207
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1625
+Map compute Time: 0
+Total Scan Time: 1625
+Average scan time: 676.341935483871
+Average total time: 676.4387096774194
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1311
+Map compute Time: 0
+Total Scan Time: 1311
+Average scan time: 680.4102564102565
+Average total time: 680.5064102564103
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1321
+Map compute Time: 0
+Total Scan Time: 1321
+Average scan time: 684.4904458598726
+Average total time: 684.5859872611464
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1361
+Map compute Time: 0
+Total Scan Time: 1361
+Average scan time: 688.7721518987341
+Average total time: 688.867088607595
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1602
+Map compute Time: 0
+Total Scan Time: 1602
+Average scan time: 694.5157232704403
+Average total time: 694.6100628930818
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1548
+Map compute Time: 0
+Total Scan Time: 1548
+Average scan time: 699.85
+Average total time: 699.94375
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1515
+Map compute Time: 0
+Total Scan Time: 1515
+Average scan time: 704.9130434782609
+Average total time: 705.0062111801242
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1411
+Map compute Time: 0
+Total Scan Time: 1411
+Average scan time: 709.2716049382716
+Average total time: 709.3641975308642
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1498
+Map compute Time: 0
+Total Scan Time: 1498
+Average scan time: 714.1104294478528
+Average total time: 714.2024539877301
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1577
+Map compute Time: 0
+Total Scan Time: 1577
+Average scan time: 719.3719512195122
+Average total time: 719.4634146341464
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1523
+Map compute Time: 0
+Total Scan Time: 1523
+Average scan time: 724.2424242424242
+Average total time: 724.3333333333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1403
+Map compute Time: 0
+Total Scan Time: 1403
+Average scan time: 728.3313253012049
+Average total time: 728.4216867469879
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1433
+Map compute Time: 0
+Total Scan Time: 1433
+Average scan time: 732.5508982035929
+Average total time: 732.6407185628742
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1410
+Map compute Time: 0
+Total Scan Time: 1410
+Average scan time: 736.5833333333334
+Average total time: 736.672619047619
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1437
+Map compute Time: 0
+Total Scan Time: 1437
+Average scan time: 740.7278106508876
+Average total time: 740.8165680473372
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1531
+Map compute Time: 0
+Total Scan Time: 1531
+Average scan time: 745.3764705882353
+Average total time: 745.464705882353
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1569
+Map compute Time: 0
+Total Scan Time: 1569
+Average scan time: 750.1929824561404
+Average total time: 750.280701754386
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1467
+Map compute Time: 0
+Total Scan Time: 1467
+Average scan time: 754.3604651162791
+Average total time: 754.4476744186046
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1337
+Map compute Time: 0
+Total Scan Time: 1337
+Average scan time: 757.7283236994219
+Average total time: 757.8150289017341
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1337
+Map compute Time: 0
+Total Scan Time: 1337
+Average scan time: 761.0574712643678
+Average total time: 761.1436781609195
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1422
+Map compute Time: 0
+Total Scan Time: 1422
+Average scan time: 764.8342857142857
+Average total time: 764.92
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1293
+Map compute Time: 0
+Total Scan Time: 1293
+Average scan time: 767.8352272727273
+Average total time: 767.9204545454545
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 936
+Map compute Time: 0
+Total Scan Time: 936
+Average scan time: 768.7853107344632
+Average total time: 768.8700564971751
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 697
+Map compute Time: 0
+Total Scan Time: 697
+Average scan time: 768.3820224719101
+Average total time: 768.4662921348314
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
+Add Scan Time: 685
+Map compute Time: 0
+Total Scan Time: 685
+Average scan time: 767.9162011173185
+Average total time: 768.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 774
+Map compute Time: 0
+Total Scan Time: 774
+Average scan time: 767.95
+Average total time: 768.0333333333333
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 630
+Map compute Time: 0
+Total Scan Time: 630
+Average scan time: 767.1878453038674
+Average total time: 767.2707182320441
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 631
+Map compute Time: 0
+Total Scan Time: 631
+Average scan time: 766.4395604395604
+Average total time: 766.521978021978
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 628
+Map compute Time: 0
+Total Scan Time: 628
+Average scan time: 765.6830601092896
+Average total time: 765.7650273224044
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000009
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000009
+Add Scan Time: 598
+Map compute Time: 0
+Total Scan Time: 598
+Average scan time: 764.7717391304348
+Average total time: 764.8532608695652
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 598
+Map compute Time: 0
+Total Scan Time: 598
+Average scan time: 763.8702702702702
+Average total time: 763.9513513513514
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 596
+Map compute Time: 0
+Total Scan Time: 596
+Average scan time: 762.9677419354839
+Average total time: 763.0483870967741
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 597
+Map compute Time: 0
+Total Scan Time: 597
+Average scan time: 762.0802139037434
+Average total time: 762.1604278074866
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 617
+Map compute Time: 0
+Total Scan Time: 617
+Average scan time: 761.3085106382979
+Average total time: 761.3882978723404
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 606
+Map compute Time: 0
+Total Scan Time: 606
+Average scan time: 760.4867724867725
+Average total time: 760.5661375661375
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 594
+Map compute Time: 0
+Total Scan Time: 594
+Average scan time: 759.6105263157895
+Average total time: 759.6894736842105
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 834
+Map compute Time: 0
+Total Scan Time: 834
+Average scan time: 760.0
+Average total time: 760.0785340314136
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 615
+Map compute Time: 0
+Total Scan Time: 615
+Average scan time: 759.2447916666666
+Average total time: 759.3229166666666
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 626
+Map compute Time: 0
+Total Scan Time: 626
+Average scan time: 758.5544041450777
+Average total time: 758.6321243523316
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 784
+Map compute Time: 0
+Total Scan Time: 784
+Average scan time: 758.6855670103092
+Average total time: 758.7628865979382
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 586
+Map compute Time: 0
+Total Scan Time: 586
+Average scan time: 757.8
+Average total time: 757.876923076923
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 565
+Map compute Time: 0
+Total Scan Time: 565
+Average scan time: 756.8163265306123
+Average total time: 756.8928571428571
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 586
+Map compute Time: 0
+Total Scan Time: 586
+Average scan time: 755.9492385786803
+Average total time: 756.0253807106599
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 590
+Map compute Time: 0
+Total Scan Time: 590
+Average scan time: 755.1111111111111
+Average total time: 755.1868686868687
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 577
+Map compute Time: 0
+Total Scan Time: 577
+Average scan time: 754.2160804020101
+Average total time: 754.2914572864322
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 572
+Map compute Time: 0
+Total Scan Time: 572
+Average scan time: 753.305
+Average total time: 753.38
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 597
+Map compute Time: 0
+Total Scan Time: 597
+Average scan time: 752.5273631840796
+Average total time: 752.6019900497513
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 615
+Map compute Time: 0
+Total Scan Time: 615
+Average scan time: 751.8465346534654
+Average total time: 751.9207920792079
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 612
+Map compute Time: 0
+Total Scan Time: 612
+Average scan time: 751.1576354679803
+Average total time: 751.231527093596
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 593
+Map compute Time: 0
+Total Scan Time: 593
+Average scan time: 750.3823529411765
+Average total time: 750.4558823529412
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 810
+Map compute Time: 0
+Total Scan Time: 810
+Average scan time: 750.6731707317073
+Average total time: 750.7463414634146
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 588
+Map compute Time: 0
+Total Scan Time: 588
+Average scan time: 749.8834951456311
+Average total time: 749.9563106796116
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 816
+Map compute Time: 0
+Total Scan Time: 817
+Average scan time: 750.2028985507246
+Average total time: 750.2801932367149
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 589
+Map compute Time: 0
+Total Scan Time: 589
+Average scan time: 749.4278846153846
+Average total time: 749.5048076923077
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 595
+Map compute Time: 0
+Total Scan Time: 595
+Average scan time: 748.688995215311
+Average total time: 748.7655502392345
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 573
+Map compute Time: 0
+Total Scan Time: 573
+Average scan time: 747.8523809523809
+Average total time: 747.9285714285714
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 574
+Map compute Time: 0
+Total Scan Time: 574
+Average scan time: 747.0284360189573
+Average total time: 747.1042654028436
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 567
+Map compute Time: 0
+Total Scan Time: 567
+Average scan time: 746.1792452830189
+Average total time: 746.2547169811321
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 590
+Map compute Time: 0
+Total Scan Time: 590
+Average scan time: 745.4460093896714
+Average total time: 745.5211267605633
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+Add Scan Time: 573
+Map compute Time: 0
+Total Scan Time: 573
+Average scan time: 744.6401869158879
+Average total time: 744.7149532710281
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 578
+Map compute Time: 0
+Total Scan Time: 578
+Average scan time: 743.8651162790698
+Average total time: 743.939534883721
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 563
+Map compute Time: 0
+Total Scan Time: 564
+Average scan time: 743.0277777777778
+Average total time: 743.1064814814815
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 577
+Map compute Time: 0
+Total Scan Time: 577
+Average scan time: 742.2626728110599
+Average total time: 742.3410138248848
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 560
+Map compute Time: 0
+Total Scan Time: 560
+Average scan time: 741.4266055045872
+Average total time: 741.5045871559633
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 581
+Map compute Time: 0
+Total Scan Time: 581
+Average scan time: 740.6940639269407
+Average total time: 740.7716894977169
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 583
+Map compute Time: 0
+Total Scan Time: 583
+Average scan time: 739.9772727272727
+Average total time: 740.0545454545454
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 570
+Map compute Time: 0
+Total Scan Time: 570
+Average scan time: 739.2081447963801
+Average total time: 739.2850678733032
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 566
+Map compute Time: 0
+Total Scan Time: 566
+Average scan time: 738.427927927928
+Average total time: 738.5045045045046
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 583
+Map compute Time: 0
+Total Scan Time: 583
+Average scan time: 737.7309417040359
+Average total time: 737.8071748878924
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 565
+Map compute Time: 0
+Total Scan Time: 566
+Average scan time: 736.9598214285714
+Average total time: 737.0401785714286
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+Add Scan Time: 1270
+Map compute Time: 0
+Total Scan Time: 1270
+Average scan time: 739.3288888888889
+Average total time: 739.4088888888889
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1737
+Map compute Time: 0
+Total Scan Time: 1737
+Average scan time: 743.7433628318585
+Average total time: 743.8230088495575
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1785
+Map compute Time: 0
+Total Scan Time: 1786
+Average scan time: 748.330396475771
+Average total time: 748.4140969162995
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1935
+Map compute Time: 0
+Total Scan Time: 1935
+Average scan time: 753.5350877192982
+Average total time: 753.6184210526316
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1662
+Map compute Time: 0
+Total Scan Time: 1663
+Average scan time: 757.5021834061135
+Average total time: 757.589519650655
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1640
+Map compute Time: 0
+Total Scan Time: 1640
+Average scan time: 761.3391304347826
+Average total time: 761.4260869565218
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1897
+Map compute Time: 0
+Total Scan Time: 1897
+Average scan time: 766.2554112554112
+Average total time: 766.3419913419914
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1597
+Map compute Time: 0
+Total Scan Time: 1598
+Average scan time: 769.8362068965517
+Average total time: 769.926724137931
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1753
+Map compute Time: 0
+Total Scan Time: 1767
+Average scan time: 774.0557939914163
+Average total time: 774.206008583691
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1756
+Map compute Time: 0
+Total Scan Time: 1756
+Average scan time: 778.2521367521367
+Average total time: 778.4017094017094
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1716
+Map compute Time: 0
+Total Scan Time: 1716
+Average scan time: 782.2425531914894
+Average total time: 782.3914893617022
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1517
+Map compute Time: 0
+Total Scan Time: 1517
+Average scan time: 785.3559322033898
+Average total time: 785.5042372881356
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1568
+Map compute Time: 0
+Total Scan Time: 1569
+Average scan time: 788.6582278481013
+Average total time: 788.8101265822785
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1611
+Map compute Time: 0
+Total Scan Time: 1612
+Average scan time: 792.1134453781513
+Average total time: 792.2689075630252
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1479
+Map compute Time: 0
+Total Scan Time: 1479
+Average scan time: 794.9874476987447
+Average total time: 795.1422594142259
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1426
+Map compute Time: 0
+Total Scan Time: 1426
+Average scan time: 797.6166666666667
+Average total time: 797.7708333333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1426
+Map compute Time: 0
+Total Scan Time: 1426
+Average scan time: 800.2240663900415
+Average total time: 800.3775933609959
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1309
+Map compute Time: 0
+Total Scan Time: 1309
+Average scan time: 802.3264462809917
+Average total time: 802.4793388429752
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1194
+Map compute Time: 0
+Total Scan Time: 1194
+Average scan time: 803.9382716049382
+Average total time: 804.0905349794239
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1193
+Map compute Time: 0
+Total Scan Time: 1193
+Average scan time: 805.5327868852459
+Average total time: 805.6844262295082
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1188
+Map compute Time: 0
+Total Scan Time: 1189
+Average scan time: 807.0938775510205
+Average total time: 807.2448979591836
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1145
+Map compute Time: 0
+Total Scan Time: 1145
+Average scan time: 808.4674796747968
+Average total time: 808.6178861788618
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1031
+Map compute Time: 0
+Total Scan Time: 1031
+Average scan time: 809.3684210526316
+Average total time: 809.5182186234817
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1169
+Map compute Time: 0
+Total Scan Time: 1169
+Average scan time: 810.8185483870968
+Average total time: 810.9677419354839
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1136
+Map compute Time: 0
+Total Scan Time: 1136
+Average scan time: 812.1244979919679
+Average total time: 812.2730923694779
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1075
+Map compute Time: 0
+Total Scan Time: 1075
+Average scan time: 813.176
+Average total time: 813.324
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1118
+Map compute Time: 0
+Total Scan Time: 1118
+Average scan time: 814.390438247012
+Average total time: 814.5378486055777
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1185
+Map compute Time: 0
+Total Scan Time: 1185
+Average scan time: 815.8611111111111
+Average total time: 816.0079365079365
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 979
+Map compute Time: 0
+Total Scan Time: 979
+Average scan time: 816.505928853755
+Average total time: 816.6521739130435
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1100
+Map compute Time: 0
+Total Scan Time: 1101
+Average scan time: 817.6220472440945
+Average total time: 817.7716535433071
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1092
+Map compute Time: 0
+Total Scan Time: 1093
+Average scan time: 818.6980392156863
+Average total time: 818.8509803921569
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1253
+Map compute Time: 0
+Total Scan Time: 1253
+Average scan time: 820.39453125
+Average total time: 820.546875
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 997
+Map compute Time: 0
+Total Scan Time: 997
+Average scan time: 821.0817120622568
+Average total time: 821.2334630350194
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1093
+Map compute Time: 0
+Total Scan Time: 1094
+Average scan time: 822.1356589147287
+Average total time: 822.2906976744187
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 982
+Map compute Time: 0
+Total Scan Time: 983
+Average scan time: 822.7528957528957
+Average total time: 822.911196911197
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 978
+Map compute Time: 0
+Total Scan Time: 978
+Average scan time: 823.35
+Average total time: 823.5076923076923
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1107
+Map compute Time: 0
+Total Scan Time: 1107
+Average scan time: 824.4367816091954
+Average total time: 824.5938697318007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1309
+Map compute Time: 0
+Total Scan Time: 1309
+Average scan time: 826.2862595419847
+Average total time: 826.4427480916031
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1104
+Map compute Time: 0
+Total Scan Time: 1105
+Average scan time: 827.3422053231939
+Average total time: 827.5019011406844
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1109
+Map compute Time: 0
+Total Scan Time: 1109
+Average scan time: 828.4090909090909
+Average total time: 828.5681818181819
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1164
+Map compute Time: 0
+Total Scan Time: 1165
+Average scan time: 829.6754716981133
+Average total time: 829.8377358490566
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1242
+Map compute Time: 0
+Total Scan Time: 1243
+Average scan time: 831.2255639097745
+Average total time: 831.390977443609
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1255
+Map compute Time: 0
+Total Scan Time: 1256
+Average scan time: 832.812734082397
+Average total time: 832.9812734082396
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1188
+Map compute Time: 0
+Total Scan Time: 1188
+Average scan time: 834.1380597014926
+Average total time: 834.3059701492538
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1277
+Map compute Time: 0
+Total Scan Time: 1277
+Average scan time: 835.7843866171004
+Average total time: 835.9516728624535
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1193
+Map compute Time: 0
+Total Scan Time: 1193
+Average scan time: 837.1074074074074
+Average total time: 837.2740740740741
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1195
+Map compute Time: 0
+Total Scan Time: 1195
+Average scan time: 838.4280442804428
+Average total time: 838.5940959409594
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1195
+Map compute Time: 0
+Total Scan Time: 1195
+Average scan time: 839.7389705882352
+Average total time: 839.9044117647059
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1279
+Map compute Time: 0
+Total Scan Time: 1279
+Average scan time: 841.3479853479854
+Average total time: 841.5128205128206
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1260
+Map compute Time: 0
+Total Scan Time: 1260
+Average scan time: 842.8759124087592
+Average total time: 843.0401459854014
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1221
+Map compute Time: 0
+Total Scan Time: 1221
+Average scan time: 844.2509090909091
+Average total time: 844.4145454545454
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1136
+Map compute Time: 0
+Total Scan Time: 1137
+Average scan time: 845.3079710144928
+Average total time: 845.4746376811594
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1204
+Map compute Time: 0
+Total Scan Time: 1204
+Average scan time: 846.6028880866426
+Average total time: 846.768953068592
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1202
+Map compute Time: 0
+Total Scan Time: 1202
+Average scan time: 847.8812949640288
+Average total time: 848.0467625899281
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1140
+Map compute Time: 0
+Total Scan Time: 1140
+Average scan time: 848.9283154121864
+Average total time: 849.0931899641577
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1107
+Map compute Time: 0
+Total Scan Time: 1107
+Average scan time: 849.85
+Average total time: 850.0142857142857
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+Add Scan Time: 1250
+Map compute Time: 0
+Total Scan Time: 1250
+Average scan time: 851.2740213523132
+Average total time: 851.4377224199288
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1153
+Map compute Time: 0
+Total Scan Time: 1153
+Average scan time: 852.3439716312057
+Average total time: 852.5070921985815
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1265
+Map compute Time: 0
+Total Scan Time: 1265
+Average scan time: 853.8021201413428
+Average total time: 853.964664310954
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1238
+Map compute Time: 0
+Total Scan Time: 1238
+Average scan time: 855.1549295774648
+Average total time: 855.3169014084507
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1323
+Map compute Time: 0
+Total Scan Time: 1323
+Average scan time: 856.7964912280702
+Average total time: 856.9578947368421
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1303
+Map compute Time: 0
+Total Scan Time: 1303
+Average scan time: 858.3566433566433
+Average total time: 858.5174825174826
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1221
+Map compute Time: 0
+Total Scan Time: 1221
+Average scan time: 859.6202090592335
+Average total time: 859.780487804878
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1240
+Map compute Time: 0
+Total Scan Time: 1240
+Average scan time: 860.9409722222222
+Average total time: 861.1006944444445
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1274
+Map compute Time: 0
+Total Scan Time: 1274
+Average scan time: 862.3702422145328
+Average total time: 862.5294117647059
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1236
+Map compute Time: 0
+Total Scan Time: 1236
+Average scan time: 863.6586206896552
+Average total time: 863.8172413793103
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1277
+Map compute Time: 0
+Total Scan Time: 1277
+Average scan time: 865.0790378006873
+Average total time: 865.2371134020618
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1148
+Map compute Time: 0
+Total Scan Time: 1148
+Average scan time: 866.0479452054794
+Average total time: 866.2054794520548
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1220
+Map compute Time: 0
+Total Scan Time: 1220
+Average scan time: 867.2559726962457
+Average total time: 867.4129692832764
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1176
+Map compute Time: 0
+Total Scan Time: 1176
+Average scan time: 868.3061224489796
+Average total time: 868.4625850340136
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1131
+Map compute Time: 0
+Total Scan Time: 1131
+Average scan time: 869.1966101694916
+Average total time: 869.3525423728813
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1089
+Map compute Time: 0
+Total Scan Time: 1090
+Average scan time: 869.9391891891892
+Average total time: 870.097972972973
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1112
+Map compute Time: 0
+Total Scan Time: 1113
+Average scan time: 870.7542087542088
+Average total time: 870.9158249158249
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1122
+Map compute Time: 0
+Total Scan Time: 1123
+Average scan time: 871.5973154362416
+Average total time: 871.761744966443
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1335
+Map compute Time: 0
+Total Scan Time: 1335
+Average scan time: 873.1471571906354
+Average total time: 873.3110367892976
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 1171
+Map compute Time: 0
+Total Scan Time: 1171
+Average scan time: 874.14
+Average total time: 874.3033333333333
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1056
+Map compute Time: 0
+Total Scan Time: 1057
+Average scan time: 874.7441860465116
+Average total time: 874.9102990033223
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1172
+Map compute Time: 0
+Total Scan Time: 1172
+Average scan time: 875.7284768211921
+Average total time: 875.8940397350993
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1191
+Map compute Time: 0
+Total Scan Time: 1191
+Average scan time: 876.7689768976898
+Average total time: 876.9339933993399
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+Add Scan Time: 1031
+Map compute Time: 0
+Total Scan Time: 1031
+Average scan time: 877.2763157894736
+Average total time: 877.4407894736842
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1258
+Map compute Time: 0
+Total Scan Time: 1258
+Average scan time: 878.5245901639345
+Average total time: 878.688524590164
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1279
+Map compute Time: 0
+Total Scan Time: 1279
+Average scan time: 879.8333333333334
+Average total time: 879.9967320261438
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1256
+Map compute Time: 0
+Total Scan Time: 1256
+Average scan time: 881.0586319218241
+Average total time: 881.2214983713355
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1442
+Map compute Time: 0
+Total Scan Time: 1443
+Average scan time: 882.8798701298701
+Average total time: 883.0454545454545
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1526
+Map compute Time: 0
+Total Scan Time: 1526
+Average scan time: 884.9611650485436
+Average total time: 885.1262135922331
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1424
+Map compute Time: 0
+Total Scan Time: 1424
+Average scan time: 886.7
+Average total time: 886.8645161290323
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1220
+Map compute Time: 0
+Total Scan Time: 1220
+Average scan time: 887.7717041800643
+Average total time: 887.9356913183279
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1354
+Map compute Time: 0
+Total Scan Time: 1354
+Average scan time: 889.2660256410256
+Average total time: 889.4294871794872
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1562
+Map compute Time: 0
+Total Scan Time: 1562
+Average scan time: 891.4153354632588
+Average total time: 891.5782747603834
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1706
+Map compute Time: 0
+Total Scan Time: 1706
+Average scan time: 894.0095541401274
+Average total time: 894.171974522293
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1425
+Map compute Time: 0
+Total Scan Time: 1425
+Average scan time: 895.6952380952381
+Average total time: 895.8571428571429
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1548
+Map compute Time: 0
+Total Scan Time: 1548
+Average scan time: 897.7594936708861
+Average total time: 897.9208860759494
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1475
+Map compute Time: 0
+Total Scan Time: 1476
+Average scan time: 899.5804416403786
+Average total time: 899.7444794952681
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
+Add Scan Time: 1477
+Map compute Time: 0
+Total Scan Time: 1477
+Average scan time: 901.3962264150944
+Average total time: 901.559748427673
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1652
+Map compute Time: 0
+Total Scan Time: 1652
+Average scan time: 903.7492163009405
+Average total time: 903.9122257053292
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1688
+Map compute Time: 0
+Total Scan Time: 1688
+Average scan time: 906.2
+Average total time: 906.3625
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 3167
+Map compute Time: 0
+Total Scan Time: 3167
+Average scan time: 913.2429906542056
+Average total time: 913.4049844236761
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1482
+Map compute Time: 0
+Total Scan Time: 1483
+Average scan time: 915.0093167701864
+Average total time: 915.1739130434783
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
+Add Scan Time: 1428
+Map compute Time: 0
+Total Scan Time: 1428
+Average scan time: 916.5975232198142
+Average total time: 916.7616099071207
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1555
+Map compute Time: 0
+Total Scan Time: 1556
+Average scan time: 918.5679012345679
+Average total time: 918.7345679012345
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1500
+Map compute Time: 0
+Total Scan Time: 1500
+Average scan time: 920.3569230769231
+Average total time: 920.5230769230769
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
+Add Scan Time: 1567
+Map compute Time: 0
+Total Scan Time: 1567
+Average scan time: 922.3404907975461
+Average total time: 922.5061349693251
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1675
+Map compute Time: 0
+Total Scan Time: 1675
+Average scan time: 924.6422018348624
+Average total time: 924.8073394495412
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 1685
+Map compute Time: 0
+Total Scan Time: 1685
+Average scan time: 926.9603658536586
+Average total time: 927.125
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.999999999999999
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.999999999999999
+Add Scan Time: 1515
+Map compute Time: 0
+Total Scan Time: 1515
+Average scan time: 928.7477203647417
+Average total time: 928.9118541033434
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1547
+Map compute Time: 0
+Total Scan Time: 1547
+Average scan time: 930.6212121212121
+Average total time: 930.7848484848485
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1677
+Map compute Time: 0
+Total Scan Time: 1677
+Average scan time: 932.8761329305136
+Average total time: 933.0392749244713
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 1504
+Map compute Time: 0
+Total Scan Time: 1504
+Average scan time: 934.5963855421687
+Average total time: 934.7590361445783
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
+Add Scan Time: 1597
+Map compute Time: 0
+Total Scan Time: 1597
+Average scan time: 936.5855855855856
+Average total time: 936.7477477477478
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 1637
+Map compute Time: 0
+Total Scan Time: 1637
+Average scan time: 938.6826347305389
+Average total time: 938.8443113772455
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
+Add Scan Time: 1718
+Map compute Time: 0
+Total Scan Time: 1719
+Average scan time: 941.0089552238805
+Average total time: 941.1731343283582
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
+Add Scan Time: 1457
+Map compute Time: 0
+Total Scan Time: 1457
+Average scan time: 942.5446428571429
+Average total time: 942.7083333333334
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
+Add Scan Time: 630
+Map compute Time: 0
+Total Scan Time: 630
+Average scan time: 941.6172106824926
+Average total time: 941.7804154302671
+We are done!!
