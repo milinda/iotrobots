@@ -30,6 +30,8 @@ java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.s
 
 java -Xmx6G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator true simulator/data/aces.txt 90 false 4 false
 
+java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:NewSize=2G -XX:MaxNewSize=2G -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=6 -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator false data/simbard_1.txt 20 false 4 false
+
 SIMBARD_TEST
 ------------
 ./bin/storm jar ~/projects/iotrobots/slam/streaming/target/iotrobots-slam-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.streaming.SLAMTopology -name slam_processor -ds_mode 0 -p 4 -pt 20 -i
@@ -39,3 +41,4 @@ SIMBARD_TEST
 
 
  java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" data/simbard_1.txt 20_8 true false 1500
+ java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" data/aces.txt 16_16 false false 200

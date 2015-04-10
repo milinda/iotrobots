@@ -198,13 +198,13 @@ public class GFSAlgorithm {
                 lastMapUpdate = System.currentTimeMillis();
 //                lastMapUpdate = 0;
             }
-            System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
+            // System.out.println("Map compute Time: " + (System.currentTimeMillis() - t1) );
         }
         totalTime += System.currentTimeMillis() - t0;
-        System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0));
+        // System.out.println("Total Scan Time: " + (System.currentTimeMillis() - t0));
         count++;
-        System.out.println("Average scan time: " + scanTime / count);
-        System.out.println("Average total time: " + totalTime / count);
+        // System.out.println("Average scan time: " + scanTime / count);
+        // System.out.println("Average total time: " + totalTime / count);
     }
 
     public boolean addScan(LaserScan scan) {
