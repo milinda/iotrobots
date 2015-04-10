@@ -175,9 +175,10 @@ public class FileBasedDistributedSimulator {
                 Object time = message.getProperties().get("time");
                 Long t = Long.parseLong(time.toString());
                 bestSum += System.currentTimeMillis() - t;
+            long receiveTime = System.currentTimeMillis();
                 bestCount++;
             Trace trace = (Trace) Utils.deSerialize(kryo, message.getBody(), Trace.class);
-                resultBestIO.writeResult((System.currentTimeMillis() - t) + " ," + trace.serialize());
+                resultBestIO.writeResult((receiveTime - t) + " ," + trace.serialize());
 //                System.out.println("Best Time: " + (System.currentTimeMillis() - t) + "\nAverage Best: " + ((double) (bestSum) / bestCount));
             //System.out.println((System.currentTimeMillis() - t) + " ," + trace.serialize());
                 // send = false;

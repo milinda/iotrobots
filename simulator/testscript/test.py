@@ -28,7 +28,7 @@ def copy_scan_matcher(ssh, topologyFile):
     ''' + cmd + '''
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
 
@@ -44,7 +44,7 @@ def compile_program(ssh, topologyFile):
     mvn clean install -Dmaven.test.skip=true
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
 
@@ -61,7 +61,7 @@ def restart_zk(ssh):
     sleep 60
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
 
@@ -79,7 +79,7 @@ def exec_storm(ssh, particles, parallel):
     ''' + cmd + '''
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
     time.sleep(30)
@@ -97,7 +97,7 @@ def exec_rabbit(ssh):
     sudo ./rabbitmq-server > /dev/null 2>&1 &
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
     time.sleep(5)
@@ -115,7 +115,7 @@ def exec_iotcloud(ssh):
     ./bin/iotcloud local > /dev/null 2>&1 &
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
     time.sleep(5)
@@ -130,7 +130,7 @@ def exec_sensor(ssh):
     ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672"  > /dev/null 2>&1 &
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
     time.sleep(5)
