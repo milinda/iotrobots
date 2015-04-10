@@ -46,7 +46,7 @@ public class ScanMatchBolt extends BaseRichBolt {
     private TopologyContext topologyContext;
 
     /** Assignment are broad cast, so will create a broadcast receiver */
-//    private RabbitMQReceiver assignmentReceiver;
+    private RabbitMQReceiver assignmentReceiver;
 
     /** Particles are sent directly, so we will create a direct receiver */
     private RabbitMQReceiver particleMapReceiver;
@@ -130,7 +130,7 @@ public class ScanMatchBolt extends BaseRichBolt {
         String url = (String) components.getConf().get(Constants.RABBITMQ_URL);
         try {
             // we use broadcast to receive assignments
-//            this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
+            this.assignmentReceiver = new RabbitMQReceiver(url, Constants.Messages.BROADCAST_EXCHANGE, true);
             // we use direct exchange to receive particle maps
             this.particleMapReceiver = new RabbitMQReceiver(url, Constants.Messages.DIRECT_EXCHANGE);
             // we use direct to receive particle values
@@ -149,7 +149,7 @@ public class ScanMatchBolt extends BaseRichBolt {
                 kryoMapWriters.add(k);
             }
 
-//            this.assignmentReceiver.listen(new ParticleAssignmentHandler());
+            this.assignmentReceiver.listen(new ParticleAssignmentHandler());
             this.particleMapReceiver.listen(new MapHandler());
             this.particleValueReceiver.listen(new ParticleValueHandler());
         } catch (Exception e) {
@@ -335,11 +335,6 @@ public class ScanMatchBolt extends BaseRichBolt {
         emit.add(sensorId);
         emit.add(time);
         lastEmitTime = System.currentTimeMillis();
-//        try {
-//            Thread.sleep(1);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
         long gcTime = gcCounter.getFullGCTime() + gcCounter.getYoungGCTime();
         long timeSpent = lastEmitTime - lastComputationBeginTime;
         trace.getSmp().put(taskId, timeSpent);
