@@ -146,7 +146,7 @@ def run_test(ssh, test, parallel, particles, input, simbad):
     ''' + cmd + '''
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
 
@@ -218,7 +218,7 @@ def run_serial(ssh, par, file, simbard):
     ''' + cmd + '''
     exit
     ''')
-    #print stdout.read()
+    print stdout.read()
     stdout.close()
     stdin.close()
 
