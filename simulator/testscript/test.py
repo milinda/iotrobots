@@ -201,15 +201,23 @@ def run_rs_test():
             exec_storm(sshNZ, par, t)
             run_test(sshIR, 'rs', t, par, 'data/simbard_1.txt', 'true')
 
+def start_cluster(par, t):
+    exec_rabbit(sshBR)
+    exec_iotcloud(sshI)
+    exec_sensor(sshI)
+    exec_storm(sshNZ, par, t)
+
 def main():
-    restart_zk(sshNZ)
-    run_aces_test()
-    restart_zk(sshNZ)
-    run_simbard_test()
-    restart_zk(sshNZ)
-    run_rs_test()
-    restart_zk(sshNZ)
-    run_simbard_cost_test()
+    #restart_zk(sshNZ)
+    #run_aces_test()
+    #restart_zk(sshNZ)
+    #run_simbard_test()
+    #restart_zk(sshNZ)
+    #run_rs_test()
+    #restart_zk(sshNZ)
+    #run_simbard_cost_test()
+
+    start_cluster(4, 20)
 
 if __name__ == "__main__":
     main()
