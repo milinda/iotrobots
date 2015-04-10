@@ -32,7 +32,7 @@ public class DispatcherBolt extends BaseRichBolt {
     private TopologyContext topologyContext;
 
     // use this receiver to synchronize the
-    // private RabbitMQReceiver readyReceiver;
+    private RabbitMQReceiver readyReceiver;
 
     // broker url
     private String brokerURL = "amqp://localhost:5672";
@@ -83,14 +83,14 @@ public class DispatcherBolt extends BaseRichBolt {
         kryo = new Kryo();
         Utils.registerClasses(kryo);
 
-//        try {
-//            this.readyReceiver = new RabbitMQReceiver(brokerURL, Constants.Messages.DIRECT_EXCHANGE);
-//            this.readyReceiver.listen(new ReadyMessageListener());
-//        } catch (Exception e) {
-//            String msg = "Failed to create the receiver";
-//            LOG.error(msg, e);
-//            throw new RuntimeException(msg, e);
-//        }
+        try {
+            this.readyReceiver = new RabbitMQReceiver(brokerURL, Constants.Messages.DIRECT_EXCHANGE);
+            this.readyReceiver.listen(new ReadyMessageListener());
+        } catch (Exception e) {
+            String msg = "Failed to create the receiver";
+            LOG.error(msg, e);
+            throw new RuntimeException(msg, e);
+        }
     }
 
     private List<Ready> readyList = new ArrayList<Ready>();

@@ -491,18 +491,18 @@ public class ScanMatchBolt extends BaseRichBolt {
         state = MatchState.WAITING_FOR_READING;
         Ready ready = new Ready(taskId);
         byte []readyBody = Utils.serialize(kryoReady, ready);
-//
-//        Message m = new Message(readyBody, new HashMap<String, Object>());
-//        try {
-//            readySender.send(m, Constants.Messages.READY_ROUTING_KEY);
-//        } catch (Exception e) {
-//            String msg = "Error sending the ready message";
-//            LOG.error(msg, e);
-//            throw new RuntimeException(msg, e);
-//        }
-        List<Object> emit = new ArrayList<Object>();
-        emit.add(readyBody);
-        outputCollector.emit(Constants.Fields.READY_STREAM, emit);
+
+        Message m = new Message(readyBody, new HashMap<String, Object>());
+        try {
+            readySender.send(m, Constants.Messages.READY_ROUTING_KEY);
+        } catch (Exception e) {
+            String msg = "Error sending the ready message";
+            LOG.error(msg, e);
+            throw new RuntimeException(msg, e);
+        }
+//        List<Object> emit = new ArrayList<Object>();
+//        emit.add(readyBody);
+//        outputCollector.emit(Constants.Fields.READY_STREAM, emit);
     }
 
     private void processReceivedMaps(String origin) {

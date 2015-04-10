@@ -512,7 +512,7 @@ public class ScanMatcher {
                 }
 
                 likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
-//                count++;
+                count++;
 //                if (count == 50) {
 //                    move = Move.Done;
 //                }
@@ -528,6 +528,7 @@ public class ScanMatcher {
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
         pnew.theta = currentPose.theta;
+//        System.out.println("Iteration count: " + count);
         return bestScore;
     }
 
