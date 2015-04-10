@@ -137,7 +137,7 @@ def exec_sensor(ssh):
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir3/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir4/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -232,12 +232,12 @@ def main():
     restart_zk(sshNZ)
     run_simbard_cost_test()
 
-    run_serial(sshI, 20, "simbard_1.txt", "true")
-    run_serial(sshI, 60, "simbard_1.txt", "true")
-    run_serial(sshI, 100, "simbard_1.txt", "true")
-    run_serial(sshI, 20, "aces.txt", "false")
-    run_serial(sshI, 60, "aces.txt", "false")
-    run_serial(sshI, 100, "aces.txt", "false")
+    # run_serial(sshI, 20, "simbard_1.txt", "true")
+    # run_serial(sshI, 60, "simbard_1.txt", "true")
+    # run_serial(sshI, 100, "simbard_1.txt", "true")
+    # run_serial(sshI, 20, "aces.txt", "false")
+    # run_serial(sshI, 60, "aces.txt", "false")
+    # run_serial(sshI, 100, "aces.txt", "false")
 
 if __name__ == "__main__":
     main()
