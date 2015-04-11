@@ -32,7 +32,8 @@ java -Xmx6G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotr
 java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:NewSize=2G -XX:MaxNewSize=2G -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=6 -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator true simulator/data/aces.txt 90 false 4 false
 
 
-java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:NewSize=2G -XX:MaxNewSize=2G -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=6 -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator false data/simbard_1.txt 20 false 4 false
+java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:NewSize=2G -XX:MaxNewSize=2G -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=6 -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator false data/simbard_1.txt 20 true 4 false
+java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:NewSize=2G -XX:MaxNewSize=2G -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=6 -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator false data/aces_300.txt 100 false 4 false
 
 SIMBARD_TEST
 ------------
