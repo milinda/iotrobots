@@ -222,22 +222,57 @@ def run_serial(ssh, par, file, simbard):
     stdout.close()
     stdin.close()
 
+def copy_file(ssh, src, dest):
+    print "copy file"
+    cmd = 'cp ' + str(src) + ' ' + src(dest)
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    cd /home/ubuntu/projects/iotrobots/slam
+    ''' + cmd + '''
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
+
+def compile(ssh, dir):
+    print "compiling"
+    cmd = 'cd ' + str(dir)
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    ''' + cmd + '''
+    mvn clean install -Dmaven.test.skip=true
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
+
 def main():
     #restart_zk(sshNZ)
-    run_aces_test()
+    #run_aces_test()
     #restart_zk(sshNZ)
     #run_simbard_test()
     #restart_zk(sshNZ)
     #run_rs_test()
     #restart_zk(sshNZ)
     #run_simbard_cost_test()
-
-    # run_serial(sshI, 20, "simbard_1.txt", "true")
-    # run_serial(sshI, 60, "simbard_1.txt", "true")
-    # run_serial(sshI, 100, "simbard_1.txt", "true")
-    # run_serial(sshI, 20, "aces.txt", "false")
-    # run_serial(sshI, 60, "aces.txt", "false")
-    # run_serial(sshI, 100, "aces.txt", "false")
+    copy_file(sshI, "testscript/Simbard.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
+    compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
+    compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
+    run_serial(sshI, 4, "simbard_1.txt", "true")
+    run_serial(sshI, 4, "simbard_1.txt", "true")
+    run_serial(sshI, 100, "simbard_1.txt", "true")
+    copy_file(sshI, "testscript/Aces.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
+    compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
+    compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
+    run_serial(sshI, 20, "aces_300.txt", "false")
+    run_serial(sshI, 60, "aces_300.txt", "false")
+    run_serial(sshI, 100, "aces_300.txt", "false")
 
 if __name__ == "__main__":
     main()
