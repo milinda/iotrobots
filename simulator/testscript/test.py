@@ -209,7 +209,7 @@ def start_cluster(par, t):
 
 def run_serial(ssh, par, file, simbard):
     print "running test...."
-    cmd = "java -Xmx6G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator true data/" + str(file) + " " + str(par) + " " + str(simbard) + " 1 false > " + str(file) + str(par)
+    cmd = "java -Xmx4G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator true data/" + str(file) + " " + str(par) + " " + str(simbard) + " 1 false > " + str(file) + str(par)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -265,7 +265,7 @@ def main():
     compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
     compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
     run_serial(sshI, 4, "simbard_1.txt", "true")
-    run_serial(sshI, 4, "simbard_1.txt", "true")
+    run_serial(sshI, 8, "simbard_1.txt", "true")
     run_serial(sshI, 100, "simbard_1.txt", "true")
     copy_file(sshI, "testscript/Aces.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
     compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
