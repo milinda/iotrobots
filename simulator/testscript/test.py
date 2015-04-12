@@ -224,7 +224,7 @@ def run_serial(ssh, par, file, simbard):
 
 def copy_file(ssh, src, dest):
     print "copy file"
-    cmd = 'cp ' + str(src) + ' ' + src(dest)
+    cmd = 'cp ' + str(src) + ' ' + str(dest)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
