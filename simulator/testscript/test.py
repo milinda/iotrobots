@@ -223,13 +223,13 @@ def run_serial(ssh, par, file, simbard):
     stdin.close()
 
 def main():
-    restart_zk(sshNZ)
-    run_aces_test()
-    restart_zk(sshNZ)
+    #restart_zk(sshNZ)
+    #run_aces_test()
+    #restart_zk(sshNZ)
     run_simbard_test()
-    restart_zk(sshNZ)
+    #restart_zk(sshNZ)
     run_rs_test()
-    restart_zk(sshNZ)
+    #restart_zk(sshNZ)
     run_simbard_cost_test()
 
     # run_serial(sshI, 20, "simbard_1.txt", "true")
