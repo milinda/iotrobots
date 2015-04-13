@@ -207,9 +207,9 @@ def start_cluster(par, t):
     exec_sensor(sshI)
     exec_storm(sshNZ, par, t)
 
-def run_serial(ssh, par, file, simbard):
+def run_serial(ssh, par, file, simbard, name):
     print "running test...."
-    cmd = "java -Xmx4G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator false data/" + str(file) + " " + str(par) + " " + str(simbard) + " 1 false > " + str(file) + str(par)
+    cmd = "java -Xmx4G -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedSimulator false data/" + str(file) + " " + str(par) + " " + str(simbard) + " 1 false > " + str(name) + str(par)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -253,6 +253,7 @@ def compile(ssh, dir):
     stdin.close()
 
 def main():
+    copy_file(sshI, "testscript/ScanMatcher.java", "serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java")
     #restart_zk(sshNZ)
     #run_aces_test()
     #restart_zk(sshNZ)
@@ -264,15 +265,22 @@ def main():
     copy_file(sshI, "testscript/Simbard.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
     compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
     compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
-    run_serial(sshI, 20, "simbard_1.txt", "true")
-    run_serial(sshI, 60, "simbard_1.txt", "true")
-    run_serial(sshI, 100, "simbard_1.txt", "true")
+    run_serial(sshI, 20, "simbard_1.txt", "true", "simbard_serial__")
+    run_serial(sshI, 60, "simbard_1.txt", "true", "simbard_serial__")
+    run_serial(sshI, 100, "simbard_1.txt", "true", "simbard_serial__")
     copy_file(sshI, "testscript/Aces.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
     compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
     compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
-    run_serial(sshI, 20, "aces_300.txt", "false")
-    run_serial(sshI, 60, "aces_300.txt", "false")
-    run_serial(sshI, 100, "aces_300.txt", "false")
+    run_serial(sshI, 20, "aces_300.txt", "false", "aces_serial__")
+    run_serial(sshI, 60, "aces_300.txt", "false", "aces_serial__")
+    run_serial(sshI, 100, "aces_300.txt", "false", "aces_serial__")
+    copy_file(sshI, "testscript/Simbard.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
+    copy_file(sshI, "testscript/ScanMatcher_const.java", "serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java")
+    compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
+    compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
+    run_serial(sshI, 20, "simbard_1.txt", "true", "simbard_c_serial__")
+    run_serial(sshI, 60, "simbard_1.txt", "true", "simbard_c_serial__")
+    run_serial(sshI, 100, "simbard_1.txt", "true", "simbard_c_serial__")
 
 if __name__ == "__main__":
     main()
