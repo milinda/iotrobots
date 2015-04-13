@@ -513,7 +513,7 @@ public class ScanMatcher {
 
                 likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
                 count++;
-                if (count == 50) {
+                if (count == 100) {
                     move = Move.Done;
                 }
 //                double localScore = odo_gain * score(map, localPose, readings);

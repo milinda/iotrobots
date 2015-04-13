@@ -137,7 +137,7 @@ def exec_sensor(ssh):
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir5/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir6/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -261,7 +261,7 @@ def main():
     #restart_zk(sshNZ)
     #run_rs_test()
     #restart_zk(sshNZ)
-    #run_simbard_cost_test()
+    run_simbard_cost_test()
     #copy_file(sshI, "testscript/Simbard.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")
     #compile(sshI, "/home/ubuntu/projects/iotrobots/slam")
     #compile(sshI, "/home/ubuntu/projects/iotrobots/simulator")
