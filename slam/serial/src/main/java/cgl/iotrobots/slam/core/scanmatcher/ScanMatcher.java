@@ -524,7 +524,7 @@ public class ScanMatcher {
                 }
             } while (move != Move.Done);
             currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
-        } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && count < 50);
+        } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && count < 100);
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
         pnew.theta = currentPose.theta;
