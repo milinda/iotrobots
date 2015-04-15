@@ -1,0 +1,134 @@
+private class Pair {
+        double one;
+        double two;
+
+        private Pair(double one, double two) {
+            this.one = one;
+            this.two = two;
+        }
+    }
+
+    public double optimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
+        double bestScore = -1;
+        DoubleOrientedPoint currentPose = new DoubleOrientedPoint(init.x, init.y, init.theta);
+        LikeliHoodAndScore likeliHoodAndScore = likelihoodAndScore(map, currentPose, readings);
+//        double currentScore = score(map, currentPose, readings);
+        double currentScore = likeliHoodAndScore.s;
+        double adelta = optAngularDelta, ldelta = optLinearDelta;
+        int refinement = 0;
+        int []countRefinement = new int[7];
+        int count = 0;
+        List<ArrayList<Pair>> currentScores = new ArrayList<ArrayList<Pair>>();
+        List<ArrayList<DoubleOrientedPoint>> points = new ArrayList<ArrayList<DoubleOrientedPoint>>();
+        ArrayList<DoubleOrientedPoint> p = new ArrayList<DoubleOrientedPoint>();
+        ArrayList<Pair> e = new ArrayList<Pair>();
+        currentScores.add(e);
+        points.add(p);
+        do {
+            if (bestScore >= currentScore || (Double.isNaN(bestScore) && Double.isNaN(currentScore))) {
+                countRefinement[refinement] = count;
+                count = 0;
+                refinement++;
+                adelta *= .5;
+                ldelta *= .5;
+                e = new ArrayList<Pair>();
+                currentScores.add(e);
+                p=  new ArrayList<DoubleOrientedPoint>();
+                points.add(p);
+            }
+            bestScore = currentScore;
+            DoubleOrientedPoint bestLocalPose = new DoubleOrientedPoint(currentPose.x, currentPose.y, currentPose.theta);
+            DoubleOrientedPoint localPose;
+
+            Move move = Move.Front;
+            do {
+                localPose = new DoubleOrientedPoint(currentPose.x, currentPose.y, currentPose.theta);
+                switch (move) {
+                    case Front:
+                        localPose.x += ldelta;
+                        move = Move.Back;
+                        break;
+                    case Back:
+                        localPose.x -=  ldelta;
+                        move = Move.Left;
+                        break;
+                    case Left:
+                        localPose.y -= ldelta;
+                        move = Move.Right;
+                        break;
+                    case Right:
+                        localPose.y += ldelta;
+                        move = Move.TurnLeft;
+                        break;
+                    case TurnLeft:
+                        localPose.theta += adelta;
+                        move = Move.TurnRight;
+                        break;
+                    case TurnRight:
+                        localPose.theta -= adelta;
+                        move = Move.Done;
+                        break;
+                    default:
+                }
+
+                localPose.theta = Utils.theta(localPose.theta);
+
+                double odo_gain = 1;
+                if (angularOdometryReliability > 0.) {
+                    double dth = Utils.theta(init.theta - localPose.theta);
+                    dth = Math.atan2(Math.sin(dth), Math.cos(dth));
+                    dth *= dth;
+                    odo_gain *= Math.exp(-angularOdometryReliability * dth);
+                }
+                if (linearOdometryReliability > 0.) {
+                    double dx = init.x - localPose.x;
+                    double dy = init.y - localPose.y;
+                    double drho = dx * dx + dy * dy;
+                    odo_gain *= Math.exp(-linearOdometryReliability * drho);
+                }
+
+                likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
+                count++;
+//                if (count == 100) {
+//                    move = Move.Done;
+//                }
+//                double localScore = odo_gain * score(map, localPose, readings);
+                double localScore = odo_gain * likeliHoodAndScore.s;
+                if (localScore > currentScore) {
+                    currentScore = localScore;
+                    bestLocalPose = new DoubleOrientedPoint(localPose.x, localPose.y, localPose.theta);
+                }
+            } while (move != Move.Done);
+            currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
+            p.add(currentPose);
+            e.add(new Pair(currentScore, bestScore));
+        } while ((currentScore > bestScore || refinement <= optRecursiveIterations));
+        pnew.x = currentPose.x;
+        pnew.y = currentPose.y;
+        pnew.theta = currentPose.theta;
+        String s = "";
+        int c  = 0;
+        for (int i = 0; i < countRefinement.length; i++) {
+            s += countRefinement[i] + " ";
+            c += countRefinement[i];
+        }
+        if  (c > 400) {
+            for (int i = 0; i < currentScores.size(); i++) {
+                e = currentScores.get(i);
+                p = points.get(i);
+                String pt = "" + p.size() + ":";
+                String r = "" + e.size() + " :";
+                for (int j = 0; j < p.size(); j++) {
+                    Pair pr = e.get(j);
+                    DoubleOrientedPoint point = p.get(j);
+                    r += pr.one + ", " + pr.two + "  ";
+                    pt += "(" + point.x + " " + point.y + " " + point.theta +")";
+                }
+                System.out.println(r);
+                System.out.println(pt);
+                System.out.println("*************");
+            }
+        }
+        System.out.println("Iteration count: " + c + ", " + s + " refinement: " + refinement);
+        return bestScore;
+    }
