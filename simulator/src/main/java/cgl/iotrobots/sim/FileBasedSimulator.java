@@ -34,7 +34,7 @@ public class FileBasedSimulator {
 
     boolean simbard = true;
 
-    RosMapPublisher mapPublisher = new RosMapPublisher();
+    //RosMapPublisher mapPublisher = new RosMapPublisher();
 
     boolean ui = false;
 
@@ -70,7 +70,7 @@ public class FileBasedSimulator {
 //        RosTurtle rosTurtle = new RosTurtle();
 //        TurtleUtils.connectToRos(rosTurtle);
         if (ui) {
-            TurtleUtils.connectToRos(mapPublisher);
+            //TurtleUtils.connectToRos(mapPublisher);
         }
 
         if (simbard) {
@@ -98,11 +98,13 @@ public class FileBasedSimulator {
                 } else {
                     scan = dataReader.read();
                 }
+
                 if (scan != null) {
+                    scan.setTimestamp(System.currentTimeMillis());
                     gfsAlgorithm.laserScan(scan);
                     if (ui) {
                         mapUI.setMap(gfsAlgorithm.getMap());
-                        mapPublisher.addMap(gfsAlgorithm.getMap());
+                        //mapPublisher.addMap(gfsAlgorithm.getMap());
                     }
                 } else {
                     gfsAlgorithm.setLastMapUpdate(0);
@@ -110,7 +112,7 @@ public class FileBasedSimulator {
                         gfsAlgorithm.laserScan(oldScan);
                         if (ui) {
                             mapUI.setMap(gfsAlgorithm.getMap());
-                            mapPublisher.addMap(gfsAlgorithm.getMap());
+                            //mapPublisher.addMap(gfsAlgorithm.getMap());
                         }
                         System.out.println("We are done!!");
                         return;
