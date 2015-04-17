@@ -49,7 +49,7 @@ def config_nimbus():
 
     scp_file(ssh, "hosts", 'hosts')
     scp_file(ssh, "storm.yaml", "storm.yaml")
-
+    kill = kill_process_cmd('supervisor')
     stormCP = 'cp storm.yaml'  + ' /home/ubuntu/deploy/storm/conf/storm.yaml'
     stormRm = 'rm -rf /home/ubuntu/deploy/storm/storm-local'
     zooRm = 'rm -rf /tmp/zookeeper'
