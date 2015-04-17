@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "test.py", line 6, in <module>
+    sshNZ.connect('10.39.1.18', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
+  File "/usr/lib/python2.7/dist-packages/paramiko/client.py", line 332, in connect
+    self._auth(username, password, pkey, key_filenames, allow_agent, look_for_keys)
+  File "/usr/lib/python2.7/dist-packages/paramiko/client.py", line 436, in _auth
+    key = pkey_class.from_private_key_file(key_filename, password)
+  File "/usr/lib/python2.7/dist-packages/paramiko/pkey.py", line 198, in from_private_key_file
+    key = cls(filename=filename, password=password)
+  File "/usr/lib/python2.7/dist-packages/paramiko/rsakey.py", line 51, in __init__
+    self._from_private_key_file(filename, password)
+  File "/usr/lib/python2.7/dist-packages/paramiko/rsakey.py", line 163, in _from_private_key_file
+    data = self._read_private_key_file('RSA', filename, password)
+  File "/usr/lib/python2.7/dist-packages/paramiko/pkey.py", line 279, in _read_private_key_file
+    f = open(filename, 'r')
+IOError: [Errno 2] No such file or directory: '/home/ubuntu/skamburu-key'
