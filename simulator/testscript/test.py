@@ -1,21 +1,25 @@
 import paramiko
 import time
 
+ipNz = '10.23.0.92'
+ipB = '10.23.0.93'
+ipI = '10.23.0.94'
+
 sshNZ = paramiko.SSHClient()
 sshNZ.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshNZ.connect('10.39.1.18', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
+sshNZ.connect(ipNz, username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
 sshBR = paramiko.SSHClient()
 sshBR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshBR.connect('10.39.1.28', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
+sshBR.connect(ipB, username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
 sshI = paramiko.SSHClient()
 sshI.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshI.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
+sshI.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
 sshIR = paramiko.SSHClient()
 sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshIR.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
+sshIR.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
 def copy_scan_matcher(ssh, topologyFile):
     print "compiling"
