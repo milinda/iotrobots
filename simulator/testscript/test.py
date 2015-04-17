@@ -19,7 +19,7 @@ sshIR.connect('10.39.1.26', username='ubuntu', key_filename='/home/ubuntu/skambu
 
 def copy_scan_matcher(ssh, topologyFile):
     print "compiling"
-    cmd = 'cp ' + str(topologyFile) + ' serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java'
+    cmd = 'cp ../simulator/testscript/' + str(topologyFile) + ' serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -34,7 +34,7 @@ def copy_scan_matcher(ssh, topologyFile):
 
 def compile_program(ssh, topologyFile):
     print "compiling"
-    cmd = 'cp ' + str(topologyFile) + ' streaming/src/main/resources/topology.yaml'
+    cmd = 'cp ../simulator/testscript/' + str(topologyFile) + ' streaming/src/main/resources/topology.yaml'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
