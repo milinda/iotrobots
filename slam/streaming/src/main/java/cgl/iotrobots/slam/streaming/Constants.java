@@ -41,6 +41,7 @@ public abstract class Constants {
     public static final String RABBITMQ_URL = "rabbitmq_url";
     public static final String OCC_THRESH = "occ_threshold";
     public static final String MIN_SCORE = "min_score";
+    public static final String MAX_CORRECTIONS = "max_corrections";
 
     public abstract class Fields {
         public static final String BODY = "body";

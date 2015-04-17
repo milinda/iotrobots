@@ -96,6 +96,10 @@ public abstract class AbstractGridSlamProcessor {
         this.updatePeriod = period;
     }
 
+    public void setMaxCorrections(int corrections) {
+        this.matcher.setMaxCorrections(corrections);
+    }
+
     public void setMatchingParameters(double urange, double range, double sigma, int kernsize, double lopt, double aopt,
                                       int iterations, double likelihoodSigma, double likelihoodGain, int likelihoodSkip) {
         obsSigmaGain = likelihoodGain;

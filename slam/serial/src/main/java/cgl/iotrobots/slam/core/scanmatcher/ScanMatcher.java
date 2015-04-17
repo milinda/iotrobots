@@ -34,6 +34,7 @@ public class ScanMatcher {
     double linearOdometryReliability = 0;
     double freeCellRatio = Math.sqrt(2.0);
     int initialBeamsSkip = 0;
+    int maxCorrections = 200;
 
     boolean m_activeAreaComputed = false;
 
@@ -131,6 +132,10 @@ public class ScanMatcher {
 
     public void setactiveAreaComputed(boolean m_activeAreaComputed) {
         this.m_activeAreaComputed = m_activeAreaComputed;
+    }
+
+    public void setMaxCorrections(int maxCorrections) {
+        this.maxCorrections = maxCorrections;
     }
 
     public void setMatchingParameters
@@ -445,6 +450,16 @@ public class ScanMatcher {
         return bestScore;
     }
 
+    private class Pair {
+        double one;
+        double two;
+
+        private Pair(double one, double two) {
+            this.one = one;
+            this.two = two;
+        }
+    }
+
     public double optimize(DoubleOrientedPoint pnew, IGMap map, DoubleOrientedPoint init, double[] readings) {
         double bestScore = -1;
         DoubleOrientedPoint currentPose = new DoubleOrientedPoint(init.x, init.y, init.theta);
@@ -453,12 +468,27 @@ public class ScanMatcher {
         double currentScore = likeliHoodAndScore.s;
         double adelta = optAngularDelta, ldelta = optLinearDelta;
         int refinement = 0;
+
+        int totalCorrections = 0;
+        int []countRefinement = new int[7];
         int count = 0;
+        List<ArrayList<Pair>> currentScores = new ArrayList<ArrayList<Pair>>();
+        List<ArrayList<DoubleOrientedPoint>> points = new ArrayList<ArrayList<DoubleOrientedPoint>>();
+        ArrayList<DoubleOrientedPoint> p = new ArrayList<DoubleOrientedPoint>();
+        ArrayList<Pair> e = new ArrayList<Pair>();
+        currentScores.add(e);
+        points.add(p);
         do {
             if (bestScore >= currentScore || (Double.isNaN(bestScore) && Double.isNaN(currentScore))) {
+                countRefinement[refinement] = count;
+                count = 0;
                 refinement++;
                 adelta *= .5;
                 ldelta *= .5;
+                e = new ArrayList<Pair>();
+                currentScores.add(e);
+                p=  new ArrayList<DoubleOrientedPoint>();
+                points.add(p);
             }
             bestScore = currentScore;
             DoubleOrientedPoint bestLocalPose = new DoubleOrientedPoint(currentPose.x, currentPose.y, currentPose.theta);
@@ -513,9 +543,13 @@ public class ScanMatcher {
 
                 likeliHoodAndScore = likelihoodAndScore(map, localPose, readings);
                 count++;
-                if (count == 100) {
+                totalCorrections++;
+                if (totalCorrections >= maxCorrections) {
                     move = Move.Done;
                 }
+//                if (count == 100) {
+//                    move = Move.Done;
+//                }
 //                double localScore = odo_gain * score(map, localPose, readings);
                 double localScore = odo_gain * likeliHoodAndScore.s;
                 if (localScore > currentScore) {
@@ -524,12 +558,45 @@ public class ScanMatcher {
                 }
             } while (move != Move.Done);
             currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
-        } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && count < 100);
+            p.add(currentPose);
+            e.add(new Pair(currentScore, bestScore));
+        } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && totalCorrections < maxCorrections);
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
         pnew.theta = currentPose.theta;
-//        System.out.println("Iteration count: " + count);
+        printCorrectionInfo(refinement, countRefinement, currentScores, points);
         return bestScore;
+    }
+
+    private void printCorrectionInfo(int refinement, int[] countRefinement,
+                                     List<ArrayList<Pair>> currentScores,
+                                     List<ArrayList<DoubleOrientedPoint>> points) {
+        ArrayList<Pair> e;
+        ArrayList<DoubleOrientedPoint> p;
+        String s = "";
+        int c  = 0;
+        for (int i = 0; i < countRefinement.length; i++) {
+            s += countRefinement[i] + " ";
+            c += countRefinement[i];
+        }
+        if  (c > 200) {
+            for (int i = 0; i < currentScores.size(); i++) {
+                e = currentScores.get(i);
+                p = points.get(i);
+                String pt = "" + p.size() + ":";
+                String r = "" + e.size() + " :";
+                for (int j = 0; j < p.size(); j++) {
+                    Pair pr = e.get(j);
+                    DoubleOrientedPoint point = p.get(j);
+                    r += pr.one + ", " + pr.two + "  ";
+                    pt += "(" + point.x + " " + point.y + " " + point.theta +")";
+                }
+                System.out.println(r);
+                System.out.println(pt);
+                System.out.println("*************");
+            }
+        }
+        System.out.println("Iteration count: " + c + ", " + s + " refinement: " + refinement);
     }
 
     public void setLaserParameters(int beams, double[] angles, DoubleOrientedPoint lpose) {

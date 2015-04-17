@@ -56,6 +56,7 @@ public class GFSConfiguration {
     protected double mapUpdateInterval = 5.0;
 
     protected double occThresh = .3;
+    private int maxCorrections;
 
     public double getOccThresh() {
         return occThresh;
@@ -416,5 +417,13 @@ public class GFSConfiguration {
 
     public void setMapUpdateInterval(double mapUpdateInterval) {
         this.mapUpdateInterval = mapUpdateInterval;
+    }
+
+    public void setMaxCorrections(int maxCorrections) {
+        this.maxCorrections = maxCorrections;
+    }
+
+    public int getMaxCorrections() {
+        return maxCorrections;
     }
 }

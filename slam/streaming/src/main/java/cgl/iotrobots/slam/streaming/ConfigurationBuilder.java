@@ -46,6 +46,7 @@ public class ConfigurationBuilder {
         configuration.setOccThresh(getDoubleProperty(conf, Constants.OCC_THRESH));
 
         configuration.setMinimumScore(getDoubleProperty(conf, Constants.MIN_SCORE));
+        configuration.setMaxCorrections(getIntProperty(conf, Constants.MAX_CORRECTIONS));
 
         return configuration;
     }

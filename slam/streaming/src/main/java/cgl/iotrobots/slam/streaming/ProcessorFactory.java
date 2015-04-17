@@ -25,6 +25,7 @@ public class ProcessorFactory {
         scanMatcher.init(cfg.getNoOfParticles(), cfg.getXmin(), cfg.getYmin(),
                 cfg.getXmax(), cfg.getYmax(), cfg.getDelta(), new DoubleOrientedPoint(0.0, 0.0, 0.0), activeParticles);
         scanMatcher.getActiveParticles().addAll(activeParticles);
+        scanMatcher.setMaxCorrections(cfg.getMaxCorrections());
         return scanMatcher;
     }
 
