@@ -45,7 +45,7 @@ def config_nimbus():
     scp_file(ssh, "hosts", 'hosts')
     scp_file(ssh, "storm.yaml", "storm.yaml")
 
-    stormCP = 'cp storm.yaml'  + ' /home/ubuntudeploy/storm/conf/storm.yaml'
+    stormCP = 'cp storm.yaml'  + ' /home/ubuntu/deploy/storm/conf/storm.yaml'
     stormRm = 'rm -rf /home/ubuntu/deploy/storm/storm-local'
     zooRm = 'rm -rf /tmp/zookeeper'
     channel = ssh.invoke_shell()
@@ -72,7 +72,7 @@ def config_supervisors():
         scp_file(ssh, "storm.yaml", "storm.yaml")
 
 
-        stormCP = 'cp storm.yaml'  + ' deploy/storm/conf/storm.yaml'
+        stormCP = 'cp storm.yaml'  + ' /home/ubuntu/deploy/storm/conf/storm.yaml'
         stormRm = 'rm -rf deploy/storm/storm-local'
         channel = ssh.invoke_shell()
         stdin = channel.makefile('wb')
