@@ -34,6 +34,11 @@ def init_connections():
         ssh.connect(s, username='ubuntu', key_filename=key_file)
         supervisor_connections[s] = ssh
 
+def kill_process_cmd(s):
+    s = '''pid=`ps ax | grep "''' + s + '''" | awk "{print $1}"`
+    sudo kill $pid'''
+    return s
+
 def scp_file(ssh, src, dst):
     scp = SCPClient(ssh.get_transport())
     scp.put(src, dst)
@@ -55,7 +60,9 @@ def config_nimbus():
     ''' + stormCP + '''
     ''' + stormRm + '''
     ''' + zooRm + '''
+    ''' + kill + '''
     ''' + supervisorStop + '''
+    sleep 5
     ''' + supervisorStart + '''
     exit
     ''')
@@ -71,7 +78,7 @@ def config_supervisors():
         scp_file(ssh, "hosts", 'hosts')
         scp_file(ssh, "storm.yaml", "storm.yaml")
 
-
+        kill = kill_process_cmd('supervisor')
         stormCP = 'cp storm.yaml'  + ' /home/ubuntu/deploy/storm/conf/storm.yaml'
         stormRm = 'rm -rf deploy/storm/storm-local'
         channel = ssh.invoke_shell()
@@ -81,7 +88,9 @@ def config_supervisors():
         ''' + hostsCP + '''
         ''' + stormCP + '''
         ''' + stormRm + '''
+        ''' + kill + '''
         ''' + supervisorStop + '''
+        sleep 5
         ''' + supervisorStart + '''
         exit
         ''')
