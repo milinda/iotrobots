@@ -53,6 +53,7 @@ public class GFSAlgorithm {
     double llsamplestep;
     double lasamplerange;
     double lasamplestep;
+    int maxCorrections;
 
     private MapUpdater mapUpdater;
 
