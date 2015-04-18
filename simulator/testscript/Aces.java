@@ -53,6 +53,7 @@ public class GFSAlgorithm {
     double llsamplestep;
     double lasamplerange;
     double lasamplestep;
+    int maxCorrections;
 
     private MapUpdater mapUpdater;
 
@@ -134,6 +135,7 @@ public class GFSAlgorithm {
         gsp.init(particles, xmin, ymin, xmax, ymax, delta, initialPose);
         gsp.getMatcher().setLLSamplerange(llsamplerange);
         gsp.getMatcher().setLLSamplestep(llsamplestep);
+        gsp.setMaxCorrections(maxCorrections);
         /// @todo Check these calls; in the gmapping gui, they use
         /// llsamplestep and llsamplerange intead of lasamplestep and
         /// lasamplerange.  It was probably a typo, but who knows.

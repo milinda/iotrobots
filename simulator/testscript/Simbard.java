@@ -131,6 +131,7 @@ public class GFSAlgorithm {
         gsp.setUpdateDistances(linearUpdate, angularUpdate, resampleThreshold);
         gsp.setUpdatePeriod(temporalUpdate);
         gsp.getMatcher().setgenerateMap(false);
+        gsp.setMaxCorrections(maxCorrections);
         gsp.init(particles, xmin, ymin, xmax, ymax, delta, initialPose);
         gsp.getMatcher().setLLSamplerange(llsamplerange);
         gsp.getMatcher().setLLSamplestep(llsamplestep);
