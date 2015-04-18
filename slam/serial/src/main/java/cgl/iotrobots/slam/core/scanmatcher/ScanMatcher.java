@@ -470,25 +470,25 @@ public class ScanMatcher {
         int refinement = 0;
 
         int totalCorrections = 0;
-        int []countRefinement = new int[7];
+//        int []countRefinement = new int[7];
         int count = 0;
-        List<ArrayList<Pair>> currentScores = new ArrayList<ArrayList<Pair>>();
-        List<ArrayList<DoubleOrientedPoint>> points = new ArrayList<ArrayList<DoubleOrientedPoint>>();
-        ArrayList<DoubleOrientedPoint> p = new ArrayList<DoubleOrientedPoint>();
-        ArrayList<Pair> e = new ArrayList<Pair>();
-        currentScores.add(e);
-        points.add(p);
+//        List<ArrayList<Pair>> currentScores = new ArrayList<ArrayList<Pair>>();
+//        List<ArrayList<DoubleOrientedPoint>> points = new ArrayList<ArrayList<DoubleOrientedPoint>>();
+//        ArrayList<DoubleOrientedPoint> p = new ArrayList<DoubleOrientedPoint>();
+//        ArrayList<Pair> e = new ArrayList<Pair>();
+//        currentScores.add(e);
+//        points.add(p);
         do {
             if (bestScore >= currentScore || (Double.isNaN(bestScore) && Double.isNaN(currentScore))) {
-                countRefinement[refinement] = count;
+//                countRefinement[refinement] = count;
                 count = 0;
                 refinement++;
                 adelta *= .5;
                 ldelta *= .5;
-                e = new ArrayList<Pair>();
-                currentScores.add(e);
-                p=  new ArrayList<DoubleOrientedPoint>();
-                points.add(p);
+//                e = new ArrayList<Pair>();
+//                currentScores.add(e);
+//                p=  new ArrayList<DoubleOrientedPoint>();
+//                points.add(p);
             }
             bestScore = currentScore;
             DoubleOrientedPoint bestLocalPose = new DoubleOrientedPoint(currentPose.x, currentPose.y, currentPose.theta);
@@ -558,13 +558,13 @@ public class ScanMatcher {
                 }
             } while (move != Move.Done);
             currentPose = new DoubleOrientedPoint(bestLocalPose.x, bestLocalPose.y, bestLocalPose.theta);
-            p.add(currentPose);
-            e.add(new Pair(currentScore, bestScore));
+            // p.add(currentPose);
+            // e.add(new Pair(currentScore, bestScore));
         } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && totalCorrections < maxCorrections);
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
         pnew.theta = currentPose.theta;
-        printCorrectionInfo(refinement, countRefinement, currentScores, points);
+        // printCorrectionInfo(refinement, countRefinement, currentScores, points);
         return bestScore;
     }
 

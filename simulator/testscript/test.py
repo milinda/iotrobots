@@ -139,6 +139,9 @@ def exec_sensor(ssh):
     stdin.close()
     time.sleep(5)
 
+aces_times = {20: [300, 250, 200, 200, 200], 60: {400, 350, 300, 300, 300}, 100: {600, 500, 400, 400, 400}}
+simbard_times = {20: [300, 300, 300, 300, 300], 60: {400, 400, 400, 400, 400}, 100: {500, 500, 500, 500, 500}}
+
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
     cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.23.0.93:5672" ' + str(input) + ' results_dir7/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
