@@ -1,0 +1,2 @@
+Ran on Apr 18, 5pm
+Doing results with 130 iterations upperbound

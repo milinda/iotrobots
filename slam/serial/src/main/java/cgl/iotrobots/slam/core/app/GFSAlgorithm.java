@@ -54,6 +54,7 @@ public class GFSAlgorithm {
     double lasamplerange;
     double lasamplestep;
     int maxCorrections;
+
     private MapUpdater mapUpdater;
 
     public void init() {
@@ -80,10 +81,10 @@ public class GFSAlgorithm {
         temporalUpdate = -1;
         resampleThreshold = .5;
         particles = 30;
-        xmin = -70;
-        ymin = -40.0;
-        xmax = 10.0;
-        ymax = 40.0;
+        xmin = -15;
+        ymin = -15.0;
+        xmax = 15.0;
+        ymax = 15.0;
         delta = 0.05;
         occThresh = 0.25;
         llsamplerange = 0.01;
@@ -130,8 +131,8 @@ public class GFSAlgorithm {
         gsp.setMotionModelParameters(srr, srt, str, stt);
         gsp.setUpdateDistances(linearUpdate, angularUpdate, resampleThreshold);
         gsp.setUpdatePeriod(temporalUpdate);
-        gsp.setMaxCorrections(maxCorrections);
         gsp.getMatcher().setgenerateMap(false);
+        gsp.setMaxCorrections(maxCorrections);
         gsp.init(particles, xmin, ymin, xmax, ymax, delta, initialPose);
         gsp.getMatcher().setLLSamplerange(llsamplerange);
         gsp.getMatcher().setLLSamplestep(llsamplestep);
