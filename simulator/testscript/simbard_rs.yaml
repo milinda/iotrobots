@@ -32,7 +32,7 @@ bolts:
         properties:
           ackMode: "auto"
 conf:
-    rabbitmq_url: "amqp://10.23.0.92:5672"
+    rabbitmq_url: "amqp://10.23.0.93:5672"
     map_update_interval: 5.0
     maxRange: 80.0
     maxUrange: 79.0
