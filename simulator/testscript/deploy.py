@@ -2,10 +2,10 @@ import paramiko
 import time
 from scp import SCPClient
 
-supervisors = ['10.23.0.87', '10.23.0.88', '10.23.0.89', '10.23.0.90', '10.23.0.91']
+supervisors = ['10.23.1.185', '10.23.1.186', '10.23.1.191', '10.23.1.188', '10.23.1.189']
 nimbus = '10.23.0.92'
-iot = '10.23.0.94'
-broker = '10.23.0.93'
+iot = '10.23.1.190'
+broker = '10.23.1.192'
 
 key_file = '/home/ubuntu/skamburu-key'
 

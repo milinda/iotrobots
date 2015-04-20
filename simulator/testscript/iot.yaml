@@ -29,7 +29,7 @@ iot.sensorsite.transports:
     rabbitmq:
       class: "cgl.iotcloud.transport.rabbitmq.RabbitMQTransport"
       properties:
-            urls: ["amqp://10.23.0.93:5672"]
+            urls: ["amqp://10.23.1.192:5672"]
             threads:
                 max: 10
                 core: 4
