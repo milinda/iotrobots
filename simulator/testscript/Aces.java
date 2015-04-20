@@ -91,7 +91,7 @@ public class GFSAlgorithm {
         llsamplestep = 0.01;
         lasamplerange = 0.005;
         lasamplestep = 0.005;
-        maxCorrections = 130;
+        maxCorrections = 180;
     }
 
     public void setParticles(int particles) {
