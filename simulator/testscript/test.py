@@ -1,9 +1,9 @@
 import paramiko
 import time
 
-ipNz = '10.23.0.92'
-ipB = '10.23.1.192'
-ipI = '10.23.1.190'
+ipNz = '10.39.1.18'
+ipB = '10.39.1.28'
+ipI = '10.39.1.26'
 
 sshNZ = paramiko.SSHClient()
 sshNZ.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -131,7 +131,7 @@ def exec_sensor(ssh):
     stdout = channel.makefile('rb')
     stdin.write('''
     cd deploy/iotcloud2-bin-1.0-SNAPSHOT
-    ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.23.1.192:5672"  > /dev/null 2>&1 &
+    ./bin/iotcloud jar repository/sensors/iotrobots-slam-sensor-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.slam.sensor.SlamSensor -s local -sim -url "amqp://10.39.1.28:5672"  > /dev/null 2>&1 &
     exit
     ''')
     print stdout.read()
@@ -144,7 +144,7 @@ simbard_times = {20: [300, 300, 300, 300, 300], 60: {400, 400, 400, 400, 400}, 1
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.23.1.192:5672" ' + str(input) + ' results_dir14/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir14/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
