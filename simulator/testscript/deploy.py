@@ -105,7 +105,7 @@ def config_iot():
     scp_file(ssh, "hosts", 'hosts')
     scp_file(ssh, "iot.yaml", "iot.yaml")
 
-    iotCP = 'cp iot.yaml'  + ' /home/ubuntu/iotcloud2-bin-1.0-SNAPSHOT/conf/iot.yaml'
+    iotCP = 'cp iot.yaml'  + ' /home/ubuntu/deploy/iotcloud2-bin-1.0-SNAPSHOT/conf/iot.yaml'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
