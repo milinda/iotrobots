@@ -144,7 +144,7 @@ simbard_times = {20: [300, 300, 300, 300, 300], 60: {400, 400, 400, 400, 400}, 1
 
 def run_test(ssh, test, parallel, particles, input, simbad):
     print "running test...."
-    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir14/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
+    cmd = 'java -cp target/simulator-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.sim.FileBasedDistributedSimulator "amqp://10.39.1.28:5672" ' + str(input) + ' results_dir16/' +str(test) + '/' + str(particles) + '_' + str(parallel) + ' ' +str(simbad) + ' false 1000'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -263,10 +263,10 @@ def main():
     #copy_file(sshI, "testscript/ScanMatcher.java", "serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java")
     #restart_zk(sshNZ)
     #restart_zk(sshNZ)
-    run_simbard_test()
-    run_aces_test()
+    #run_simbard_test()
+    #run_aces_test()
     #restart_zk(sshNZ)
-    run_rs_test()
+    #run_rs_test()
     #restart_zk(sshNZ)
     #run_simbard_cost_test()
     copy_file(sshI, "../simulator/testscript/Simbard.java", "serial/src/main/java/cgl/iotrobots/slam/core/app/GFSAlgorithm.java")

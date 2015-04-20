@@ -1,903 +1,302 @@
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000013
-Add Scan Time: 207
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2432
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2280
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2757
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2688
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2610
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2755
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2621
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2609
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
-Add Scan Time: 3381
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2359
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2103
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2324
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2252
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2728
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2713
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2597
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2594
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2494
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2899
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2836
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2716
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2402
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2371
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2455
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2576
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2428
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 205
 Add Scan Time: 2184
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2256
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2441
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2451
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2269
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2480
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2882
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2799
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2670
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2801
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2836
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2707
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2316
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2223
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2469
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2381
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2699
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2799
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2663
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2381
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2657
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000013
-Add Scan Time: 3007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2133
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2212
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2463
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2783
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2603
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2307
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2311
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2457
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2336
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2527
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2553
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
-Add Scan Time: 2560
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2625
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2546
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2496
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2277
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2308
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999993
-Add Scan Time: 2342
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2233
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2543
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2448
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2619
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2835
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2612
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2730
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2660
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2661
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2572
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2281
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2328
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2568
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2537
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2289
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2255
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2114
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2367
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2557
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2644
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2715
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2862
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2757
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2579
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 2298
+Add Scan Time: 2507
+Add Scan Time: 2512
 Add Scan Time: 2583
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2470
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2205
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2013
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2073
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2199
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2285
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2466
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2216
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2521
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000013
-Add Scan Time: 3173
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2722
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2494
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2446
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2671
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2534
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2438
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2285
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2116
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2378
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2248
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2060
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 1887
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 1954
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2071
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2111
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2531
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2302
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2208
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2220
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2430
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2758
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2862
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 3025
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 3132
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2632
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2479
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2463
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2436
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2212
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2129
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 1877
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2397
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2535
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2460
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2819
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2850
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2960
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 3126
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 3021
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2757
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2626
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2288
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2240
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2269
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2374
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2600
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2660
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2763
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2877
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2722
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2943
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 3664
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 3230
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2980
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2664
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2368
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2410
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2609
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2585
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2332
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2400
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2914
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 3095
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2848
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2848
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2961
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 3174
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 3051
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2718
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 2622
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 2281
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2311
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000013
-Add Scan Time: 2487
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2172
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2563
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2364
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2430
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2786
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2733
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2638
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2591
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2806
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2359
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2368
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2118
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2008
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2214
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2240
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2198
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2193
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2053
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2627
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2833
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2822
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2933
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2959
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2551
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2491
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2297
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2061
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2323
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2280
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2110
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2273
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2547
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2715
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2646
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2993
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 3172
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2967
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2636
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2627
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2458
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2375
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2277
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2111
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2352
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2912
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2859
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2833
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 3024
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 3157
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2929
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2814
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2849
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2786
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 2843
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2639
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2289
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2214
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2360
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2360
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2333
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2559
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2820
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999992
-Add Scan Time: 2679
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2977
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2900
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2783
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000013
-Add Scan Time: 3308
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2220
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 2511
+Add Scan Time: 2507
+Add Scan Time: 2483
+Add Scan Time: 3078
+Add Scan Time: 2263
 Add Scan Time: 2012
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 1794
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 1821
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 1976
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 1980
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 1889
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2068
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 1841
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 1940
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2118
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 1960
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2378
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2811
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 3060
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 2891
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2687
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2505
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-Add Scan Time: 2439
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2246
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2039
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999994
-Add Scan Time: 2210
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2110
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
+Add Scan Time: 2164
+Add Scan Time: 2340
+Add Scan Time: 2808
+Add Scan Time: 2737
+Add Scan Time: 2501
+Add Scan Time: 2640
+Add Scan Time: 2582
+Add Scan Time: 2843
+Add Scan Time: 2704
+Add Scan Time: 2585
+Add Scan Time: 2363
+Add Scan Time: 2427
+Add Scan Time: 2436
+Add Scan Time: 2459
+Add Scan Time: 2373
+Add Scan Time: 2145
 Add Scan Time: 2282
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2478
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2708
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2931
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2901
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2961
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 3067
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000013
-Add Scan Time: 3125
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2290
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999998
-Add Scan Time: 2277
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2101
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2122
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 1955
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 1847
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 1962
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000004
-Add Scan Time: 1917
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 2288
+Add Scan Time: 2422
+Add Scan Time: 2225
+Add Scan Time: 2308
+Add Scan Time: 2706
+Add Scan Time: 2822
+Add Scan Time: 2781
+Add Scan Time: 2742
+Add Scan Time: 2641
+Add Scan Time: 2653
+Add Scan Time: 2449
+Add Scan Time: 2268
+Add Scan Time: 2373
+Add Scan Time: 2308
+Add Scan Time: 2539
+Add Scan Time: 2446
+Add Scan Time: 2379
+Add Scan Time: 2252
+Add Scan Time: 2260
+Add Scan Time: 2282
+Add Scan Time: 2378
+Add Scan Time: 2416
+Add Scan Time: 2634
+Add Scan Time: 2713
+Add Scan Time: 2712
+Add Scan Time: 2526
+Add Scan Time: 2719
+Add Scan Time: 2842
+Add Scan Time: 2679
+Add Scan Time: 2790
+Add Scan Time: 2809
+Add Scan Time: 2693
+Add Scan Time: 2567
+Add Scan Time: 2517
+Add Scan Time: 2493
+Add Scan Time: 2377
+Add Scan Time: 2451
+Add Scan Time: 2506
+Add Scan Time: 2738
 Add Scan Time: 2044
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2283
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 2381
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2552
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2786
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999997
-Add Scan Time: 2787
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2841
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 2941
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2988
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2989
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999999
-Add Scan Time: 2780
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-Add Scan Time: 2665
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2551
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2639
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2139
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=0.9999999999999996
+Add Scan Time: 2122
+Add Scan Time: 2159
+Add Scan Time: 2387
+Add Scan Time: 2485
+Add Scan Time: 2356
+Add Scan Time: 2414
+Add Scan Time: 2271
+Add Scan Time: 2169
+Add Scan Time: 2149
+Add Scan Time: 2598
+Add Scan Time: 2221
+Add Scan Time: 2167
+Add Scan Time: 2186
+Add Scan Time: 2206
+Add Scan Time: 2229
+Add Scan Time: 2286
+Add Scan Time: 2444
+Add Scan Time: 2597
+Add Scan Time: 2660
+Add Scan Time: 2533
+Add Scan Time: 2581
+Add Scan Time: 2510
+Add Scan Time: 2414
+Add Scan Time: 2342
+Add Scan Time: 2117
+Add Scan Time: 1965
+Add Scan Time: 1985
+Add Scan Time: 2133
+Add Scan Time: 2150
+Add Scan Time: 2161
+Add Scan Time: 2187
+Add Scan Time: 2336
+Add Scan Time: 2562
+Add Scan Time: 2702
+Add Scan Time: 2683
+Add Scan Time: 2729
+Add Scan Time: 2847
+Add Scan Time: 2751
+Add Scan Time: 2662
+Add Scan Time: 2406
+Add Scan Time: 2485
+Add Scan Time: 2462
+Add Scan Time: 2371
+Add Scan Time: 2242
+Add Scan Time: 2192
+Add Scan Time: 2188
+Add Scan Time: 2190
+Add Scan Time: 2199
+Add Scan Time: 2245
+Add Scan Time: 2237
 Add Scan Time: 2276
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0
+Add Scan Time: 2255
+Add Scan Time: 2436
+Add Scan Time: 2532
+Add Scan Time: 2740
+Add Scan Time: 3011
+Add Scan Time: 2340
 Add Scan Time: 2204
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000002
-Add Scan Time: 2020
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-ERROR Normalizer - ERROR: root->accWeight=0.0    sum_leaf_weights=1.0000000000000007
-Add Scan Time: 1106
+Add Scan Time: 2101
+Add Scan Time: 2057
+Add Scan Time: 2087
+Add Scan Time: 1908
+Add Scan Time: 2237
+Add Scan Time: 1872
+Add Scan Time: 1997
+Add Scan Time: 2152
+Add Scan Time: 2267
+Add Scan Time: 2450
+Add Scan Time: 2671
+Add Scan Time: 2705
+Add Scan Time: 2706
+Add Scan Time: 2576
+Add Scan Time: 2619
+Add Scan Time: 2531
+Add Scan Time: 2253
+Add Scan Time: 2186
+Add Scan Time: 2206
+Add Scan Time: 2180
+Add Scan Time: 2195
+Add Scan Time: 2246
+Add Scan Time: 2367
+Add Scan Time: 2488
+Add Scan Time: 2571
+Add Scan Time: 2638
+Add Scan Time: 2719
+Add Scan Time: 2804
+Add Scan Time: 2593
+Add Scan Time: 2421
+Add Scan Time: 2233
+Add Scan Time: 2223
+Add Scan Time: 2226
+Add Scan Time: 2292
+Add Scan Time: 2293
+Add Scan Time: 2279
+Add Scan Time: 2548
+Add Scan Time: 2740
+Add Scan Time: 2688
+Add Scan Time: 2642
+Add Scan Time: 2670
+Add Scan Time: 2719
+Add Scan Time: 2567
+Add Scan Time: 2370
+Add Scan Time: 2428
+Add Scan Time: 1879
+Add Scan Time: 2058
+Add Scan Time: 2050
+Add Scan Time: 2225
+Add Scan Time: 2373
+Add Scan Time: 2370
+Add Scan Time: 2493
+Add Scan Time: 2556
+Add Scan Time: 2483
+Add Scan Time: 2513
+Add Scan Time: 2682
+Add Scan Time: 2704
+Add Scan Time: 2482
+Add Scan Time: 2342
+Add Scan Time: 2192
+Add Scan Time: 2117
+Add Scan Time: 2239
+Add Scan Time: 2261
+Add Scan Time: 2195
+Add Scan Time: 2069
+Add Scan Time: 2109
+Add Scan Time: 2297
+Add Scan Time: 2451
+Add Scan Time: 2486
+Add Scan Time: 2626
+Add Scan Time: 2617
+Add Scan Time: 2382
+Add Scan Time: 2298
+Add Scan Time: 2173
+Add Scan Time: 2103
+Add Scan Time: 2156
+Add Scan Time: 2124
+Add Scan Time: 2014
+Add Scan Time: 2270
+Add Scan Time: 2460
+Add Scan Time: 2488
+Add Scan Time: 2592
+Add Scan Time: 2731
+Add Scan Time: 2854
+Add Scan Time: 2808
+Add Scan Time: 3149
+Add Scan Time: 2402
+Add Scan Time: 2376
+Add Scan Time: 2214
+Add Scan Time: 2112
+Add Scan Time: 2132
+Add Scan Time: 2033
+Add Scan Time: 2247
+Add Scan Time: 2543
+Add Scan Time: 2607
+Add Scan Time: 2578
+Add Scan Time: 2775
+Add Scan Time: 2730
+Add Scan Time: 2709
+Add Scan Time: 2702
+Add Scan Time: 2698
+Add Scan Time: 2591
+Add Scan Time: 2508
+Add Scan Time: 2574
+Add Scan Time: 2423
+Add Scan Time: 2276
+Add Scan Time: 2457
+Add Scan Time: 1969
+Add Scan Time: 2068
+Add Scan Time: 2345
+Add Scan Time: 2318
+Add Scan Time: 2399
+Add Scan Time: 2466
+Add Scan Time: 2284
+Add Scan Time: 2232
+Add Scan Time: 2105
+Add Scan Time: 2100
+Add Scan Time: 2021
+Add Scan Time: 1936
+Add Scan Time: 1920
+Add Scan Time: 1988
+Add Scan Time: 1962
+Add Scan Time: 1934
+Add Scan Time: 1973
+Add Scan Time: 1990
+Add Scan Time: 2045
+Add Scan Time: 2158
+Add Scan Time: 2122
+Add Scan Time: 2545
+Add Scan Time: 2742
+Add Scan Time: 2889
+Add Scan Time: 2807
+Add Scan Time: 2696
+Add Scan Time: 2130
+Add Scan Time: 2173
+Add Scan Time: 2068
+Add Scan Time: 2065
+Add Scan Time: 2064
+Add Scan Time: 1906
+Add Scan Time: 1967
+Add Scan Time: 1944
+Add Scan Time: 2382
+Add Scan Time: 2422
+Add Scan Time: 2508
+Add Scan Time: 2647
+Add Scan Time: 2607
+Add Scan Time: 2461
+Add Scan Time: 2362
+Add Scan Time: 2452
+Add Scan Time: 2376
+Add Scan Time: 2260
+Add Scan Time: 2133
+Add Scan Time: 2086
+Add Scan Time: 2186
+Add Scan Time: 2104
+Add Scan Time: 2143
+Add Scan Time: 2255
+Add Scan Time: 2406
+Add Scan Time: 2399
+Add Scan Time: 2420
+Add Scan Time: 2534
+Add Scan Time: 2574
+Add Scan Time: 2891
+Add Scan Time: 2920
+Add Scan Time: 2932
+Add Scan Time: 2710
+Add Scan Time: 2556
+Add Scan Time: 2480
+Add Scan Time: 2317
+Add Scan Time: 2079
+Add Scan Time: 2140
+Add Scan Time: 2108
+Add Scan Time: 2042
+Add Scan Time: 889
 We are done!!
