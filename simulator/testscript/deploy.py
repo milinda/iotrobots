@@ -57,6 +57,7 @@ def config_nimbus():
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
     stdin.write('''
+    ''' + hostsCP + '''
     ''' + stormCP + '''
     ''' + stormRm + '''
     ''' + zooRm + '''
@@ -110,7 +111,25 @@ def config_iot():
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
     stdin.write('''
+    ''' + hostsCP + '''
     ''' + iotCP + '''
+    exit
+    ''')
+    print stdout.read()
+    stdout.close()
+    stdin.close()
+
+def config_broker():
+    print "compiling"
+    ssh = sshBR
+
+    scp_file(ssh, "hosts", 'hosts')
+
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+    stdin.write('''
+    ''' + hostsCP + '''
     exit
     ''')
     print stdout.read()
@@ -122,6 +141,7 @@ def main():
     config_nimbus()
     config_supervisors()
     config_iot()
+    config_broker()
 
 if __name__ == "__main__":
     main()
