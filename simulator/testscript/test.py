@@ -263,7 +263,7 @@ def main():
     #copy_file(sshI, "testscript/ScanMatcher.java", "serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java")
     #restart_zk(sshNZ)
     #restart_zk(sshNZ)
-    run_simbard_test()
+    #run_simbard_test()
     run_aces_test()
     #restart_zk(sshNZ)
     #run_rs_test()
