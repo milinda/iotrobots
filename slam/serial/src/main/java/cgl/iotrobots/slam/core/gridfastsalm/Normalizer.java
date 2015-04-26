@@ -61,7 +61,7 @@ public class Normalizer {
         }
 
         if (Math.abs(aw - 1.0) > 0.0001 || Math.abs(lastNodeWeight - 1.0) > 0.0001) {
-            LOG.error("ERROR: root->accWeight=" + lastNodeWeight + "    sum_leaf_weights=" + aw);
+            //LOG.error("ERROR: root->accWeight=" + lastNodeWeight + "    sum_leaf_weights=" + aw);
         } else {
             LOG.info("Cooreect weights {} {}", lastNodeWeight, aw);
         }

@@ -563,6 +563,7 @@ public class ScanMatcher {
         } while ((currentScore > bestScore || refinement <= optRecursiveIterations) && totalCorrections < maxCorrections);
         pnew.x = currentPose.x;
         pnew.y = currentPose.y;
+        System.out.println(totalCorrections);
         pnew.theta = currentPose.theta;
         // printCorrectionInfo(refinement, countRefinement, currentScores, points);
         return bestScore;
