@@ -186,7 +186,7 @@ public class GFSAlgorithm {
 
         if (addScan(scan)) {
             scanTime += System.currentTimeMillis() - t0;
-            // System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
+            System.out.println("Add Scan Time: " + (System.currentTimeMillis() - t0) );
             LOG.debug("scan processed");
 
             DoubleOrientedPoint mpose = gsp.getParticles().get(gsp.getBestParticleIndex()).pose;
