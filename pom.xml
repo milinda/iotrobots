@@ -15,6 +15,7 @@
         <module>simulator</module>
         <!--<module>collavoid</module>-->
         <module>utils</module>
+        <module>collectives</module>
     </modules>
 
     <properties>
