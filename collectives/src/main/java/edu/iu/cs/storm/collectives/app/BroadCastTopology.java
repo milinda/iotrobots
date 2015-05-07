@@ -101,12 +101,10 @@ public class BroadCastTopology {
         };
         IRichSpout dataSpout;
         IRichSpout controlSpout;
-        IRichBolt mapSendBolt;
         IRichBolt valueSendBolt;
         if (!iotCloud) {
             dataSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(0), reporter);
             controlSpout = new RabbitMQSpout(new RabbitMQStaticSpoutConfigurator(3), reporter);
-            mapSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(1), reporter);
             valueSendBolt = new RabbitMQBolt(new RabbitMQStaticBoltConfigurator(2), reporter);
         } else {
             StreamComponents components = streamTopologyBuilder.buildComponents();
@@ -119,13 +117,11 @@ public class BroadCastTopology {
         GatherBolt reSamplingBolt = new GatherBolt();
         BroadCastBolt dispatcherBolt = new BroadCastBolt();
 
-
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
-        builder.setBolt(Constants.Topology.WORKER_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.BROADCAST_BOLT, Constants.Fields.DATA_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM).allGrouping(Constants.Topology.GATHER_BOLT, Constants.Fields.ASSIGNMENT_STREAM);
+        builder.setBolt(Constants.Topology.WORKER_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.BROADCAST_BOLT, Constants.Fields.DATA_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
         builder.setBolt(Constants.Topology.GATHER_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.GATHER_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
         builder.setBolt(Constants.Topology.RESULT_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.SEND_STREAM);
-
     }
 
     private static void addSerializers(Config config) {

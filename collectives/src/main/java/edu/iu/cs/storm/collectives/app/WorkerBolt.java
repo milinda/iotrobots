@@ -10,9 +10,13 @@ import backtype.storm.tuple.Tuple;
 import java.util.Map;
 
 public class WorkerBolt extends BaseRichBolt {
+    private TopologyContext context;
+    private OutputCollector collector;
+
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-
+        this.collector = collector;
+        this.context = context;
     }
 
     @Override
@@ -22,8 +26,8 @@ public class WorkerBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declareStream(Constants.Fields.GATHER_STREAM, new Fields(Constants.Fields.PARTICLE_VALUE_FIELD,
-                Constants.Fields.LASER_SCAN_FIELD,
+        outputFieldsDeclarer.declareStream(Constants.Fields.GATHER_STREAM, new Fields(Constants.Fields.DATA_FIELD,
+                Constants.Fields.DATA_FIELD,
                 Constants.Fields.SENSOR_ID_FIELD,
                 Constants.Fields.TIME_FIELD,
                 Constants.Fields.TRACE_FIELD));
