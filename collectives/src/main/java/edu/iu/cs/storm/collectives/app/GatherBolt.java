@@ -10,13 +10,20 @@ import backtype.storm.tuple.Tuple;
 import java.util.Map;
 
 public class GatherBolt extends BaseRichBolt {
+    private int workers = 0;
+    private TopologyContext topologyContext;
+    private OutputCollector collector;
+
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-
+        this.collector = collector;
+        this.topologyContext = context;
+        this.workers = context.getComponentTasks(Constants.Topology.WORKER_BOLT).size();
     }
 
     @Override
     public void execute(Tuple input) {
+        // wait until we gel all
 
     }
 
