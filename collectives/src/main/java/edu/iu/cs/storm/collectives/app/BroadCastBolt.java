@@ -27,11 +27,6 @@ public class BroadCastBolt extends BaseRichBolt {
         Object body = tuple.getValueByField(Constants.Fields.BODY);
 
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         Trace trace = new Trace();
         trace.setTime(Long.parseLong(time.toString()));
@@ -39,12 +34,12 @@ public class BroadCastBolt extends BaseRichBolt {
         List<Object> list = new ArrayList<Object>();
         list.add(body);
         list.add(trace);
-        collector.emit(Constants.Fields.DATA_STREAM, list);
+        collector.emit(Constants.Fields.BROADCAST_STREAM, list);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declareStream(Constants.Fields.DATA_STREAM, new Fields(
+        declarer.declareStream(Constants.Fields.BROADCAST_STREAM, new Fields(
                 Constants.Fields.BODY,
                 Constants.Fields.TRACE_FIELD));
     }

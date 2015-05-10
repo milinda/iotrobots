@@ -44,7 +44,7 @@ public class GatherBolt extends BaseRichBolt {
             list.add("test");
             list.add(currentTrace.getTime());
 
-            collector.emit(Constants.Fields.DATA_STREAM, list);
+            collector.emit(Constants.Fields.SEND_STREAM, list);
 
             this.currentTrace = new Trace();
         }

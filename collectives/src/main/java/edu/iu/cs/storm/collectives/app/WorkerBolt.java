@@ -47,7 +47,7 @@ public class WorkerBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declareStream(Constants.Fields.DATA_STREAM, new Fields(Constants.Fields.DATA_FIELD,
+        outputFieldsDeclarer.declareStream(Constants.Fields.GATHER_STREAM, new Fields(Constants.Fields.DATA_FIELD,
                 Constants.Fields.TRACE_FIELD));
     }
 }

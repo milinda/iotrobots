@@ -14,6 +14,7 @@ public class Constants {
     public abstract class Fields {
         public static final String BODY = "body";
         public static final String DATA_STREAM = "data";
+        public static final String BROADCAST_STREAM = "broadcast";
         public static final String GATHER_STREAM = "gather";
         public static final String SEND_STREAM = "send";
         public static final String CONTROL_STREAM = "control";

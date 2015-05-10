@@ -76,7 +76,7 @@ public class DataGenerator {
                     e.printStackTrace();
                 }
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
