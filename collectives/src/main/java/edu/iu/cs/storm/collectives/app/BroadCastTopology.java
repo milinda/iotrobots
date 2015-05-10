@@ -119,10 +119,10 @@ public class BroadCastTopology {
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
-        builder.setBolt(Constants.Topology.BROADCAST_BOLT, dispatcherBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT, Constants.Fields.DATA_STREAM);
+        builder.setBolt(Constants.Topology.BROADCAST_BOLT, dispatcherBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
         builder.setBolt(Constants.Topology.WORKER_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.BROADCAST_BOLT, Constants.Fields.DATA_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
-        builder.setBolt(Constants.Topology.GATHER_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.GATHER_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
-        builder.setBolt(Constants.Topology.RESULT_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.SEND_STREAM);
+        builder.setBolt(Constants.Topology.GATHER_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.DATA_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
+        builder.setBolt(Constants.Topology.RESULT_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.DATA_STREAM);
     }
 
     private static void addSerializers(Config config) {
