@@ -19,6 +19,7 @@ public class GatherBolt extends BaseRichBolt {
 
     private Kryo kryo;
     private Trace currentTrace;
+    private List<Tuple> inputs = new ArrayList<Tuple>();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -30,7 +31,6 @@ public class GatherBolt extends BaseRichBolt {
         this.currentTrace = new Trace();
     }
 
-    private List<Tuple> inputs = new ArrayList<Tuple>();
 
     @Override
     public void execute(Tuple tuple) {
@@ -40,10 +40,13 @@ public class GatherBolt extends BaseRichBolt {
         }
 
         // wait until we get all the inputs
-        inputs.add(tuple);
         processInput(tuple);
+        inputs.add(tuple);
 
         if (inputs.size() >= workers) {
+            if (currentTrace.getBcastReceiveTimes().size() != workers) {
+                System.out.println(currentTrace.getBcastReceiveTimes().size() + " != " + workers);
+            }
             // emit the current trace
             byte []b = Utils.serialize(kryo, currentTrace);
             List<Object> list = new ArrayList<Object>();
@@ -60,11 +63,13 @@ public class GatherBolt extends BaseRichBolt {
 
     private void processInput(Tuple tuple) {
         Object body = tuple.getValueByField(Constants.Fields.DATA_FIELD);
-        Trace trace = (Trace) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
+        byte []traceBytes = (byte[]) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
+        Trace trace = (Trace) Utils.deSerialize(kryo, traceBytes, Trace.class);
         processTrace(trace);
     }
 
     private void processTrace(Trace trace) {
+        System.out.println("Got trace: " + trace.getTaskId());
         currentTrace.setTime(trace.getTime());
         currentTrace.getBcastReceiveTimes().put(trace.getTaskId(), trace.getBcastReceiveTime());
         currentTrace.getGatherReceiveTimes().put(trace.getTaskId(), System.currentTimeMillis());
