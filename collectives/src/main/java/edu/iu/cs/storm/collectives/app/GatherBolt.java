@@ -18,7 +18,7 @@ public class GatherBolt extends BaseRichBolt {
     private OutputCollector collector;
 
     private Kryo kryo;
-    private Trace currentTrace = null;
+    private Trace currentTrace;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -26,12 +26,19 @@ public class GatherBolt extends BaseRichBolt {
         this.topologyContext = context;
         this.workers = context.getComponentTasks(Constants.Topology.WORKER_BOLT).size();
         this.kryo = new Kryo();
+        Utils.registerClasses(this.kryo);
+        this.currentTrace = new Trace();
     }
 
     private List<Tuple> inputs = new ArrayList<Tuple>();
 
     @Override
     public void execute(Tuple tuple) {
+        String stream = tuple.getSourceStreamId();
+        if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
+            return;
+        }
+
         // wait until we get all the inputs
         inputs.add(tuple);
         processInput(tuple);
@@ -51,7 +58,7 @@ public class GatherBolt extends BaseRichBolt {
     }
 
     private void processInput(Tuple tuple) {
-        Object body = tuple.getValueByField(Constants.Fields.BODY);
+        Object body = tuple.getValueByField(Constants.Fields.DATA_FIELD);
         Trace trace = (Trace) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
         processTrace(trace);
     }

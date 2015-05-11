@@ -42,4 +42,8 @@ public class Utils {
         new Random().nextBytes(b);
         return b;
     }
+
+    public static void registerClasses(Kryo kryo) {
+        kryo.register(Trace.class);
+    }
 }

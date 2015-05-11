@@ -26,6 +26,11 @@ public class WorkerBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        String stream = tuple.getSourceStreamId();
+        if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
+            return;
+        }
+
         long receiveTime = System.currentTimeMillis();
         Object body = tuple.getValueByField(Constants.Fields.BODY);
 
@@ -42,7 +47,7 @@ public class WorkerBolt extends BaseRichBolt {
         List<Object> list = new ArrayList<Object>();
         list.add(body);
         list.add(trace);
-        collector.emit(Constants.Fields.DATA_STREAM, list);
+        collector.emit(Constants.Fields.GATHER_STREAM, list);
     }
 
     @Override

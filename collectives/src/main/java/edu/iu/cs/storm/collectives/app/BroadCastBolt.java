@@ -24,6 +24,11 @@ public class BroadCastBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        String stream = tuple.getSourceStreamId();
+        if (stream.equals(Constants.Fields.CONTROL_STREAM)) {
+            return;
+        }
+
         Object body = tuple.getValueByField(Constants.Fields.BODY);
 
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);

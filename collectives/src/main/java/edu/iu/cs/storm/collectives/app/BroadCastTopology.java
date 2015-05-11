@@ -113,19 +113,20 @@ public class BroadCastTopology {
             valueSendBolt = components.getBolts().get(Constants.Topology.RESULT_SEND_BOLT);
         }
 
-        WorkerBolt scanMatchBolt = new WorkerBolt();
-        GatherBolt reSamplingBolt = new GatherBolt();
-        BroadCastBolt dispatcherBolt = new BroadCastBolt();
+        WorkerBolt workerBolt = new WorkerBolt();
+        GatherBolt gatherBolt = new GatherBolt();
+        BroadCastBolt broadCastBolt = new BroadCastBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
         builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
-        builder.setBolt(Constants.Topology.BROADCAST_BOLT, dispatcherBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
-        builder.setBolt(Constants.Topology.WORKER_BOLT, scanMatchBolt, parallel).allGrouping(Constants.Topology.BROADCAST_BOLT, Constants.Fields.BROADCAST_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
-        builder.setBolt(Constants.Topology.GATHER_BOLT, reSamplingBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.GATHER_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
+        builder.setBolt(Constants.Topology.BROADCAST_BOLT, broadCastBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT);
+        builder.setBolt(Constants.Topology.WORKER_BOLT, workerBolt, parallel).allGrouping(Constants.Topology.BROADCAST_BOLT, Constants.Fields.BROADCAST_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
+        builder.setBolt(Constants.Topology.GATHER_BOLT, gatherBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.GATHER_STREAM).allGrouping(Constants.Topology.CONTROL_SPOUT, Constants.Fields.CONTROL_STREAM);
         builder.setBolt(Constants.Topology.RESULT_SEND_BOLT, valueSendBolt, 1).shuffleGrouping(Constants.Topology.GATHER_BOLT, Constants.Fields.SEND_STREAM);
     }
 
     private static void addSerializers(Config config) {
+        config.registerSerialization(Trace.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

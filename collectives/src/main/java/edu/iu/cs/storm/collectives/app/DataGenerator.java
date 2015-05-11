@@ -102,6 +102,7 @@ public class DataGenerator {
             long receiveTime = System.currentTimeMillis();
             Trace trace = (Trace) Utils.deSerialize(kryo, message.getBody(), Trace.class);
             resultBestIO.writeResult((receiveTime - t) + " ," + trace.serialize());
+            System.out.println((receiveTime - t) + " ," + trace.serialize());
         }
     }
 }
