@@ -43,7 +43,7 @@ public class GatherBolt extends BaseRichBolt {
         inputs.add(tuple);
         processInput(tuple);
 
-        if (inputs.size() == workers) {
+        if (inputs.size() >= workers) {
             // emit the current trace
             byte []b = Utils.serialize(kryo, currentTrace);
             List<Object> list = new ArrayList<Object>();
@@ -53,6 +53,7 @@ public class GatherBolt extends BaseRichBolt {
 
             collector.emit(Constants.Fields.SEND_STREAM, list);
 
+            this.inputs.clear();
             this.currentTrace = new Trace();
         }
     }
