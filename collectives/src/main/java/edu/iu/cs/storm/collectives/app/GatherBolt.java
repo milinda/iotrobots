@@ -44,9 +44,6 @@ public class GatherBolt extends BaseRichBolt {
         inputs.add(tuple);
 
         if (inputs.size() >= workers) {
-            if (currentTrace.getBcastReceiveTimes().size() != workers) {
-                System.out.println(currentTrace.getBcastReceiveTimes().size() + " != " + workers);
-            }
             // emit the current trace
             byte []b = Utils.serialize(kryo, currentTrace);
             List<Object> list = new ArrayList<Object>();

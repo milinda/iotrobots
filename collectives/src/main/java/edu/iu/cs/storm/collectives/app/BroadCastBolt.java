@@ -33,14 +33,11 @@ public class BroadCastBolt extends BaseRichBolt {
         }
 
         Object body = tuple.getValueByField(Constants.Fields.BODY);
-
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-
         Trace trace = new Trace();
         trace.setTime(Long.parseLong(time.toString()));
 
         byte []b = Utils.serialize(kryo, trace);
-
         List<Object> list = new ArrayList<Object>();
         list.add(body);
         list.add(b);

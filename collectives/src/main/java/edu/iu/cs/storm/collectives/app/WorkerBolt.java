@@ -45,11 +45,6 @@ public class WorkerBolt extends BaseRichBolt {
 
         byte []traceBytes = (byte[]) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
         Trace trace = (Trace) Utils.deSerialize(kryo, traceBytes, Trace.class);
-//        try {
-//            Thread.sleep(10);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
 
         trace.setTaskId(taskId);
         trace.setBcastReceiveTime(receiveTime);

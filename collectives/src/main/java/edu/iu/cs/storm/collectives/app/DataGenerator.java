@@ -84,7 +84,8 @@ public class DataGenerator {
         }
     }
 
-
+    int count = 0;
+    double sum = 0;
 
     private class TraceReceiver implements MessageHandler {
         @Override
@@ -102,7 +103,10 @@ public class DataGenerator {
             long receiveTime = System.currentTimeMillis();
             Trace trace = (Trace) Utils.deSerialize(kryo, message.getBody(), Trace.class);
             resultBestIO.writeResult((receiveTime - t) + " ," + trace.serialize());
-            System.out.println((receiveTime - t) + " ," + trace.serialize());
+            sum += (receiveTime - trace.getTime());
+            count++;
+            System.out.println((receiveTime - trace.getTime()) + " ," + trace.serialize());
+            System.out.println("Average: " + (sum / count));
         }
     }
 }
