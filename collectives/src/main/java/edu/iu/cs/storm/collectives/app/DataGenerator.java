@@ -86,6 +86,7 @@ public class DataGenerator {
                 }
                 count++;
             }
+            System.exit(1);
         }
     }
 
