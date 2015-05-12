@@ -26,7 +26,7 @@ public class DataGenerator {
             controlSender.open();
             bestReceiver.listen(new TraceReceiver());
 
-            resultBestIO = new FileIO(test + "_best", true);
+            resultBestIO = new FileIO(test, true);
             this.sleepTime = sleepTime;
             this.dataSize = size;
         } catch (Exception e) {
@@ -100,10 +100,9 @@ public class DataGenerator {
         @Override
         public void onMessage(Message message) {
             Object time = message.getProperties().get("time");
-            Long t = Long.parseLong(time.toString());
             long receiveTime = System.currentTimeMillis();
             Trace trace = (Trace) Utils.deSerialize(kryo, message.getBody(), Trace.class);
-            resultBestIO.writeResult((receiveTime - t) + " ," + trace.serialize());
+            resultBestIO.writeResult((receiveTime - trace.getTime()) + "");
             sum += (receiveTime - trace.getTime());
             count++;
             System.out.println((receiveTime - trace.getTime()) + " ," + trace.serialize());
