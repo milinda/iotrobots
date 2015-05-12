@@ -22,37 +22,6 @@ sshIR = paramiko.SSHClient()
 sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 sshIR.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/skamburu-key')
 
-def copy_scan_matcher(ssh, topologyFile):
-    print "compiling"
-    cmd = 'cp ../simulator/testscript/' + str(topologyFile) + ' serial/src/main/java/cgl/iotrobots/slam/core/scanmatcher/ScanMatcher.java'
-    channel = ssh.invoke_shell()
-    stdin = channel.makefile('wb')
-    stdout = channel.makefile('rb')
-    stdin.write('''
-    cd /home/ubuntu/projects/iotrobots/slam
-    ''' + cmd + '''
-    exit
-    ''')
-    print stdout.read()
-    stdout.close()
-    stdin.close()
-
-def compile_program(ssh, topologyFile):
-    print "compiling"
-    cmd = 'cp test/' + str(topologyFile) + ' src/main/resources/topology.yaml'
-    channel = ssh.invoke_shell()
-    stdin = channel.makefile('wb')
-    stdout = channel.makefile('rb')
-    stdin.write('''
-    cd /home/ubuntu/projects/iotrobots/slam
-    ''' + cmd + '''
-    mvn clean install -Dmaven.test.skip=true
-    exit
-    ''')
-    print stdout.read()
-    stdout.close()
-    stdin.close()
-
 def restart_zk(ssh):
     print "compiling"
     channel = ssh.invoke_shell()
@@ -125,7 +94,8 @@ def run_bcast_test():
     tasks = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
     data = [100, 1000, 10000, 100000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
 
-    compile_program(sshNZ, "test.yaml")
+    copy_file(sshNZ, "test/test.yaml", "src/main/resources/topology.yaml")
+    compile(sshNZ, "/home/ubuntu/projects/iotrobots/collectives")
     for t in tasks:
         exec_rabbit(sshBR)
         exec_storm(sshNZ, t)
