@@ -15,8 +15,9 @@ public class DataGenerator {
     int dataSize;
     Kryo kryo = new Kryo();
     long sleepTime;
+    int messages;
 
-    public DataGenerator(String url, String test, long sleepTime, int size) {
+    public DataGenerator(String url, String test, long sleepTime, int size, int messages) {
         try {
             dataSender = new RabbitMQSender(url, "simbard_laser");
             controlSender = new RabbitMQSender(url, "simbard_control");
@@ -29,6 +30,7 @@ public class DataGenerator {
             resultBestIO = new FileIO(test, true);
             this.sleepTime = sleepTime;
             this.dataSize = size;
+            this.messages = messages;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -57,7 +59,7 @@ public class DataGenerator {
             System.out.println("Please specify amqp url, filename and test name as arguments");
         }
 
-        DataGenerator fileBasedSimulator = new DataGenerator(args[0], args[1], Long.parseLong(args[2]), Integer.parseInt(args[3]));
+        DataGenerator fileBasedSimulator = new DataGenerator(args[0], args[1], Long.parseLong(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
         fileBasedSimulator.start();
     }
 
@@ -65,7 +67,8 @@ public class DataGenerator {
         @Override
         public void run() {
             long t0 = System.currentTimeMillis();
-            while (true) {
+            int count = 0;
+            while (count < messages) {
                 byte []body = Utils.generateData(dataSize);
                 Map<String, Object> props = new HashMap<String, Object>();
                 props.put("time", System.currentTimeMillis());
@@ -81,6 +84,7 @@ public class DataGenerator {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                count++;
             }
         }
     }

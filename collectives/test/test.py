@@ -106,9 +106,9 @@ def exec_rabbit(ssh):
     stdin.close()
     time.sleep(5)
 
-def run_test(ssh, test, parallel, t, size):
+def run_test(ssh, test, parallel, t, size, msgs):
     print "running test...."
-    cmd = 'java -cp target/collectives-1.0-SNAPSHOT-jar-with-dependencies.jar edu.iu.cs.storm.collectives.app.BroadCastTopology "amqp://' + str(ipB) +':5672"' + ' ' + str(test) + '/' + str(size) + '_' + str(parallel) + ' ' + str(size) + ' ' + str(t)
+    cmd = 'java -cp target/collectives-1.0-SNAPSHOT-jar-with-dependencies.jar edu.iu.cs.storm.collectives.app.BroadCastTopology "amqp://' + str(ipB) +':5672"' + ' ' + str(test) + '/' + str(size) + '_' + str(parallel) + ' ' + str(size) + ' ' + str(t) + ' ' + str(msgs)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -127,10 +127,10 @@ def run_bcast_test():
 
     compile_program(sshNZ, "test.yaml")
     for t in tasks:
+        exec_rabbit(sshBR)
         exec_storm(sshNZ, t)
         for d in data:
-            exec_rabbit(sshBR)
-            run_test(sshIR, 'bcast', t, 100, d)
+            run_test(sshIR, 'bcast', t, 100, d, 500)
 
 def start_cluster(par, t):
     exec_rabbit(sshBR)
