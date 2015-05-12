@@ -108,7 +108,7 @@ def exec_rabbit(ssh):
 
 def run_test(ssh, test, parallel, t, size, msgs):
     print "running test...."
-    cmd = 'java -cp target/collectives-1.0-SNAPSHOT-jar-with-dependencies.jar edu.iu.cs.storm.collectives.app.BroadCastTopology "amqp://' + str(ipB) +':5672"' + ' ' + str(test) + '/' + str(size) + '_' + str(parallel) + ' ' + str(size) + ' ' + str(t) + ' ' + str(msgs)
+    cmd = 'java -cp target/collectives-1.0-SNAPSHOT-jar-with-dependencies.jar edu.iu.cs.storm.collectives.app.DataGenerator "amqp://' + str(ipB) +':5672"' + ' ' + str(test) + '/' + str(size) + '_' + str(parallel) + ' ' + str(size) + ' ' + str(t) + ' ' + str(msgs)
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
