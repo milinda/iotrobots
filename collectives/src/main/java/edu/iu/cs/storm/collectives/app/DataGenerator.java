@@ -16,7 +16,7 @@ public class DataGenerator {
     Kryo kryo = new Kryo();
     long sleepTime;
 
-    public DataGenerator(String url, String file, String test, boolean simbard, boolean ui, long sleepTime) {
+    public DataGenerator(String url, String test, long sleepTime, int size) {
         try {
             dataSender = new RabbitMQSender(url, "simbard_laser");
             controlSender = new RabbitMQSender(url, "simbard_control");
@@ -28,6 +28,7 @@ public class DataGenerator {
 
             resultBestIO = new FileIO(test + "_best", true);
             this.sleepTime = sleepTime;
+            this.dataSize = size;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -56,7 +57,7 @@ public class DataGenerator {
             System.out.println("Please specify amqp url, filename and test name as arguments");
         }
 
-        DataGenerator fileBasedSimulator = new DataGenerator(args[0], args[1], args[2], Boolean.parseBoolean(args[3]), Boolean.parseBoolean(args[4]), Long.parseLong(args[5]));
+        DataGenerator fileBasedSimulator = new DataGenerator(args[0], args[1], Long.parseLong(args[2]), Integer.parseInt(args[3]));
         fileBasedSimulator.start();
     }
 
