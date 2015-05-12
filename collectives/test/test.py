@@ -39,7 +39,7 @@ def copy_scan_matcher(ssh, topologyFile):
 
 def compile_program(ssh, topologyFile):
     print "compiling"
-    cmd = 'cp test/' + str(topologyFile) + ' collectives/src/main/resources/topology.yaml'
+    cmd = 'cp test/' + str(topologyFile) + ' src/main/resources/topology.yaml'
     channel = ssh.invoke_shell()
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
@@ -125,7 +125,7 @@ def run_bcast_test():
     tasks = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
     data = [100, 1000, 10000, 100000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
 
-    compile_program(sshNZ, "simbard.yaml")
+    compile_program(sshNZ, "test.yaml")
     for t in tasks:
         exec_storm(sshNZ, t)
         for d in data:
