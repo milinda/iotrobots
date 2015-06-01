@@ -17,6 +17,7 @@ public class Constants {
         public static final String BROADCAST_STREAM = "broadcast";
         public static final String GATHER_STREAM = "gather";
         public static final String SEND_STREAM = "send";
+        public static final String READY_STREAM = "ready";
         public static final String CONTROL_STREAM = "control";
         public static final String TIME_FIELD = "time";
         public static final String DATA_FIELD = "data";
