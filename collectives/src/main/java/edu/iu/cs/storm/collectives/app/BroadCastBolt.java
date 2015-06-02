@@ -6,19 +6,22 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import cgl.iotcloud.core.transport.TransportConstants;
 import com.esotericsoftware.kryo.Kryo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class BroadCastBolt extends BaseRichBolt {
+    private Logger LOG = LoggerFactory.getLogger(BroadCastBolt.class);
+
     private TopologyContext context;
     private OutputCollector collector;
     private Kryo kryo;
 
-    private State state;
+    private State state = State.WAITING_FOR_READING;
 
     private enum State {
         WAITING_FOR_READING,
@@ -43,24 +46,23 @@ public class BroadCastBolt extends BaseRichBolt {
         if (stream.equals(Constants.Fields.READY_STREAM)) {
             this.state = State.WAITING_FOR_READING;
             return;
+        } else if (state == State.WAITING_FOR_READING) {
+            LOG.info("Received message, emit and waiting for READY");
+            Object body = tuple.getValueByField(Constants.Fields.BODY);
+            Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
+            Trace trace = new Trace();
+            trace.setTime(Long.parseLong(time.toString()));
+
+            byte []b = Utils.serialize(kryo, trace);
+            List<Object> list = new ArrayList<Object>();
+            list.add(body);
+            list.add(b);
+            collector.emit(Constants.Fields.BROADCAST_STREAM, list);
+            // we are waiting for the tuples to finish
+            state = State.WAITING_FOR_READY;
+        } else {
+            LOG.info("Received message, dropping message until READY for next");
         }
-
-        if (state != State.WAITING_FOR_READING) {
-            return;
-        }
-
-        Object body = tuple.getValueByField(Constants.Fields.BODY);
-        Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-        Trace trace = new Trace();
-        trace.setTime(Long.parseLong(time.toString()));
-
-        byte []b = Utils.serialize(kryo, trace);
-        List<Object> list = new ArrayList<Object>();
-        list.add(body);
-        list.add(b);
-        collector.emit(Constants.Fields.BROADCAST_STREAM, list);
-        // we are waiting for the tuples to finish
-        state = State.WAITING_FOR_READY;
     }
 
     @Override
