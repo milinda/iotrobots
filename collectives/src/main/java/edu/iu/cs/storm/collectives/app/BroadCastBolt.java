@@ -17,6 +17,14 @@ public class BroadCastBolt extends BaseRichBolt {
     private TopologyContext context;
     private OutputCollector collector;
     private Kryo kryo;
+
+    private State state;
+
+    private enum State {
+        WAITING_FOR_READING,
+        WAITING_FOR_READY,
+    }
+
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.context = context;
@@ -32,6 +40,15 @@ public class BroadCastBolt extends BaseRichBolt {
             return;
         }
 
+        if (stream.equals(Constants.Fields.READY_STREAM)) {
+            this.state = State.WAITING_FOR_READING;
+            return;
+        }
+
+        if (state != State.WAITING_FOR_READING) {
+            return;
+        }
+
         Object body = tuple.getValueByField(Constants.Fields.BODY);
         Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
         Trace trace = new Trace();
@@ -42,6 +59,8 @@ public class BroadCastBolt extends BaseRichBolt {
         list.add(body);
         list.add(b);
         collector.emit(Constants.Fields.BROADCAST_STREAM, list);
+        // we are waiting for the tuples to finish
+        state = State.WAITING_FOR_READY;
     }
 
     @Override

@@ -80,7 +80,7 @@ public class GatherBolt extends BaseRichBolt {
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declareStream(Constants.Fields.SEND_STREAM,
                 new Fields("body", Constants.Fields.SENSOR_ID_FIELD, Constants.Fields.TIME_FIELD));
-        outputFieldsDeclarer.declareStream(Constants.Fields.SEND_STREAM,
+        outputFieldsDeclarer.declareStream(Constants.Fields.READY_STREAM,
                 new Fields(Constants.Fields.DATA_FIELD));
     }
 }
