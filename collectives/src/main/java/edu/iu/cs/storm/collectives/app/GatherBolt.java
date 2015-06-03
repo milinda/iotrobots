@@ -7,12 +7,15 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import com.esotericsoftware.kryo.Kryo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class GatherBolt extends BaseRichBolt {
+    private Logger LOG = LoggerFactory.getLogger(GatherBolt.class);
     private int workers = 0;
     private TopologyContext topologyContext;
     private OutputCollector collector;
@@ -70,7 +73,7 @@ public class GatherBolt extends BaseRichBolt {
     }
 
     private void processTrace(Trace trace) {
-        System.out.println("Got trace: " + trace.getTaskId());
+        LOG.info("Got trace: " + trace.getTaskId());
         currentTrace.setTime(trace.getTime());
         currentTrace.getBcastReceiveTimes().put(trace.getTaskId(), trace.getBcastReceiveTime());
         currentTrace.getGatherReceiveTimes().put(trace.getTaskId(), System.currentTimeMillis());
