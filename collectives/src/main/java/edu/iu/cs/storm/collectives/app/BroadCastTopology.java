@@ -110,7 +110,7 @@ public class BroadCastTopology {
         BroadCastBolt broadCastBolt = new BroadCastBolt();
 
         builder.setSpout(Constants.Topology.RECEIVE_SPOUT, dataSpout, 1);
-        builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
+        //builder.setSpout(Constants.Topology.CONTROL_SPOUT, controlSpout, 1);
         builder.setBolt(Constants.Topology.BROADCAST_BOLT, broadCastBolt, 1).shuffleGrouping(Constants.Topology.RECEIVE_SPOUT).shuffleGrouping(Constants.Topology.GATHER_BOLT, Constants.Fields.READY_STREAM);
         builder.setBolt(Constants.Topology.WORKER_BOLT, workerBolt, parallel).allGrouping(Constants.Topology.BROADCAST_BOLT, Constants.Fields.BROADCAST_STREAM);
         builder.setBolt(Constants.Topology.GATHER_BOLT, gatherBolt, 1).shuffleGrouping(Constants.Topology.WORKER_BOLT, Constants.Fields.GATHER_STREAM);
