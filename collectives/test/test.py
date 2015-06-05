@@ -48,7 +48,7 @@ def exec_storm(ssh, parallel):
     stdin.write('''
     cd deploy/storm
     ./bin/storm kill bcast_processor -w 1
-    sleep 15
+    sleep 45
     ''' + cmd + '''
     exit
     ''')
