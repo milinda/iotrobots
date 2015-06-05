@@ -31,6 +31,7 @@ public class DataGenerator {
             this.sleepTime = sleepTime;
             this.dataSize = size;
             this.messages = messages;
+            Utils.registerClasses(kryo);
         } catch (Exception e) {
             e.printStackTrace();
         }
