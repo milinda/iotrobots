@@ -8,19 +8,19 @@ resultsdir = ""
 
 sshNZ = paramiko.SSHClient()
 sshNZ.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshNZ.connect(ipNz, username='ubuntu', key_filename='/home/ubuntu/id_rsa')
+sshNZ.connect(ipNz, username='ubuntu', key_filename='/home/ubuntu/.ssh/id_rsa')
 
 sshBR = paramiko.SSHClient()
 sshBR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshBR.connect(ipB, username='ubuntu', key_filename='/home/ubuntu/id_rsa')
+sshBR.connect(ipB, username='ubuntu', key_filename='/home/ubuntu/.ssh/id_rsa')
 
 sshI = paramiko.SSHClient()
 sshI.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshI.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/id_rsa')
+sshI.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/.ssh/id_rsa')
 
 sshIR = paramiko.SSHClient()
 sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshIR.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/id_rsa')
+sshIR.connect(ipI, username='ubuntu', key_filename='/home/ubuntu/.ssh/id_rsa')
 
 def restart_zk(ssh):
     print "Restart ZK"
