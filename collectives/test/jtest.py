@@ -66,7 +66,7 @@ def exec_rabbit(ssh):
     pid=`ps ax | grep "rabbitmq" | awk '{print $1}'`
     sudo kill $pid
     sleep 5
-    cd /home/ubuntu/deploy/rabbitmq_server-3.3.2/sbin
+    cd /home/ubuntu/deploy/rabbitmq_server-3.3.5/sbin
     sudo ./rabbitmq-server > /dev/null 2>&1 &
     exit
     ''')
