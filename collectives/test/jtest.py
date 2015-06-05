@@ -46,7 +46,7 @@ def exec_storm(ssh, parallel):
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
     stdin.write('''
-    cd deploy/storm
+    cd /home/ubuntu/deploy/jstorm-0.9.6.3
     ./bin/jstorm kill bcast_processor
     sleep 15
     ''' + cmd + '''
