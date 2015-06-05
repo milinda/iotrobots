@@ -3,7 +3,7 @@ import time
 
 ipNz = '10.23.2.87'
 ipB = '10.23.3.110'
-ipI = '10.23.3.11'
+ipI = '10.23.3.145'
 resultsdir = ""
 
 sshNZ = paramiko.SSHClient()
