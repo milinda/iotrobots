@@ -25,21 +25,4 @@ public class FileIO {
         pw.printf("%s\n", value);
         pw.flush();
     }
-
-    public LaserScan read() {
-        String line = null;
-        try {
-            line = br.readLine();
-            if (line != null) {
-                LaserScan laserScan = new LaserScan();
-                laserScan.loadFromString(line);
-                return laserScan;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
