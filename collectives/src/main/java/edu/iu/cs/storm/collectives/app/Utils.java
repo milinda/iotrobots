@@ -46,6 +46,6 @@ public class Utils {
 
     public static void registerClasses(Kryo kryo) {
         kryo.register(BTrace.class);
-        kryo.register(HashMap.class);
+//        kryo.register(HashMap.class);
     }
 }
