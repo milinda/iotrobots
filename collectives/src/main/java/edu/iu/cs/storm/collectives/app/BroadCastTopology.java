@@ -118,7 +118,7 @@ public class BroadCastTopology {
     }
 
     private static void addSerializers(Config config) {
-        config.registerSerialization(Trace.class);
+        config.registerSerialization(BTrace.class);
     }
 
     private static class RabbitMQStaticBoltConfigurator implements BoltConfigurator {

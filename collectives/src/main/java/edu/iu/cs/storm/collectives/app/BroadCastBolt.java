@@ -50,7 +50,7 @@ public class BroadCastBolt extends BaseRichBolt {
             LOG.info("Received message, emit and waiting for READY");
             Object body = tuple.getValueByField(Constants.Fields.BODY);
             Object time = tuple.getValueByField(Constants.Fields.TIME_FIELD);
-            Trace trace = new Trace();
+            BTrace trace = new BTrace();
             trace.setTime(Long.parseLong(time.toString()));
 
             byte []b = Utils.serialize(kryo, trace);

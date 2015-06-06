@@ -108,7 +108,7 @@ public class DataGenerator {
         public void onMessage(Message message) {
             Object time = message.getProperties().get("time");
             long receiveTime = System.currentTimeMillis();
-            Trace trace = (Trace) Utils.deSerialize(kryo, message.getBody(), Trace.class);
+            BTrace trace = (BTrace) Utils.deSerialize(kryo, message.getBody(), BTrace.class);
             Field[] fs = trace.getClass().getDeclaredFields();
             for (Field f : fs) {
                 System.out.println(f.getName() + " " + f.getType().toString() + " " + f.getModifiers());

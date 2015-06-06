@@ -3,7 +3,7 @@ package edu.iu.cs.storm.collectives.app;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Trace {
+public class BTrace {
     private Map<Integer, Long> gatherReceiveTimes = new HashMap<Integer, Long>();
 
     private Map<Integer, Long> bcastReceiveTimes = new HashMap<Integer, Long>();
