@@ -114,9 +114,10 @@ public class DataGenerator {
                 System.out.println(f.getName() + " " + f.getType().toString() + " " + f.getModifiers());
             }
             resultBestIO.writeResult((receiveTime - trace.getTime()) + "");
-            sum += (receiveTime - trace.getTime());
+            long l = Long.parseLong(time.toString());
+            sum += (receiveTime - l);
             count++;
-            System.out.println((receiveTime - Long.parseLong(time.toString())));
+            System.out.println((receiveTime - l));
             System.out.println("Average: " + (sum / count));
         }
     }
