@@ -48,14 +48,14 @@ def exec_storm(ssh, parallel):
     stdin.write('''
     cd /home/ubuntu/deploy/jstorm-0.9.6.3
     ./bin/jstorm kill bcast_processor 1
-    sleep 15
+    sleep 45
     ''' + cmd + '''
     exit
     ''')
     print stdout.read()
     stdout.close()
     stdin.close()
-    time.sleep(15)
+    time.sleep(45)
 
 def exec_rabbit(ssh):
     print "starting rabbitmq...."
