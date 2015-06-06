@@ -96,12 +96,12 @@ def run_bcast_test():
     data = [100, 1000, 10000, 100000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
 
     copy_file(sshNZ, "test/test.yaml", "src/main/resources/topology.yaml")
-    # compile(sshNZ, "/home/ubuntu/projects/iotrobots/collectives")
+    compile(sshNZ, "/home/ubuntu/projects/iotrobots/collectives")
     for t in tasks:
         exec_rabbit(sshBR)
         exec_storm(sshNZ, t)
         for d in data:
-            run_test(sshIR, 'bcast', t, 100, d, 500)
+            run_test(sshIR, 'jstorm_bcast_first', t, 100, d, 500)
 
 def start_cluster(par, t):
     exec_rabbit(sshBR)
