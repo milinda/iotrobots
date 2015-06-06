@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.Random;
 
 public class Utils {
@@ -45,5 +46,6 @@ public class Utils {
 
     public static void registerClasses(Kryo kryo) {
         kryo.register(Trace.class);
+        kryo.register(HashMap.class);
     }
 }
