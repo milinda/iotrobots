@@ -1,7 +1,5 @@
 package edu.iu.cs.storm.collectives.app;
 
-import cgl.iotrobots.slam.core.app.LaserScan;
-
 import java.io.*;
 
 public class FileIO {
