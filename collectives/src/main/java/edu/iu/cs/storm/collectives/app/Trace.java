@@ -57,13 +57,14 @@ public class Trace {
     public String serialize() {
         String s = "'";
         String g = "'";
-        int size = gatherReceiveTimes.size();
+        /*int size = gatherReceiveTimes.size();
         for (int i = 0; i < size; i++) {
             s += gatherReceiveTimes.get(i) + " ";
             g += bcastReceiveTimes.get(i) + " ";
         }
         s += "'";
-        g += "'";
-        return time + ", " + s + " ," + g;
+        g += "'";*/
+//        return time + ", " + s + " ," + g;
+        return time + "";
     }
 }
