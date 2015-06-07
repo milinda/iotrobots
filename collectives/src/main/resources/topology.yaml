@@ -1,4 +1,4 @@
-zk.servers: ["localhost:2181"]
+zk.servers: ["10.23.2.113:2181"]
 zk.root: "/iot/sensors"
 spouts:
     receive_spout:
@@ -33,4 +33,4 @@ bolts:
         properties:
           ackMode: "auto"
 conf:
-    rabbitmq_url: "amqp://localhost:5672"
+    rabbitmq_url: "amqp://10.23.3.110:5672"
