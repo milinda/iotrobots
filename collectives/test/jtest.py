@@ -101,7 +101,7 @@ def run_bcast_test():
         exec_rabbit(sshBR)
         exec_storm(sshNZ, t)
         for d in data:
-            run_test(sshIR, 'jstorm_bcast_original', t, 100, d, 500)
+            run_test(sshIR, 'jstorm_bcast_second', t, 100, d, 500)
 
 def start_cluster(par, t):
     exec_rabbit(sshBR)
