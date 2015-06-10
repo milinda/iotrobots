@@ -94,7 +94,7 @@ def run_test(ssh, test, parallel, t, size, msgs):
 def run_bcast_test():
     # tasks = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
     tasks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    data = [100, 1000, 10000, 100000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
+    data = [100, 1000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
 
     copy_file(sshNZ, "test/test.yaml", "src/main/resources/topology.yaml")
     compile(sshNZ, "/home/ubuntu/projects/iotrobots/collectives")
