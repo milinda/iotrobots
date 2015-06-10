@@ -22,13 +22,13 @@ def main():
     for d in data:
         s = str(d) + ": "
         for t in tasks:
-            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_bcast_original/" + str(d)  + "_" + str(t), 60))
+            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_original_second/" + str(d)  + "_" + str(t), 60))
         print s
 
     for d in data:
         s = str(d) + ": "
         for t in tasks:
-            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_bcast_first/" + str(d)  + "_" + str(t), 60))
+            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_bcast_second/" + str(d)  + "_" + str(t), 60))
         print s
 
     for d in data:
