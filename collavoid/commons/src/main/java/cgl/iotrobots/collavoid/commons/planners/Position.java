@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Position implements Serializable {
 
-    private Vector2 pos=new Vector2();
+    private Vector2 pos = new Vector2();
     private double heading;//heading
 
     public Position() {
@@ -41,8 +41,8 @@ public class Position implements Serializable {
         return this.heading;
     }
 
-    public void setHeading(double hd){
-        this.heading=hd;
+    public void setHeading(double hd) {
+        this.heading = hd;
     }
 
     public void setPos(Vector2 pos) {
@@ -54,7 +54,7 @@ public class Position implements Serializable {
         res.setHeading(heading);
         res.setPos(pos.copy());
         return res;
-        
+
     }
 
 

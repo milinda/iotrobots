@@ -47,7 +47,7 @@ public class PushBallsDemo extends Demo {
             }
 
             public void contactWith(SimpleAgent a){
-              //  System.out.println(getName()+" interacts with "+a.getName());
+              //  System.out.println(getId()+" interacts with "+a.getId());
             }
             /** Perform one step of Agent's Behavior */
             public void performBehavior() {

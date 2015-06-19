@@ -31,7 +31,7 @@ public abstract class Parameters implements Serializable {
 
     public static double MAX_VEL_WITH_OBSTACLES = 0.5;
 
-    public static double FOOTPRINT_RADIUS = 0.17;
+    public static double FOOTPRINT_RADIUS = 0.176;
 
     public static double TIME_TO_HOLO = 0.4;
     public static double MIN_ERROR_HOLO = 0.02;
@@ -49,19 +49,21 @@ public abstract class Parameters implements Serializable {
     public static boolean USE_TRUNCATION = true;//TRUNCATE VOS
     public static double TRUNC_TIME = 5.0;
 
-    public static double PUBLISH_POSITIONS_FREQUENCY = 10.0; // VISUALIZATION
+    //    public static double PUBLISH_POSITIONS_FREQUENCY = 10.0; // VISUALIZATION
     public static double PUBLISH_ME_FREQUENCY = 20.0; //SHARE POSITION
     public static double CONTROLLER_FREQUENCY = 20.0; //SIMULATION PERIOD
 
     // allowed error for position and heading
     public static double EPSILON = 0.001;
 
+    public static double LOCALIZATION_ERROR_MAX = 0.3;
+
     // For simulator
-    //robot number, in meter
-    public static int ROBOT_NUMBER = 6;
+    // robot number,
+    public static int ROBOT_NUMBER = 2;
     //robot position radius, robot are evenly distributed around a circle and
-    // heading toward the center
-    public static double POSE_RADIUS = 4;
+    // heading toward the center, in meter
+    public static double POSE_RADIUS = 2.5;
 
 
 }

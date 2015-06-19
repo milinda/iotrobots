@@ -1,7 +1,5 @@
 package cgl.iotrobots.collavoid.simulator;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.PointCloud2_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
 import geometry_msgs.Pose;
 import geometry_msgs.Vector3;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -13,7 +11,9 @@ import org.ros.message.MessageFactory;
 import sensor_msgs.PointCloud2;
 import sensor_msgs.PointField;
 
-import javax.vecmath.*;
+import javax.vecmath.Point3d;
+import javax.vecmath.Quat4d;
+import javax.vecmath.Vector3d;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +22,9 @@ import java.util.Random;
 public class utilsSim {
 
     private static MessageDefinitionProvider messageDefinitionProvider = new MessageDefinitionReflectionProvider();
+
     public static MessageFactory messageFactory = new DefaultMessageFactory(messageDefinitionProvider);
-    //public static Transform3D tftoROS=new Transform3D(new Quat4d(-1,0,0,Math.cos(Math.PI/4)),new Vector3d(0,0,0),1);
+
     public static Point3d toROSCoordinate(Point3d p) {
         return new Point3d(p.getX(), -p.getZ(), p.getY());
     }
@@ -33,7 +34,7 @@ public class utilsSim {
     }
 
     public static void toROSCoordinate(Quat4d q) {
-            q.set(q.getX(),-q.getZ(),q.getY(),q.getW());
+        q.set(q.getX(), -q.getZ(), q.getY(), q.getW());
     }
 
     public static Pose getPose(Point3d p3d, Quat4d quat4d) {
@@ -95,43 +96,10 @@ public class utilsSim {
                 buffer.writeFloat((float) pt[j]);
             }
         }
-        if (scan.size()==0)
+        if (scan.size() == 0)
             pc2.getData().clear();
         else
             pc2.setData(buffer);
-    }
-
-    //no ros
-    public static void toPointCloud2(PointCloud2_ pc2, List<Point3d> scan) {
-        pc2.setHeight(1);
-        pc2.setWidth(scan.size());
-        pc2.setDimension(3);
-        Point3d p3d;
-        int idx = 0;
-        double[] data = new double[3 * scan.size()];
-        for (int i = 0; i < scan.size(); i++) {
-            //in ros coordinate
-            double[] pt = new double[3];
-            p3d = toROSCoordinate(scan.get(i));
-            p3d.get(pt);
-            for (int j = 0; j < 3; j++) {
-                data[idx++] = pt[j];
-            }
-        }
-        if (scan.size() == 0)
-            pc2.setData(null);
-        else
-            pc2.setData(data);
-    }
-
-    public static void Vector3ToPoint3d(Vector3 in, Point3d out) {
-        out.set(in.getX(), in.getY(), in.getZ());
-    }
-
-    public static void Point3dToVector3(Point3d in, Vector3 out) {
-        out.setX(in.getX());
-        out.setY(in.getY());
-        out.setZ(in.getZ());
     }
 
     public static double getGaussianNoise(double mean, double variance) {

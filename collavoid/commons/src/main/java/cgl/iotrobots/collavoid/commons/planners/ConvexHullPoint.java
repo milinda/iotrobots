@@ -37,12 +37,12 @@ public class ConvexHullPoint implements Serializable {
         setPoint(v.getX(), v.getY());
     }
 
-    public void setWeight(double w){
-        this.weight=w;
+    public void setWeight(double w) {
+        this.weight = w;
     }
 
-    public void setIndex(int i){
-        this.index=i;
+    public void setIndex(int i) {
+        this.index = i;
     }
 
     public void setOrig_index(int orig_index) {

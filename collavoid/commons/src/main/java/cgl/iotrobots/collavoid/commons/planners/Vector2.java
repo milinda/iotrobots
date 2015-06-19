@@ -95,11 +95,11 @@ public class Vector2 implements Serializable {
     }
 
     public static double det(Vector2 v1, Vector2 v2) {
-        return det(v1.getX(),v1.getY(),v2.getX(),v2.getY());
+        return det(v1.getX(), v1.getY(), v2.getX(), v2.getY());
     }
 
-    public static double det(double x1,double y1,double x2,double y2){
-        return x1*y2-y1*x2;
+    public static double det(double x1, double y1, double x2, double y2) {
+        return x1 * y2 - y1 * x2;
     }
 
     public static double absSqr(double x, double y) {
@@ -124,9 +124,9 @@ public class Vector2 implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof Vector2))
+        if (!(obj instanceof Vector2))
             return false;
-        Vector2 v2=(Vector2)obj;
+        Vector2 v2 = (Vector2) obj;
         if (this.x == v2.getX() && this.y == v2.getY()) {
             return true;
         } else {
@@ -141,8 +141,8 @@ public class Vector2 implements Serializable {
     }
 
     //calculate normal vector of p, clockwise
-    public static Vector2 normal(Vector2 p){
-        return normalize(new Vector2(p.getY(),-p.getX()));
+    public static Vector2 normal(Vector2 p) {
+        return normalize(new Vector2(p.getY(), -p.getX()));
     }
 
     public static Vector2 rotateVectorByAngle(Vector2 p, double ang) {
@@ -155,14 +155,14 @@ public class Vector2 implements Serializable {
     }
 
     public static double angleBetween(final Vector2 one, final Vector2 two) {
-        double dot_prod = Vector2.dotProduct(one,two);
+        double dot_prod = Vector2.dotProduct(one, two);
         double len1 = abs(one);
         double len2 = abs(two);
-        return Math.acos(dot_prod / (len1*len2));
+        return Math.acos(dot_prod / (len1 * len2));
     }
 
-    public static double atan(Vector2 v){
-        return Math.atan2(v.getY(),v.getX());
+    public static double atan(Vector2 v) {
+        return Math.atan2(v.getY(), v.getX());
     }
 
     @Override

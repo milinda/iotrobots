@@ -1,24 +1,30 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 
 public class Twist_ implements Serializable {
 
     private long Time;
+    //test
+    private long EmitTime;
 
     private Vector3d_ Angular = new Vector3d_();
 
     private Vector3d_ Linear = new Vector3d_();
 
+    private long seq;
+
     private boolean goalReached;
 
     public Twist_() {
+    }
+
+    public void setEmitTime(long emitTime) {
+        EmitTime = emitTime;
+    }
+
+    public void setSeq(long seq) {
+        this.seq = seq;
     }
 
     public void setAngular(Vector3d_ angular) {
@@ -49,8 +55,16 @@ public class Twist_ implements Serializable {
         return Linear;
     }
 
+    public long getEmitTime() {
+        return EmitTime;
+    }
+
     public boolean isGoalReached() {
         return goalReached;
+    }
+
+    public long getSeq() {
+        return seq;
     }
 
     public Twist_ copy() {
