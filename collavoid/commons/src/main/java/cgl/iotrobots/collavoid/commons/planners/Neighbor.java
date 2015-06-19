@@ -8,31 +8,39 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by hjh on 1/5/15.
- */
 public class Neighbor implements Serializable {
-    public Lock lock;
-    public String Name;
+    protected Lock lock;
+    public String Name = "robot";
+    public String id;
     public boolean holo_robot_;
-    public Odometry_ base_odom_ = new Odometry_();
+    protected Odometry_ base_odom_ = new Odometry_();
+    // for getting obstacles, but the algorithm uses footprint to calculate velocity, this may be not right
     public double radius;
     public boolean controlled;
-    public List<Vector2> footprint_minkowski = new ArrayList<Vector2>();
+    protected List<Vector2> footprint_minkowski = new ArrayList<Vector2>();
     public List<Vector2> footprint_rotated = new ArrayList<Vector2>();
     public long last_seen_;
+    public long lastTimeMePublished;
+    public long lastTimeControlled;
+    //updated robot state
     public Position position = new Position();
     public Vector2 velocity = new Vector2();
+
     public double controlPeriod = 0.05;
+    private long seq;
 
     public Neighbor() {
 
-
     }
 
-    public Neighbor(String name) {
-        this.Name = name;
+    public Neighbor(String ID) {
+        this.id = ID;
         lock = new ReentrantLock();
+    }
+
+    public Neighbor(String ID, String name) {
+        this(ID);
+        this.Name = name;
     }
 
     public String getName() {
@@ -70,6 +78,10 @@ public class Neighbor implements Serializable {
 
     public double getRadius() {
         return radius;
+    }
+
+    public long getSeq() {
+        return seq;
     }
 
     public void setPosition(Position position) {
@@ -110,14 +122,19 @@ public class Neighbor implements Serializable {
 
     public void setBase_odom_(Odometry_ base_odom_) {
         this.base_odom_ = base_odom_;
+        this.last_seen_ = base_odom_.getHeader().getStamp();
     }
 
     public void setName(String name) {
         Name = name;
     }
 
+    public void setSeq(long seq) {
+        this.seq = seq;
+    }
+
     public Neighbor copy() {
-        Neighbor res = new Neighbor(Name);
+        Neighbor res = new Neighbor(id, Name);
         res.setControlPeriod(controlPeriod);
         res.setControlled(controlled);
         res.setHolo_robot_(holo_robot_);

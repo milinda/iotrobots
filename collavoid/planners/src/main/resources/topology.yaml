@@ -1,11 +1,11 @@
 zk.servers: ["localhost:2181"]
-zk.root: "/iot/sensors/collisionAvoid"
+zk.root: "/iot/sensors"
 spouts:
     odometry_receiver:
         broker: "rabbitmq"
         sensor: "collisionAvoid"
         channel: "odometry"
-        fields: ["time","sensorID","odometry"]
+        fields: ["time","sensorID","odometry","agentIndex"]
         builder: cgl.iotrobots.collavoid.commons.iotcloud.SpoutMessageBuilder
         properties:
           ackMode: "auto"
@@ -14,7 +14,7 @@ spouts:
         broker: "rabbitmq"
         sensor: "collisionAvoid"
         channel: "scan"
-        fields: ["time","sensorID","scan"]
+        fields: ["time","sensorID","scan","agentIndex"]
         builder: cgl.iotrobots.collavoid.commons.iotcloud.SpoutMessageBuilder
         properties:
           ackMode: "auto"
@@ -23,16 +23,25 @@ spouts:
         broker: "rabbitmq"
         sensor: "collisionAvoid"
         channel: "pose_array"
-        fields: ["time","sensorID","pose_array"]
+        fields: ["time","sensorID","pose_array","agentIndex"]
         builder: cgl.iotrobots.collavoid.commons.iotcloud.SpoutMessageBuilder
         properties:
           ackMode: "auto"
           prefectCount: "10"
-    base_config_receiver:
+    command_receiver:
         broker: "rabbitmq"
         sensor: "collisionAvoid"
-        channel: "base_config"
-        fields: ["time","sensorID","baseConfig"]
+        channel: "command"
+        fields: ["time","sensorID","baseConfig","agentIndex"]
+        builder: cgl.iotrobots.collavoid.commons.iotcloud.SpoutMessageBuilder
+        properties:
+          ackMode: "auto"
+          prefectCount: "10"
+    pose_share_out_receiver:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "pose_share_out"
+        fields: ["time","sensorID","poseShare"]
         builder: cgl.iotrobots.collavoid.commons.iotcloud.SpoutMessageBuilder
         properties:
           ackMode: "auto"
@@ -43,6 +52,14 @@ bolts:
         sensor: "collisionAvoid"
         channel: "vel_cmd"
         fields: ["time","sensorID","velocityCommand"]
+        builder: cgl.iotrobots.collavoid.commons.iotcloud.BoltMessageBuilder
+        properties:
+          ackMode: "auto"
+    pose_share_in_sender:
+        broker: "rabbitmq"
+        sensor: "collisionAvoid"
+        channel: "pose_share_in"
+        fields: ["time","sensorID","poseShare"]
         builder: cgl.iotrobots.collavoid.commons.iotcloud.BoltMessageBuilder
         properties:
           ackMode: "auto"

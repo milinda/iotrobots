@@ -1,13 +1,26 @@
 Deploy on Storm
 ===============
-In developing!
 
-1. Build the planner module 
-2. Run the storm command 
+1. Build the planner module
 
-./bin/storm jar /dirToJar/JarName.jar MainClass TopologyNameAsParameter
+If you are going to run in local mode, make sure scope of storm-core dependency in iotrobots-collavoid-parent.pom is NOT 
 
-example
+provided(comment the entry) when building the module otherwise set it to provided.
 
-./bin/storm jar ~/Dropbox/git/iotrobots/collavoid/planners/target/planners-collavoid-1.0-SNAPSHOT-jar-with-dependencies.jar \
-cgl.iotrobots.collavoid.iotTopology.runIotTopology collavoid
+2. If you are going to deploy on cluster, install storm in client machine
+
+3. Deploy
+
+Local mode:
+
+In target dir, run java -jar planners-collavoid-1.0-SNAPSHOT-jar-with-dendencies.jar -l
+
+Remote mode:
+
+To deploy on cluster, first zk.servers in resource file topology.yaml should be configured. Then run
+
+./bin/storm jar /pathToTheJar/planners-collavoid-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+Several arguments can be set when running the command.
+
+Note: Run zookeeper first.

@@ -1,16 +1,7 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 
-/**
- * Created by hjh on 12/20/14.
- */
 public class PoseStamped_ implements Serializable {
     private Header_ Header = new Header_();
 

@@ -1,11 +1,5 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 
 public class Header_ implements Serializable {
@@ -14,11 +8,17 @@ public class Header_ implements Serializable {
 
     private long Stamp;
 
+    private long seq;
+
     public Header_() {
     }
 
     public long getStamp() {
         return Stamp;
+    }
+
+    public long getSeq() {
+        return seq;
     }
 
     public String getFrameId() {
@@ -33,10 +33,15 @@ public class Header_ implements Serializable {
         Stamp = stamp;
     }
 
+    public void setSeq(long seq) {
+        this.seq = seq;
+    }
+
     public Header_ copy() {
         Header_ header_ = new Header_();
         header_.setStamp(Stamp);
         header_.setFrameId(FrameId);
+        header_.setSeq(seq);
         return header_;
     }
 

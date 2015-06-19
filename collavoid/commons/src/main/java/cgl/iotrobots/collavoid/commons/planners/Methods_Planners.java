@@ -1,9 +1,9 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Pose_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Vector3d_;
-import cgl.iotrobots.collavoid.commons.rmqmsg.Vector4d_;
+/* Some of the methods are based on multi_robot_collision_avoidance on wiki ros, license information: refer to
+ http://wiki.ros.org/action/login/multi_robot_collision_avoidance */
+
+import cgl.iotrobots.collavoid.commons.rmqmsg.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +24,7 @@ public class Methods_Planners implements Serializable {
         }
         return result;
     }
+
     // local planner related
     public static double getYaw(Vector4d_ q) {
         double q0 = q.getX();
@@ -36,12 +37,26 @@ public class Methods_Planners implements Serializable {
 
     public static Vector4d_ getQuaternion(Vector3d_ vec, double theta) {
         double theta_normalized = normalize_angle(theta);
-        double w = Math.cos(normalize_angle(theta) / 2);        
+        double w = Math.cos(normalize_angle(theta) / 2);
         double s = Math.sqrt(1 - w * w) / vec.length();
         if (theta_normalized < 0)
             s = -s;
         vec.scale(s);
         return new Vector4d_(vec.getX(), vec.getY(), vec.getZ(), w);
+    }
+
+    public static double getPositionDistance(Pose_ p1, Pose_ p2) {
+        Vector3d_ v1 = p1.getPosition();
+        Vector3d_ v2 = p2.getPosition();
+        double x1 = v1.getX();
+        double y1 = v1.getY();
+        double z1 = v1.getZ();
+        double x2 = v2.getX();
+        double y2 = v2.getY();
+        double z2 = v2.getZ();
+        return Math.sqrt(
+                (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2)
+        );
     }
 
     public static double getGoalPositionDistance(Pose_ pose, double goalx, double goaly) {
@@ -144,6 +159,19 @@ public class Methods_Planners implements Serializable {
 
     public static List<Vector2> minkowskiSumConvexHull(final List<Vector2> polygon1, final List<Vector2> polygon2) {
         List<Vector2> result = new ArrayList<Vector2>();
+        if (polygon1.size() == 0 && polygon2.size() == 0) {
+            return result;
+        } else if (polygon1.size() == 0) {
+            for (Vector2 pt : polygon2) {
+                result.add(new Vector2(pt.getX(), pt.getY()));
+            }
+            return result;
+        } else if (polygon2.size() == 0) {
+            for (Vector2 pt : polygon1) {
+                result.add(new Vector2(pt.getX(), pt.getY()));
+            }
+            return result;
+        }
         ConvexHullPoint[] convex_hull = new ConvexHullPoint[polygon1.size() * polygon2.size()];
 
         int n = 0;
@@ -167,8 +195,6 @@ public class Methods_Planners implements Serializable {
 
         if (!sorted)
             Arrays.sort(P, new Comparators.VectorsLexigraphicComparator());
-
-        //    ROS_WARN("points length %d", (int)P.size());
 
         // Build lower hull,
         for (int i = 0; i < n; i++) {
@@ -205,6 +231,59 @@ public class Methods_Planners implements Serializable {
     public static class NHORCA {
         //from orca
         //in velocity space
+        public static void addNHConstraints(Agent agent) {
+            if (agent.holo_robot_)
+                return;
+
+            double min_error = agent.minErrorHolo;
+            double max_error = agent.maxErrorHolo;
+            double error = max_error;
+            double v_max_ang = NHORCA.vMaxAng(agent);
+
+            if (agent.min_dist < 2.0 * agent.footprint_radius_ + agent.cur_loc_unc_radius_) {
+                error = (max_error - min_error) /
+                        (Math.pow(2 * (agent.footprint_radius_ + agent.cur_loc_unc_radius_), 2)) *
+                        Math.pow(agent.min_dist, 2) + min_error; // how much error do i allow?
+                if (agent.min_dist < 0) {
+                    error = min_error;
+                }
+            }
+            agent.cur_allowed_nh_error_ = 1.0 / 3.0 * agent.cur_allowed_nh_error_ + 2.0 / 3.0 * error;
+
+            double speed_ang = Math.atan2(agent.prefVelociy.getY(), agent.prefVelociy.getX());
+            double dif_ang = shortest_angular_distance(agent.position.getHeading(), speed_ang);
+            //calculate possible tracking holomonic robot speed range
+            if (Math.abs(dif_ang) > Math.PI / 2.0) { // || cur_allowed_nh_error_ < 2.0 * min_error) {
+                double max_track_speed = NHORCA.calculateMaxTrackSpeedAngle(
+                        agent.time_to_holo_,
+                        Math.PI / 2.0,
+                        agent.cur_allowed_nh_error_,
+                        agent.max_vel_x_,
+                        agent.max_vel_th_,
+                        v_max_ang);
+                // tracking errors are in velocity space?
+                if (max_track_speed <= 2 * min_error) {
+                    max_track_speed = 2 * min_error;
+                }
+                NHORCA.addMovementConstraintsDiffSimple(
+                        max_track_speed,
+                        agent.position.getHeading(),
+                        agent.addOrcaLines);
+            } else {
+                NHORCA.addMovementConstraintsDiff(
+                        agent.cur_allowed_nh_error_,
+                        agent.time_to_holo_,
+                        agent.max_vel_x_,
+                        agent.max_vel_th_,
+                        agent.position.getHeading(),
+                        v_max_ang,
+                        agent.addOrcaLines);
+            }
+            agent.max_speed_x_ = NHORCA.vMaxAng(agent);
+
+        }
+
+
         public static void addMovementConstraintsDiffSimple(double max_track_speed, double heading, List<Line> additional_orca_lines) {
             Line maxVel1;
             Line maxVel2;
@@ -220,7 +299,6 @@ public class Methods_Planners implements Serializable {
             maxVel2.setType("NHConstraints");
             additional_orca_lines.add(maxVel1);
             additional_orca_lines.add(maxVel2);
-
         }
 
         //from orca
@@ -253,7 +331,6 @@ public class Methods_Planners implements Serializable {
                 line = new Line(first_point, Vector2.normalize(Vector2.minus(second_point, first_point)));
                 line.setType("NHConstraints");
                 additional_orca_lines.add(line);
-                //    ROS_DEBUG("line point 1 x, y, %f, %f, point 2 = %f,%f",first_point.x(),first_point.y(),second_point.x(),second_point.y());
                 first_point.setVector2(second_point);
             }
         }
@@ -286,8 +363,6 @@ public class Methods_Planners implements Serializable {
                 min_lim_x = Math.max(-max_vel_x, cur_x - sim_period * acc_lim_x);
                 min_lim_y = Math.max(-max_vel_y, cur_y - sim_period * acc_lim_y);
 
-                //      ROS_ERROR("Cur cvel (%f, %f) Max limints x = %f, %f, y = %f, %f", cur_x, cur_y, max_lim_x, min_lim_x, max_lim_y, min_lim_y);
-
                 line_x_front = new Line(Vector2.scale(dir_front, max_lim_x), Vector2.negative(dir_right));
 
                 line_x_back = new Line(Vector2.scale(dir_front, min_lim_x), dir_right);
@@ -314,7 +389,6 @@ public class Methods_Planners implements Serializable {
 
                 line_x_back = new Line(Vector2.scale(dir_front, min_lim_x), dir_right);
 
-                //ROS_ERROR("Max limints x = %f, %f", max_lim_x, min_lim_x);
                 line_x_front.setType("accConstraints");
                 line_x_back.setType("accConstraints");
                 additional_orca_lines.add(line_x_front);
@@ -348,7 +422,7 @@ public class Methods_Planners implements Serializable {
             } else
                 //  return 2;
                 //set theta to positive
-                return Math.min(Methods_Planners.sign(theta) * error * max_vel_th / theta, max_vel_x);
+                return Math.min(sign(theta) * error * max_vel_th / theta, max_vel_x);
         }
 
         public static double beta(double T, double theta, double v_max_ang) {
@@ -365,6 +439,12 @@ public class Methods_Planners implements Serializable {
 
         public static double calcVstarError(double T, double theta, double error) {
             return calcVstar(error / T, theta) * Math.sqrt((2.0 * (1.0 - Math.cos(theta))) / (2.0 * (1.0 - Math.cos(theta)) - Math.pow(Math.sin(theta), 2)));
+        }
+
+        public static double vMaxAng(Agent agent) {
+            //double theoretical_max_v = max_vel_th_ * wheel_base_ / 2.0;
+            //return theoretical_max_v - std::abs(base_odom_.twist.twist.angular.z) * wheel_base_/2.0;
+            return agent.max_vel_x_; //TODO: fixme
         }
 
 
@@ -428,10 +508,9 @@ public class Methods_Planners implements Serializable {
             for (int i = 0; i < truncated_vos.size(); i++) {
                 if (isInsideVO(truncated_vos.get(i), pref_vel, use_truncation)) {
                     isOutsideVOs = false;
-//                    logger.warn("in side vo {}",truncated_vos.get(i).getType());
 
                     VelocitySample leg_projection = new VelocitySample();
-                    if (Methods_Planners.leftOf(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRelativePosition(), pref_vel)) { //left of centerline, project on left leg
+                    if (leftOf(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getRelativePosition(), pref_vel)) { //left of centerline, project on left leg
                         leg_projection.setVelocity(intersectTwoLines(truncated_vos.get(i).getPoint(), truncated_vos.get(i).getLeftLegDir(),
                                 pref_vel, new Vector2(truncated_vos.get(i).getLeftLegDir().getY(), -truncated_vos.get(i).getLeftLegDir().getX())));
                     } else { //project on right leg
@@ -509,7 +588,6 @@ public class Methods_Planners implements Serializable {
             null_vel_sample.setDistToPrefVel(Vector2.absSqr(pref_vel));
             samples.add(null_vel_sample);
 
-            //    ROS_ERROR("projection list length  = %d", samples.size());
             //sort according to the distance to vel pref
             if (samples.size() > 1)
                 Collections.sort(samples, new Comparators.VelocitySamplesComparator());
@@ -549,7 +627,6 @@ public class Methods_Planners implements Serializable {
                 }
 
             }
-            //    ROS_INFO("selected j %d, of size %d", optimal, (int) truncated_vos.size());
 
             //make sure to satisfy truncated vos
             return new_vel;
@@ -557,8 +634,7 @@ public class Methods_Planners implements Serializable {
 
         static boolean isWithinAdditionalConstraints(final List<Line> additional_constraints, final Vector2 point) {
             for (int i = 0; i < additional_constraints.size(); i++) {
-                if (Methods_Planners.rightOf(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(), point)) {
-//                    logger.warn("not with in {} constraint",additional_constraints.get(i).getType());
+                if (rightOf(additional_constraints.get(i).getPoint(), additional_constraints.get(i).getDir(), point)) {
                     return false;
                 }
             }
@@ -567,10 +643,10 @@ public class Methods_Planners implements Serializable {
 
 
         static boolean isInsideVO(final VO vo, Vector2 point, boolean use_truncation) {
-            boolean trunc = Methods_Planners.leftOf(vo.getTruncLeft(), Vector2.minus(vo.getTruncRight(), vo.getTruncLeft()), point);
+            boolean trunc = leftOf(vo.getTruncLeft(), Vector2.minus(vo.getTruncRight(), vo.getTruncLeft()), point);
             if (Vector2.abs(Vector2.minus(vo.getTruncLeft(), vo.getTruncRight())) < Parameters.EPSILON)
                 trunc = true;
-            return Methods_Planners.rightOf(vo.getPoint(), vo.getLeftLegDir(), point) && Methods_Planners.leftOf(vo.getPoint(), vo.getRightLegDir(), point) && (!use_truncation || trunc);
+            return rightOf(vo.getPoint(), vo.getLeftLegDir(), point) && leftOf(vo.getPoint(), vo.getRightLegDir(), point) && (!use_truncation || trunc);
         }
 
         static void addRayVelocitySamples(
@@ -580,7 +656,7 @@ public class Methods_Planners implements Serializable {
                 final Vector2 dir1,
                 final Vector2 point2,
                 final Vector2 dir2, double max_speed, int TYPE) {
-            
+
             double r, s;
             double x1, x2, x3, x4, y1, y2, y3, y4;
             x1 = point1.getX();
@@ -595,7 +671,6 @@ public class Methods_Planners implements Serializable {
             double det = (((x2 - x1) * (y4 - y3)) - (y2 - y1) * (x4 - x3));
 
             if (det == 0.0) {
-                //ROS_WARN("No Intersection found");
                 return;
             }
             if (det != 0) {
@@ -608,84 +683,11 @@ public class Methods_Planners implements Serializable {
                     intersection_point.setVelocity(new Vector2(x1 + r * (x2 - x1), y1 + r * (y2 - y1)));
                     intersection_point.setDistToPrefVel(Vector2.absSqr(Vector2.minus(pref_vel, intersection_point.getVelocity())));
                     if (Vector2.absSqr(intersection_point.getVelocity()) < Math.pow(1.2 * max_speed, 2)) {
-                        //ROS_ERROR("adding VelocitySample");
                         samples.add(intersection_point);
-                        //ROS_ERROR("size of VelocitySamples %d", (int) samples->size());
-
                     }
                 }
             }
         }
-
-//        public static List<Vector2> minkowskiSumConvexHull(final List<Vector2> polygon1, final List<Vector2> polygon2) {
-//            List<Vector2> result = new ArrayList<Vector2>();
-//            ConvexHullPoint[] convex_hull = new ConvexHullPoint[polygon1.size() * polygon2.size()];
-//
-//            int n = 0;
-//            for (int i = 0; i < polygon1.size(); i++) {
-//                for (int j = 0; j < polygon2.size(); j++) {
-//                    ConvexHullPoint p = new ConvexHullPoint();
-//                    p.setPoint(Vector2.plus(polygon1.get(i), polygon2.get(j)));
-//                    convex_hull[n++] = p;
-//                }
-//            }
-//            convex_hull = convexHull(convex_hull, false);
-//            for (int i = 0; i < convex_hull.length; i++) {
-//                result.add(new Vector2(convex_hull[i].getX(), convex_hull[i].getY()));
-//            }
-//            return result;
-//
-//        }
-//
-//        // Returns a list of points on the convex hull in counter-clockwise order.
-//        // Note: the last point in the returned list is the same as the first one.
-//        //Wikipedia Monotone chain...
-//        public static ConvexHullPoint[] convexHull(ConvexHullPoint[] P, boolean sorted) {
-//            int n = P.length, k = 0;
-//            ConvexHullPoint[] result = new ConvexHullPoint[2 * n];
-//
-//            // Sort points lexicographically
-//            if (!sorted)
-//                Arrays.sort(P, new Comparators.VectorsLexigraphicComparator());
-//
-//            //    ROS_WARN("points length %d", (int)P.size());
-//
-//            // Build lower hull,
-//            for (int i = 0; i < n; i++) {
-//                while (k >= 2 && Vector2.det(
-//                        result[k - 2].getX() - result[k - 1].getX(),
-//                        result[k - 2].getY() - result[k - 1].getY(),
-//                        P[i].getX() - result[k - 1].getX(),
-//                        P[i].getY() - result[k - 1].getY()
-//                ) <= 0) k--;
-//                ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
-//                result[k++] = pt;
-//            }
-//
-//            // Build upper hull
-//            for (int i = n - 2, t = k + 1; i >= 0; i--) {
-//                while (k >= t && Vector2.det(
-//                        result[k - 2].getX() - result[k - 1].getX(),
-//                        result[k - 2].getY() - result[k - 1].getY(),
-//                        P[i].getX() - result[k - 1].getX(),
-//                        P[i].getY() - result[k - 1].getY()
-//                ) <= 0) k--;
-//                ConvexHullPoint pt = new ConvexHullPoint(P[i].getX(), P[i].getY());
-//                result[k++] = pt;
-//            }
-//
-//
-//            //resize list
-//            ConvexHullPoint[] resultnew = new ConvexHullPoint[k];
-//            System.arraycopy(result, 0, resultnew, 0, k);
-//
-//            return resultnew;
-//        }
-
-//    static double cross(final ConvexHullPoint o, final ConvexHullPoint A, final ConvexHullPoint B){
-//        return (A.getPoint().getX()- o.getPoint().getX()) * (B.getPoint().getY() - o.getPoint().getY())
-//                -(A.getPoint().getY() - o.getPoint().getY()) * (B.getPoint().getX() - o.getPoint().getX());
-//    }
 
         public static VO createObstacleVO(
                 Vector2 position1,
@@ -714,7 +716,7 @@ public class Methods_Planners implements Serializable {
 
             for (int i = 0; i < mink_sum.size(); i++) {
                 double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
-                if (Methods_Planners.rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
+                if (rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
                     if (-angle < min_ang) {
                         min_right = Vector2.plus(rel_position, mink_sum.get(i));
                         min_ang = -angle;
@@ -728,9 +730,7 @@ public class Methods_Planners implements Serializable {
                 Vector2 project_on_rel_position = intersectTwoLines(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)), rel_position_normal);
                 double dist = Vector2.abs(project_on_rel_position);
                 if (Vector2.dotProduct(project_on_rel_position, rel_position) < -Parameters.EPSILON) {
-                    //	ROS_ERROR("Collision?");
                     dist = -dist;
-
                 }
 
                 if (dist < min_dist) {
@@ -823,11 +823,10 @@ public class Methods_Planners implements Serializable {
             Vector2 rel_velocity = Vector2.minus(vel1, vel2);
 
             if (result.getCombinedRadius() > Vector2.abs(result.getRelativePosition())) {
-                //ROS_ERROR("comb.rad. %f, relPos %f, %f (abs = %f)", result.combined_radius, result.relative_position.x(), result.relative_position.y(), abs(result.relative_position));
                 return result;
             }
 
-            if (Methods_Planners.leftOf(new Vector2(0.0, 0.0), result.getRelativePosition(), rel_velocity)) { //left of centerline
+            if (leftOf(new Vector2(0.0, 0.0), result.getRelativePosition(), rel_velocity)) { //left of centerline
                 result.setPoint(intersectTwoLines(result.getPoint(), result.getLeftLegDir(), vel2, result.getRightLegDir())); // TODO add uncertainty
             } else { //right of centerline
                 result.setPoint(intersectTwoLines(vel2, result.getLeftLegDir(), result.getPoint(), result.getRightLegDir())); // TODO add uncertainty
@@ -847,7 +846,7 @@ public class Methods_Planners implements Serializable {
                 return result;
             }
 
-            if (Methods_Planners.leftOf(new Vector2(0.0, 0.0), rel_position, rel_velocity)) { //left of centerline
+            if (leftOf(new Vector2(0.0, 0.0), rel_position, rel_velocity)) { //left of centerline
                 result.setPoint(intersectTwoLines(result.getPoint(), result.getLeftLegDir(), vel2, result.getRightLegDir())); // TODO add uncertainty
             } else { //right of centerline
                 result.setPoint(intersectTwoLines(vel2, result.getLeftLegDir(), result.getPoint(), result.getRightLegDir())); // TODO add uncertainty
@@ -886,7 +885,7 @@ public class Methods_Planners implements Serializable {
 
             for (int i = 0; i < mink_sum.size(); i++) {
                 double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
-                if (Methods_Planners.rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
+                if (rightOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
                     if (-angle < min_ang) {
                         min_right = Vector2.plus(rel_position, mink_sum.get(i));
                         min_ang = -angle;
@@ -900,7 +899,6 @@ public class Methods_Planners implements Serializable {
                 Vector2 project_on_rel_position = intersectTwoLines(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)), rel_position_normal);
                 double dist = Vector2.abs(project_on_rel_position);
                 if (Vector2.dotProduct(project_on_rel_position, rel_position) < -Parameters.EPSILON) {
-                    //	ROS_ERROR("Collision?");
                     dist = -dist;
 
                 }
@@ -941,7 +939,6 @@ public class Methods_Planners implements Serializable {
 
             }
 
-            //ROS_ERROR("min_right %f, %f, min_left %f,%f,", min_right.x(), min_right.y(), min_left.x(), min_left.y());
             double center_p, radius;
             Vector2 center_r;
             //test left/right
@@ -966,12 +963,11 @@ public class Methods_Planners implements Serializable {
                     center_r = Vector2.scale(dir_center, center_p);
                     radius = Vector2.abs(Vector2.minus(min_point, center_r));
                 } else {
-                    logger.error("CreateVO error: ang =" + ang_between + ", sqrt_ext = " + sqrt_exp);
-                    logger.error("CreateVO error: rel position " + rel_position.getX() + " " + rel_position.getY() + ", radius " + radius + ", center_p " + center_p);
+                    logger.warn("CreateVO warn: ang =" + ang_between + ", sqrt_ext = " + sqrt_exp);
+                    logger.warn("CreateVO warn: rel position " + rel_position.getX() + " " + rel_position.getY() + ", radius " + radius + ", center_p " + center_p);
+                    logger.warn("Agent position: {}, neighbor position: {}", position1.toString(), position2.toString());
                 }
             }
-            //result.relative_position = rel_position;
-            //result.combined_radius = abs(rel_position) - min_dist;
 
             result.setRelativePosition(center_r);
             result.setCombinedRadius(radius);
@@ -996,7 +992,6 @@ public class Methods_Planners implements Serializable {
                 result.setRightLegDir(new Vector2(Math.cos(ang_to_other - angle_of_opening), Math.sin(ang_to_other - angle_of_opening)));
                 result.setLeftLegDir(new Vector2(Math.cos(ang_to_other + angle_of_opening), Math.sin(ang_to_other + angle_of_opening)));
             }
-            //    ROS_ERROR("angle_of_opening %f, combined_radius %f, rel_position %f", angle_of_opening, combined_radius, abs(rel_position));
             result.setPoint(vel2);
             result.setRelativePosition(rel_position);
             result.setCombinedRadius(radius1 + radius2);
@@ -1033,6 +1028,306 @@ public class Methods_Planners implements Serializable {
                 return result;
             }
         }
+
+        //-------------------compute obstacle vos-------------------------
+        public static void computeObstacleVOs(Agent agent) {
+            if (agent.obstacles_from_laser_.size() <= 0)
+                return;
+            double maxDist = Math.pow((Vector2.abs(agent.velocity) + 4.0 * agent.footprint_radius_), 2);
+            for (Obstacle obstacle : agent.obstacles_from_laser_) {
+                //why choose this limit?????????????????????????????????
+                if (agent.use_obstacles_) {
+                    if (obstacle.getDistToAgent() < maxDist) {
+                        if (agent.orca) {// currently set to false
+                            createObstacleLine(agent, obstacle.getBegin(), obstacle.getEnd());
+                        } else {//called from CP
+                            VO obstacle_vo = ClearPath.createObstacleVO(
+                                    agent.position.getPos(),
+                                    agent.footprint_radius_,
+                                    agent.footprint_original,
+                                    obstacle.getBegin(),
+                                    obstacle.getEnd()
+                            );
+                            obstacle_vo.setType("obstacleVo");
+                            agent.voAgents.add(obstacle_vo);
+                        }
+                    }
+                }
+
+            }
+        }
+
+        static void createObstacleLine(Agent agent, Vector2 obst1, Vector2 obst2) {
+
+            double dist = distSqPointLineSegment(obst1, obst2, agent.position.getPos());
+
+            if (dist == Vector2.absSqr(Vector2.minus(agent.position.getPos(), obst1))) {
+                computeObstacleLine(agent, obst1);
+            } else if (dist == Vector2.absSqr(Vector2.minus(agent.position.getPos(), obst2))) {
+                computeObstacleLine(agent, obst2);
+            } else {
+                Vector2 position_obst = projectPointOnLine(obst1, Vector2.minus(obst2, obst1), agent.position.getPos());
+                Vector2 rel_position = Vector2.minus(position_obst, agent.position.getPos());
+                dist = Math.sqrt(dist);
+                double dist_to_footprint = getDistToFootprint(agent, rel_position);
+                if (dist_to_footprint == -1) {
+                    dist_to_footprint = agent.footprint_radius_;
+                }
+                dist = dist - dist_to_footprint - 0.03;
+
+                if (dist < 0.0) {
+                    Line line = new Line();
+                    line.setPoint(Vector2.scale(Vector2.normalize(rel_position), (dist - 0.02)));
+                    line.setDir(Vector2.normalize(Vector2.minus(obst1, obst2)));
+                    agent.addOrcaLines.add(line);
+                    return;
+                }
+
+                if (Vector2.abs(Vector2.minus(agent.position.getPos(), obst1)) > 2 * agent.footprint_radius_ &&
+                        Vector2.abs(Vector2.minus(agent.position.getPos(), obst2)) > 2 * agent.footprint_radius_) {
+                    Line line = new Line();
+                    line.setPoint(Vector2.scale(Vector2.normalize(rel_position), dist));
+                    line.setDir(Vector2.negative(Vector2.normalize(Vector2.minus(obst1, obst2))));
+                    agent.addOrcaLines.add(line);
+                    return;
+
+                }
+
+                rel_position = Vector2.scale(Vector2.normalize(rel_position), Vector2.abs(rel_position) - dist / 2.0);
+
+                List<Vector2> obst = new ArrayList<Vector2>();
+                obst.add(Vector2.minus(obst1, position_obst));
+                obst.add(Vector2.minus(obst2, position_obst));
+                List<Vector2> mink_sum = minkowskiSumConvexHull(agent.footprint_original, obst);
+
+                Vector2 min = new Vector2();
+                Vector2 max = new Vector2();
+                double min_ang = 0.0;
+                double max_ang = 0.0;
+
+                for (int i = 0; i < mink_sum.size(); i++) {
+                    double angle = Vector2.angleBetween(rel_position, Vector2.plus(rel_position, mink_sum.get(i)));
+                    if (leftOf(new Vector2(0.0, 0.0), rel_position, Vector2.plus(rel_position, mink_sum.get(i)))) {
+                        if (-angle < min_ang) {
+                            min = Vector2.plus(rel_position, mink_sum.get(i));
+                            min_ang = -angle;
+                        }
+                    } else {
+                        if (angle > max_ang) {
+                            max = Vector2.plus(rel_position, mink_sum.get(i));
+                            max_ang = angle;
+                        }
+                    }
+                }
+
+                Line line = new Line();
+                line.setPoint(Vector2.scale(Vector2.normalize(rel_position), dist / 2.0));
+                if (Vector2.absSqr(Vector2.minus(position_obst, obst1)) > Vector2.absSqr(Vector2.minus(position_obst, obst2))) {
+                    line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(max), 0.1));
+                } else {
+                    line.setDir(Vector2.rotateVectorByAngle(Vector2.normalize(min), 0.1));
+
+                }
+                agent.addOrcaLines.add(line);
+
+            }
+        }
+
+        static void computeObstacleLine(Agent agent, Vector2 obst) {
+            Line line = new Line();
+            Vector2 relative_position = Vector2.minus(obst, agent.position.getPos());
+            double dist_to_footprint;
+            double dist = Vector2.abs(Vector2.minus(agent.position.getPos(), obst));
+            if (!agent.has_polygon_footprint_)
+                dist_to_footprint = agent.footprint_radius_;
+            else {
+                dist_to_footprint = getDistToFootprint(agent, relative_position);
+                if (dist_to_footprint == -1) {
+                    dist_to_footprint = agent.footprint_radius_;
+                }
+            }
+            dist = dist - dist_to_footprint - 0.03;
+
+            line.setPoint(Vector2.scale(Vector2.normalize(relative_position), dist));
+            line.setDir(new Vector2(-(Vector2.normalize(relative_position)).getY(),
+                    (Vector2.normalize(relative_position)).getX()));
+            agent.addOrcaLines.add(line);
+        }
+
+        static double getDistToFootprint(Agent agent, Vector2 point) {
+            Vector2 result;
+            for (int i = 0; i < agent.footprint_minkowski_lines.size(); i++) {
+                LinePair l1 = new LinePair(agent.footprint_minkowski_lines.get(i).getFirst(),
+                        agent.footprint_minkowski_lines.get(i).getSecond());
+                LinePair l2 = new LinePair(new Vector2(0.0, 0.0), point);
+
+                result = LinePair.Intersection(l1, l2);
+                if (result != null) {
+                    return Vector2.abs(result);
+                }
+            }
+            return -1;
+        }
+
+        //--------------------------agent vos-----------------------------
+
+        public static void computeAgentVOs(Agent agent) {
+            double radiusWithError = agent.radius + agent.cur_allowed_nh_error_;
+            // neighbors are published with localization uncertainty that means radius and footprint
+            // include localization uncertainty radius and minkowski footprint.
+            for (Neighbor neighbor : agent.AgentNeighbors) {
+                VO new_agent_vo;
+                //use footprint or radius to create VO
+                if (agent.convex) {
+                    if (neighbor.controlled) {
+                        new_agent_vo = ClearPath.createVO(
+                                agent.position.getPos(),
+                                agent.footprint_rotated,
+                                agent.velocity,
+                                neighbor.position.getPos(),
+                                neighbor.footprint_rotated,
+                                neighbor.velocity,
+                                agent.voType);
+                    } else {
+                        new_agent_vo = ClearPath.createVO(
+                                agent.position.getPos(),
+                                agent.footprint_rotated,
+                                agent.velocity,
+                                neighbor.position.getPos(),
+                                neighbor.footprint_rotated,
+                                neighbor.velocity,
+                                ClearPath.VOS);
+                    }
+                } else {
+                    if (neighbor.controlled) {
+                        new_agent_vo = ClearPath.createVO(
+                                agent.position.getPos(),
+                                radiusWithError,
+                                agent.velocity,
+                                neighbor.position.getPos(),
+                                neighbor.radius,
+                                neighbor.velocity,
+                                agent.voType);
+                    } else {
+                        new_agent_vo = ClearPath.createVO(
+                                agent.position.getPos(),
+                                radiusWithError,
+                                agent.velocity,
+                                neighbor.position.getPos(),
+                                neighbor.radius,
+                                neighbor.velocity,
+                                ClearPath.VOS);
+                    }
+                }
+                //truncation--not collide in certain amount of time
+                if (agent.useTruancation) {
+                    new_agent_vo = ClearPath.createTruncVO(new_agent_vo, agent.truncTime);
+                    new_agent_vo.setType("agentVo");
+                }
+                agent.voAgents.add(new_agent_vo);
+            }
+        }
+
+    }
+
+
+    public static void velocityToCmd(Agent agent) {
+        double speed_ang = Math.atan2(agent.newVelocity.getY(), agent.newVelocity.getX());
+        double dif_ang = shortest_angular_distance(agent.position.getHeading(), speed_ang);
+
+        Vector3d_ linear = new Vector3d_();
+        Vector3d_ angular = new Vector3d_();
+        if (!agent.holo_robot_) {
+            double vel = Vector2.abs(agent.newVelocity);
+            double vstar;
+
+            if (Math.abs(dif_ang) > Parameters.EPSILON)
+                vstar = NHORCA.calcVstar(vel, dif_ang);//get nonholomonic velocity
+            else
+                vstar = agent.max_vel_x_;
+
+            linear.setX(Math.min(vstar, NHORCA.vMaxAng(agent)));
+            linear.setY(0.0);
+            agent.cmd_vel.setLinear(linear);
+
+            if (Math.abs(dif_ang) > 3.0 * Math.PI / 4.0) {
+                angular.setZ(
+                        sign(
+                                agent.base_odom_.getTwist().getAngular().getZ()) *
+                                Math.min(Math.abs(dif_ang / agent.time_to_holo_),
+                                        agent.max_vel_th_)
+                );
+                agent.cmd_vel.setAngular(angular);
+            } else {
+                angular.setZ(
+                        sign(dif_ang) *
+                                Math.min(Math.abs(dif_ang / agent.time_to_holo_),
+                                        agent.max_vel_th_)
+                );
+                agent.cmd_vel.setAngular(angular);
+            }
+        } else {
+            //new velocity is caculated in world frame, it has to be transformed to robot base frame
+            Vector2 rotated_vel = Vector2.rotateVectorByAngle(agent.newVelocity, -agent.position.getHeading());
+            linear.setX(rotated_vel.getX());
+            linear.setY(rotated_vel.getY());
+            agent.cmd_vel.setLinear(linear);
+            if (agent.min_dist > 2 * agent.footprint_radius_) {
+                angular.setZ(sign(dif_ang) * Math.min(Math.abs(dif_ang), agent.max_vel_th_));
+                agent.cmd_vel.setAngular(angular);
+            }
+        }
+
+    }
+
+
+    public static void getValidCommand(Agent agent) {
+        if (Math.abs(agent.cmd_vel.getAngular().getZ()) > agent.max_vel_th_)
+            agent.cmd_vel.getAngular().setZ(Methods_Planners.sign(agent.cmd_vel.getAngular().getZ()) * agent.max_vel_th_);
+
+        if (Math.abs(agent.cmd_vel.getLinear().getX()) > agent.max_vel_x_)
+            agent.cmd_vel.getLinear().setX(Methods_Planners.sign(agent.cmd_vel.getLinear().getX()) * agent.max_vel_x_);
+
+        if (Math.abs(agent.cmd_vel.getLinear().getY()) > agent.max_vel_y_)
+            agent.cmd_vel.getLinear().setY(Methods_Planners.sign(agent.cmd_vel.getLinear().getY()) * agent.max_vel_y_);
+
+        if (Math.abs(agent.cmd_vel.getAngular().getZ()) < agent.min_vel_th_)
+            agent.cmd_vel.getAngular().setZ(0);
+
+        if (Math.abs(agent.cmd_vel.getLinear().getX()) < agent.min_vel_x_)
+            agent.cmd_vel.getLinear().setX(0);
+
+        if (Math.abs(agent.cmd_vel.getLinear().getY()) < agent.min_vel_y_)
+            agent.cmd_vel.getLinear().setY(0);
+    }
+
+    // global planner
+    public static List<PoseStamped_> makePlan(final PoseStamped_ start, final PoseStamped_ goal) {
+        //start and goal are supposed not to change
+        List<PoseStamped_> plan = new ArrayList<PoseStamped_>();
+        plan.clear();
+        plan.add(start);
+        double x, y, dir_x, dir_y;
+        dir_x = goal.getPose().getPosition().getX() - start.getPose().getPosition().getX();
+        dir_y = goal.getPose().getPosition().getY() - start.getPose().getPosition().getY();
+        double length = Math.sqrt(dir_y * dir_y + dir_x * dir_x);
+        dir_x /= length;
+        dir_y /= length;
+        x = start.getPose().getPosition().getX() + 0.1 * dir_x;
+        y = start.getPose().getPosition().getY() + 0.1 * dir_y;
+
+        while (Math.abs(x - goal.getPose().getPosition().getX()) > 0.2 || Math.abs(y - goal.getPose().getPosition().getY()) > 0.2) {
+            PoseStamped_ pose = new PoseStamped_();
+            pose.getPose().getPosition().setX(x);
+            pose.getPose().getPosition().setY(y);
+            pose.getHeader().setFrameId(goal.getHeader().getFrameId());
+            pose.getHeader().setStamp(goal.getHeader().getStamp());
+            plan.add(pose);
+            x += 0.1 * dir_x;
+            y += 0.1 * dir_y;
+        }
+        plan.add(goal);
+        return plan;
     }
 
 }

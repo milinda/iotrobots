@@ -12,25 +12,25 @@ public class Line implements Serializable {
         this.dir = new Vector2(dir);
     }
 
-    public Line(){
-        this.point=new Vector2(0,0);
-        this.dir=new Vector2(0,0);
+    public Line() {
+        this.point = new Vector2(0, 0);
+        this.dir = new Vector2(0, 0);
     }
 
-    public Vector2 getPoint(){
+    public Vector2 getPoint() {
         return new Vector2(this.point);
     }
 
-    public Vector2 getDir(){
+    public Vector2 getDir() {
         return new Vector2(this.dir);
     }
 
-    public void setPoint(Vector2 p){
-        this.point=new Vector2(p);
+    public void setPoint(Vector2 p) {
+        this.point = new Vector2(p);
     }
 
-    public void setDir(Vector2 d){
-        this.dir=new Vector2(d);
+    public void setDir(Vector2 d) {
+        this.dir = new Vector2(d);
     }
 
     public String getType() {

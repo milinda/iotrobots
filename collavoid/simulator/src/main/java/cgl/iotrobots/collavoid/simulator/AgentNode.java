@@ -1,17 +1,15 @@
 package cgl.iotrobots.collavoid.simulator;
 
-import org.ros.address.InetAddressFactory;
 import org.ros.namespace.GraphName;
 import org.ros.node.*;
 
-/**
- * Created by hjh on 11/25/14.
- */
-public class AgentNode {
+import java.net.URI;
+import java.net.URISyntaxException;
 
-    private PubSubNode pubSubNode;
+public class AgentNode {
     private ConnectedNode node;
     private NodeMainExecutor executor;
+    private String nodeName;
 
     public class PubSubNode extends AbstractNodeMain {
         private boolean initialized = false;
@@ -24,29 +22,33 @@ public class AgentNode {
 
         @Override
         public GraphName getDefaultNodeName() {
-            return GraphName.of("agent");
+            return GraphName.of(nodeName);
         }
 
-        @Override
-        public void onShutdown(Node node) {
-            node.shutdown();
-        }
     }
 
-    public AgentNode(String nodeName) {
-        String host = InetAddressFactory.newNonLoopback().getHostAddress()
-                .toString();
-        NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(host);
-        executor = DefaultNodeMainExecutor.newDefault();
+    public AgentNode(String nodeName, String rosip, String rosMaster) {
+        NodeConfiguration nodeConfiguration = null;
+        try {
+            nodeConfiguration = NodeConfiguration.newPublic(rosip, new URI(rosMaster));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        this.executor = DefaultNodeMainExecutor.newDefault();
+        this.nodeName = nodeName;
         nodeConfiguration.setNodeName(nodeName);
 
-        pubSubNode = new PubSubNode();
+        PubSubNode pubSubNode = new PubSubNode();
         executor.execute(pubSubNode, nodeConfiguration);
 
         System.out.println("Initializing Node " + nodeName + "..");
 
+        int i = 0;
         while (!pubSubNode.initialized) {
+            i++;
             System.out.print(".");
+            if (i % 30 == 0)
+                System.out.println();
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -57,7 +59,7 @@ public class AgentNode {
     }
 
     public ConnectedNode getNode() {
-        if (pubSubNode.initialized) {
+        if (node != null) {
             return node;
         } else {
             System.out.println("Error, node not initialized!");
@@ -65,14 +67,8 @@ public class AgentNode {
         }
     }
 
-    public NodeMainExecutor getExecutor() {
-        return executor;
-
-    }
-
-    public void shutDown() {
+    public void shutdown() {
         executor.shutdown();
-
     }
 
 

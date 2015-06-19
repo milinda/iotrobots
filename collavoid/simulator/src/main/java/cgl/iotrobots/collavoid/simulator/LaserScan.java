@@ -1,6 +1,5 @@
 package cgl.iotrobots.collavoid.simulator;
 
-import cgl.iotrobots.collavoid.commons.rmqmsg.PointCloud2_;
 import sensor_msgs.PointCloud2;
 import simbad.sim.RangeSensorBelt;
 
@@ -28,7 +27,7 @@ public class LaserScan {
     //sensor belt radius
     private double radius;
 
-    private double minRange,maxRange;
+    private double minRange, maxRange;
 
     // original
     public LaserScan(double radius, double angle, int nbsensors, double minRange_, double maxRange_, int updateFreq) {
@@ -41,7 +40,7 @@ public class LaserScan {
         positions = new Vector3d[nbsensors];
         directions = new Vector3d[nbsensors];
         Vector3d frontPos = new Vector3d(radius, 0, 0);
-        Vector3d frontDir = new Vector3d(maxRange-radius, 0, 0);
+        Vector3d frontDir = new Vector3d(maxRange - radius, 0, 0);
         angles = new double[nbsensors];
         Transform3D transform = new Transform3D();
         double step = angle / ((double) nbsensors - 1);
@@ -77,10 +76,10 @@ public class LaserScan {
         for (int i = 0; i < sensors.getNumSensors(); i++) {
             if (Double.isFinite(sensors.getMeasurement(i))) {
                 d = sensors.getMeasurement(i) + this.radius;
-                double x=d * Math.cos(angles[i]);
-                double z=d * Math.sin(-angles[i]);
-                if (x>=this.minRange)
-                res.add(new Point3d(x, height,z ));
+                double x = d * Math.cos(angles[i]);
+                double z = d * Math.sin(-angles[i]);
+                if (x >= this.minRange)
+                    res.add(new Point3d(x, height, z));
             }
         }
     }
@@ -95,14 +94,4 @@ public class LaserScan {
         utilsSim.toPointCloud2(pc2, scan);
     }
 
-    //no ros
-    public void getLaserscanPointCloud2(PointCloud2_ pc2, Transform3D transform3D) {
-        List<Point3d> scan = new ArrayList<Point3d>();
-        getScan(scan);
-        // transform to map or global frame
-        for (int i = 0; i < scan.size(); i++) {
-            transform3D.transform(scan.get(i));
-        }
-        utilsSim.toPointCloud2(pc2, scan);
-    }
 }

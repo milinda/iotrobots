@@ -1,37 +1,34 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
 import cgl.iotrobots.collavoid.commons.planners.Vector2;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class PoseShareMsg_ implements Serializable {
 
     private Header_ Header = new Header_();
 
-    private String Name = "";
+    public String id = "";
 
-    private double Radius;
+    private double Radius;//here we use footprint to calculate velocity, so this radius is the footprint radius
 
     private boolean HoloRobot;
 
     private boolean Controlled;
 
-    private double ControlPeriod;
+    public double PulishMePeriod;
+
+    public long lastTimeMePublished;
 
     private Pose_ Pose = new Pose_();
 
     private Twist_ Twist = new Twist_();
 
     private List<Vector2> FootPrint_Minkowski = new ArrayList<Vector2>();    // footprint minkowski
+
+    public List<Vector2> Footprint_original = new ArrayList<Vector2>();
 
 
     public Header_ getHeader() {
@@ -50,8 +47,8 @@ public class PoseShareMsg_ implements Serializable {
         return Controlled;
     }
 
-    public double getControlPeriod() {
-        return ControlPeriod;
+    public double getPulishMePeriod() {
+        return PulishMePeriod;
     }
 
     public List<Vector2> getFootPrint_Minkowski() {
@@ -62,12 +59,20 @@ public class PoseShareMsg_ implements Serializable {
         return Pose;
     }
 
-    public String getName() {
-        return Name;
+    public String getId() {
+        return id;
     }
 
     public Twist_ getTwist() {
         return Twist;
+    }
+
+    public List<Vector2> getFootprint_original() {
+        return Footprint_original;
+    }
+
+    public long getLastTimeMePublished() {
+        return lastTimeMePublished;
     }
 
     public void setHeader(Header_ header) {
@@ -98,12 +103,19 @@ public class PoseShareMsg_ implements Serializable {
         Radius = radius;
     }
 
-    public void setName(String robotId) {
-        Name = robotId;
+    public void setId(String robotId) {
+        id = robotId;
     }
 
-    public void setControlPeriod(double controlPeriod) {
-        this.ControlPeriod = controlPeriod;
+    public void setPulishMePeriod(double pulishMePeriod) {
+        this.PulishMePeriod = pulishMePeriod;
     }
 
+    public void setFootprint_original(List<Vector2> footprint_original) {
+        Footprint_original = footprint_original;
+    }
+
+    public void setLastTimeMePublished(long lastTimeMePublished) {
+        this.lastTimeMePublished = lastTimeMePublished;
+    }
 }

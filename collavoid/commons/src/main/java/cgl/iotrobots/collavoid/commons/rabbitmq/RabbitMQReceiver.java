@@ -45,7 +45,7 @@ public class RabbitMQReceiver {
             if (!topic) {
                 channel.exchangeDeclare(exchangeName, "direct", false);
             } else {
-                channel.exchangeDeclare(exchangeName, "fanout", false);
+                channel.exchangeDeclare(exchangeName, "topic", false);
             }
             this.topic = topic;
         } catch (Exception e) {

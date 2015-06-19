@@ -1,11 +1,5 @@
 package cgl.iotrobots.collavoid.commons.rmqmsg;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 
 public class Odometry_ implements Serializable {
@@ -63,6 +57,7 @@ public class Odometry_ implements Serializable {
         odometry_.setChildFrameId(new String(ChildFrameId));
         odometry_.setTwist(Twist.copy());
         odometry_.setPose(Pose.copy());
+
         return odometry_;
     }
 

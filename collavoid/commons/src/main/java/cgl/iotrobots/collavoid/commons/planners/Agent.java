@@ -1,19 +1,21 @@
 package cgl.iotrobots.collavoid.commons.planners;
 
 import cgl.iotrobots.collavoid.commons.rmqmsg.Odometry_;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import cgl.iotrobots.collavoid.commons.rmqmsg.PoseStamped_;
+import cgl.iotrobots.collavoid.commons.rmqmsg.Twist_;
 
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Agent extends Neighbor {
 
     //parameters read directly from configuration, or set automatically
+    public double rot_stopped_velocity;
+    public double trans_stopped_velocity;
+    public double yaw_goal_tolerance;
+    public double xy_goal_tolerance;
+    public boolean latch_xy_goal_tolerance;
+    public boolean ignore_goal_yaw;
     public boolean use_obstacles_;
     public String global_frame_;
     public double acc_lim_x_;
@@ -37,9 +39,7 @@ public class Agent extends Neighbor {
     public boolean useTruancation;
     public int voType;
     public double truncTime;
-    public double publishPositionsPeriod;
     public double publishMePeriod;
-    //private Logger logger;  can not be serialized
 
     //paramters calculated from configuration
     public String base_frame_;
@@ -48,18 +48,25 @@ public class Agent extends Neighbor {
 
     //robot state information
     public Vector2 prefVelociy;
+    public Vector2 newVelocity;
+    public Twist_ cmd_vel;
     public double cur_allowed_nh_error_;
-    public double max_speed_x_; //in nonholomic robot it has only one liner velocity
-    public long lastTimeMePublished;
+    public double max_speed_x_; //in nonholomic robot, it has only one liner velocity
     public double min_dist;
     public boolean has_polygon_footprint_;
     public double cur_loc_unc_radius_;
-    public List<Line> orcaLines, addOrcaLines;
+    public List<Line> addOrcaLines;
     public List<VO> voAgents;
     public List<Neighbor> AgentNeighbors;
     public List<Obstacle> obstacles_from_laser_;
     public List<LinePair> footprint_minkowski_lines;
-
+    public List<PoseStamped_> plan;
+    public List<PoseStamped_> transformed_plan;
+    public boolean isNew = true;//not used
+    public int current_waypoint = 0;
+    public boolean skip_next = false;
+    public boolean xy_tolerance_latch_ = false;
+    public boolean rotating_to_goal_ = false;
 
     // inherit from Neighbor
 //    public String Name;
@@ -78,14 +85,27 @@ public class Agent extends Neighbor {
 
     public Agent() {
         super();
-
     }
 
-    public Agent(String name) {
-        super(name);
+    public Agent(String id, String name) {
+        super(id, name);
+        initParameters();
+    }
+
+    public Agent(String id) {
+        super(id);
+        initParameters();
+    }
+
+    void initParameters() {
         cur_allowed_nh_error_ = 0;
         cur_loc_unc_radius_ = 0;// not used
         base_odom_ = null;
+        cmd_vel = new Twist_();
+        prefVelociy = null;
+        newVelocity = null;
+        plan = new ArrayList<PoseStamped_>();
+        transformed_plan = new ArrayList<PoseStamped_>();
         footprint_original = new ArrayList<Vector2>();
         footprint_minkowski = new ArrayList<Vector2>();
         footprint_minkowski_lines = new ArrayList<LinePair>();
@@ -93,24 +113,24 @@ public class Agent extends Neighbor {
         obstacles_from_laser_ = new ArrayList<Obstacle>();
         addOrcaLines = new ArrayList<Line>();
         voAgents = new ArrayList<VO>();
-        orcaLines = new ArrayList<Line>();
-//        samples = new ArrayList<VelocitySample>();
-//        logger = LoggerFactory.getLogger(Agent.class);
-        initParameters();
-    }
-
-    void initParameters() {
 
         double controller_frequency = -1;
 
         //load parameters locally
+        rot_stopped_velocity = Parameters.ROT_STOPPED_VELOCITY;
+        trans_stopped_velocity = Parameters.TRANS_STOPPED_VELOCITY;
+        yaw_goal_tolerance = Parameters.YAW_GOAL_TOLERANCE;
+        xy_goal_tolerance = Parameters.XY_GOAL_TOLERANCE;
+        latch_xy_goal_tolerance = Parameters.LATCH_XY_GOAL_TOLERANCE;
+        ignore_goal_yaw = Parameters.IGNORE_GOAL_YAW;
+
         use_obstacles_ = Parameters.USE_OBSTACLES;
         controlled = Parameters.CONTROLLED;
 
         updateBaseFrame();//get rid of the / character
         global_frame_ = Parameters.GLOBAL_FRAME;
 
-        //acceleration limits load from params_turtle.yaml
+        //acceleration limits, from params_turtle.yaml
         acc_lim_x_ = Parameters.ACC_LIM_X;
         acc_lim_y_ = Parameters.ACC_LIM_Y;
         acc_lim_th_ = Parameters.ACC_LIM_TH;
@@ -137,14 +157,18 @@ public class Agent extends Neighbor {
         //set radius
         footprint_radius_ = Parameters.FOOTPRINT_RADIUS;
 
+        // set radius with localization error, as we use footprint to calculate, this is set to footprint radius
+        radius = footprint_radius_ + cur_loc_unc_radius_;
         //sim period
         controller_frequency = Parameters.CONTROLLER_FREQUENCY;
 
         //me.time_horizon_obst_ = getParamDef(private_nh,"time_horizon_obst",10.0); currently not used in agent
+
         //non holo robot parameters
         time_to_holo_ = Parameters.TIME_TO_HOLO;
         minErrorHolo = Parameters.MIN_ERROR_HOLO;
         maxErrorHolo = Parameters.MAX_ERROR_HOLO;
+
         //delete_observations_ = params.getBoolean("delete_observations", true); currently not used in agent
         //threshold_last_seen_ = params.getDouble("threshold_last_seen",1.0); currently not used in agent
 
@@ -161,20 +185,15 @@ public class Agent extends Neighbor {
         truncTime = Parameters.TRUNC_TIME;
         //left_pref_ = getParamDef(private_nh,"left_pref",0.1); not used as it is for orca method
 
-        //visualization publish frequency
-        publishPositionsPeriod = 1.0 / Parameters.PUBLISH_POSITIONS_FREQUENCY;
         //position share publish frequency
         publishMePeriod = 1.0 / Parameters.PUBLISH_ME_FREQUENCY;
 
-        radius = footprint_radius_ + cur_loc_unc_radius_;
-
         if (controller_frequency <= 0) {
-            System.out.println("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
+            System.err.println("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
             controlPeriod = 0.05;
         } else {
             controlPeriod = 1.0 / controller_frequency;
         }
-//       System.out.println("Sim period is set to " + String.format("%1$.2f", controlPeriod));
 
         //currently use circular footprint
         footprint_original.clear();
@@ -188,8 +207,6 @@ public class Agent extends Neighbor {
             angle += step;
         }
         setFootprint_minkowski(footprint_original);
-
-//        logger.info("************************Agent " + Name + " is initialized!");
     }
 
     public void updateBaseFrame() {
@@ -225,11 +242,15 @@ public class Agent extends Neighbor {
         return base_frame_;
     }
 
+    public String getGlobal_frame_() {
+        return global_frame_;
+    }
+
     public boolean getHoloRobot() {
         return holo_robot_;
     }
 
-    public boolean getController() {
+    public boolean getControlled() {
         return controlled;
     }
 
@@ -260,10 +281,25 @@ public class Agent extends Neighbor {
     public List<Vector2> getFootprint_original() {
         return footprint_original;
     }
-    
-    /*+++++++++++++++++++++++++Get stuff end+++++++++++++++++++++++++*/
+
+    public List<PoseStamped_> getPlan() {
+        return plan;
+    }
+
+    public boolean isNew() {
+        return isNew;
+    }
+/*+++++++++++++++++++++++++Get stuff end+++++++++++++++++++++++++*/
 
     /*++++++++++++++++++++++++Set stuff++++++++++++++++++++++++++*/
+
+    public void setNew(boolean isNew) {
+        this.isNew = isNew;
+    }
+
+    public void setPlan(List<PoseStamped_> plan) {
+        this.plan = plan;
+    }
 
     public void setHolo_robot_(boolean holo_robot_) {
         this.holo_robot_ = holo_robot_;
@@ -321,43 +357,49 @@ public class Agent extends Neighbor {
         this.cur_loc_unc_radius_ = cur_loc_unc_radius_;
     }
 
+    public void setAgentNeighbors(List<Neighbor> agentNeighbors) {
+        AgentNeighbors = agentNeighbors;
+    }
+
+    public void setObstacles_from_laser_(List<Obstacle> obstacles_from_laser_) {
+        this.obstacles_from_laser_ = obstacles_from_laser_;
+    }
+
     // footprint(minkowski footprint) are all in robot frame
     // set both footprint minkowski and the footprint minkowski lines
     public void setFootprint_minkowski(List<Vector2> footprint) {
         if (footprint.size() < 2) {
-            System.err.println("The footprint specified has less than two nodes");
-            return;
+            throw new RuntimeException("The footprint specified has less than two nodes");
         }
-//        this.lock.lock();
-//        try {
-        footprint_minkowski.clear();
-        for (Vector2 pt : footprint) {
-            footprint_minkowski.add(new Vector2(pt.getX(), pt.getY()));
+        this.lock.lock();
+        try {
+            footprint_minkowski.clear();
+            for (Vector2 pt : footprint) {
+                footprint_minkowski.add(new Vector2(pt.getX(), pt.getY()));
+            }
+            footprint_minkowski_lines.clear();
+            Vector2 p = footprint.get(0);
+            Vector2 first = new Vector2(p.getX(), p.getY());
+            Vector2 old = new Vector2(p.getX(), p.getY());
+            //add linesegments for footprint
+            for (int i = 0; i < footprint.size(); i++) {
+                footprint_minkowski_lines.add(new LinePair(old, footprint.get(i)));
+                old.setVector2(footprint.get(i));
+            }
+            //add last segment
+            footprint_minkowski_lines.add(new LinePair(old, first));
+            has_polygon_footprint_ = true;
+        } finally {
+            this.lock.unlock();
         }
-        footprint_minkowski_lines.clear();
-        Vector2 p = footprint.get(0);
-        Vector2 first = new Vector2(p.getX(), p.getY());
-        Vector2 old = new Vector2(p.getX(), p.getY());
-        //add linesegments for footprint
-        for (int i = 0; i < footprint.size(); i++) {
-            footprint_minkowski_lines.add(new LinePair(old, footprint.get(i)));
-            old.setVector2(footprint.get(i));
-        }
-        //add last segment
-        footprint_minkowski_lines.add(new LinePair(old, first));
-        has_polygon_footprint_ = true;
-//        }finally {
-//            this.lock.unlock();
-//        }
+    }
+
+    @Override
+    public void setSeq(long seq) {
+        super.setSeq(seq);
+        cmd_vel.setSeq(seq);
     }
 
     /*+++++++++++++++++++++++++Set stuff end+++++++++++++++++++++++++*/
-    public byte[] toJSON() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        mapper.writeValue(outputStream, this);
-        return outputStream.toByteArray();
-    }
 }
 
