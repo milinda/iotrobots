@@ -1,9 +1,7 @@
 Build Iotcloud
 =================
 
-For developing, to provide necessary dependencies, need to build and install the whole project including iotcloud2, 
-
-sensorstream, and storm connector.
+For development, to provide necessary dependencies, need to build and install the whole IOT cloud project including iotcloud2, sensorstream, and storm connector.
 
 run mvn clean install in each project
 
@@ -32,21 +30,17 @@ Then open a new terminal, go to iotcloud2 distribution directory and type the fo
 
 ./bin/iotcloud site
 
-Configurations are in the conf directory of iotcloud2 directory.
+In this condition master and site will both run on local host. Configurations are in the conf directory of iotcloud2 directory.
 
 Deploy the sensor
 =================
 
-1. Run mvn clean install to build the sensor module and copy the jar with dependencies in target dir to 
-
-repository/sensors directory of iotcloud2
+1. Run mvn clean install to build the sensor module and copy the jar with dependencies in target dir to repository/sensors which is the in the iotcloud2 distribution directory
 
 2. In iotcloud2 dir run
 
-./bin/iotcloud jar repository/sensors/sensors-collavoid-1.0-SNAPSHOT-jar-with-dependencies.jar \\
+./bin/iotcloud jar repository/sensors/sensors-collavoid-1.0-SNAPSHOT-jar-with-dependencies.jar cgl.iotrobots.collavoid.sensors.CollAvoidSensor -n
 
-cgl.iotrobots.collavoid.sensors.CollAvoidSensor -n <number of robots,default is 2>
-
-Here n should be the same as the number of robots running in the simulator
+Here n is the number of robots and should be the same as the number of robots running in the simulator. If n is not set, default value is 2.
 
 Remember sensor uses ROS to relay velocity command, so before deploying sensor, ros server should be launched.
