@@ -18,24 +18,25 @@ def average(file_name, upperbound):
 
 def main():
     tasks = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    # tasks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     data = [100, 1000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
     for d in data:
         s = str(d) + ": "
         for t in tasks:
-            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_original_second/" + str(d)  + "_" + str(t), 60))
+            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_original_second/" + str(d)  + "_" + str(t), 100))
         print s
 
     for d in data:
         s = str(d) + ": "
         for t in tasks:
-            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_bcast_second/" + str(d)  + "_" + str(t), 60))
+            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/jstorm_bcast_second/" + str(d)  + "_" + str(t), 100))
         print s
 
-    for d in data:
-        s = str(d) + ": "
-        for t in tasks:
-            s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/bcast/" + str(d)  + "_" + str(t), 60))
-        print s
+    # for d in data:
+    #     s = str(d) + ": "
+    #     for t in tasks:
+    #         s = s + " " + str(average("/home/supun/dev/projects/iotrobots/collectives/bcast/" + str(d)  + "_" + str(t), 60))
+    #     print s
 
 if __name__ == "__main__":
     main()
