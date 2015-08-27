@@ -44,6 +44,7 @@ public class BroadCastBolt extends BaseRichBolt {
         }
 
         if (stream.equals(Constants.Fields.READY_STREAM)) {
+            LOG.info("Received READY, waiting for message");
             this.state = State.WAITING_FOR_READING;
             return;
         } else if (state == State.WAITING_FOR_READING) {

@@ -38,7 +38,7 @@ public class WorkerBolt extends BaseRichBolt {
             return;
         }
         int taskId = context.getThisTaskIndex();
-//        LOG.info("Message received for worker with ID {}", taskId);
+        LOG.info("Message received for worker with ID {}", taskId);
 
         long receiveTime = System.currentTimeMillis();
         Object body = tuple.getValueByField(Constants.Fields.BODY);
