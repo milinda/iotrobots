@@ -3,6 +3,7 @@ import time
 
 ipNz = 'cn01'
 ipB = 'cn03'
+ipI = 'cn10'
 resultsdir = ""
 
 storm_dir="/N/u/skamburu/jstorm_cluster/jstorm-original"
