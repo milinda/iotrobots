@@ -3,13 +3,11 @@ import time
 
 ipNz = 'cn01'
 ipB = 'cn03'
-ipI = '10.23.0.22'
 resultsdir = ""
 
-storm_dir="/home/ubuntu/deploy/jstorm-0.9.6.3"
-project_dir="/home/ubuntu/projects/iotrobots/collectives"
-rabbitmq_dir="/N/u/skamburu/opt/rabbitmq_server-3.3.0"
-username = 'ubuntu'
+storm_dir="/N/u/skamburu/jstorm_cluster/jstorm-original"
+project_dir="/N/u/skamburu/projects/iotrobots/collectives"
+username = 'skamburu'
 
 sshNZ = paramiko.SSHClient()
 sshNZ.set_missing_host_key_policy(paramiko.AutoAddPolicy())
