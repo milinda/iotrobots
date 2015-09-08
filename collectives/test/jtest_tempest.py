@@ -14,20 +14,20 @@ username = 'skamburu'
 
 sshNZ = paramiko.SSHClient()
 sshNZ.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshNZ.connect(ipNz, username=('%s' % username), key_filename=
+sshNZ.connect(ipNz, username=('%s' % username), key_filename=key_file)
 
 sshBR = paramiko.SSHClient()
 sshBR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshBR.connect(ipB, username=('%s' % username), key_filename='~/.ssh/id_rsa')
+sshBR.connect(ipB, username=('%s' % username), key_filename=key_file)
 
 sshI = paramiko.SSHClient()
 sshI.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshI.connect(ipI, username=('%s' % username), key_filename='~/.ssh/id_rsa')
+sshI.connect(ipI, username=('%s' % username), key_filename=key_file)
 
 sshIR = paramiko.SSHClient()
 sshIR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-sshIR.connect(ipI, username=('%s' % username), key_filename='~/.ssh/id_rsa')
+sshIR.connect(ipI, username=('%s' % username), key_filename=key_file)
 
 def exec_storm(ssh, parallel):
     print "executing storm commands"
