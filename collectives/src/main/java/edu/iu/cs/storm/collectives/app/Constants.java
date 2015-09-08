@@ -7,6 +7,8 @@ public class Constants {
     public static final String ARGS_PARALLEL = "p";
     public static final String ARGS_IOT_CLOUD = "i";
     public static final String ARGS_PARTICLES = "pt";
+    public static final String ARGS_NODE_BRANCH = "nb";
+    public static final String ARGS_WORKER_BRANCH= "wb";
 
     // configurations
     public static final String RABBITMQ_URL = "rabbitmq_url";
