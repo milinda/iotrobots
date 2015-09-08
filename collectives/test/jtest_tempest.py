@@ -8,11 +8,13 @@ resultsdir = ""
 
 storm_dir="/N/u/skamburu/jstorm_cluster/jstorm-original"
 project_dir="/N/u/skamburu/projects/iotrobots/collectives"
+key_file='/N/u/skamburu/.ssh/id_rsa'
+
 username = 'skamburu'
 
 sshNZ = paramiko.SSHClient()
 sshNZ.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-sshNZ.connect(ipNz, username=('%s' % username), key_filename='~/.ssh/id_rsa')
+sshNZ.connect(ipNz, username=('%s' % username), key_filename=
 
 sshBR = paramiko.SSHClient()
 sshBR.set_missing_host_key_policy(paramiko.AutoAddPolicy())
