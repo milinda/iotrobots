@@ -147,8 +147,9 @@ public class RabbitMQReceiver {
             LOG.info("connected to rabbitmq: " + connection + " for " + exchangeName);
             return connection;
         } catch (Exception e) {
-            LOG.info("connection failed to rabbitmq: " + connection + " for " + exchangeName);
-            return null;
+            String msg = "connection failed to rabbitmq: " + connection + " for " + exchangeName;
+            LOG.info(msg, e);
+            throw new RuntimeException(msg, e);
         }
     }
 
