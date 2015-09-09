@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class GatherBolt extends BaseRichBolt {
 
     private Kryo kryo;
     private BTrace currentTrace;
-    private List<Tuple> inputs = new ArrayList<Tuple>();
+    private Map<String, List<Tuple>> inputs = new HashMap<String, List<Tuple>>();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -44,9 +45,19 @@ public class GatherBolt extends BaseRichBolt {
 
         // wait until we get all the inputs
         processInput(tuple);
-        inputs.add(tuple);
 
-        if (inputs.size() >= workers) {
+        String messageId = tuple.getStringByField(Constants.Fields.MESSAGE_ID_FIELD);
+
+        if(!inputs.containsKey(messageId)) {
+            ArrayList<Tuple> tuples = new ArrayList<Tuple>();
+            inputs.put(messageId, tuples);
+        }
+
+        inputs.get(messageId).add(tuple);
+
+        if (inputs.get(messageId).size() >= workers) {
+            inputs.remove(messageId);
+            LOG.info("Gather done for message with ID: " + messageId);
             // emit the current trace
             byte []b = Utils.serialize(kryo, currentTrace);
             List<Object> list = new ArrayList<Object>();

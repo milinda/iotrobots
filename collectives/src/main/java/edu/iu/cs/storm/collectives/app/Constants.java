@@ -25,6 +25,7 @@ public class Constants {
         public static final String DATA_FIELD = "data";
         public static final String SENSOR_ID_FIELD = "sensorID";
         public static final String TRACE_FIELD = "trace";
+        public static final String MESSAGE_ID_FIELD = "messageID";
     }
 
     public abstract class Topology {

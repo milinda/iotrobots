@@ -46,18 +46,21 @@ public class WorkerBolt extends BaseRichBolt {
         byte []traceBytes = (byte[]) tuple.getValueByField(Constants.Fields.TRACE_FIELD);
         BTrace trace = (BTrace) Utils.deSerialize(kryo, traceBytes, BTrace.class);
 
+        String messageId = tuple.getStringByField(Constants.Fields.MESSAGE_ID_FIELD);
+
         trace.setTaskId(taskId);
         trace.setBcastReceiveTime(receiveTime);
         byte []traceSendBytes = Utils.serialize(kryo, trace);
         List<Object> list = new ArrayList<Object>();
         list.add(body);
         list.add(traceSendBytes);
+        list.add(messageId);
         collector.emit(Constants.Fields.GATHER_STREAM, list);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declareStream(Constants.Fields.GATHER_STREAM, new Fields(Constants.Fields.DATA_FIELD,
-                Constants.Fields.TRACE_FIELD));
+                Constants.Fields.TRACE_FIELD, Constants.Fields.MESSAGE_ID_FIELD));
     }
 }

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class BroadCastBolt extends BaseRichBolt {
     private Logger LOG = LoggerFactory.getLogger(BroadCastBolt.class);
@@ -58,6 +59,7 @@ public class BroadCastBolt extends BaseRichBolt {
             List<Object> list = new ArrayList<Object>();
             list.add(body);
             list.add(b);
+            list.add(UUID.randomUUID().toString());
             collector.emit(Constants.Fields.BROADCAST_STREAM, list);
             // we are waiting for the tuples to finish
             state = State.WAITING_FOR_READY;
@@ -70,6 +72,7 @@ public class BroadCastBolt extends BaseRichBolt {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declareStream(Constants.Fields.BROADCAST_STREAM, new Fields(
                 Constants.Fields.BODY,
-                Constants.Fields.TRACE_FIELD));
+                Constants.Fields.TRACE_FIELD,
+                Constants.Fields.MESSAGE_ID_FIELD));
     }
 }
